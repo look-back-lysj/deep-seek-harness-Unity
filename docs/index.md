@@ -4,7 +4,8 @@
 
 | 文档 | 用途 |
 |---|---|
-| [滚动修复与皮肤目录交付](handoff/SCROLL-AND-SKINS-2026-09-28.md) | mvp.2日常更新、官方分组、326项测试、本机皮肤原包及未验边界 |
+| [发行与皮肤中心交付](handoff/DISTRIBUTION-2026-09-28.md) | mvp.4发行包、82项清点、公开镜像、真实Desktop与未验边界 |
+| [首次使用链路复检](reviews/2026-09-28-portability-recheck.md) | 远端源码、干净构建、安装链、制品下载及Gitee 451限制 |
 | [本机皮肤目录操作](contributing/LOCAL-EAC-SKINS.md) | 管理器与皮肤的用户安装顺序、固定来源、许可证及复现脚本 |
 | [下一模型接力入口](handoff/START-HERE.md) | 最新状态、阅读顺序、路径、执行默认、环境与可复制启动提示词 |
 | [第二轮独立复查](reviews/2026-09-28-independent-review.md) | 当前最新：亲自操作官方 Desktop、15组问题、证据及旧结论纠正 |
