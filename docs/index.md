@@ -5,12 +5,17 @@
 | 文档 | 用途 |
 |---|---|
 | [下一模型接力入口](handoff/START-HERE.md) | 最新状态、阅读顺序、路径、执行默认、环境与可复制启动提示词 |
+| [第二轮独立复查](reviews/2026-09-28-independent-review.md) | 当前最新：亲自操作官方 Desktop、15组问题、证据及旧结论纠正 |
+| [下一阶段实施计划](NEXT-STAGE-PLAN.md) | 两部分方案、G0–G6、技术备选、逐项验收 |
+| [作者／分发／双扩展接口](ECOSYSTEM-INTERFACES.md) | 两条发行路线、公共协议边界、上架模板、五槽位及两个接入方式 |
+| [下一轮多智能体提示词](handoff/NEXT-AGENT-PLAYBOOK.md) | 当前执行分工、文件owner、两波并行、完整角色提示词 |
+| [当前复查工作登记](handoff/CURRENT-REVIEW-REGISTER.md) | REV、旧AUD/ACC及新E需求的追踪方式 |
 | [阶段成果复查与接力报告](handoff/REVIEW-HANDOFF-2026-09-28.md) | 深度复查、R01–R10 风险、真实证据边界和下一阶段规划 |
 | [接力运行报告](handoff/RUN-REPORT-2026-09-28-ai-and-workers.md) | 自动检查、最终包摘要、隔离 profile 和真实未验证边界 |
 | [接力工作清单](handoff/WORK-QUEUE.md) | AUD 缺陷与新增需求的 owner、完成条件和证据账 |
 | [旧验收要求登记](handoff/ACCEPTANCE-REGISTER.md) | 旧矩阵每一条要求独立登记为 ACC，防止与审查编号混淆 |
 | [正式内容输入清单](handoff/CONTENT-INPUTS.md) | 合作作者、正式制品、来源和缺料时继续工作的方法 |
-| [升级计划 v2](UPGRADE-PLAN-V2.md) | 基于实际缺陷的阶段、页面规格、文件所有权和多智能体提示词；未实施 |
+| [升级计划 v2](UPGRADE-PLAN-V2.md) | 上一阶段历史计划，已有部分实现；本轮顺序和分工以上述新计划为准 |
 | [AI 辅助操作守则](AI-ASSIST-RULES.md) | 已确认方向下的允许范围、执行约束、模型指引与验收；AI 骨架已实现，真实模型和完整执行待验 |
 | [2026-09-28 实际体验与升级讨论](reviews/2026-09-28-experience-audit.md) | 最新桌面复现、MVP 缺口、待讨论方案；未实施修复 |
 | [architecture.md](architecture.md) | 代码层次、依赖方向、目录与生命周期 |

@@ -1,0 +1,142 @@
+{
+  "reviewDate": "2026-09-28",
+  "compiledAtUtc": "2026-09-28T05:44:06.122987+00:00",
+  "sourceCommit": "ea84b9f79754e720efde2bb8f38988faabc695eb",
+  "evidenceLevel": "native Windows UI + dedicated profile files; no real model call",
+  "host": {
+    "version": "0.1.7-rc.2",
+    "platform": "Windows x64",
+    "officialSourceIsArchiveWithoutGit": true
+  },
+  "marketArtifact": {
+    "name": "dsh-eac-market-0.1.0-mvp.0.tgz",
+    "bytes": 358423,
+    "sha256": "A15C1A1AFA46197E71A8329ED513E6F8A128074DD274DF65CF3FAECE2CBE944C"
+  },
+  "officialMarketInstall": {
+    "nativeOfficialAddPluginPage": true,
+    "installedAndEnabled": true
+  },
+  "fixture": {
+    "packageName": "@dsh-eac/fixture-plugin-a",
+    "version": "1.0.0",
+    "bytes": 509,
+    "sha256": "5598c2d01736df5db979fa8311a3328c79c1f90e5a7019dc9ad4d1cae06bbc7d",
+    "kind": "existing harmless engineering fixture; not an author release",
+    "catalogVerification": "unverified"
+  },
+  "observedConsent": {
+    "checkboxChecked": false,
+    "basis": "operator observed current native UI; original request boolean is not persisted by current plan format"
+  },
+  "savedPlan": {
+    "planId": "plan-26820f1e864450e2b5c78854d1eec249241f9d56eea85ede0180a61496286deb",
+    "planDigest": "d30f54e4270d5d35c9e3b7194bd73bf40915079897df136b2bbd9570b018f819",
+    "items": [
+      {
+        "pluginId": "dev.test.fixture-plugin-a",
+        "packageName": "@dsh-eac/fixture-plugin-a",
+        "action": "add",
+        "currentEnabled": false,
+        "targetVersion": "1.0.0",
+        "targetDigest": "sha256:5598c2d01736df5db979fa8311a3328c79c1f90e5a7019dc9ad4d1cae06bbc7d",
+        "requestedEnabled": false,
+        "verification": "unverified",
+        "requiresRestart": false,
+        "blockers": []
+      }
+    ],
+    "fileSha256": "00c692532106a568e2c3ab5f8e5af3d3eeed0e8bed6d2a836f0d90bb95a12b9c"
+  },
+  "savedTask": {
+    "taskId": "task-6a540423502704925ff35716d7dba38a",
+    "status": "completed",
+    "items": [
+      {
+        "changed": true,
+        "installOutcome": "applied",
+        "packageName": "@dsh-eac/fixture-plugin-a",
+        "packageResultCode": "exit-0",
+        "permissionChanges": [],
+        "pluginId": "dev.test.fixture-plugin-a",
+        "status": "disabled",
+        "targetVersion": "1.0.0"
+      }
+    ],
+    "events": [
+      {
+        "at": "2026-09-28T05:16:37.417Z",
+        "level": "info",
+        "message": "任务已持久化，等待执行",
+        "phase": "queued",
+        "sequence": 0
+      },
+      {
+        "at": "2026-09-28T05:16:37.601Z",
+        "level": "info",
+        "message": "开始获取并校验精确制品",
+        "phase": "downloading",
+        "pluginId": "dev.test.fixture-plugin-a",
+        "sequence": 1
+      },
+      {
+        "at": "2026-09-28T05:16:37.630Z",
+        "level": "info",
+        "message": "摘要、身份和大小已由 ArtifactPort 核验",
+        "phase": "verifying",
+        "pluginId": "dev.test.fixture-plugin-a",
+        "sequence": 2
+      },
+      {
+        "at": "2026-09-28T05:16:37.640Z",
+        "level": "info",
+        "message": "调用 HostPort 安装同一份已核验制品",
+        "phase": "installing",
+        "pluginId": "dev.test.fixture-plugin-a",
+        "sequence": 3
+      },
+      {
+        "at": "2026-09-28T05:16:42.183Z",
+        "level": "info",
+        "message": "Host结果：applied",
+        "phase": "installing",
+        "pluginId": "dev.test.fixture-plugin-a",
+        "sequence": 4
+      }
+    ],
+    "fileSha256": "f8241676d5c1a877e55f82e9fb668112c1b6bd06b978bcedb6380eddcb8f33ee"
+  },
+  "postInstallUi": {
+    "samePageInventoryUpdated": false,
+    "officialManagerShowsFixture": true,
+    "afterLeavingAndReenteringMarketShowsFixture": true,
+    "disabledInitiallyDisplayedAsUnknown": true,
+    "laterMarketEnableDisplayedEnabled": true
+  },
+  "finalTestProfile": {
+    "fixtureDependencyPresent": true,
+    "fixtureSelectedAfterEnable": true
+  },
+  "otherObservations": {
+    "catalogRefreshWithoutSourceShownSuccess": true,
+    "firstAuthorDraftSaveSucceeded": true,
+    "closedDrawerObstructionImproved": true
+  },
+  "environment": {
+    "dedicatedHomeAndUserData": true,
+    "sharedPnpmCache": "D:/.pnpm-store",
+    "packageManagerOfflineSetting": true,
+    "fullNetworkIsolationClaimed": false,
+    "testInstanceExited": true,
+    "normalUserWindowRestored": true,
+    "userProfileMarketAndFixtureAbsent": true
+  },
+  "unverified": [
+    "real third-party release download",
+    "GitHub/Gitee mirror fallback",
+    "real model",
+    "all recovery and uninstall paths",
+    "business functionality of third-party plugin",
+    "quantified UI performance"
+  ]
+}

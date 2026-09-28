@@ -1,0 +1,224 @@
+{
+  "evidence": "synthetic production classes; reproduced means defect observed, NOT product passed",
+  "sourceCommit": "ea84b9f79754e720efde2bb8f38988faabc695eb",
+  "observations": [
+    {
+      "id": "P01-ai-normal-confirm-blocked-and-empty-diagnostics",
+      "status": "reproduced",
+      "observed": {
+        "analyzed": "ready",
+        "storedProposals": 0,
+        "confirmation": {
+          "status": "blocked",
+          "changed": false,
+          "error": "提案不存在或已过期"
+        },
+        "sentDiagnostics": []
+      }
+    },
+    {
+      "id": "P02-latent-ai-write-boundaries-after-controlled-proposal-injection",
+      "status": "reproduced",
+      "observed": {
+        "evidence": "controlled injection only; normal flow currently blocked by P01",
+        "acceptedUnknownFields": true,
+        "displayedActionCount": 2,
+        "calls": [
+          "@dsh-eac/market",
+          "@dsh-eac/market"
+        ],
+        "first": {
+          "status": "applied",
+          "changed": true
+        },
+        "second": {
+          "status": "applied",
+          "changed": true
+        }
+      }
+    },
+    {
+      "id": "P03-official-host-source-evidence-missing-blocks-upgrade",
+      "status": "reproduced",
+      "observed": {
+        "source": "unknown",
+        "action": "blocked",
+        "blockers": [
+          "local-identity:protected"
+        ]
+      }
+    },
+    {
+      "id": "P04-approved-source-reference-is-ignored",
+      "status": "reproduced",
+      "observed": {
+        "approvedSourceRef": "catalog:catalog-approved:p0",
+        "usedSources": [
+          {
+            "ref": "https://unconfirmed.invalid/new.tgz",
+            "kind": "https-artifact",
+            "priority": 0
+          }
+        ],
+        "networkRequests": 0,
+        "digestCheckBypassed": false
+      }
+    },
+    {
+      "id": "P05-restart-required-prerequisite-does-not-block-consumer",
+      "status": "reproduced",
+      "observed": {
+        "calls": [
+          "prerequisite",
+          "consumer"
+        ],
+        "items": [
+          {
+            "name": "prerequisite",
+            "status": "restart-required"
+          },
+          {
+            "name": "consumer",
+            "status": "enabled"
+          }
+        ],
+        "officialRuntimeEntryStill": "old-running-entry",
+        "inventoryRestartRequired": false
+      }
+    },
+    {
+      "id": "P06-production-lock-cancel-during-download-still-installs",
+      "status": "reproduced",
+      "observed": {
+        "beforeRelease": {
+          "cancellationReturned": false,
+          "cancellationPersisted": false
+        },
+        "officialCancelCalls": [],
+        "installed": [
+          "a",
+          "b"
+        ],
+        "cancellationResult": "completed"
+      }
+    },
+    {
+      "id": "P07-production-lock-cancel-install-still-runs-next-item",
+      "status": "reproduced",
+      "observed": {
+        "calls": [
+          "a",
+          "b"
+        ],
+        "cancellationResult": "partial",
+        "items": [
+          "cancelled",
+          "enabled"
+        ]
+      }
+    },
+    {
+      "id": "P08-interrupted-result-unknown-is-replayed-after-resume",
+      "status": "reproduced",
+      "observed": {
+        "onDiskBeforeResume": "2.0.0",
+        "remaining": [
+          "p0"
+        ],
+        "replayedRequestId": "old-request-with-missing-receipt",
+        "status": "completed"
+      }
+    },
+    {
+      "id": "P09-active-equivalent-new-plan-not-deduplicated-and-retry-link-lost",
+      "status": "reproduced",
+      "observed": {
+        "samePlanCreatedAgain": false,
+        "equivalentNewPlanCreated": true,
+        "firstStatus": "awaiting-approval",
+        "secondStatus": "completed",
+        "installCalls": 2,
+        "persistedRetryLink": null
+      }
+    },
+    {
+      "id": "P10-drift-during-acquisition-overwrites-new-external-version",
+      "status": "reproduced",
+      "observed": {
+        "planBaseline": "1.0.0 disabled",
+        "externalChangeDuringAcquire": "9.0.0 enabled local fork",
+        "afterInstall": {
+          "packageName": "drifted",
+          "version": "2.0.0",
+          "installed": true,
+          "bundleEnabled": false,
+          "source": "market-cache-file",
+          "removable": true,
+          "rows": [],
+          "restartRequired": false
+        },
+        "status": "completed"
+      }
+    },
+    {
+      "id": "P11-enable-remove-ignore-expected-version-idempotency-and-writer",
+      "status": "reproduced",
+      "observed": {
+        "calls": [
+          {
+            "action": "enable",
+            "name": "unverified-target",
+            "enabled": false
+          },
+          {
+            "action": "remove",
+            "name": "unverified-target"
+          },
+          {
+            "action": "remove",
+            "name": "unverified-target"
+          }
+        ],
+        "droppedDiagnostic": {
+          "status": "failed",
+          "changed": false,
+          "error": "official-failure",
+          "permissionChanges": []
+        },
+        "executorCalled": false
+      }
+    },
+    {
+      "id": "P12-json-store-unindexed-summary-invisible-after-second-write-failure",
+      "status": "reproduced",
+      "observed": {
+        "summaryReadableById": true,
+        "listCountAfterRecreation": 0,
+        "claim": "history/recovery visibility gap; not proof of duplicate real installation"
+      }
+    },
+    {
+      "id": "P13-valid-evidence-rejected-with-host-constructor-defaults",
+      "status": "reproduced",
+      "observed": {
+        "passesWithExplicitHostEvidence": true,
+        "sameConstructorDefaultsAsMarketRuntime": true,
+        "refreshStatus": "failed",
+        "reason": "dev.test.alpha@1.2.3 标记 verified 但没有当前宿主证据上下文",
+        "retainedRevision": "test-revision-1"
+      }
+    },
+    {
+      "id": "P14-inventory-read-failure-does-not-prevent-install-write",
+      "status": "reproduced",
+      "observed": {
+        "readErrors": [
+          "listBundles:synthetic inventory unavailable"
+        ],
+        "reportedStable": true,
+        "officialInstallCalls": 1,
+        "finalStatus": "failed"
+      }
+    }
+  ]
+}
