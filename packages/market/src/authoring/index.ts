@@ -33,6 +33,7 @@ export {
   AuthorPackageError,
   AuthorPackageService,
   type AuthorPackageResult,
+  type AuthorMediaView,
   type AuthorProvenance,
 } from './package.ts'
 export {
@@ -40,6 +41,7 @@ export {
   ReadmeImportError,
   type ReadmeImporterOptions,
   type RemoteBytesReader,
+  type ReadmePreview,
 } from './readme.ts'
 export {
   TransferError,

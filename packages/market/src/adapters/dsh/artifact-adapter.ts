@@ -9,19 +9,23 @@ import { ArtifactCache } from '../../delivery/cache.ts'
 export class CatalogArtifactPort implements ArtifactPort {
   constructor(
     private readonly cache: ArtifactCache,
-    private readonly deliveries: () => readonly CatalogDelivery[],
+    // Kept as a constructor compatibility argument; execution never consults
+    // the live catalog after the user has confirmed a plan.
+    _deliveries: () => readonly CatalogDelivery[],
     private readonly allowLocalFileSources: readonly string[] = [],
   ) {}
 
   async acquire(request: ArtifactAcquireRequest, signal?: AbortSignal): Promise<ArtifactAcquisition> {
     signal?.throwIfAborted()
-    const delivery = this.deliveries().find((candidate) =>
-      candidate.pluginId === request.pluginId
-      && candidate.packageName === request.packageName
-      && candidate.version === request.version
-      && candidate.artifactDigest === request.artifactDigest)
-    if (delivery === undefined) throw new Error('exact catalog delivery is unavailable')
+    const delivery = request.delivery
+    if (delivery === undefined) throw new Error('该计划缺少冻结的下载来源，请重新查看安装方案')
+    if (delivery.pluginId !== request.pluginId || delivery.packageName !== request.packageName
+      || delivery.version !== request.version
+      || delivery.artifactDigest.replace(/^sha256:/, '') !== request.artifactDigest.replace(/^sha256:/, '')) {
+      throw new Error('冻结下载来源与已确认的插件或摘要不一致')
+    }
     const acquired = await this.cache.download(delivery, {
+      signal,
       referenceId: request.requestId,
       // Retain conservatively: an official dependency may persist as file:.
       // Cleanup only removes files with no active-task or installed reference.

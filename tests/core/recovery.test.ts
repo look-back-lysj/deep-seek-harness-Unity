@@ -3,7 +3,7 @@ import { FakeHost, InMemoryLocks, InMemoryTaskStore, MemoryEventLog, FakeArtifac
 import { InstallTaskManager } from '../../packages/market/src/core/task-manager.ts'
 
 describe('interrupted task reconciliation', () => {
-  it('marks in-flight work interrupted and prepares an explicit resume challenge', async () => {
+  it('keeps an in-flight write with no receipt blocked without a resume challenge', async () => {
     const host = new FakeHost()
     const gate: { release?: () => void } = {}
     host.installGate = new Promise<void>((resolve) => { gate.release = resolve })
@@ -36,8 +36,9 @@ describe('interrupted task reconciliation', () => {
     })
     await restarted.reconcileInterrupted('env-test')
     const task = await restarted.get(started.task.taskId)
-    expect(task?.status).toBe('awaiting-resume')
-    expect(task?.resume?.remainingPluginIds).toEqual(['p0'])
+    expect(task?.status).toBe('needs-attention')
+    expect(task?.resume).toBeUndefined()
+    expect(restartedHost.calls).toHaveLength(0)
     gate.release?.()
   })
 

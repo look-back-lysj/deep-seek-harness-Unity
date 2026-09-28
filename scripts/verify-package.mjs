@@ -9,6 +9,7 @@ const manifest = JSON.parse(await readFile(join(packageDir, 'package.json'), 'ut
 const required = [
   'lib/index.js', 'lib/client.js', 'lib/types/contracts/types.js', 'lib/types/contracts/types.d.ts',
   'lib/typert.host.js', 'lib/typert.host.d.ts',
+  'lib/typert.client.js', 'lib/typert.client.d.ts',
   'lib/typert.remote-client.js', 'lib/typert.remote-client.d.ts',
   'data/index.json', 'cordis.patch.yml', 'dsh-plugin.json', 'LICENSE',
 ]

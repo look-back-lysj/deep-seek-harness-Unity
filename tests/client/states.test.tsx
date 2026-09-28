@@ -67,7 +67,7 @@ describe('client state rendering', () => {
     expect(html).toContain('全部插件')
     expect(html).toContain('我的插件')
     expect(html).toContain('class="eac-market"')
-    expect(html).toContain('精选功能，轻松装进 DSH')
+    expect(html).toContain('发现适合你的插件')
     expect(html).not.toContain('Star')
     expect(html).not.toContain('GitHub 登录')
   })

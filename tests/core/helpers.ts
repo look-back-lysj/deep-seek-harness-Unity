@@ -159,7 +159,7 @@ export class FakeHost implements HostPort {
         installed: true,
         bundleEnabled: request.enabled,
         removable: true,
-        rows: [],
+        rows: request.enabled ? [{ id: packageName + '-test-entry', name: packageName, state: 'enabled', fiberPhase: 'active' }] : [],
         restartRequired: outcome.kind === 'applied' && outcome.restartRequired,
       })
     }
@@ -277,7 +277,7 @@ export async function makeManager(bundle: PlanBundle, host = new FakeHost(), sto
   const outcome = await manager.start(bundle, {
     planId: bundle.plan.planId,
     planDigest: bundle.plan.planDigest,
-    idempotencyKey: 'start-1',
+    idempotencyKey: 'start-' + bundle.plan.planId,
     confirmed: true,
   }, await host.readState())
   return { manager, host, store, artifacts, taskId: outcome.task.taskId }

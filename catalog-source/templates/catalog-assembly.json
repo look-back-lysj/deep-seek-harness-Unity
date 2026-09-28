@@ -1,0 +1,16 @@
+{
+  "schemaVersion": "1",
+  "kind": "CatalogAssembly",
+  "testOnly": false,
+  "revision": null,
+  "generatedAt": null,
+  "publication": { "sourceId": null, "sequence": null },
+  "plugins": [],
+  "releases": [],
+  "releaseStatuses": [],
+  "presentations": [],
+  "deliveries": [],
+  "recommendations": [],
+  "collections": [],
+  "packs": []
+}

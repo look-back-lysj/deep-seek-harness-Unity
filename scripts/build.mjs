@@ -34,7 +34,7 @@ for (const artifact of generator.generate(['@dsh-eac/market'], ['host'])) {
   }
 }
 for (const artifact of generator.generate(['@dsh-eac/market'], ['client'])) {
-  const output = artifact.packageRoot
+  const output = join(artifact.packageRoot, 'lib')
   await writeFile(join(output, `typert.${artifact.face}.js`), artifact.js)
   await writeFile(join(output, `typert.${artifact.face}.d.ts`), artifact.dts)
 }

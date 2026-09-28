@@ -1,5 +1,6 @@
 import {
   useEffect,
+  useId,
   useRef,
   useState,
   type ButtonHTMLAttributes,
@@ -47,24 +48,28 @@ export function Modal({ open, onClose, title, description, children, footer, clo
 }): React.JSX.Element | null {
   const cardRef = useRef<HTMLDivElement>(null)
   const returnFocus = useRef<HTMLElement | null>(null)
+  const closeRef = useRef(onClose)
+  closeRef.current = onClose
+  const titleId = useId()
   useEffect(() => {
     if (!open) return
     returnFocus.current = document.activeElement instanceof HTMLElement ? document.activeElement : null
     const card = cardRef.current
-    const first = card?.querySelector<HTMLElement>('[data-modal-autofocus], button, input, textarea, select, a[href]')
-    first?.focus()
+    const first = card?.querySelector<HTMLElement>('[data-modal-autofocus]:not([disabled]), button:not([disabled]), input:not([disabled]), textarea:not([disabled]), select:not([disabled]), a[href]')
+    ;(first ?? card)?.focus()
     function onKeyDown(event: KeyboardEvent): void {
       if (event.key === 'Escape') {
         event.preventDefault()
-        onClose()
+        closeRef.current()
       }
       if (event.key !== 'Tab' || card === null) return
       const focusable = [...card.querySelectorAll<HTMLElement>('button:not([disabled]), input:not([disabled]), textarea:not([disabled]), select:not([disabled]), a[href]')]
-      if (focusable.length === 0) return
+      if (focusable.length === 0) { event.preventDefault(); card.focus(); return }
       const firstEl = focusable[0]
       const lastEl = focusable[focusable.length - 1]
       if (firstEl === undefined || lastEl === undefined) return
-      if (event.shiftKey && document.activeElement === firstEl) {
+      if (!card.contains(document.activeElement)) { event.preventDefault(); firstEl.focus() }
+      else if (event.shiftKey && document.activeElement === firstEl) {
         event.preventDefault()
         lastEl.focus()
       } else if (!event.shiftKey && document.activeElement === lastEl) {
@@ -77,13 +82,13 @@ export function Modal({ open, onClose, title, description, children, footer, clo
       document.removeEventListener('keydown', onKeyDown)
       returnFocus.current?.focus()
     }
-  }, [open, onClose])
+  }, [open])
   if (!open) return null
   return (
     <div className="eac-modal-overlay" role="presentation" onMouseDown={(event) => { if (event.currentTarget === event.target) onClose() }}>
-      <div className={`eac-modal ${className}`.trim()} role="dialog" aria-modal="true" aria-labelledby="eac-modal-title" ref={cardRef}>
+      <div className={`eac-modal ${className}`.trim()} role="dialog" aria-modal="true" aria-labelledby={titleId} tabIndex={-1} ref={cardRef}>
         <div className="eac-modal__head">
-          <div><h2 id="eac-modal-title">{title}</h2>{description !== undefined && <p>{description}</p>}</div>
+          <div><h2 id={titleId}>{title}</h2>{description !== undefined && <p>{description}</p>}</div>
           <Button variant="ghost" aria-label={closeLabel} onClick={onClose}>关闭</Button>
         </div>
         <div className={`eac-modal__content ${contentClassName}`.trim()}>{children}</div>
@@ -97,7 +102,7 @@ function safeHref(value: string): string | undefined {
   return /^https?:\/\//i.test(value) ? value : undefined
 }
 
-function inlineNodes(text: string, keyPrefix: string): readonly ReactNode[] {
+function inlineNodes(text: string, keyPrefix: string, mediaUrls: Readonly<Record<string, string>>): readonly ReactNode[] {
   const pattern = /(!\[([^\]]*)\]\(([^)]+)\)|\[([^\]]+)\]\(([^)]+)\)|`([^`]+)`|\*\*([^*]+)\*\*)/g
   const output: ReactNode[] = []
   let cursor = 0
@@ -106,9 +111,10 @@ function inlineNodes(text: string, keyPrefix: string): readonly ReactNode[] {
     if (match.index > cursor) output.push(text.slice(cursor, match.index))
     const key = `${keyPrefix}-${match.index}`
     if (match[1]?.startsWith('!') === true) {
-      const href = safeHref(match[3] ?? '')
+      const mediaId = /^media:\/\/([a-zA-Z0-9_-]+)$/.exec(match[3] ?? '')?.[1]
+      const href = mediaId === undefined ? undefined : mediaUrls[mediaId]
       output.push(href === undefined
-        ? <span key={key}>{match[2]}</span>
+        ? <span key={key}>图片未载入：{match[2] || '作者图片'}（需受控媒体）</span>
         : <img key={key} src={href} alt={match[2] ?? ''} loading="lazy" />)
     } else if (match[4] !== undefined && match[5] !== undefined) {
       const href = safeHref(match[5])
@@ -141,9 +147,10 @@ function CodeBlock({ code }: { readonly code: string }): React.JSX.Element {
   )
 }
 
-export function MarkdownText({ text, labels }: {
+export function MarkdownText({ text, labels, mediaUrls = {} }: {
   readonly text: string
   readonly labels: unknown
+  readonly mediaUrls?: Readonly<Record<string, string>>
 }): React.JSX.Element {
   void labels
   const lines = text.replaceAll('\r\n', '\n').split('\n')
@@ -154,12 +161,12 @@ export function MarkdownText({ text, labels }: {
   function flushParagraph(): void {
     if (paragraph.length === 0) return
     const content = paragraph.join(' ')
-    blocks.push(<p key={`p-${blocks.length}`}>{inlineNodes(content, `p-${blocks.length}`)}</p>)
+    blocks.push(<p key={`p-${blocks.length}`}>{inlineNodes(content, `p-${blocks.length}`, mediaUrls)}</p>)
     paragraph = []
   }
   function flushList(): void {
     if (list === undefined) return
-    const items = list.items.map((item, index) => <li key={index}>{inlineNodes(item, `li-${blocks.length}-${index}`)}</li>)
+    const items = list.items.map((item, index) => <li key={index}>{inlineNodes(item, `li-${blocks.length}-${index}`, mediaUrls)}</li>)
     blocks.push(list.ordered ? <ol key={`l-${blocks.length}`}>{items}</ol> : <ul key={`l-${blocks.length}`}>{items}</ul>)
     list = undefined
   }
@@ -180,7 +187,7 @@ export function MarkdownText({ text, labels }: {
     if (heading !== null) {
       flushParagraph(); flushList()
       const level = heading[1]?.length ?? 1
-      const content = inlineNodes(heading[2] ?? '', `h-${blocks.length}`)
+      const content = inlineNodes(heading[2] ?? '', `h-${blocks.length}`, mediaUrls)
       blocks.push(level === 1 ? <h1 key={`h-${blocks.length}`}>{content}</h1>
         : level === 2 ? <h2 key={`h-${blocks.length}`}>{content}</h2>
           : level === 3 ? <h3 key={`h-${blocks.length}`}>{content}</h3>

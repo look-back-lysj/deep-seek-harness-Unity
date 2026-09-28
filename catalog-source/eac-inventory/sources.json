@@ -1,0 +1,21 @@
+{
+  "schemaVersion": "1",
+  "repository": "D:/DSH-EAC/DSH-Desktop-EAC",
+  "repositoryUrl": "https://github.com/DSH-EAC/DSH-Desktop-EAC",
+  "beta": "dc22280beb9d0a6338d1e02d99f5e5346f72f4f0",
+  "betaTree": "D:/eac-market-verify/skin-market-20260928/latest-beta-tree.json",
+  "betaPack": "44178ab1360dcb8221a666e782391a11f5716074",
+  "betaSkins": "afa947215a862a9c3304f6fff7a812efe5a42fdc",
+  "skinRepositoryUrl": "https://github.com/DSH-EAC/dsh-ui-skin-loader",
+  "officialRequestedPath": "D:/deepseek-harness-source/deepseek-harness-master0.1.7rc2",
+  "officialSource": "D:/deepseek-harness-source/deepseek-harness-master",
+  "officialVersion": "0.1.7-rc.2",
+  "originalSkins": "D:/eac-market/releases/eac-skins-1.1.0/artifacts",
+  "previousReview": "D:/eac-market-verify/skin-market-20260928/source-review.md",
+  "remoteVerification": "主控本轮通过 GitHub API 确认三个 refs 未变；本脚本不联网。",
+  "derivedVersion": "1.1.1-eac.dc22280.2",
+  "derivedClients": {
+    "@dsh-eac/skin-miku": "6dd87158537496e5c073a4f6e6587da870613799",
+    "@dsh-eac/skin-trading": "0fa2ff0a45a48a5cdf7c72e023652317a3132ee9"
+  }
+}

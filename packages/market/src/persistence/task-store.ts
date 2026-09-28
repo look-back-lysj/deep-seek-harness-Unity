@@ -4,17 +4,17 @@
  * from creating two tasks for one immutable plan.
  */
 import type { TaskRecord, TaskStorePort } from '../core/ports.ts'
+import { canonicalJson, sha256Hex } from '../core/canonical.ts'
 import {
   decodeJson,
   encodeJson,
   PersistenceError,
-  readJsonDocument,
   safeStoreId,
   taskDirectory,
   writeJsonDocument,
   type PersistenceFilePort,
 } from './files.ts'
-import { migrateTaskDocument, TASK_SCHEMA_VERSION, type TaskDocumentV2 } from './schema.ts'
+import { migrateTaskDocument, TASK_SCHEMA_VERSION, type TaskDocumentV3 } from './schema.ts'
 import type { ProfileLockPort } from '../core/ports.ts'
 
 interface TaskIndexDocument {
@@ -37,7 +37,7 @@ function parseIndex(raw: unknown): TaskIndexDocument {
 }
 
 function terminalStatus(status: string): boolean {
-  return status === 'completed' || status === 'partial' || status === 'failed' || status === 'cancelled' || status === 'needs-attention' || status === 'unknown'
+  return status === 'completed' || status === 'partial' || status === 'failed' || status === 'cancelled'
 }
 
 function planKey(environmentId: string, planId: string): string {
@@ -60,19 +60,54 @@ export class JsonTaskStore implements TaskStorePort {
     }
   }
 
+  /** Index is a projection: enumerate summaries/journals even after a failed index write. */
   private async readIndex(): Promise<TaskIndexDocument> {
-    return (await readJsonDocument(this.files, 'task-index.json', parseIndex)) ?? { schemaVersion: 1, entries: {} }
+    let previous: TaskIndexDocument = { schemaVersion: 1, entries: {} }
+    const indexBytes = await this.files.read('task-index.json')
+    if (indexBytes !== undefined) {
+      try { previous = parseIndex(decodeJson(indexBytes)) }
+      catch { await this.files.writeAtomic('task-index.corrupt-backup.json', indexBytes) }
+    }
+    const ids = new Set(Object.values(previous.entries))
+    for (const path of await this.files.list('tasks/')) {
+      const match = /^tasks\/([^/]+)\/(?:summary|commit)\.json$/.exec(path)
+      if (match !== null) ids.add(safeStoreId(match[1]!))
+    }
+    const entries: Record<string, string> = {}
+    for (const id of ids) {
+      const document = await this.readDocument(id)
+      if (document === undefined) throw new PersistenceError('task/missing-summary', '索引引用的任务摘要缺失：' + id)
+      const key = planKey(document.record.task.environmentId, document.record.task.planId)
+      if (entries[key] !== undefined && entries[key] !== id) throw new PersistenceError('task/duplicate-plan', '恢复发现同一计划存在多个任务')
+      entries[key] = id
+    }
+    const rebuilt: TaskIndexDocument = { schemaVersion: 1, entries }
+    if (canonicalJson(rebuilt) !== canonicalJson(previous)) await this.files.writeAtomic('task-index.json', encodeJson(rebuilt))
+    return rebuilt
   }
 
-  private async readDocument(taskId: string): Promise<TaskDocumentV2 | undefined> {
-    const path = `${taskDirectory(taskId)}/summary.json`
-    return readJsonDocument(this.files, path, migrateTaskDocument)
+  private async readDocument(taskId: string): Promise<TaskDocumentV3 | undefined> {
+    const directory = taskDirectory(taskId)
+    const summary = await this.files.read(directory + '/summary.json')
+    const commit = await this.files.read(directory + '/commit.json')
+    if (commit === undefined) return summary === undefined ? undefined : migrateTaskDocument(decodeJson(summary))
+    const journal = decodeJson(commit) as { schemaVersion?: number; digest?: string; document?: unknown }
+    if (journal.schemaVersion !== 1 || journal.digest !== await sha256Hex(canonicalJson(journal.document))) {
+      throw new PersistenceError('task/corrupt-commit', '任务提交记录校验失败：' + taskId)
+    }
+    const document = migrateTaskDocument(journal.document)
+    if (document.record.task.taskId !== taskId) throw new PersistenceError('task/identity-mismatch', '任务目录与提交身份不一致')
+    const committed = encodeJson(journal.document)
+    if (summary === undefined || BufferlessText(summary) !== BufferlessText(committed)) {
+      if (summary !== undefined) await this.files.writeAtomic(directory + '/summary.recovery-backup.json', summary)
+      await this.files.writeAtomic(directory + '/summary.json', committed)
+    }
+    return document
   }
 
   async get(taskId: string): Promise<TaskRecord | undefined> {
     safeStoreId(taskId)
-    const document = await this.readDocument(taskId)
-    return document?.record
+    return this.withStoreLock(async () => (await this.readDocument(taskId))?.record)
   }
 
   async getByPlan(environmentId: string, planId: string): Promise<TaskRecord | undefined> {
@@ -91,17 +126,25 @@ export class JsonTaskStore implements TaskStorePort {
       if (priorTaskId !== undefined && priorTaskId !== taskId) {
         throw new PersistenceError('task/duplicate-plan', 'environmentId + planId 已绑定其他任务')
       }
-      const prior = priorTaskId === undefined ? undefined : await this.readDocument(priorTaskId)
+      const prior = await this.readDocument(taskId)
       if (prior !== undefined && terminalStatus(prior.record.task.status) && (
         record.task.status !== prior.record.task.status || record.nextSequence < prior.record.nextSequence
       )) {
         throw new PersistenceError('task/terminal-protected', '旧记录不能覆盖已结束任务')
       }
       const path = `${taskDirectory(taskId)}/summary.json`
-      await writeJsonDocument(this.files, path, {
-        schemaVersion: TASK_SCHEMA_VERSION,
-        record,
-      } satisfies TaskDocumentV2)
+      const oldBytes = await this.files.read(path)
+      const oldVersion = oldBytes === undefined ? undefined : (decodeJson(oldBytes) as { schemaVersion?: number }).schemaVersion
+      if (oldBytes !== undefined && (oldVersion === 1 || oldVersion === 2)) {
+        const backup = taskDirectory(taskId) + '/summary.v' + oldVersion + '-backup.json'
+        if (await this.files.read(backup) === undefined) await this.files.writeAtomic(backup, oldBytes)
+      }
+      const document = { schemaVersion: TASK_SCHEMA_VERSION, record } satisfies TaskDocumentV3
+      // The durable intent precedes summary/index. Recovery can complete either missing projection.
+      await writeJsonDocument(this.files, taskDirectory(taskId) + '/commit.json', {
+        schemaVersion: 1, digest: await sha256Hex(canonicalJson(document)), document,
+      })
+      await writeJsonDocument(this.files, path, document)
       const nextIndex: TaskIndexDocument = {
         schemaVersion: 1,
         entries: { ...index.entries, [key]: taskId },
@@ -119,7 +162,7 @@ export class JsonTaskStore implements TaskStorePort {
       }
       const records: TaskRecord[] = []
       for (const taskId of taskIds) {
-        const record = await this.get(taskId)
+        const record = (await this.readDocument(taskId))?.record
         if (record !== undefined) records.push(record)
       }
       return records
@@ -133,3 +176,5 @@ export class JsonTaskStore implements TaskStorePort {
     return data === undefined ? undefined : decodeJson(data)
   }
 }
+
+function BufferlessText(bytes: Uint8Array): string { return new TextDecoder().decode(bytes) }

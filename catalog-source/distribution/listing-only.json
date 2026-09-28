@@ -1,0 +1,4079 @@
+{
+  "kind": "UninstallableInventoryListings",
+  "schemaVersion": "1",
+  "plugins": [
+    {
+      "id": "dev.eac.agent-teams",
+      "registryId": "agent-teams",
+      "packageName": "@nanmicoder/dsh-agent-teams",
+      "version": "0.1.13-eac.3",
+      "versionBasis": "registry-request-only",
+      "function": "多 Agent 团队协作",
+      "functionBasis": "editorial-label-from-registration-not-runtime-proof",
+      "scope": "beta-registry",
+      "source": {
+        "commit": "dc22280beb9d0a6338d1e02d99f5e5346f72f4f0",
+        "path": "dsh-desktop/assets/plugins/dsh-agent-teams",
+        "registration": {
+          "id": "agent-teams",
+          "kind": "plugin",
+          "path": "dsh-desktop/assets/plugins/dsh-agent-teams",
+          "packageName": "@nanmicoder/dsh-agent-teams",
+          "class": "patched",
+          "source": {
+            "kind": "github",
+            "repository": "git+https://github.com/NanmiCoder/dsh-agent-teams.git"
+          },
+          "request": {
+            "mode": "exact",
+            "version": "0.1.13-eac.3"
+          },
+          "sync": {
+            "mode": "patch-rebase",
+            "patches": [],
+            "preservePaths": []
+          },
+          "runtimeUpdate": {
+            "allowed": false,
+            "defaultAction": "prompt"
+          },
+          "validation": {
+            "entrypoints": [
+              "lib/index.js"
+            ],
+            "commands": []
+          },
+          "license": {
+            "expected": "MIT",
+            "reviewOnChange": true
+          },
+          "owner": "desktop-plugins"
+        },
+        "distribution": {
+          "id": "agent-teams",
+          "distributionClass": "external",
+          "delivery": "market",
+          "migration": {
+            "current": "bundled",
+            "target": "market",
+            "state": "source-pending"
+          }
+        },
+        "lockEntry": {
+          "compatibility": {},
+          "local": {
+            "entrypoints": [
+              "lib/index.js"
+            ],
+            "excludedPaths": [],
+            "fileCount": 65,
+            "license": "MIT",
+            "packageName": "@nanmicoder/dsh-agent-teams",
+            "packageVersion": "0.1.13-eac.3",
+            "path": "dsh-desktop/assets/plugins/dsh-agent-teams",
+            "treeSha256": "ccb9d3d2ee70929f4cd0b22a3a33596a99b47c6184dbe36ed71b8ae656dd5b9a"
+          },
+          "manifestEntrySha256": "120ff5689beba794843f70ff0cc9f9acee40d886ab131278a0e13c3978d75fb6",
+          "patchFiles": [],
+          "patchSet": "none",
+          "patchSetSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "requested": "0.1.13-eac.3",
+          "runtimeUpdate": "disabled",
+          "source": {
+            "kind": "github",
+            "repository": "git+https://github.com/NanmiCoder/dsh-agent-teams.git",
+            "sha256": "ccb9d3d2ee70929f4cd0b22a3a33596a99b47c6184dbe36ed71b8ae656dd5b9a",
+            "version": "0.1.13-eac.3"
+          },
+          "sourceCommit": null
+        },
+        "treeSha256": "sha256:afb5c85064cfbe614cbfc6a24f5d6dc2af42589c98cdf51121ddba30bf5bcd63"
+      },
+      "official": {
+        "sameNameInSource": false,
+        "bundledByOfficialDependencyGraph": false,
+        "sameImplementation": null,
+        "evidence": null,
+        "conclusion": "官方源码清单无此包名；不据此断言官方没有相似功能"
+      },
+      "api": {
+        "requirement": "unknown-missing-source",
+        "bridgeAndProfileReferences": [],
+        "externalImports": [],
+        "method": "Static text evidence; comments and guarded fallbacks are not automatically treated as mandatory dependencies."
+      },
+      "local": {
+        "builtFiles": [],
+        "fileCount": 0,
+        "availableFileCount": 0,
+        "missingBlobs": [],
+        "artifacts": []
+      },
+      "license": {
+        "declared": null,
+        "expectedByRegistry": "MIT",
+        "status": "unverified-no-license-text",
+        "canRedistribute": false,
+        "conditions": [
+          "需取得实际许可证文本或明确授权，声明/expected 字段本身不够"
+        ],
+        "evidence": [],
+        "assetRightsAudit": null
+      },
+      "knownFixes": [],
+      "install": {
+        "state": "missing-artifact",
+        "canInstall": false,
+        "reasons": [
+          "固定最新版 tree 无该目录制品；注册记录或旧公共 Manifest 不能替代作者包。",
+          "缺实际许可证文本，暂停再分发和安装。"
+        ],
+        "runtimeVerification": "not-tested"
+      },
+      "publicManifest": null,
+      "buildMaterials": {
+        "thirdPartyCommandsExecuted": false,
+        "scriptsDeclared": {},
+        "dependencies": {},
+        "peerDependencies": {},
+        "engines": {},
+        "externalImports": [],
+        "needed": [
+          "固定作者源码 commit",
+          "完整许可证与署名链",
+          "精确版本的原始 tgz 及 SHA256；或锁文件、精确工具链和隔离构建配方",
+          "官方 bundle 加载声明及运行依赖",
+          "官方 Desktop 安装及业务验证"
+        ]
+      },
+      "catalogProjection": {
+        "target": "listing-only",
+        "reason": "Use the separate v2 listings table; never invent package metadata or exact installed version."
+      }
+    },
+    {
+      "id": "dev.eac.balance",
+      "registryId": "balance",
+      "packageName": "@deepseek-ai/dsh-balance",
+      "version": "0.1.0",
+      "versionBasis": "registry-request-only",
+      "function": "模型账户余额显示",
+      "functionBasis": "editorial-label-from-registration-not-runtime-proof",
+      "scope": "beta-registry",
+      "source": {
+        "commit": "dc22280beb9d0a6338d1e02d99f5e5346f72f4f0",
+        "path": "dsh-desktop/assets/plugins/dsh-balance",
+        "registration": {
+          "id": "balance",
+          "kind": "plugin",
+          "path": "dsh-desktop/assets/plugins/dsh-balance",
+          "packageName": "@deepseek-ai/dsh-balance",
+          "class": "internal",
+          "source": {
+            "kind": "internal",
+            "name": "@deepseek-ai/dsh-balance",
+            "reason": "maintained in this repository; no external source is declared"
+          },
+          "request": {
+            "mode": "exact",
+            "version": "0.1.0"
+          },
+          "sync": {
+            "mode": "manual",
+            "patches": [],
+            "preservePaths": []
+          },
+          "runtimeUpdate": {
+            "allowed": false,
+            "defaultAction": "prompt"
+          },
+          "validation": {
+            "entrypoints": [
+              "lib/index.js"
+            ],
+            "commands": []
+          },
+          "license": {
+            "expected": "MIT",
+            "reviewOnChange": true
+          },
+          "owner": "desktop-plugins"
+        },
+        "distribution": {
+          "id": "balance",
+          "distributionClass": "builtin",
+          "delivery": "bundled",
+          "migration": {
+            "current": "bundled",
+            "target": "bundled",
+            "state": "migrated"
+          }
+        },
+        "lockEntry": {
+          "compatibility": {},
+          "local": {
+            "entrypoints": [
+              "lib/index.js"
+            ],
+            "excludedPaths": [],
+            "fileCount": 4,
+            "license": "MIT",
+            "packageName": "@deepseek-ai/dsh-balance",
+            "packageVersion": "0.1.0",
+            "path": "dsh-desktop/assets/plugins/dsh-balance",
+            "treeSha256": "d6fd395d9153b96ad207774919329e934fc442634e673328582933ee2c357bb4"
+          },
+          "manifestEntrySha256": "1ecb7c22a146fbf7726b952163e567192302879b232cb2fc9dbbed0f413ee8ca",
+          "patchFiles": [],
+          "patchSet": "none",
+          "patchSetSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "requested": "0.1.0",
+          "runtimeUpdate": "disabled",
+          "source": {
+            "kind": "internal",
+            "name": "@deepseek-ai/dsh-balance",
+            "sha256": "d6fd395d9153b96ad207774919329e934fc442634e673328582933ee2c357bb4",
+            "version": "0.1.0"
+          },
+          "sourceCommit": null
+        },
+        "treeSha256": "sha256:afb5c85064cfbe614cbfc6a24f5d6dc2af42589c98cdf51121ddba30bf5bcd63"
+      },
+      "official": {
+        "sameNameInSource": false,
+        "bundledByOfficialDependencyGraph": false,
+        "sameImplementation": null,
+        "evidence": null,
+        "conclusion": "官方源码清单无此包名；不据此断言官方没有相似功能"
+      },
+      "api": {
+        "requirement": "unknown-missing-source",
+        "bridgeAndProfileReferences": [],
+        "externalImports": [],
+        "method": "Static text evidence; comments and guarded fallbacks are not automatically treated as mandatory dependencies."
+      },
+      "local": {
+        "builtFiles": [],
+        "fileCount": 0,
+        "availableFileCount": 0,
+        "missingBlobs": [],
+        "artifacts": []
+      },
+      "license": {
+        "declared": null,
+        "expectedByRegistry": "MIT",
+        "status": "unverified-no-license-text",
+        "canRedistribute": false,
+        "conditions": [
+          "需取得实际许可证文本或明确授权，声明/expected 字段本身不够"
+        ],
+        "evidence": [],
+        "assetRightsAudit": null
+      },
+      "knownFixes": [],
+      "install": {
+        "state": "missing-artifact",
+        "canInstall": false,
+        "reasons": [
+          "固定最新版 tree 无该目录制品；注册记录或旧公共 Manifest 不能替代作者包。",
+          "缺实际许可证文本，暂停再分发和安装。"
+        ],
+        "runtimeVerification": "not-tested"
+      },
+      "publicManifest": null,
+      "buildMaterials": {
+        "thirdPartyCommandsExecuted": false,
+        "scriptsDeclared": {},
+        "dependencies": {},
+        "peerDependencies": {},
+        "engines": {},
+        "externalImports": [],
+        "needed": [
+          "固定作者源码 commit",
+          "完整许可证与署名链",
+          "精确版本的原始 tgz 及 SHA256；或锁文件、精确工具链和隔离构建配方",
+          "官方 bundle 加载声明及运行依赖",
+          "官方 Desktop 安装及业务验证"
+        ]
+      },
+      "catalogProjection": {
+        "target": "listing-only",
+        "reason": "Use the separate v2 listings table; never invent package metadata or exact installed version."
+      }
+    },
+    {
+      "id": "dev.eac.change-review",
+      "registryId": "change-review",
+      "packageName": "dsh-change-review",
+      "version": "0.1.0",
+      "versionBasis": "registry-request-only",
+      "function": "代码变更审查",
+      "functionBasis": "editorial-label-from-registration-not-runtime-proof",
+      "scope": "beta-registry",
+      "source": {
+        "commit": "dc22280beb9d0a6338d1e02d99f5e5346f72f4f0",
+        "path": "dsh-desktop/assets/plugins/dsh-change-review",
+        "registration": {
+          "id": "change-review",
+          "kind": "plugin",
+          "path": "dsh-desktop/assets/plugins/dsh-change-review",
+          "packageName": "dsh-change-review",
+          "class": "manual",
+          "source": {
+            "kind": "unknown",
+            "reason": "package.json does not declare a source repository; do not infer one from the directory name"
+          },
+          "request": {
+            "mode": "exact",
+            "version": "0.1.0"
+          },
+          "sync": {
+            "mode": "manual",
+            "patches": [],
+            "preservePaths": []
+          },
+          "runtimeUpdate": {
+            "allowed": false,
+            "defaultAction": "prompt"
+          },
+          "validation": {
+            "entrypoints": [
+              "lib/index.js"
+            ],
+            "commands": []
+          },
+          "license": {
+            "expected": "MIT",
+            "reviewOnChange": true
+          },
+          "owner": "desktop-plugins"
+        },
+        "distribution": {
+          "id": "change-review",
+          "distributionClass": "recommended",
+          "delivery": "pack",
+          "pack": "dev.dsh-eac.desktop-recommended",
+          "migration": {
+            "current": "bundled",
+            "target": "pack",
+            "state": "source-pending"
+          }
+        },
+        "lockEntry": {
+          "compatibility": {},
+          "local": {
+            "entrypoints": [
+              "lib/index.js"
+            ],
+            "excludedPaths": [],
+            "fileCount": 4,
+            "license": "MIT",
+            "packageName": "dsh-change-review",
+            "packageVersion": "0.1.0",
+            "path": "dsh-desktop/assets/plugins/dsh-change-review",
+            "treeSha256": "3a94180a86a9f6aaa19a0d175bd32e76b4944c39640eedc65083c95bb0d6401f"
+          },
+          "manifestEntrySha256": "f63d8a7351724d644eb89f4707a019d4f14ad6c582f5a7c1caa587cce6746961",
+          "patchFiles": [],
+          "patchSet": "none",
+          "patchSetSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "requested": "0.1.0",
+          "runtimeUpdate": "disabled",
+          "source": {
+            "kind": "unknown",
+            "sha256": "3a94180a86a9f6aaa19a0d175bd32e76b4944c39640eedc65083c95bb0d6401f",
+            "version": "0.1.0"
+          },
+          "sourceCommit": null
+        },
+        "treeSha256": "sha256:afb5c85064cfbe614cbfc6a24f5d6dc2af42589c98cdf51121ddba30bf5bcd63"
+      },
+      "official": {
+        "sameNameInSource": false,
+        "bundledByOfficialDependencyGraph": false,
+        "sameImplementation": null,
+        "evidence": null,
+        "conclusion": "官方源码清单无此包名；不据此断言官方没有相似功能"
+      },
+      "api": {
+        "requirement": "unknown-missing-source",
+        "bridgeAndProfileReferences": [],
+        "externalImports": [],
+        "method": "Static text evidence; comments and guarded fallbacks are not automatically treated as mandatory dependencies."
+      },
+      "local": {
+        "builtFiles": [],
+        "fileCount": 0,
+        "availableFileCount": 0,
+        "missingBlobs": [],
+        "artifacts": []
+      },
+      "license": {
+        "declared": null,
+        "expectedByRegistry": "MIT",
+        "status": "unverified-no-license-text",
+        "canRedistribute": false,
+        "conditions": [
+          "需取得实际许可证文本或明确授权，声明/expected 字段本身不够"
+        ],
+        "evidence": [],
+        "assetRightsAudit": null
+      },
+      "knownFixes": [],
+      "install": {
+        "state": "missing-artifact",
+        "canInstall": false,
+        "reasons": [
+          "固定最新版 tree 无该目录制品；注册记录或旧公共 Manifest 不能替代作者包。",
+          "缺实际许可证文本，暂停再分发和安装。"
+        ],
+        "runtimeVerification": "not-tested"
+      },
+      "publicManifest": null,
+      "buildMaterials": {
+        "thirdPartyCommandsExecuted": false,
+        "scriptsDeclared": {},
+        "dependencies": {},
+        "peerDependencies": {},
+        "engines": {},
+        "externalImports": [],
+        "needed": [
+          "固定作者源码 commit",
+          "完整许可证与署名链",
+          "精确版本的原始 tgz 及 SHA256；或锁文件、精确工具链和隔离构建配方",
+          "官方 bundle 加载声明及运行依赖",
+          "官方 Desktop 安装及业务验证"
+        ]
+      },
+      "catalogProjection": {
+        "target": "listing-only",
+        "reason": "Use the separate v2 listings table; never invent package metadata or exact installed version."
+      }
+    },
+    {
+      "id": "dev.eac.composer-dynamic-island",
+      "registryId": "composer-dynamic-island",
+      "packageName": "dsh-composer-dynamic-island",
+      "version": "2.1.0",
+      "versionBasis": "registry-request-only",
+      "function": "输入框动态状态展示",
+      "functionBasis": "editorial-label-from-registration-not-runtime-proof",
+      "scope": "beta-registry",
+      "source": {
+        "commit": "dc22280beb9d0a6338d1e02d99f5e5346f72f4f0",
+        "path": "dsh-desktop/assets/plugins/dsh-composer-dynamic-island",
+        "registration": {
+          "id": "composer-dynamic-island",
+          "kind": "plugin",
+          "path": "dsh-desktop/assets/plugins/dsh-composer-dynamic-island",
+          "packageName": "dsh-composer-dynamic-island",
+          "class": "follow-upstream",
+          "source": {
+            "kind": "github",
+            "repository": "git+https://github.com/says693/dsh-composer-dynamic-island.git"
+          },
+          "request": {
+            "mode": "exact",
+            "version": "2.1.0"
+          },
+          "sync": {
+            "mode": "mirror",
+            "patches": [],
+            "preservePaths": []
+          },
+          "runtimeUpdate": {
+            "allowed": false,
+            "defaultAction": "prompt"
+          },
+          "validation": {
+            "entrypoints": [
+              "lib/types/index.js"
+            ],
+            "commands": []
+          },
+          "license": {
+            "expected": "MIT",
+            "reviewOnChange": true
+          },
+          "owner": "desktop-plugins"
+        },
+        "distribution": {
+          "id": "composer-dynamic-island",
+          "distributionClass": "recommended",
+          "delivery": "pack",
+          "pack": "dev.dsh-eac.desktop-recommended",
+          "migration": {
+            "current": "bundled",
+            "target": "pack",
+            "state": "source-pending"
+          }
+        },
+        "lockEntry": {
+          "compatibility": {},
+          "local": {
+            "entrypoints": [
+              "lib/types/index.js"
+            ],
+            "excludedPaths": [],
+            "fileCount": 12,
+            "license": "MIT",
+            "packageName": "dsh-composer-dynamic-island",
+            "packageVersion": "2.1.0",
+            "path": "dsh-desktop/assets/plugins/dsh-composer-dynamic-island",
+            "treeSha256": "c12a2654229976a425c341413da2494119e4c909318c711c378b389ab67d474e"
+          },
+          "manifestEntrySha256": "c3201847d612da00fa8eabff0b509d69a1214dbe98975199deeda5a44f444741",
+          "patchFiles": [],
+          "patchSet": "none",
+          "patchSetSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "requested": "2.1.0",
+          "runtimeUpdate": "disabled",
+          "source": {
+            "kind": "github",
+            "repository": "git+https://github.com/says693/dsh-composer-dynamic-island.git",
+            "sha256": "c12a2654229976a425c341413da2494119e4c909318c711c378b389ab67d474e",
+            "version": "2.1.0"
+          },
+          "sourceCommit": null
+        },
+        "treeSha256": "sha256:afb5c85064cfbe614cbfc6a24f5d6dc2af42589c98cdf51121ddba30bf5bcd63"
+      },
+      "official": {
+        "sameNameInSource": false,
+        "bundledByOfficialDependencyGraph": false,
+        "sameImplementation": null,
+        "evidence": null,
+        "conclusion": "官方源码清单无此包名；不据此断言官方没有相似功能"
+      },
+      "api": {
+        "requirement": "unknown-missing-source",
+        "bridgeAndProfileReferences": [],
+        "externalImports": [],
+        "method": "Static text evidence; comments and guarded fallbacks are not automatically treated as mandatory dependencies."
+      },
+      "local": {
+        "builtFiles": [],
+        "fileCount": 0,
+        "availableFileCount": 0,
+        "missingBlobs": [],
+        "artifacts": []
+      },
+      "license": {
+        "declared": null,
+        "expectedByRegistry": "MIT",
+        "status": "unverified-no-license-text",
+        "canRedistribute": false,
+        "conditions": [
+          "需取得实际许可证文本或明确授权，声明/expected 字段本身不够"
+        ],
+        "evidence": [],
+        "assetRightsAudit": null
+      },
+      "knownFixes": [],
+      "install": {
+        "state": "missing-artifact",
+        "canInstall": false,
+        "reasons": [
+          "固定最新版 tree 无该目录制品；注册记录或旧公共 Manifest 不能替代作者包。",
+          "缺实际许可证文本，暂停再分发和安装。"
+        ],
+        "runtimeVerification": "not-tested"
+      },
+      "publicManifest": null,
+      "buildMaterials": {
+        "thirdPartyCommandsExecuted": false,
+        "scriptsDeclared": {},
+        "dependencies": {},
+        "peerDependencies": {},
+        "engines": {},
+        "externalImports": [],
+        "needed": [
+          "固定作者源码 commit",
+          "完整许可证与署名链",
+          "精确版本的原始 tgz 及 SHA256；或锁文件、精确工具链和隔离构建配方",
+          "官方 bundle 加载声明及运行依赖",
+          "官方 Desktop 安装及业务验证"
+        ]
+      },
+      "catalogProjection": {
+        "target": "listing-only",
+        "reason": "Use the separate v2 listings table; never invent package metadata or exact installed version."
+      }
+    },
+    {
+      "id": "dev.eac.conversation-tweaks",
+      "registryId": "conversation-tweaks",
+      "packageName": "@deepseek-ai/dsh-conversation-tweaks",
+      "version": "0.1.0",
+      "versionBasis": "registry-request-only",
+      "function": "对话界面增强",
+      "functionBasis": "editorial-label-from-registration-not-runtime-proof",
+      "scope": "beta-registry",
+      "source": {
+        "commit": "dc22280beb9d0a6338d1e02d99f5e5346f72f4f0",
+        "path": "dsh-desktop/assets/plugins/dsh-conversation-tweaks",
+        "registration": {
+          "id": "conversation-tweaks",
+          "kind": "plugin",
+          "path": "dsh-desktop/assets/plugins/dsh-conversation-tweaks",
+          "packageName": "@deepseek-ai/dsh-conversation-tweaks",
+          "class": "internal",
+          "source": {
+            "kind": "internal",
+            "name": "@deepseek-ai/dsh-conversation-tweaks",
+            "reason": "maintained in this repository; no external source is declared"
+          },
+          "request": {
+            "mode": "exact",
+            "version": "0.1.0"
+          },
+          "sync": {
+            "mode": "manual",
+            "patches": [],
+            "preservePaths": []
+          },
+          "runtimeUpdate": {
+            "allowed": false,
+            "defaultAction": "prompt"
+          },
+          "validation": {
+            "entrypoints": [
+              "lib/index.js"
+            ],
+            "commands": []
+          },
+          "license": {
+            "expected": "MIT",
+            "reviewOnChange": true
+          },
+          "owner": "desktop-plugins"
+        },
+        "distribution": {
+          "id": "conversation-tweaks",
+          "distributionClass": "recommended",
+          "delivery": "pack",
+          "pack": "dev.dsh-eac.desktop-recommended",
+          "migration": {
+            "current": "bundled",
+            "target": "pack",
+            "state": "source-pending"
+          }
+        },
+        "lockEntry": {
+          "compatibility": {},
+          "local": {
+            "entrypoints": [
+              "lib/index.js"
+            ],
+            "excludedPaths": [],
+            "fileCount": 5,
+            "license": "MIT",
+            "packageName": "@deepseek-ai/dsh-conversation-tweaks",
+            "packageVersion": "0.1.0",
+            "path": "dsh-desktop/assets/plugins/dsh-conversation-tweaks",
+            "treeSha256": "88d6ef3c067e0caa2e655bb2e6380133f189d115ad986d8178865bbf9f5e4057"
+          },
+          "manifestEntrySha256": "981db0608e6d011c717137a18497655f1f5d7312b0edbe4495ddcc3689a209a3",
+          "patchFiles": [],
+          "patchSet": "none",
+          "patchSetSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "requested": "0.1.0",
+          "runtimeUpdate": "disabled",
+          "source": {
+            "kind": "internal",
+            "name": "@deepseek-ai/dsh-conversation-tweaks",
+            "sha256": "88d6ef3c067e0caa2e655bb2e6380133f189d115ad986d8178865bbf9f5e4057",
+            "version": "0.1.0"
+          },
+          "sourceCommit": null
+        },
+        "treeSha256": "sha256:afb5c85064cfbe614cbfc6a24f5d6dc2af42589c98cdf51121ddba30bf5bcd63"
+      },
+      "official": {
+        "sameNameInSource": false,
+        "bundledByOfficialDependencyGraph": false,
+        "sameImplementation": null,
+        "evidence": null,
+        "conclusion": "官方源码清单无此包名；不据此断言官方没有相似功能"
+      },
+      "api": {
+        "requirement": "unknown-missing-source",
+        "bridgeAndProfileReferences": [],
+        "externalImports": [],
+        "method": "Static text evidence; comments and guarded fallbacks are not automatically treated as mandatory dependencies."
+      },
+      "local": {
+        "builtFiles": [],
+        "fileCount": 0,
+        "availableFileCount": 0,
+        "missingBlobs": [],
+        "artifacts": []
+      },
+      "license": {
+        "declared": null,
+        "expectedByRegistry": "MIT",
+        "status": "unverified-no-license-text",
+        "canRedistribute": false,
+        "conditions": [
+          "需取得实际许可证文本或明确授权，声明/expected 字段本身不够"
+        ],
+        "evidence": [],
+        "assetRightsAudit": null
+      },
+      "knownFixes": [],
+      "install": {
+        "state": "missing-artifact",
+        "canInstall": false,
+        "reasons": [
+          "固定最新版 tree 无该目录制品；注册记录或旧公共 Manifest 不能替代作者包。",
+          "缺实际许可证文本，暂停再分发和安装。"
+        ],
+        "runtimeVerification": "not-tested"
+      },
+      "publicManifest": null,
+      "buildMaterials": {
+        "thirdPartyCommandsExecuted": false,
+        "scriptsDeclared": {},
+        "dependencies": {},
+        "peerDependencies": {},
+        "engines": {},
+        "externalImports": [],
+        "needed": [
+          "固定作者源码 commit",
+          "完整许可证与署名链",
+          "精确版本的原始 tgz 及 SHA256；或锁文件、精确工具链和隔离构建配方",
+          "官方 bundle 加载声明及运行依赖",
+          "官方 Desktop 安装及业务验证"
+        ]
+      },
+      "catalogProjection": {
+        "target": "listing-only",
+        "reason": "Use the separate v2 listings table; never invent package metadata or exact installed version."
+      }
+    },
+    {
+      "id": "dev.eac.dock-settings",
+      "registryId": "dock-settings",
+      "packageName": "dsh-dock-settings",
+      "version": "0.1.0",
+      "versionBasis": "registry-request-only",
+      "function": "Dock 设置",
+      "functionBasis": "editorial-label-from-registration-not-runtime-proof",
+      "scope": "beta-registry",
+      "source": {
+        "commit": "dc22280beb9d0a6338d1e02d99f5e5346f72f4f0",
+        "path": "dsh-desktop/assets/plugins/dsh-dock-settings",
+        "registration": {
+          "id": "dock-settings",
+          "kind": "plugin",
+          "path": "dsh-desktop/assets/plugins/dsh-dock-settings",
+          "packageName": "dsh-dock-settings",
+          "class": "manual",
+          "source": {
+            "kind": "unknown",
+            "reason": "package.json does not declare a source repository; do not infer one from the directory name"
+          },
+          "request": {
+            "mode": "exact",
+            "version": "0.1.0"
+          },
+          "sync": {
+            "mode": "manual",
+            "patches": [],
+            "preservePaths": []
+          },
+          "runtimeUpdate": {
+            "allowed": false,
+            "defaultAction": "prompt"
+          },
+          "validation": {
+            "entrypoints": [
+              "lib/host.js"
+            ],
+            "commands": []
+          },
+          "license": {
+            "expected": "MIT",
+            "reviewOnChange": true
+          },
+          "owner": "desktop-plugins"
+        },
+        "distribution": {
+          "id": "dock-settings",
+          "distributionClass": "recommended",
+          "delivery": "pack",
+          "pack": "dev.dsh-eac.desktop-recommended",
+          "migration": {
+            "current": "bundled",
+            "target": "pack",
+            "state": "source-pending"
+          }
+        },
+        "lockEntry": {
+          "compatibility": {},
+          "local": {
+            "entrypoints": [
+              "lib/host.js"
+            ],
+            "excludedPaths": [],
+            "fileCount": 7,
+            "license": "MIT",
+            "packageName": "dsh-dock-settings",
+            "packageVersion": "0.1.0",
+            "path": "dsh-desktop/assets/plugins/dsh-dock-settings",
+            "treeSha256": "f49d805ff421f8b035cc18b67d2c961f82474da3b59b7a558d21a4cd4e9a37c8"
+          },
+          "manifestEntrySha256": "a30fb9b9d132ca6f5c7402ff0ac605bc4c18a4b6df0197aa1035df0827c30d67",
+          "patchFiles": [],
+          "patchSet": "none",
+          "patchSetSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "requested": "0.1.0",
+          "runtimeUpdate": "disabled",
+          "source": {
+            "kind": "unknown",
+            "sha256": "f49d805ff421f8b035cc18b67d2c961f82474da3b59b7a558d21a4cd4e9a37c8",
+            "version": "0.1.0"
+          },
+          "sourceCommit": null
+        },
+        "treeSha256": "sha256:afb5c85064cfbe614cbfc6a24f5d6dc2af42589c98cdf51121ddba30bf5bcd63"
+      },
+      "official": {
+        "sameNameInSource": false,
+        "bundledByOfficialDependencyGraph": false,
+        "sameImplementation": null,
+        "evidence": null,
+        "conclusion": "官方源码清单无此包名；不据此断言官方没有相似功能"
+      },
+      "api": {
+        "requirement": "unknown-missing-source",
+        "bridgeAndProfileReferences": [],
+        "externalImports": [],
+        "method": "Static text evidence; comments and guarded fallbacks are not automatically treated as mandatory dependencies."
+      },
+      "local": {
+        "builtFiles": [],
+        "fileCount": 0,
+        "availableFileCount": 0,
+        "missingBlobs": [],
+        "artifacts": []
+      },
+      "license": {
+        "declared": null,
+        "expectedByRegistry": "MIT",
+        "status": "unverified-no-license-text",
+        "canRedistribute": false,
+        "conditions": [
+          "需取得实际许可证文本或明确授权，声明/expected 字段本身不够"
+        ],
+        "evidence": [],
+        "assetRightsAudit": null
+      },
+      "knownFixes": [],
+      "install": {
+        "state": "missing-artifact",
+        "canInstall": false,
+        "reasons": [
+          "固定最新版 tree 无该目录制品；注册记录或旧公共 Manifest 不能替代作者包。",
+          "缺实际许可证文本，暂停再分发和安装。"
+        ],
+        "runtimeVerification": "not-tested"
+      },
+      "publicManifest": null,
+      "buildMaterials": {
+        "thirdPartyCommandsExecuted": false,
+        "scriptsDeclared": {},
+        "dependencies": {},
+        "peerDependencies": {},
+        "engines": {},
+        "externalImports": [],
+        "needed": [
+          "固定作者源码 commit",
+          "完整许可证与署名链",
+          "精确版本的原始 tgz 及 SHA256；或锁文件、精确工具链和隔离构建配方",
+          "官方 bundle 加载声明及运行依赖",
+          "官方 Desktop 安装及业务验证"
+        ]
+      },
+      "catalogProjection": {
+        "target": "listing-only",
+        "reason": "Use the separate v2 listings table; never invent package metadata or exact installed version."
+      }
+    },
+    {
+      "id": "dev.eac.dsh-dafeiyu",
+      "registryId": "dsh-dafeiyu",
+      "packageName": "dsh-dafeiyu",
+      "version": "0.1.0-alpha.6",
+      "versionBasis": "registry-request-only",
+      "function": "大飞鱼资源与界面装饰",
+      "functionBasis": "editorial-label-from-registration-not-runtime-proof",
+      "scope": "beta-registry",
+      "source": {
+        "commit": "dc22280beb9d0a6338d1e02d99f5e5346f72f4f0",
+        "path": "dsh-desktop/assets/plugins/dsh-dafeiyu",
+        "registration": {
+          "id": "dsh-dafeiyu",
+          "kind": "plugin",
+          "path": "dsh-desktop/assets/plugins/dsh-dafeiyu",
+          "packageName": "dsh-dafeiyu",
+          "class": "resource",
+          "source": {
+            "kind": "github",
+            "repository": "git+https://github.com/QCYTSN/dsh-dafeiyu.git"
+          },
+          "request": {
+            "mode": "exact",
+            "version": "0.1.0-alpha.6"
+          },
+          "sync": {
+            "mode": "metadata-only",
+            "patches": [],
+            "preservePaths": []
+          },
+          "runtimeUpdate": {
+            "allowed": false,
+            "defaultAction": "prompt"
+          },
+          "validation": {
+            "entrypoints": [
+              "src/index.js"
+            ],
+            "commands": []
+          },
+          "license": {
+            "expected": "SEE LICENSE IN ASSET_LICENSE.md",
+            "reviewOnChange": true
+          },
+          "owner": "desktop-plugins"
+        },
+        "distribution": {
+          "id": "dsh-dafeiyu",
+          "distributionClass": "external",
+          "delivery": "market",
+          "migration": {
+            "current": "bundled",
+            "target": "market",
+            "state": "source-pending"
+          }
+        },
+        "lockEntry": {
+          "compatibility": {},
+          "local": {
+            "entrypoints": [
+              "src/index.js"
+            ],
+            "excludedPaths": [],
+            "fileCount": 72,
+            "license": "SEE LICENSE IN ASSET_LICENSE.md",
+            "packageName": "dsh-dafeiyu",
+            "packageVersion": "0.1.0-alpha.6",
+            "path": "dsh-desktop/assets/plugins/dsh-dafeiyu",
+            "treeSha256": "fb1c17f86406934b79c26246698a33d6b16b8e5343b544c42a748747f0f5a845"
+          },
+          "manifestEntrySha256": "964210a5fe5501a6a43204e9e93f7ad1e58f9a765d2419505d19a05c1eac764a",
+          "patchFiles": [],
+          "patchSet": "none",
+          "patchSetSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "requested": "0.1.0-alpha.6",
+          "runtimeUpdate": "disabled",
+          "source": {
+            "kind": "github",
+            "repository": "git+https://github.com/QCYTSN/dsh-dafeiyu.git",
+            "sha256": "fb1c17f86406934b79c26246698a33d6b16b8e5343b544c42a748747f0f5a845",
+            "version": "0.1.0-alpha.6"
+          },
+          "sourceCommit": null
+        },
+        "treeSha256": "sha256:afb5c85064cfbe614cbfc6a24f5d6dc2af42589c98cdf51121ddba30bf5bcd63"
+      },
+      "official": {
+        "sameNameInSource": false,
+        "bundledByOfficialDependencyGraph": false,
+        "sameImplementation": null,
+        "evidence": null,
+        "conclusion": "官方源码清单无此包名；不据此断言官方没有相似功能"
+      },
+      "api": {
+        "requirement": "unknown-missing-source",
+        "bridgeAndProfileReferences": [],
+        "externalImports": [],
+        "method": "Static text evidence; comments and guarded fallbacks are not automatically treated as mandatory dependencies."
+      },
+      "local": {
+        "builtFiles": [],
+        "fileCount": 0,
+        "availableFileCount": 0,
+        "missingBlobs": [],
+        "artifacts": []
+      },
+      "license": {
+        "declared": null,
+        "expectedByRegistry": "SEE LICENSE IN ASSET_LICENSE.md",
+        "status": "unverified-no-license-text",
+        "canRedistribute": false,
+        "conditions": [
+          "需取得实际许可证文本或明确授权，声明/expected 字段本身不够"
+        ],
+        "evidence": [],
+        "assetRightsAudit": null
+      },
+      "knownFixes": [],
+      "install": {
+        "state": "missing-artifact",
+        "canInstall": false,
+        "reasons": [
+          "固定最新版 tree 无该目录制品；注册记录或旧公共 Manifest 不能替代作者包。",
+          "缺实际许可证文本，暂停再分发和安装。"
+        ],
+        "runtimeVerification": "not-tested"
+      },
+      "publicManifest": null,
+      "buildMaterials": {
+        "thirdPartyCommandsExecuted": false,
+        "scriptsDeclared": {},
+        "dependencies": {},
+        "peerDependencies": {},
+        "engines": {},
+        "externalImports": [],
+        "needed": [
+          "固定作者源码 commit",
+          "完整许可证与署名链",
+          "精确版本的原始 tgz 及 SHA256；或锁文件、精确工具链和隔离构建配方",
+          "官方 bundle 加载声明及运行依赖",
+          "官方 Desktop 安装及业务验证"
+        ]
+      },
+      "catalogProjection": {
+        "target": "listing-only",
+        "reason": "Use the separate v2 listings table; never invent package metadata or exact installed version."
+      }
+    },
+    {
+      "id": "dev.eac.dsh-feature-toggles",
+      "registryId": "dsh-feature-toggles",
+      "packageName": "dsh-feature-toggles",
+      "version": "0.1.1",
+      "versionBasis": "registry-request-only",
+      "function": "EAC 功能开关",
+      "functionBasis": "editorial-label-from-registration-not-runtime-proof",
+      "scope": "beta-registry",
+      "source": {
+        "commit": "dc22280beb9d0a6338d1e02d99f5e5346f72f4f0",
+        "path": "dsh-desktop/assets/plugins/dsh-feature-toggles",
+        "registration": {
+          "id": "dsh-feature-toggles",
+          "kind": "plugin",
+          "path": "dsh-desktop/assets/plugins/dsh-feature-toggles",
+          "packageName": "dsh-feature-toggles",
+          "class": "manual",
+          "source": {
+            "kind": "unknown",
+            "reason": "package.json does not declare a source repository; do not infer one from the directory name"
+          },
+          "request": {
+            "mode": "exact",
+            "version": "0.1.1"
+          },
+          "sync": {
+            "mode": "manual",
+            "patches": [],
+            "preservePaths": []
+          },
+          "runtimeUpdate": {
+            "allowed": false,
+            "defaultAction": "prompt"
+          },
+          "validation": {
+            "entrypoints": [
+              "lib/index.js"
+            ],
+            "commands": []
+          },
+          "license": {
+            "expected": "MIT",
+            "reviewOnChange": true
+          },
+          "owner": "desktop-plugins"
+        },
+        "distribution": {
+          "id": "dsh-feature-toggles",
+          "distributionClass": "external",
+          "delivery": "market",
+          "migration": {
+            "current": "bundled",
+            "target": "retired",
+            "state": "source-pending"
+          }
+        },
+        "lockEntry": {
+          "compatibility": {},
+          "local": {
+            "entrypoints": [
+              "lib/index.js"
+            ],
+            "excludedPaths": [],
+            "fileCount": 4,
+            "license": "MIT",
+            "packageName": "dsh-feature-toggles",
+            "packageVersion": "0.1.1",
+            "path": "dsh-desktop/assets/plugins/dsh-feature-toggles",
+            "treeSha256": "2da3162441c422484d530824b05f76864b4a2d0dc845fd83d2a371a199c88a4c"
+          },
+          "manifestEntrySha256": "6e313940c15585dd1f72d45cd3da36d69e68724144128daf38e4f02c8595cd8e",
+          "patchFiles": [],
+          "patchSet": "none",
+          "patchSetSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "requested": "0.1.1",
+          "runtimeUpdate": "disabled",
+          "source": {
+            "kind": "unknown",
+            "sha256": "2da3162441c422484d530824b05f76864b4a2d0dc845fd83d2a371a199c88a4c",
+            "version": "0.1.1"
+          },
+          "sourceCommit": null
+        },
+        "treeSha256": "sha256:afb5c85064cfbe614cbfc6a24f5d6dc2af42589c98cdf51121ddba30bf5bcd63"
+      },
+      "official": {
+        "sameNameInSource": false,
+        "bundledByOfficialDependencyGraph": false,
+        "sameImplementation": null,
+        "evidence": null,
+        "conclusion": "官方源码清单无此包名；不据此断言官方没有相似功能"
+      },
+      "api": {
+        "requirement": "unknown-missing-source",
+        "bridgeAndProfileReferences": [],
+        "externalImports": [],
+        "method": "Static text evidence; comments and guarded fallbacks are not automatically treated as mandatory dependencies."
+      },
+      "local": {
+        "builtFiles": [],
+        "fileCount": 0,
+        "availableFileCount": 0,
+        "missingBlobs": [],
+        "artifacts": []
+      },
+      "license": {
+        "declared": null,
+        "expectedByRegistry": "MIT",
+        "status": "unverified-no-license-text",
+        "canRedistribute": false,
+        "conditions": [
+          "需取得实际许可证文本或明确授权，声明/expected 字段本身不够"
+        ],
+        "evidence": [],
+        "assetRightsAudit": null
+      },
+      "knownFixes": [],
+      "install": {
+        "state": "missing-artifact",
+        "canInstall": false,
+        "reasons": [
+          "固定最新版 tree 无该目录制品；注册记录或旧公共 Manifest 不能替代作者包。",
+          "缺实际许可证文本，暂停再分发和安装。"
+        ],
+        "runtimeVerification": "not-tested"
+      },
+      "publicManifest": null,
+      "buildMaterials": {
+        "thirdPartyCommandsExecuted": false,
+        "scriptsDeclared": {},
+        "dependencies": {},
+        "peerDependencies": {},
+        "engines": {},
+        "externalImports": [],
+        "needed": [
+          "固定作者源码 commit",
+          "完整许可证与署名链",
+          "精确版本的原始 tgz 及 SHA256；或锁文件、精确工具链和隔离构建配方",
+          "官方 bundle 加载声明及运行依赖",
+          "官方 Desktop 安装及业务验证"
+        ]
+      },
+      "catalogProjection": {
+        "target": "listing-only",
+        "reason": "Use the separate v2 listings table; never invent package metadata or exact installed version."
+      }
+    },
+    {
+      "id": "dev.eac.dsh-pet",
+      "registryId": "dsh-pet",
+      "packageName": "dsh-pet",
+      "version": "0.1.3",
+      "versionBasis": "registry-lock-only",
+      "function": "DSH Web UI 桌面宠物：精灵图动画、agent 状态联动、拖拽、闹钟（每天/一次）与番茄钟，皮肤下拉选择 + 预览。",
+      "functionBasis": "catalog-description",
+      "scope": "beta-registry",
+      "source": {
+        "commit": "dc22280beb9d0a6338d1e02d99f5e5346f72f4f0",
+        "path": "dsh-desktop/assets/plugins/dsh-pet",
+        "registration": {
+          "id": "dsh-pet",
+          "kind": "plugin",
+          "path": "dsh-desktop/assets/plugins/dsh-pet",
+          "packageName": "dsh-pet",
+          "class": "follow-upstream",
+          "source": {
+            "kind": "npm",
+            "name": "dsh-pet",
+            "repository": "git+https://github.com/PC2005-cloud/dsh-pet.git"
+          },
+          "request": {
+            "mode": "latest",
+            "range": "*",
+            "releaseAgeHours": 24
+          },
+          "sync": {
+            "mode": "mirror",
+            "patches": [],
+            "preservePaths": []
+          },
+          "runtimeUpdate": {
+            "allowed": true,
+            "defaultAction": "prompt",
+            "source": {
+              "kind": "npm",
+              "name": "dsh-pet"
+            }
+          },
+          "validation": {
+            "entrypoints": [
+              "lib/index.js"
+            ],
+            "commands": []
+          },
+          "license": {
+            "expected": "MIT",
+            "reviewOnChange": true
+          },
+          "owner": "desktop-plugins",
+          "defaultDisabled": true
+        },
+        "distribution": {
+          "id": "dsh-pet",
+          "distributionClass": "external",
+          "delivery": "market",
+          "migration": {
+            "current": "bundled",
+            "target": "market",
+            "state": "source-pending"
+          }
+        },
+        "lockEntry": {
+          "compatibility": {},
+          "local": {
+            "entrypoints": [
+              "lib/index.js"
+            ],
+            "excludedPaths": [],
+            "fileCount": 38,
+            "license": "MIT",
+            "packageName": "dsh-pet",
+            "packageVersion": "0.1.3",
+            "path": "dsh-desktop/assets/plugins/dsh-pet",
+            "treeSha256": "da1e197f893dfe9ea08fa826fe1693edaa61fde82f1cbb0e932dedc36096c024"
+          },
+          "manifestEntrySha256": "f923bfc1a15b06fcfad8e4505f34954dc0b031bdaad670f6abbc8c8e34e6046e",
+          "patchFiles": [],
+          "patchSet": "none",
+          "patchSetSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "requested": "latest",
+          "runtimeUpdate": "enabled",
+          "source": {
+            "kind": "npm",
+            "name": "dsh-pet",
+            "repository": "git+https://github.com/PC2005-cloud/dsh-pet.git",
+            "sha256": "da1e197f893dfe9ea08fa826fe1693edaa61fde82f1cbb0e932dedc36096c024",
+            "version": "0.1.3"
+          },
+          "sourceCommit": null
+        },
+        "treeSha256": "sha256:afb5c85064cfbe614cbfc6a24f5d6dc2af42589c98cdf51121ddba30bf5bcd63"
+      },
+      "official": {
+        "sameNameInSource": false,
+        "bundledByOfficialDependencyGraph": false,
+        "sameImplementation": null,
+        "evidence": null,
+        "conclusion": "官方源码清单无此包名；不据此断言官方没有相似功能"
+      },
+      "api": {
+        "requirement": "unknown-missing-source",
+        "bridgeAndProfileReferences": [],
+        "externalImports": [],
+        "method": "Static text evidence; comments and guarded fallbacks are not automatically treated as mandatory dependencies."
+      },
+      "local": {
+        "builtFiles": [],
+        "fileCount": 0,
+        "availableFileCount": 0,
+        "missingBlobs": [],
+        "artifacts": []
+      },
+      "license": {
+        "declared": null,
+        "expectedByRegistry": "MIT",
+        "status": "unverified-no-license-text",
+        "canRedistribute": false,
+        "conditions": [
+          "需取得实际许可证文本或明确授权，声明/expected 字段本身不够"
+        ],
+        "evidence": [],
+        "assetRightsAudit": null
+      },
+      "knownFixes": [],
+      "install": {
+        "state": "missing-artifact",
+        "canInstall": false,
+        "reasons": [
+          "固定最新版 tree 无该目录制品；注册记录或旧公共 Manifest 不能替代作者包。",
+          "缺实际许可证文本，暂停再分发和安装。"
+        ],
+        "runtimeVerification": "not-tested"
+      },
+      "publicManifest": null,
+      "buildMaterials": {
+        "thirdPartyCommandsExecuted": false,
+        "scriptsDeclared": {},
+        "dependencies": {},
+        "peerDependencies": {},
+        "engines": {},
+        "externalImports": [],
+        "needed": [
+          "固定作者源码 commit",
+          "完整许可证与署名链",
+          "精确版本的原始 tgz 及 SHA256；或锁文件、精确工具链和隔离构建配方",
+          "官方 bundle 加载声明及运行依赖",
+          "官方 Desktop 安装及业务验证"
+        ]
+      },
+      "catalogProjection": {
+        "target": "listing-only",
+        "reason": "Use the separate v2 listings table; never invent package metadata or exact installed version."
+      }
+    },
+    {
+      "id": "dev.eac.dsh-pet-settings",
+      "registryId": "dsh-pet-settings",
+      "packageName": "dsh-pet-settings",
+      "version": "0.1.0",
+      "versionBasis": "registry-request-only",
+      "function": "桌面宠物设置",
+      "functionBasis": "editorial-label-from-registration-not-runtime-proof",
+      "scope": "beta-registry",
+      "source": {
+        "commit": "dc22280beb9d0a6338d1e02d99f5e5346f72f4f0",
+        "path": "dsh-desktop/assets/plugins/dsh-pet-settings",
+        "registration": {
+          "id": "dsh-pet-settings",
+          "kind": "plugin",
+          "path": "dsh-desktop/assets/plugins/dsh-pet-settings",
+          "packageName": "dsh-pet-settings",
+          "class": "manual",
+          "source": {
+            "kind": "unknown",
+            "reason": "package.json does not declare a source repository; do not infer one from the directory name"
+          },
+          "request": {
+            "mode": "exact",
+            "version": "0.1.0"
+          },
+          "sync": {
+            "mode": "manual",
+            "patches": [],
+            "preservePaths": []
+          },
+          "runtimeUpdate": {
+            "allowed": false,
+            "defaultAction": "prompt"
+          },
+          "validation": {
+            "entrypoints": [
+              "lib/index.js"
+            ],
+            "commands": []
+          },
+          "license": {
+            "expected": "MIT",
+            "reviewOnChange": true
+          },
+          "owner": "desktop-plugins"
+        },
+        "distribution": {
+          "id": "dsh-pet-settings",
+          "distributionClass": "external",
+          "delivery": "market",
+          "migration": {
+            "current": "bundled",
+            "target": "market",
+            "state": "source-pending"
+          }
+        },
+        "lockEntry": {
+          "compatibility": {},
+          "local": {
+            "entrypoints": [
+              "lib/index.js"
+            ],
+            "excludedPaths": [],
+            "fileCount": 4,
+            "license": "MIT",
+            "packageName": "dsh-pet-settings",
+            "packageVersion": "0.1.0",
+            "path": "dsh-desktop/assets/plugins/dsh-pet-settings",
+            "treeSha256": "8e16ecd0b62d7a8c81cad8eafe57e550d11dad5c75b3c09126f541b74abbd90c"
+          },
+          "manifestEntrySha256": "651355060428101a7df530cfc5b929dd4ce4d0eb515e1cf92cc6df5a788d568b",
+          "patchFiles": [],
+          "patchSet": "none",
+          "patchSetSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "requested": "0.1.0",
+          "runtimeUpdate": "disabled",
+          "source": {
+            "kind": "unknown",
+            "sha256": "8e16ecd0b62d7a8c81cad8eafe57e550d11dad5c75b3c09126f541b74abbd90c",
+            "version": "0.1.0"
+          },
+          "sourceCommit": null
+        },
+        "treeSha256": "sha256:afb5c85064cfbe614cbfc6a24f5d6dc2af42589c98cdf51121ddba30bf5bcd63"
+      },
+      "official": {
+        "sameNameInSource": false,
+        "bundledByOfficialDependencyGraph": false,
+        "sameImplementation": null,
+        "evidence": null,
+        "conclusion": "官方源码清单无此包名；不据此断言官方没有相似功能"
+      },
+      "api": {
+        "requirement": "unknown-missing-source",
+        "bridgeAndProfileReferences": [],
+        "externalImports": [],
+        "method": "Static text evidence; comments and guarded fallbacks are not automatically treated as mandatory dependencies."
+      },
+      "local": {
+        "builtFiles": [],
+        "fileCount": 0,
+        "availableFileCount": 0,
+        "missingBlobs": [],
+        "artifacts": []
+      },
+      "license": {
+        "declared": null,
+        "expectedByRegistry": "MIT",
+        "status": "unverified-no-license-text",
+        "canRedistribute": false,
+        "conditions": [
+          "需取得实际许可证文本或明确授权，声明/expected 字段本身不够"
+        ],
+        "evidence": [],
+        "assetRightsAudit": null
+      },
+      "knownFixes": [],
+      "install": {
+        "state": "missing-artifact",
+        "canInstall": false,
+        "reasons": [
+          "固定最新版 tree 无该目录制品；注册记录或旧公共 Manifest 不能替代作者包。",
+          "缺实际许可证文本，暂停再分发和安装。"
+        ],
+        "runtimeVerification": "not-tested"
+      },
+      "publicManifest": null,
+      "buildMaterials": {
+        "thirdPartyCommandsExecuted": false,
+        "scriptsDeclared": {},
+        "dependencies": {},
+        "peerDependencies": {},
+        "engines": {},
+        "externalImports": [],
+        "needed": [
+          "固定作者源码 commit",
+          "完整许可证与署名链",
+          "精确版本的原始 tgz 及 SHA256；或锁文件、精确工具链和隔离构建配方",
+          "官方 bundle 加载声明及运行依赖",
+          "官方 Desktop 安装及业务验证"
+        ]
+      },
+      "catalogProjection": {
+        "target": "listing-only",
+        "reason": "Use the separate v2 listings table; never invent package metadata or exact installed version."
+      }
+    },
+    {
+      "id": "dev.eac.dsh-phone",
+      "registryId": "dsh-phone",
+      "packageName": "dsh-phone",
+      "version": "0.1.0",
+      "versionBasis": "registry-request-only",
+      "function": "手机端接入",
+      "functionBasis": "editorial-label-from-registration-not-runtime-proof",
+      "scope": "beta-registry",
+      "source": {
+        "commit": "dc22280beb9d0a6338d1e02d99f5e5346f72f4f0",
+        "path": "dsh-desktop/assets/plugins/dsh-phone",
+        "registration": {
+          "id": "dsh-phone",
+          "kind": "plugin",
+          "path": "dsh-desktop/assets/plugins/dsh-phone",
+          "packageName": "dsh-phone",
+          "class": "internal",
+          "source": {
+            "kind": "internal",
+            "name": "dsh-phone",
+            "reason": "maintained in this repository; no external source is declared"
+          },
+          "request": {
+            "mode": "exact",
+            "version": "0.1.0"
+          },
+          "sync": {
+            "mode": "manual",
+            "patches": [],
+            "preservePaths": []
+          },
+          "runtimeUpdate": {
+            "allowed": false,
+            "defaultAction": "prompt"
+          },
+          "validation": {
+            "entrypoints": [
+              "lib/index.js"
+            ],
+            "commands": []
+          },
+          "license": {
+            "expected": "MIT",
+            "reviewOnChange": true
+          },
+          "owner": "desktop-plugins"
+        },
+        "distribution": {
+          "id": "dsh-phone",
+          "distributionClass": "external",
+          "delivery": "market",
+          "migration": {
+            "current": "bundled",
+            "target": "market",
+            "state": "source-pending"
+          }
+        },
+        "lockEntry": {
+          "compatibility": {},
+          "local": {
+            "entrypoints": [
+              "lib/index.js"
+            ],
+            "excludedPaths": [],
+            "fileCount": 6,
+            "license": "MIT",
+            "packageName": "dsh-phone",
+            "packageVersion": "0.1.0",
+            "path": "dsh-desktop/assets/plugins/dsh-phone",
+            "treeSha256": "2253ef1d54aa49e764adbffff3d034bb2c8412953e68aafe1d7a177c88a128fa"
+          },
+          "manifestEntrySha256": "ebea0b3ed84ab4c80368ada3accaa7d89f35d0fc4af2606027e31aaa911f2399",
+          "patchFiles": [],
+          "patchSet": "none",
+          "patchSetSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "requested": "0.1.0",
+          "runtimeUpdate": "disabled",
+          "source": {
+            "kind": "internal",
+            "name": "dsh-phone",
+            "sha256": "2253ef1d54aa49e764adbffff3d034bb2c8412953e68aafe1d7a177c88a128fa",
+            "version": "0.1.0"
+          },
+          "sourceCommit": null
+        },
+        "treeSha256": "sha256:afb5c85064cfbe614cbfc6a24f5d6dc2af42589c98cdf51121ddba30bf5bcd63"
+      },
+      "official": {
+        "sameNameInSource": false,
+        "bundledByOfficialDependencyGraph": false,
+        "sameImplementation": null,
+        "evidence": null,
+        "conclusion": "官方源码清单无此包名；不据此断言官方没有相似功能"
+      },
+      "api": {
+        "requirement": "unknown-missing-source",
+        "bridgeAndProfileReferences": [],
+        "externalImports": [],
+        "method": "Static text evidence; comments and guarded fallbacks are not automatically treated as mandatory dependencies."
+      },
+      "local": {
+        "builtFiles": [],
+        "fileCount": 0,
+        "availableFileCount": 0,
+        "missingBlobs": [],
+        "artifacts": []
+      },
+      "license": {
+        "declared": null,
+        "expectedByRegistry": "MIT",
+        "status": "unverified-no-license-text",
+        "canRedistribute": false,
+        "conditions": [
+          "需取得实际许可证文本或明确授权，声明/expected 字段本身不够"
+        ],
+        "evidence": [],
+        "assetRightsAudit": null
+      },
+      "knownFixes": [],
+      "install": {
+        "state": "missing-artifact",
+        "canInstall": false,
+        "reasons": [
+          "固定最新版 tree 无该目录制品；注册记录或旧公共 Manifest 不能替代作者包。",
+          "缺实际许可证文本，暂停再分发和安装。"
+        ],
+        "runtimeVerification": "not-tested"
+      },
+      "publicManifest": null,
+      "buildMaterials": {
+        "thirdPartyCommandsExecuted": false,
+        "scriptsDeclared": {},
+        "dependencies": {},
+        "peerDependencies": {},
+        "engines": {},
+        "externalImports": [],
+        "needed": [
+          "固定作者源码 commit",
+          "完整许可证与署名链",
+          "精确版本的原始 tgz 及 SHA256；或锁文件、精确工具链和隔离构建配方",
+          "官方 bundle 加载声明及运行依赖",
+          "官方 Desktop 安装及业务验证"
+        ]
+      },
+      "catalogProjection": {
+        "target": "listing-only",
+        "reason": "Use the separate v2 listings table; never invent package metadata or exact installed version."
+      }
+    },
+    {
+      "id": "dev.eac.dsh-raw-html",
+      "registryId": "dsh-raw-html",
+      "packageName": "dsh-raw-html",
+      "version": "0.6.2",
+      "versionBasis": "registry-request-only",
+      "function": "HTML 内容渲染",
+      "functionBasis": "editorial-label-from-registration-not-runtime-proof",
+      "scope": "beta-registry",
+      "source": {
+        "commit": "dc22280beb9d0a6338d1e02d99f5e5346f72f4f0",
+        "path": "dsh-desktop/assets/plugins/dsh-raw-html",
+        "registration": {
+          "id": "dsh-raw-html",
+          "kind": "plugin",
+          "path": "dsh-desktop/assets/plugins/dsh-raw-html",
+          "packageName": "dsh-raw-html",
+          "class": "manual",
+          "source": {
+            "kind": "internal",
+            "name": "dsh-raw-html",
+            "reason": "maintained in this repository; no external source is declared"
+          },
+          "request": {
+            "mode": "exact",
+            "version": "0.6.2"
+          },
+          "sync": {
+            "mode": "manual",
+            "patches": [],
+            "preservePaths": []
+          },
+          "runtimeUpdate": {
+            "allowed": false,
+            "defaultAction": "prompt"
+          },
+          "validation": {
+            "entrypoints": [
+              "lib/index.js"
+            ],
+            "commands": []
+          },
+          "license": {
+            "expected": "MIT",
+            "reviewOnChange": true
+          },
+          "owner": "desktop-plugins"
+        },
+        "distribution": {
+          "id": "dsh-raw-html",
+          "distributionClass": "recommended",
+          "delivery": "pack",
+          "pack": "dev.dsh-eac.desktop-recommended",
+          "migration": {
+            "current": "bundled",
+            "target": "pack",
+            "state": "source-pending"
+          }
+        },
+        "lockEntry": {
+          "compatibility": {},
+          "local": {
+            "entrypoints": [
+              "lib/index.js"
+            ],
+            "excludedPaths": [
+              "assets/vendor"
+            ],
+            "fileCount": 55,
+            "license": "MIT",
+            "packageName": "dsh-raw-html",
+            "packageVersion": "0.6.2",
+            "path": "dsh-desktop/assets/plugins/dsh-raw-html",
+            "treeSha256": "a400b557bea52ed32b74e4d6f773cb3d6557cf9755846acc8cec7e0333af3daf"
+          },
+          "manifestEntrySha256": "b7268aafc7cbc1bd891886fb67258f44dbfa069de5d30461db70fb83f99aa489",
+          "patchFiles": [],
+          "patchSet": "none",
+          "patchSetSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "requested": "0.6.2",
+          "runtimeUpdate": "disabled",
+          "source": {
+            "kind": "internal",
+            "name": "dsh-raw-html",
+            "sha256": "a400b557bea52ed32b74e4d6f773cb3d6557cf9755846acc8cec7e0333af3daf",
+            "version": "0.6.2"
+          },
+          "sourceCommit": null
+        },
+        "treeSha256": "sha256:afb5c85064cfbe614cbfc6a24f5d6dc2af42589c98cdf51121ddba30bf5bcd63"
+      },
+      "official": {
+        "sameNameInSource": false,
+        "bundledByOfficialDependencyGraph": false,
+        "sameImplementation": null,
+        "evidence": null,
+        "conclusion": "官方源码清单无此包名；不据此断言官方没有相似功能"
+      },
+      "api": {
+        "requirement": "unknown-missing-source",
+        "bridgeAndProfileReferences": [],
+        "externalImports": [],
+        "method": "Static text evidence; comments and guarded fallbacks are not automatically treated as mandatory dependencies."
+      },
+      "local": {
+        "builtFiles": [],
+        "fileCount": 0,
+        "availableFileCount": 0,
+        "missingBlobs": [],
+        "artifacts": []
+      },
+      "license": {
+        "declared": null,
+        "expectedByRegistry": "MIT",
+        "status": "unverified-no-license-text",
+        "canRedistribute": false,
+        "conditions": [
+          "需取得实际许可证文本或明确授权，声明/expected 字段本身不够"
+        ],
+        "evidence": [],
+        "assetRightsAudit": null
+      },
+      "knownFixes": [],
+      "install": {
+        "state": "missing-artifact",
+        "canInstall": false,
+        "reasons": [
+          "固定最新版 tree 无该目录制品；注册记录或旧公共 Manifest 不能替代作者包。",
+          "缺实际许可证文本，暂停再分发和安装。"
+        ],
+        "runtimeVerification": "not-tested"
+      },
+      "publicManifest": null,
+      "buildMaterials": {
+        "thirdPartyCommandsExecuted": false,
+        "scriptsDeclared": {},
+        "dependencies": {},
+        "peerDependencies": {},
+        "engines": {},
+        "externalImports": [],
+        "needed": [
+          "固定作者源码 commit",
+          "完整许可证与署名链",
+          "精确版本的原始 tgz 及 SHA256；或锁文件、精确工具链和隔离构建配方",
+          "官方 bundle 加载声明及运行依赖",
+          "官方 Desktop 安装及业务验证"
+        ]
+      },
+      "catalogProjection": {
+        "target": "listing-only",
+        "reason": "Use the separate v2 listings table; never invent package metadata or exact installed version."
+      }
+    },
+    {
+      "id": "dev.eac.dsh-session-manager",
+      "registryId": "dsh-session-manager",
+      "packageName": "dsh-session-manager",
+      "version": "0.1.0",
+      "versionBasis": "registry-lock-only",
+      "function": "会话管理",
+      "functionBasis": "editorial-label-from-registration-not-runtime-proof",
+      "scope": "beta-registry",
+      "source": {
+        "commit": "dc22280beb9d0a6338d1e02d99f5e5346f72f4f0",
+        "path": "dsh-desktop/assets/plugins/dsh-session-manager",
+        "registration": {
+          "id": "dsh-session-manager",
+          "kind": "plugin",
+          "path": "dsh-desktop/assets/plugins/dsh-session-manager",
+          "packageName": "dsh-session-manager",
+          "class": "follow-upstream",
+          "source": {
+            "kind": "npm",
+            "name": "dsh-session-manager"
+          },
+          "request": {
+            "mode": "latest",
+            "range": "*",
+            "releaseAgeHours": 24
+          },
+          "sync": {
+            "mode": "mirror",
+            "patches": [],
+            "preservePaths": []
+          },
+          "runtimeUpdate": {
+            "allowed": true,
+            "defaultAction": "prompt",
+            "source": {
+              "kind": "npm",
+              "name": "dsh-session-manager"
+            }
+          },
+          "validation": {
+            "entrypoints": [
+              "lib/index.mjs"
+            ],
+            "commands": []
+          },
+          "license": {
+            "expected": "MIT",
+            "reviewOnChange": true
+          },
+          "owner": "desktop-plugins"
+        },
+        "distribution": {
+          "id": "dsh-session-manager",
+          "distributionClass": "recommended",
+          "delivery": "pack",
+          "pack": "dev.dsh-eac.desktop-recommended",
+          "migration": {
+            "current": "bundled",
+            "target": "pack",
+            "state": "source-pending"
+          }
+        },
+        "lockEntry": {
+          "compatibility": {},
+          "local": {
+            "entrypoints": [
+              "lib/index.mjs"
+            ],
+            "excludedPaths": [],
+            "fileCount": 7,
+            "license": "MIT",
+            "packageName": "dsh-session-manager",
+            "packageVersion": "0.1.0",
+            "path": "dsh-desktop/assets/plugins/dsh-session-manager",
+            "treeSha256": "c0ece4b9554ec71c3192e79ad14b8a84b3aebc3e789b522636678005cb261524"
+          },
+          "manifestEntrySha256": "159f7030608135c99cc557b8702fa1acfc7cc0efbdc338cac29c8c08c512028a",
+          "patchFiles": [],
+          "patchSet": "none",
+          "patchSetSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "requested": "latest",
+          "runtimeUpdate": "enabled",
+          "source": {
+            "kind": "npm",
+            "name": "dsh-session-manager",
+            "sha256": "c0ece4b9554ec71c3192e79ad14b8a84b3aebc3e789b522636678005cb261524",
+            "version": "0.1.0"
+          },
+          "sourceCommit": null
+        },
+        "treeSha256": "sha256:afb5c85064cfbe614cbfc6a24f5d6dc2af42589c98cdf51121ddba30bf5bcd63"
+      },
+      "official": {
+        "sameNameInSource": false,
+        "bundledByOfficialDependencyGraph": false,
+        "sameImplementation": null,
+        "evidence": null,
+        "conclusion": "官方源码清单无此包名；不据此断言官方没有相似功能"
+      },
+      "api": {
+        "requirement": "unknown-missing-source",
+        "bridgeAndProfileReferences": [],
+        "externalImports": [],
+        "method": "Static text evidence; comments and guarded fallbacks are not automatically treated as mandatory dependencies."
+      },
+      "local": {
+        "builtFiles": [],
+        "fileCount": 0,
+        "availableFileCount": 0,
+        "missingBlobs": [],
+        "artifacts": []
+      },
+      "license": {
+        "declared": null,
+        "expectedByRegistry": "MIT",
+        "status": "unverified-no-license-text",
+        "canRedistribute": false,
+        "conditions": [
+          "需取得实际许可证文本或明确授权，声明/expected 字段本身不够"
+        ],
+        "evidence": [],
+        "assetRightsAudit": null
+      },
+      "knownFixes": [],
+      "install": {
+        "state": "missing-artifact",
+        "canInstall": false,
+        "reasons": [
+          "固定最新版 tree 无该目录制品；注册记录或旧公共 Manifest 不能替代作者包。",
+          "缺实际许可证文本，暂停再分发和安装。"
+        ],
+        "runtimeVerification": "not-tested"
+      },
+      "publicManifest": null,
+      "buildMaterials": {
+        "thirdPartyCommandsExecuted": false,
+        "scriptsDeclared": {},
+        "dependencies": {},
+        "peerDependencies": {},
+        "engines": {},
+        "externalImports": [],
+        "needed": [
+          "固定作者源码 commit",
+          "完整许可证与署名链",
+          "精确版本的原始 tgz 及 SHA256；或锁文件、精确工具链和隔离构建配方",
+          "官方 bundle 加载声明及运行依赖",
+          "官方 Desktop 安装及业务验证"
+        ]
+      },
+      "catalogProjection": {
+        "target": "listing-only",
+        "reason": "Use the separate v2 listings table; never invent package metadata or exact installed version."
+      }
+    },
+    {
+      "id": "dev.eac.dsh-undo",
+      "registryId": "dsh-undo",
+      "packageName": "dsh-undo-savepoint",
+      "version": "0.3.4",
+      "versionBasis": "registry-lock-only",
+      "function": "文件变更保存点与撤回",
+      "functionBasis": "editorial-label-from-registration-not-runtime-proof",
+      "scope": "beta-registry",
+      "source": {
+        "commit": "dc22280beb9d0a6338d1e02d99f5e5346f72f4f0",
+        "path": "dsh-desktop/assets/plugins/dsh-undo-savepoint",
+        "registration": {
+          "id": "dsh-undo",
+          "kind": "plugin",
+          "path": "dsh-desktop/assets/plugins/dsh-undo-savepoint",
+          "packageName": "dsh-undo-savepoint",
+          "class": "follow-upstream",
+          "source": {
+            "kind": "github",
+            "repository": "https://github.com/lire1131/dsh-undo-savepoint"
+          },
+          "request": {
+            "mode": "latest",
+            "range": "*",
+            "releaseAgeHours": 24
+          },
+          "sync": {
+            "mode": "mirror",
+            "patches": [],
+            "preservePaths": []
+          },
+          "runtimeUpdate": {
+            "allowed": true,
+            "defaultAction": "prompt",
+            "source": {
+              "kind": "github",
+              "repository": "https://github.com/lire1131/dsh-undo-savepoint"
+            }
+          },
+          "validation": {
+            "entrypoints": [
+              "lib/index.js"
+            ],
+            "commands": []
+          },
+          "license": {
+            "expected": "MIT",
+            "reviewOnChange": true
+          },
+          "owner": "desktop-plugins"
+        },
+        "distribution": {
+          "id": "dsh-undo",
+          "distributionClass": "external",
+          "delivery": "market",
+          "migration": {
+            "current": "bundled",
+            "target": "market",
+            "state": "source-pending"
+          }
+        },
+        "lockEntry": {
+          "compatibility": {},
+          "local": {
+            "entrypoints": [
+              "lib/index.js"
+            ],
+            "excludedPaths": [],
+            "fileCount": 6,
+            "license": "MIT",
+            "packageName": "dsh-undo-savepoint",
+            "packageVersion": "0.3.4",
+            "path": "dsh-desktop/assets/plugins/dsh-undo-savepoint",
+            "treeSha256": "3d3abefe66e2a79f29f7317232fe31dc7046d87b4b2c9232f5b82990b5fb889f"
+          },
+          "manifestEntrySha256": "fb27830ee4d0a5a85bc3aca64601ce5cc4a99ea2bd3cf26b5b2b1fd3c2f18bb0",
+          "patchFiles": [],
+          "patchSet": "none",
+          "patchSetSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "requested": "latest",
+          "runtimeUpdate": "enabled",
+          "source": {
+            "kind": "github",
+            "repository": "https://github.com/lire1131/dsh-undo-savepoint",
+            "sha256": "3d3abefe66e2a79f29f7317232fe31dc7046d87b4b2c9232f5b82990b5fb889f",
+            "version": "0.3.4"
+          },
+          "sourceCommit": null
+        },
+        "treeSha256": "sha256:afb5c85064cfbe614cbfc6a24f5d6dc2af42589c98cdf51121ddba30bf5bcd63"
+      },
+      "official": {
+        "sameNameInSource": false,
+        "bundledByOfficialDependencyGraph": false,
+        "sameImplementation": null,
+        "evidence": null,
+        "conclusion": "官方源码清单无此包名；不据此断言官方没有相似功能"
+      },
+      "api": {
+        "requirement": "unknown-missing-source",
+        "bridgeAndProfileReferences": [],
+        "externalImports": [],
+        "method": "Static text evidence; comments and guarded fallbacks are not automatically treated as mandatory dependencies."
+      },
+      "local": {
+        "builtFiles": [],
+        "fileCount": 0,
+        "availableFileCount": 0,
+        "missingBlobs": [],
+        "artifacts": []
+      },
+      "license": {
+        "declared": null,
+        "expectedByRegistry": "MIT",
+        "status": "unverified-no-license-text",
+        "canRedistribute": false,
+        "conditions": [
+          "需取得实际许可证文本或明确授权，声明/expected 字段本身不够"
+        ],
+        "evidence": [],
+        "assetRightsAudit": null
+      },
+      "knownFixes": [],
+      "install": {
+        "state": "missing-artifact",
+        "canInstall": false,
+        "reasons": [
+          "固定最新版 tree 无该目录制品；注册记录或旧公共 Manifest 不能替代作者包。",
+          "缺实际许可证文本，暂停再分发和安装。"
+        ],
+        "runtimeVerification": "not-tested"
+      },
+      "publicManifest": null,
+      "buildMaterials": {
+        "thirdPartyCommandsExecuted": false,
+        "scriptsDeclared": {},
+        "dependencies": {},
+        "peerDependencies": {},
+        "engines": {},
+        "externalImports": [],
+        "needed": [
+          "固定作者源码 commit",
+          "完整许可证与署名链",
+          "精确版本的原始 tgz 及 SHA256；或锁文件、精确工具链和隔离构建配方",
+          "官方 bundle 加载声明及运行依赖",
+          "官方 Desktop 安装及业务验证"
+        ]
+      },
+      "catalogProjection": {
+        "target": "listing-only",
+        "reason": "Use the separate v2 listings table; never invent package metadata or exact installed version."
+      }
+    },
+    {
+      "id": "dev.eac.dsh-webui-prompt-optimizer",
+      "registryId": "dsh-webui-prompt-optimizer",
+      "packageName": "dsh-webui-prompt-optimizer",
+      "version": "0.1.0",
+      "versionBasis": "registry-request-only",
+      "function": "提示词优化",
+      "functionBasis": "editorial-label-from-registration-not-runtime-proof",
+      "scope": "beta-registry",
+      "source": {
+        "commit": "dc22280beb9d0a6338d1e02d99f5e5346f72f4f0",
+        "path": "dsh-desktop/assets/plugins/dsh-webui-prompt-optimizer",
+        "registration": {
+          "id": "dsh-webui-prompt-optimizer",
+          "kind": "plugin",
+          "path": "dsh-desktop/assets/plugins/dsh-webui-prompt-optimizer",
+          "packageName": "dsh-webui-prompt-optimizer",
+          "class": "manual",
+          "source": {
+            "kind": "unknown",
+            "reason": "package.json does not declare a source repository; do not infer one from the directory name"
+          },
+          "request": {
+            "mode": "exact",
+            "version": "0.1.0"
+          },
+          "sync": {
+            "mode": "manual",
+            "patches": [],
+            "preservePaths": []
+          },
+          "runtimeUpdate": {
+            "allowed": false,
+            "defaultAction": "prompt"
+          },
+          "validation": {
+            "entrypoints": [
+              "lib/index.js"
+            ],
+            "commands": []
+          },
+          "license": {
+            "expected": "BSD-3-Clause",
+            "reviewOnChange": true
+          },
+          "owner": "desktop-plugins"
+        },
+        "distribution": {
+          "id": "dsh-webui-prompt-optimizer",
+          "distributionClass": "external",
+          "delivery": "market",
+          "migration": {
+            "current": "bundled",
+            "target": "market",
+            "state": "source-pending"
+          }
+        },
+        "lockEntry": {
+          "compatibility": {},
+          "local": {
+            "entrypoints": [
+              "lib/index.js"
+            ],
+            "excludedPaths": [],
+            "fileCount": 10,
+            "license": "BSD-3-Clause",
+            "packageName": "dsh-webui-prompt-optimizer",
+            "packageVersion": "0.1.0",
+            "path": "dsh-desktop/assets/plugins/dsh-webui-prompt-optimizer",
+            "treeSha256": "aa4d1ab74113ccadc1b9de15b2a2a1bc9ac427945fbe8176dfdfe28523ee6c40"
+          },
+          "manifestEntrySha256": "1af877483b9750a6c24e69c3030548384d1de1fda8bcc40d594aab3e3adda5cd",
+          "patchFiles": [],
+          "patchSet": "none",
+          "patchSetSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "requested": "0.1.0",
+          "runtimeUpdate": "disabled",
+          "source": {
+            "kind": "unknown",
+            "sha256": "aa4d1ab74113ccadc1b9de15b2a2a1bc9ac427945fbe8176dfdfe28523ee6c40",
+            "version": "0.1.0"
+          },
+          "sourceCommit": null
+        },
+        "treeSha256": "sha256:afb5c85064cfbe614cbfc6a24f5d6dc2af42589c98cdf51121ddba30bf5bcd63"
+      },
+      "official": {
+        "sameNameInSource": false,
+        "bundledByOfficialDependencyGraph": false,
+        "sameImplementation": null,
+        "evidence": null,
+        "conclusion": "官方源码清单无此包名；不据此断言官方没有相似功能"
+      },
+      "api": {
+        "requirement": "unknown-missing-source",
+        "bridgeAndProfileReferences": [],
+        "externalImports": [],
+        "method": "Static text evidence; comments and guarded fallbacks are not automatically treated as mandatory dependencies."
+      },
+      "local": {
+        "builtFiles": [],
+        "fileCount": 0,
+        "availableFileCount": 0,
+        "missingBlobs": [],
+        "artifacts": []
+      },
+      "license": {
+        "declared": null,
+        "expectedByRegistry": "BSD-3-Clause",
+        "status": "unverified-no-license-text",
+        "canRedistribute": false,
+        "conditions": [
+          "需取得实际许可证文本或明确授权，声明/expected 字段本身不够"
+        ],
+        "evidence": [],
+        "assetRightsAudit": null
+      },
+      "knownFixes": [],
+      "install": {
+        "state": "missing-artifact",
+        "canInstall": false,
+        "reasons": [
+          "固定最新版 tree 无该目录制品；注册记录或旧公共 Manifest 不能替代作者包。",
+          "缺实际许可证文本，暂停再分发和安装。"
+        ],
+        "runtimeVerification": "not-tested"
+      },
+      "publicManifest": null,
+      "buildMaterials": {
+        "thirdPartyCommandsExecuted": false,
+        "scriptsDeclared": {},
+        "dependencies": {},
+        "peerDependencies": {},
+        "engines": {},
+        "externalImports": [],
+        "needed": [
+          "固定作者源码 commit",
+          "完整许可证与署名链",
+          "精确版本的原始 tgz 及 SHA256；或锁文件、精确工具链和隔离构建配方",
+          "官方 bundle 加载声明及运行依赖",
+          "官方 Desktop 安装及业务验证"
+        ]
+      },
+      "catalogProjection": {
+        "target": "listing-only",
+        "reason": "Use the separate v2 listings table; never invent package metadata or exact installed version."
+      }
+    },
+    {
+      "id": "dev.eac.float-window",
+      "registryId": "float-window",
+      "packageName": "@deepseek-ai/dsh-float-window",
+      "version": "0.1.0",
+      "versionBasis": "registry-request-only",
+      "function": "悬浮窗口",
+      "functionBasis": "editorial-label-from-registration-not-runtime-proof",
+      "scope": "beta-registry",
+      "source": {
+        "commit": "dc22280beb9d0a6338d1e02d99f5e5346f72f4f0",
+        "path": "dsh-desktop/assets/plugins/dsh-float-window",
+        "registration": {
+          "id": "float-window",
+          "kind": "plugin",
+          "path": "dsh-desktop/assets/plugins/dsh-float-window",
+          "packageName": "@deepseek-ai/dsh-float-window",
+          "class": "internal",
+          "source": {
+            "kind": "internal",
+            "name": "@deepseek-ai/dsh-float-window",
+            "reason": "maintained in this repository; no external source is declared"
+          },
+          "request": {
+            "mode": "exact",
+            "version": "0.1.0"
+          },
+          "sync": {
+            "mode": "manual",
+            "patches": [],
+            "preservePaths": []
+          },
+          "runtimeUpdate": {
+            "allowed": false,
+            "defaultAction": "prompt"
+          },
+          "validation": {
+            "entrypoints": [
+              "lib/index.js"
+            ],
+            "commands": []
+          },
+          "license": {
+            "expected": "MIT",
+            "reviewOnChange": true
+          },
+          "owner": "desktop-plugins"
+        },
+        "distribution": {
+          "id": "float-window",
+          "distributionClass": "external",
+          "delivery": "market",
+          "migration": {
+            "current": "bundled",
+            "target": "market",
+            "state": "source-pending"
+          }
+        },
+        "lockEntry": {
+          "compatibility": {},
+          "local": {
+            "entrypoints": [
+              "lib/index.js"
+            ],
+            "excludedPaths": [],
+            "fileCount": 4,
+            "license": "MIT",
+            "packageName": "@deepseek-ai/dsh-float-window",
+            "packageVersion": "0.1.0",
+            "path": "dsh-desktop/assets/plugins/dsh-float-window",
+            "treeSha256": "d77b57891044c417c05ce03dda7d7f9404e214b209458a5af569befb83c4a265"
+          },
+          "manifestEntrySha256": "fb408988af2b6955b37c306c6a661347dc274f0853730637d2dd23e510912cd4",
+          "patchFiles": [],
+          "patchSet": "none",
+          "patchSetSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "requested": "0.1.0",
+          "runtimeUpdate": "disabled",
+          "source": {
+            "kind": "internal",
+            "name": "@deepseek-ai/dsh-float-window",
+            "sha256": "d77b57891044c417c05ce03dda7d7f9404e214b209458a5af569befb83c4a265",
+            "version": "0.1.0"
+          },
+          "sourceCommit": null
+        },
+        "treeSha256": "sha256:afb5c85064cfbe614cbfc6a24f5d6dc2af42589c98cdf51121ddba30bf5bcd63"
+      },
+      "official": {
+        "sameNameInSource": false,
+        "bundledByOfficialDependencyGraph": false,
+        "sameImplementation": null,
+        "evidence": null,
+        "conclusion": "官方源码清单无此包名；不据此断言官方没有相似功能"
+      },
+      "api": {
+        "requirement": "unknown-missing-source",
+        "bridgeAndProfileReferences": [],
+        "externalImports": [],
+        "method": "Static text evidence; comments and guarded fallbacks are not automatically treated as mandatory dependencies."
+      },
+      "local": {
+        "builtFiles": [],
+        "fileCount": 0,
+        "availableFileCount": 0,
+        "missingBlobs": [],
+        "artifacts": []
+      },
+      "license": {
+        "declared": null,
+        "expectedByRegistry": "MIT",
+        "status": "unverified-no-license-text",
+        "canRedistribute": false,
+        "conditions": [
+          "需取得实际许可证文本或明确授权，声明/expected 字段本身不够"
+        ],
+        "evidence": [],
+        "assetRightsAudit": null
+      },
+      "knownFixes": [],
+      "install": {
+        "state": "missing-artifact",
+        "canInstall": false,
+        "reasons": [
+          "固定最新版 tree 无该目录制品；注册记录或旧公共 Manifest 不能替代作者包。",
+          "缺实际许可证文本，暂停再分发和安装。"
+        ],
+        "runtimeVerification": "not-tested"
+      },
+      "publicManifest": null,
+      "buildMaterials": {
+        "thirdPartyCommandsExecuted": false,
+        "scriptsDeclared": {},
+        "dependencies": {},
+        "peerDependencies": {},
+        "engines": {},
+        "externalImports": [],
+        "needed": [
+          "固定作者源码 commit",
+          "完整许可证与署名链",
+          "精确版本的原始 tgz 及 SHA256；或锁文件、精确工具链和隔离构建配方",
+          "官方 bundle 加载声明及运行依赖",
+          "官方 Desktop 安装及业务验证"
+        ]
+      },
+      "catalogProjection": {
+        "target": "listing-only",
+        "reason": "Use the separate v2 listings table; never invent package metadata or exact installed version."
+      }
+    },
+    {
+      "id": "dev.eac.font-custom",
+      "registryId": "font-custom",
+      "packageName": "dsh-font-custom",
+      "version": "0.1.0",
+      "versionBasis": "registry-request-only",
+      "function": "字体自定义",
+      "functionBasis": "editorial-label-from-registration-not-runtime-proof",
+      "scope": "beta-registry",
+      "source": {
+        "commit": "dc22280beb9d0a6338d1e02d99f5e5346f72f4f0",
+        "path": "dsh-desktop/assets/plugins/dsh-font-custom",
+        "registration": {
+          "id": "font-custom",
+          "kind": "plugin",
+          "path": "dsh-desktop/assets/plugins/dsh-font-custom",
+          "packageName": "dsh-font-custom",
+          "class": "manual",
+          "source": {
+            "kind": "unknown",
+            "reason": "package.json does not declare a source repository; do not infer one from the directory name"
+          },
+          "request": {
+            "mode": "exact",
+            "version": "0.1.0"
+          },
+          "sync": {
+            "mode": "manual",
+            "patches": [],
+            "preservePaths": []
+          },
+          "runtimeUpdate": {
+            "allowed": false,
+            "defaultAction": "prompt"
+          },
+          "validation": {
+            "entrypoints": [
+              "lib/index.js"
+            ],
+            "commands": []
+          },
+          "license": {
+            "expected": "MIT",
+            "reviewOnChange": true
+          },
+          "owner": "desktop-plugins"
+        },
+        "distribution": {
+          "id": "font-custom",
+          "distributionClass": "external",
+          "delivery": "market",
+          "migration": {
+            "current": "bundled",
+            "target": "market",
+            "state": "source-pending"
+          }
+        },
+        "lockEntry": {
+          "compatibility": {},
+          "local": {
+            "entrypoints": [
+              "lib/index.js"
+            ],
+            "excludedPaths": [],
+            "fileCount": 4,
+            "license": "MIT",
+            "packageName": "dsh-font-custom",
+            "packageVersion": "0.1.0",
+            "path": "dsh-desktop/assets/plugins/dsh-font-custom",
+            "treeSha256": "de5856e29f298796a88ffbaca1c4cdb24f2ccb1c5b4055ec10453f606145c218"
+          },
+          "manifestEntrySha256": "19ab9bdc0a920c7756ebe4776ea824f6d160f88eaea4a94ccadf37bc951ef406",
+          "patchFiles": [],
+          "patchSet": "none",
+          "patchSetSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "requested": "0.1.0",
+          "runtimeUpdate": "disabled",
+          "source": {
+            "kind": "unknown",
+            "sha256": "de5856e29f298796a88ffbaca1c4cdb24f2ccb1c5b4055ec10453f606145c218",
+            "version": "0.1.0"
+          },
+          "sourceCommit": null
+        },
+        "treeSha256": "sha256:afb5c85064cfbe614cbfc6a24f5d6dc2af42589c98cdf51121ddba30bf5bcd63"
+      },
+      "official": {
+        "sameNameInSource": false,
+        "bundledByOfficialDependencyGraph": false,
+        "sameImplementation": null,
+        "evidence": null,
+        "conclusion": "官方源码清单无此包名；不据此断言官方没有相似功能"
+      },
+      "api": {
+        "requirement": "unknown-missing-source",
+        "bridgeAndProfileReferences": [],
+        "externalImports": [],
+        "method": "Static text evidence; comments and guarded fallbacks are not automatically treated as mandatory dependencies."
+      },
+      "local": {
+        "builtFiles": [],
+        "fileCount": 0,
+        "availableFileCount": 0,
+        "missingBlobs": [],
+        "artifacts": []
+      },
+      "license": {
+        "declared": null,
+        "expectedByRegistry": "MIT",
+        "status": "unverified-no-license-text",
+        "canRedistribute": false,
+        "conditions": [
+          "需取得实际许可证文本或明确授权，声明/expected 字段本身不够"
+        ],
+        "evidence": [],
+        "assetRightsAudit": null
+      },
+      "knownFixes": [],
+      "install": {
+        "state": "missing-artifact",
+        "canInstall": false,
+        "reasons": [
+          "固定最新版 tree 无该目录制品；注册记录或旧公共 Manifest 不能替代作者包。",
+          "缺实际许可证文本，暂停再分发和安装。"
+        ],
+        "runtimeVerification": "not-tested"
+      },
+      "publicManifest": null,
+      "buildMaterials": {
+        "thirdPartyCommandsExecuted": false,
+        "scriptsDeclared": {},
+        "dependencies": {},
+        "peerDependencies": {},
+        "engines": {},
+        "externalImports": [],
+        "needed": [
+          "固定作者源码 commit",
+          "完整许可证与署名链",
+          "精确版本的原始 tgz 及 SHA256；或锁文件、精确工具链和隔离构建配方",
+          "官方 bundle 加载声明及运行依赖",
+          "官方 Desktop 安装及业务验证"
+        ]
+      },
+      "catalogProjection": {
+        "target": "listing-only",
+        "reason": "Use the separate v2 listings table; never invent package metadata or exact installed version."
+      }
+    },
+    {
+      "id": "dev.eac.image-paste",
+      "registryId": "image-paste",
+      "packageName": "dsh-image-paste",
+      "version": "0.1.0",
+      "versionBasis": "registry-request-only",
+      "function": "图片粘贴",
+      "functionBasis": "editorial-label-from-registration-not-runtime-proof",
+      "scope": "beta-registry",
+      "source": {
+        "commit": "dc22280beb9d0a6338d1e02d99f5e5346f72f4f0",
+        "path": "dsh-desktop/assets/plugins/dsh-image-paste",
+        "registration": {
+          "id": "image-paste",
+          "kind": "plugin",
+          "path": "dsh-desktop/assets/plugins/dsh-image-paste",
+          "packageName": "dsh-image-paste",
+          "class": "manual",
+          "source": {
+            "kind": "unknown",
+            "reason": "package.json does not declare a source repository; do not infer one from the directory name"
+          },
+          "request": {
+            "mode": "exact",
+            "version": "0.1.0"
+          },
+          "sync": {
+            "mode": "manual",
+            "patches": [],
+            "preservePaths": []
+          },
+          "runtimeUpdate": {
+            "allowed": false,
+            "defaultAction": "prompt"
+          },
+          "validation": {
+            "entrypoints": [
+              "lib/index.js"
+            ],
+            "commands": []
+          },
+          "license": {
+            "expected": "MIT",
+            "reviewOnChange": true
+          },
+          "owner": "desktop-plugins",
+          "defaultDisabled": true
+        },
+        "distribution": {
+          "id": "image-paste",
+          "distributionClass": "external",
+          "delivery": "market",
+          "migration": {
+            "current": "bundled",
+            "target": "market",
+            "state": "source-pending"
+          }
+        },
+        "lockEntry": {
+          "compatibility": {},
+          "local": {
+            "entrypoints": [
+              "lib/index.js"
+            ],
+            "excludedPaths": [],
+            "fileCount": 5,
+            "license": "MIT",
+            "packageName": "dsh-image-paste",
+            "packageVersion": "0.1.0",
+            "path": "dsh-desktop/assets/plugins/dsh-image-paste",
+            "treeSha256": "bc2eb982dc44f63e388ca2fc1d23719e75a59750eb7fcf8da3405afd129bbdbf"
+          },
+          "manifestEntrySha256": "9595a976228b7adc199b86872be31db559960b5ecec535c7ca8f057bdc28c132",
+          "patchFiles": [],
+          "patchSet": "none",
+          "patchSetSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "requested": "0.1.0",
+          "runtimeUpdate": "disabled",
+          "source": {
+            "kind": "unknown",
+            "sha256": "bc2eb982dc44f63e388ca2fc1d23719e75a59750eb7fcf8da3405afd129bbdbf",
+            "version": "0.1.0"
+          },
+          "sourceCommit": null
+        },
+        "treeSha256": "sha256:afb5c85064cfbe614cbfc6a24f5d6dc2af42589c98cdf51121ddba30bf5bcd63"
+      },
+      "official": {
+        "sameNameInSource": false,
+        "bundledByOfficialDependencyGraph": false,
+        "sameImplementation": null,
+        "evidence": null,
+        "conclusion": "官方源码清单无此包名；不据此断言官方没有相似功能"
+      },
+      "api": {
+        "requirement": "unknown-missing-source",
+        "bridgeAndProfileReferences": [],
+        "externalImports": [],
+        "method": "Static text evidence; comments and guarded fallbacks are not automatically treated as mandatory dependencies."
+      },
+      "local": {
+        "builtFiles": [],
+        "fileCount": 0,
+        "availableFileCount": 0,
+        "missingBlobs": [],
+        "artifacts": []
+      },
+      "license": {
+        "declared": null,
+        "expectedByRegistry": "MIT",
+        "status": "unverified-no-license-text",
+        "canRedistribute": false,
+        "conditions": [
+          "需取得实际许可证文本或明确授权，声明/expected 字段本身不够"
+        ],
+        "evidence": [],
+        "assetRightsAudit": null
+      },
+      "knownFixes": [],
+      "install": {
+        "state": "missing-artifact",
+        "canInstall": false,
+        "reasons": [
+          "固定最新版 tree 无该目录制品；注册记录或旧公共 Manifest 不能替代作者包。",
+          "缺实际许可证文本，暂停再分发和安装。"
+        ],
+        "runtimeVerification": "not-tested"
+      },
+      "publicManifest": null,
+      "buildMaterials": {
+        "thirdPartyCommandsExecuted": false,
+        "scriptsDeclared": {},
+        "dependencies": {},
+        "peerDependencies": {},
+        "engines": {},
+        "externalImports": [],
+        "needed": [
+          "固定作者源码 commit",
+          "完整许可证与署名链",
+          "精确版本的原始 tgz 及 SHA256；或锁文件、精确工具链和隔离构建配方",
+          "官方 bundle 加载声明及运行依赖",
+          "官方 Desktop 安装及业务验证"
+        ]
+      },
+      "catalogProjection": {
+        "target": "listing-only",
+        "reason": "Use the separate v2 listings table; never invent package metadata or exact installed version."
+      }
+    },
+    {
+      "id": "dev.eac.mobile-fix",
+      "registryId": "mobile-fix",
+      "packageName": "dsh-web-mobile-fix",
+      "version": "1.0.1",
+      "versionBasis": "registry-lock-only",
+      "function": "移动端界面适配",
+      "functionBasis": "editorial-label-from-registration-not-runtime-proof",
+      "scope": "beta-registry",
+      "source": {
+        "commit": "dc22280beb9d0a6338d1e02d99f5e5346f72f4f0",
+        "path": "dsh-desktop/assets/plugins/dsh-web-mobile-fix",
+        "registration": {
+          "id": "mobile-fix",
+          "kind": "plugin",
+          "path": "dsh-desktop/assets/plugins/dsh-web-mobile-fix",
+          "packageName": "dsh-web-mobile-fix",
+          "class": "follow-upstream",
+          "source": {
+            "kind": "npm",
+            "name": "dsh-web-mobile-fix",
+            "repository": "git+https://github.com/AcidGr/dsh-web-mobile-fix.git"
+          },
+          "request": {
+            "mode": "latest",
+            "range": "*",
+            "releaseAgeHours": 24
+          },
+          "sync": {
+            "mode": "mirror",
+            "patches": [],
+            "preservePaths": []
+          },
+          "runtimeUpdate": {
+            "allowed": true,
+            "defaultAction": "prompt",
+            "source": {
+              "kind": "npm",
+              "name": "dsh-web-mobile-fix"
+            }
+          },
+          "validation": {
+            "entrypoints": [
+              "lib/index.js"
+            ],
+            "commands": []
+          },
+          "license": {
+            "expected": "MIT",
+            "reviewOnChange": true
+          },
+          "owner": "desktop-plugins"
+        },
+        "distribution": {
+          "id": "mobile-fix",
+          "distributionClass": "recommended",
+          "delivery": "pack",
+          "pack": "dev.dsh-eac.desktop-recommended",
+          "migration": {
+            "current": "bundled",
+            "target": "pack",
+            "state": "source-pending"
+          }
+        },
+        "lockEntry": {
+          "compatibility": {},
+          "local": {
+            "entrypoints": [
+              "lib/index.js"
+            ],
+            "excludedPaths": [],
+            "fileCount": 8,
+            "license": "MIT",
+            "packageName": "dsh-web-mobile-fix",
+            "packageVersion": "1.0.1",
+            "path": "dsh-desktop/assets/plugins/dsh-web-mobile-fix",
+            "treeSha256": "749d217f6aab7e5199a42bff2d4871c70a73011d3883bfd85245bc89446ece60"
+          },
+          "manifestEntrySha256": "38d8f2e7daad4f811bade02c37a6e833e6d6e6562c0c730b3df49edbe3edff44",
+          "patchFiles": [],
+          "patchSet": "none",
+          "patchSetSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "requested": "latest",
+          "runtimeUpdate": "enabled",
+          "source": {
+            "kind": "npm",
+            "name": "dsh-web-mobile-fix",
+            "repository": "git+https://github.com/AcidGr/dsh-web-mobile-fix.git",
+            "sha256": "749d217f6aab7e5199a42bff2d4871c70a73011d3883bfd85245bc89446ece60",
+            "version": "1.0.1"
+          },
+          "sourceCommit": null
+        },
+        "treeSha256": "sha256:afb5c85064cfbe614cbfc6a24f5d6dc2af42589c98cdf51121ddba30bf5bcd63"
+      },
+      "official": {
+        "sameNameInSource": false,
+        "bundledByOfficialDependencyGraph": false,
+        "sameImplementation": null,
+        "evidence": null,
+        "conclusion": "官方源码清单无此包名；不据此断言官方没有相似功能"
+      },
+      "api": {
+        "requirement": "unknown-missing-source",
+        "bridgeAndProfileReferences": [],
+        "externalImports": [],
+        "method": "Static text evidence; comments and guarded fallbacks are not automatically treated as mandatory dependencies."
+      },
+      "local": {
+        "builtFiles": [],
+        "fileCount": 0,
+        "availableFileCount": 0,
+        "missingBlobs": [],
+        "artifacts": []
+      },
+      "license": {
+        "declared": null,
+        "expectedByRegistry": "MIT",
+        "status": "unverified-no-license-text",
+        "canRedistribute": false,
+        "conditions": [
+          "需取得实际许可证文本或明确授权，声明/expected 字段本身不够"
+        ],
+        "evidence": [],
+        "assetRightsAudit": null
+      },
+      "knownFixes": [],
+      "install": {
+        "state": "missing-artifact",
+        "canInstall": false,
+        "reasons": [
+          "固定最新版 tree 无该目录制品；注册记录或旧公共 Manifest 不能替代作者包。",
+          "缺实际许可证文本，暂停再分发和安装。"
+        ],
+        "runtimeVerification": "not-tested"
+      },
+      "publicManifest": null,
+      "buildMaterials": {
+        "thirdPartyCommandsExecuted": false,
+        "scriptsDeclared": {},
+        "dependencies": {},
+        "peerDependencies": {},
+        "engines": {},
+        "externalImports": [],
+        "needed": [
+          "固定作者源码 commit",
+          "完整许可证与署名链",
+          "精确版本的原始 tgz 及 SHA256；或锁文件、精确工具链和隔离构建配方",
+          "官方 bundle 加载声明及运行依赖",
+          "官方 Desktop 安装及业务验证"
+        ]
+      },
+      "catalogProjection": {
+        "target": "listing-only",
+        "reason": "Use the separate v2 listings table; never invent package metadata or exact installed version."
+      }
+    },
+    {
+      "id": "dev.eac.offpeak",
+      "registryId": "offpeak",
+      "packageName": "dsh-offpeak",
+      "version": "9.9.9",
+      "versionBasis": "registry-lock-only",
+      "function": "低峰时段相关辅助",
+      "functionBasis": "editorial-label-from-registration-not-runtime-proof",
+      "scope": "beta-registry",
+      "source": {
+        "commit": "dc22280beb9d0a6338d1e02d99f5e5346f72f4f0",
+        "path": "dsh-desktop/assets/plugins/dsh-offpeak",
+        "registration": {
+          "id": "offpeak",
+          "kind": "plugin",
+          "path": "dsh-desktop/assets/plugins/dsh-offpeak",
+          "packageName": "dsh-offpeak",
+          "class": "follow-upstream",
+          "source": {
+            "kind": "npm",
+            "name": "dsh-offpeak",
+            "repository": "git+https://github.com/christophersmith2737-commits/OffPeak.git"
+          },
+          "request": {
+            "mode": "latest",
+            "range": "*",
+            "releaseAgeHours": 24
+          },
+          "sync": {
+            "mode": "mirror",
+            "patches": [],
+            "preservePaths": []
+          },
+          "runtimeUpdate": {
+            "allowed": true,
+            "defaultAction": "prompt",
+            "source": {
+              "kind": "npm",
+              "name": "dsh-offpeak"
+            }
+          },
+          "validation": {
+            "entrypoints": [
+              "src/index.js"
+            ],
+            "commands": []
+          },
+          "license": {
+            "expected": "MIT",
+            "reviewOnChange": true
+          },
+          "owner": "desktop-plugins"
+        },
+        "distribution": {
+          "id": "offpeak",
+          "distributionClass": "recommended",
+          "delivery": "pack",
+          "pack": "dev.dsh-eac.desktop-recommended",
+          "migration": {
+            "current": "bundled",
+            "target": "pack",
+            "state": "source-pending"
+          }
+        },
+        "lockEntry": {
+          "compatibility": {},
+          "local": {
+            "entrypoints": [
+              "src/index.js"
+            ],
+            "excludedPaths": [],
+            "fileCount": 8,
+            "license": "MIT",
+            "packageName": "dsh-offpeak",
+            "packageVersion": "9.9.9",
+            "path": "dsh-desktop/assets/plugins/dsh-offpeak",
+            "treeSha256": "166ba7b3792fff9f08a056c5975fc55fe5bf1db69605045a59673069d517b42f"
+          },
+          "manifestEntrySha256": "5a9b031066eeb3e0e9920a1dda973abd42e7d3e99d9ed2884e5be2af594510c0",
+          "patchFiles": [],
+          "patchSet": "none",
+          "patchSetSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "requested": "latest",
+          "runtimeUpdate": "enabled",
+          "source": {
+            "kind": "npm",
+            "name": "dsh-offpeak",
+            "repository": "git+https://github.com/christophersmith2737-commits/OffPeak.git",
+            "sha256": "166ba7b3792fff9f08a056c5975fc55fe5bf1db69605045a59673069d517b42f",
+            "version": "9.9.9"
+          },
+          "sourceCommit": null
+        },
+        "treeSha256": "sha256:afb5c85064cfbe614cbfc6a24f5d6dc2af42589c98cdf51121ddba30bf5bcd63"
+      },
+      "official": {
+        "sameNameInSource": false,
+        "bundledByOfficialDependencyGraph": false,
+        "sameImplementation": null,
+        "evidence": null,
+        "conclusion": "官方源码清单无此包名；不据此断言官方没有相似功能"
+      },
+      "api": {
+        "requirement": "unknown-missing-source",
+        "bridgeAndProfileReferences": [],
+        "externalImports": [],
+        "method": "Static text evidence; comments and guarded fallbacks are not automatically treated as mandatory dependencies."
+      },
+      "local": {
+        "builtFiles": [],
+        "fileCount": 0,
+        "availableFileCount": 0,
+        "missingBlobs": [],
+        "artifacts": []
+      },
+      "license": {
+        "declared": null,
+        "expectedByRegistry": "MIT",
+        "status": "unverified-no-license-text",
+        "canRedistribute": false,
+        "conditions": [
+          "需取得实际许可证文本或明确授权，声明/expected 字段本身不够"
+        ],
+        "evidence": [],
+        "assetRightsAudit": null
+      },
+      "knownFixes": [],
+      "install": {
+        "state": "missing-artifact",
+        "canInstall": false,
+        "reasons": [
+          "固定最新版 tree 无该目录制品；注册记录或旧公共 Manifest 不能替代作者包。",
+          "缺实际许可证文本，暂停再分发和安装。"
+        ],
+        "runtimeVerification": "not-tested"
+      },
+      "publicManifest": null,
+      "buildMaterials": {
+        "thirdPartyCommandsExecuted": false,
+        "scriptsDeclared": {},
+        "dependencies": {},
+        "peerDependencies": {},
+        "engines": {},
+        "externalImports": [],
+        "needed": [
+          "固定作者源码 commit",
+          "完整许可证与署名链",
+          "精确版本的原始 tgz 及 SHA256；或锁文件、精确工具链和隔离构建配方",
+          "官方 bundle 加载声明及运行依赖",
+          "官方 Desktop 安装及业务验证"
+        ]
+      },
+      "catalogProjection": {
+        "target": "listing-only",
+        "reason": "Use the separate v2 listings table; never invent package metadata or exact installed version."
+      }
+    },
+    {
+      "id": "dev.eac.openclaw-bridge",
+      "registryId": "openclaw-bridge",
+      "packageName": "@deepseek-ai/dsh-openclaw-bridge",
+      "version": "0.7.0",
+      "versionBasis": "registry-request-only",
+      "function": "OpenClaw 桥接",
+      "functionBasis": "editorial-label-from-registration-not-runtime-proof",
+      "scope": "beta-registry",
+      "source": {
+        "commit": "dc22280beb9d0a6338d1e02d99f5e5346f72f4f0",
+        "path": "dsh-desktop/assets/plugins/dsh-openclaw-bridge",
+        "registration": {
+          "id": "openclaw-bridge",
+          "kind": "plugin",
+          "path": "dsh-desktop/assets/plugins/dsh-openclaw-bridge",
+          "packageName": "@deepseek-ai/dsh-openclaw-bridge",
+          "class": "internal",
+          "source": {
+            "kind": "internal",
+            "name": "@deepseek-ai/dsh-openclaw-bridge",
+            "reason": "maintained in this repository; no external source is declared"
+          },
+          "request": {
+            "mode": "exact",
+            "version": "0.7.0"
+          },
+          "sync": {
+            "mode": "manual",
+            "patches": [],
+            "preservePaths": []
+          },
+          "runtimeUpdate": {
+            "allowed": false,
+            "defaultAction": "prompt"
+          },
+          "validation": {
+            "entrypoints": [
+              "lib/index.js"
+            ],
+            "commands": []
+          },
+          "license": {
+            "expected": "MIT",
+            "reviewOnChange": true
+          },
+          "owner": "desktop-plugins"
+        },
+        "distribution": {
+          "id": "openclaw-bridge",
+          "distributionClass": "external",
+          "delivery": "market",
+          "migration": {
+            "current": "bundled",
+            "target": "market",
+            "state": "source-pending"
+          }
+        },
+        "lockEntry": {
+          "compatibility": {},
+          "local": {
+            "entrypoints": [
+              "lib/index.js"
+            ],
+            "excludedPaths": [],
+            "fileCount": 9,
+            "license": "MIT",
+            "packageName": "@deepseek-ai/dsh-openclaw-bridge",
+            "packageVersion": "0.7.0",
+            "path": "dsh-desktop/assets/plugins/dsh-openclaw-bridge",
+            "treeSha256": "9cf3a7ba0210053ce96896b9d65bc9aeaa9641df977daf887b312ac90c72f680"
+          },
+          "manifestEntrySha256": "c235ac0dcc3f48854b818b37ec928f26acaf7d13ba8c08f8f092a6910e69071e",
+          "patchFiles": [],
+          "patchSet": "none",
+          "patchSetSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "requested": "0.7.0",
+          "runtimeUpdate": "disabled",
+          "source": {
+            "kind": "internal",
+            "name": "@deepseek-ai/dsh-openclaw-bridge",
+            "sha256": "9cf3a7ba0210053ce96896b9d65bc9aeaa9641df977daf887b312ac90c72f680",
+            "version": "0.7.0"
+          },
+          "sourceCommit": null
+        },
+        "treeSha256": "sha256:afb5c85064cfbe614cbfc6a24f5d6dc2af42589c98cdf51121ddba30bf5bcd63"
+      },
+      "official": {
+        "sameNameInSource": false,
+        "bundledByOfficialDependencyGraph": false,
+        "sameImplementation": null,
+        "evidence": null,
+        "conclusion": "官方源码清单无此包名；不据此断言官方没有相似功能"
+      },
+      "api": {
+        "requirement": "unknown-missing-source",
+        "bridgeAndProfileReferences": [],
+        "externalImports": [],
+        "method": "Static text evidence; comments and guarded fallbacks are not automatically treated as mandatory dependencies."
+      },
+      "local": {
+        "builtFiles": [],
+        "fileCount": 0,
+        "availableFileCount": 0,
+        "missingBlobs": [],
+        "artifacts": []
+      },
+      "license": {
+        "declared": null,
+        "expectedByRegistry": "MIT",
+        "status": "unverified-no-license-text",
+        "canRedistribute": false,
+        "conditions": [
+          "需取得实际许可证文本或明确授权，声明/expected 字段本身不够"
+        ],
+        "evidence": [],
+        "assetRightsAudit": null
+      },
+      "knownFixes": [],
+      "install": {
+        "state": "missing-artifact",
+        "canInstall": false,
+        "reasons": [
+          "固定最新版 tree 无该目录制品；注册记录或旧公共 Manifest 不能替代作者包。",
+          "缺实际许可证文本，暂停再分发和安装。"
+        ],
+        "runtimeVerification": "not-tested"
+      },
+      "publicManifest": null,
+      "buildMaterials": {
+        "thirdPartyCommandsExecuted": false,
+        "scriptsDeclared": {},
+        "dependencies": {},
+        "peerDependencies": {},
+        "engines": {},
+        "externalImports": [],
+        "needed": [
+          "固定作者源码 commit",
+          "完整许可证与署名链",
+          "精确版本的原始 tgz 及 SHA256；或锁文件、精确工具链和隔离构建配方",
+          "官方 bundle 加载声明及运行依赖",
+          "官方 Desktop 安装及业务验证"
+        ]
+      },
+      "catalogProjection": {
+        "target": "listing-only",
+        "reason": "Use the separate v2 listings table; never invent package metadata or exact installed version."
+      }
+    },
+    {
+      "id": "dev.eac.plugin-wizard",
+      "registryId": "plugin-wizard",
+      "packageName": "dsh-plugin-wizard",
+      "version": "0.1.0",
+      "versionBasis": "registry-request-only",
+      "function": "插件配置向导",
+      "functionBasis": "editorial-label-from-registration-not-runtime-proof",
+      "scope": "beta-registry",
+      "source": {
+        "commit": "dc22280beb9d0a6338d1e02d99f5e5346f72f4f0",
+        "path": "dsh-desktop/assets/plugins/dsh-plugin-wizard",
+        "registration": {
+          "id": "plugin-wizard",
+          "kind": "plugin",
+          "path": "dsh-desktop/assets/plugins/dsh-plugin-wizard",
+          "packageName": "dsh-plugin-wizard",
+          "class": "manual",
+          "source": {
+            "kind": "unknown",
+            "reason": "package.json does not declare a source repository; do not infer one from the directory name"
+          },
+          "request": {
+            "mode": "exact",
+            "version": "0.1.0"
+          },
+          "sync": {
+            "mode": "manual",
+            "patches": [],
+            "preservePaths": []
+          },
+          "runtimeUpdate": {
+            "allowed": false,
+            "defaultAction": "prompt"
+          },
+          "validation": {
+            "entrypoints": [
+              "lib/index.js"
+            ],
+            "commands": []
+          },
+          "license": {
+            "expected": "MIT",
+            "reviewOnChange": true
+          },
+          "owner": "desktop-plugins"
+        },
+        "distribution": {
+          "id": "plugin-wizard",
+          "distributionClass": "builtin",
+          "delivery": "bundled",
+          "migration": {
+            "current": "bundled",
+            "target": "bundled",
+            "state": "migrated"
+          }
+        },
+        "lockEntry": {
+          "compatibility": {},
+          "local": {
+            "entrypoints": [
+              "lib/index.js"
+            ],
+            "excludedPaths": [],
+            "fileCount": 4,
+            "license": "MIT",
+            "packageName": "dsh-plugin-wizard",
+            "packageVersion": "0.1.0",
+            "path": "dsh-desktop/assets/plugins/dsh-plugin-wizard",
+            "treeSha256": "9324a2d9f92e8eec52c3caac01ab3d2eb5de961a44984ce7aa482db0fea9cde9"
+          },
+          "manifestEntrySha256": "dee87795f561f230c6cc713ccfd28c8e3f71dc2431e41b8af53e190647d52200",
+          "patchFiles": [],
+          "patchSet": "none",
+          "patchSetSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "requested": "0.1.0",
+          "runtimeUpdate": "disabled",
+          "source": {
+            "kind": "unknown",
+            "sha256": "9324a2d9f92e8eec52c3caac01ab3d2eb5de961a44984ce7aa482db0fea9cde9",
+            "version": "0.1.0"
+          },
+          "sourceCommit": null
+        },
+        "treeSha256": "sha256:afb5c85064cfbe614cbfc6a24f5d6dc2af42589c98cdf51121ddba30bf5bcd63"
+      },
+      "official": {
+        "sameNameInSource": false,
+        "bundledByOfficialDependencyGraph": false,
+        "sameImplementation": null,
+        "evidence": null,
+        "conclusion": "官方源码清单无此包名；不据此断言官方没有相似功能"
+      },
+      "api": {
+        "requirement": "unknown-missing-source",
+        "bridgeAndProfileReferences": [],
+        "externalImports": [],
+        "method": "Static text evidence; comments and guarded fallbacks are not automatically treated as mandatory dependencies."
+      },
+      "local": {
+        "builtFiles": [],
+        "fileCount": 0,
+        "availableFileCount": 0,
+        "missingBlobs": [],
+        "artifacts": []
+      },
+      "license": {
+        "declared": null,
+        "expectedByRegistry": "MIT",
+        "status": "unverified-no-license-text",
+        "canRedistribute": false,
+        "conditions": [
+          "需取得实际许可证文本或明确授权，声明/expected 字段本身不够"
+        ],
+        "evidence": [],
+        "assetRightsAudit": null
+      },
+      "knownFixes": [],
+      "install": {
+        "state": "missing-artifact",
+        "canInstall": false,
+        "reasons": [
+          "固定最新版 tree 无该目录制品；注册记录或旧公共 Manifest 不能替代作者包。",
+          "缺实际许可证文本，暂停再分发和安装。"
+        ],
+        "runtimeVerification": "not-tested"
+      },
+      "publicManifest": null,
+      "buildMaterials": {
+        "thirdPartyCommandsExecuted": false,
+        "scriptsDeclared": {},
+        "dependencies": {},
+        "peerDependencies": {},
+        "engines": {},
+        "externalImports": [],
+        "needed": [
+          "固定作者源码 commit",
+          "完整许可证与署名链",
+          "精确版本的原始 tgz 及 SHA256；或锁文件、精确工具链和隔离构建配方",
+          "官方 bundle 加载声明及运行依赖",
+          "官方 Desktop 安装及业务验证"
+        ]
+      },
+      "catalogProjection": {
+        "target": "listing-only",
+        "reason": "Use the separate v2 listings table; never invent package metadata or exact installed version."
+      }
+    },
+    {
+      "id": "dev.eac.prompt-custom",
+      "registryId": "prompt-custom",
+      "packageName": "@deepseek-ai/dsh-prompt-custom",
+      "version": "0.1.0",
+      "versionBasis": "registry-request-only",
+      "function": "自定义提示词",
+      "functionBasis": "editorial-label-from-registration-not-runtime-proof",
+      "scope": "beta-registry",
+      "source": {
+        "commit": "dc22280beb9d0a6338d1e02d99f5e5346f72f4f0",
+        "path": "dsh-desktop/assets/plugins/dsh-prompt-custom",
+        "registration": {
+          "id": "prompt-custom",
+          "kind": "plugin",
+          "path": "dsh-desktop/assets/plugins/dsh-prompt-custom",
+          "packageName": "@deepseek-ai/dsh-prompt-custom",
+          "class": "internal",
+          "source": {
+            "kind": "internal",
+            "name": "@deepseek-ai/dsh-prompt-custom",
+            "reason": "maintained in this repository; no external source is declared"
+          },
+          "request": {
+            "mode": "exact",
+            "version": "0.1.0"
+          },
+          "sync": {
+            "mode": "manual",
+            "patches": [],
+            "preservePaths": []
+          },
+          "runtimeUpdate": {
+            "allowed": false,
+            "defaultAction": "prompt"
+          },
+          "validation": {
+            "entrypoints": [
+              "lib/index.js"
+            ],
+            "commands": []
+          },
+          "license": {
+            "expected": "MIT",
+            "reviewOnChange": true
+          },
+          "owner": "desktop-plugins"
+        },
+        "distribution": {
+          "id": "prompt-custom",
+          "distributionClass": "recommended",
+          "delivery": "pack",
+          "pack": "dev.dsh-eac.desktop-recommended",
+          "migration": {
+            "current": "bundled",
+            "target": "pack",
+            "state": "source-pending"
+          }
+        },
+        "lockEntry": {
+          "compatibility": {},
+          "local": {
+            "entrypoints": [
+              "lib/index.js"
+            ],
+            "excludedPaths": [],
+            "fileCount": 5,
+            "license": "MIT",
+            "packageName": "@deepseek-ai/dsh-prompt-custom",
+            "packageVersion": "0.1.0",
+            "path": "dsh-desktop/assets/plugins/dsh-prompt-custom",
+            "treeSha256": "8b47630fb42c3bce9d8d444a37004e1fdb5259ddf2bc96618540a944203aaddd"
+          },
+          "manifestEntrySha256": "80e9eb22c4fb2bc70bb11ad8c37b058d1d3ed5782c737c557f4fa16b0d8163a3",
+          "patchFiles": [],
+          "patchSet": "none",
+          "patchSetSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "requested": "0.1.0",
+          "runtimeUpdate": "disabled",
+          "source": {
+            "kind": "internal",
+            "name": "@deepseek-ai/dsh-prompt-custom",
+            "sha256": "8b47630fb42c3bce9d8d444a37004e1fdb5259ddf2bc96618540a944203aaddd",
+            "version": "0.1.0"
+          },
+          "sourceCommit": null
+        },
+        "treeSha256": "sha256:afb5c85064cfbe614cbfc6a24f5d6dc2af42589c98cdf51121ddba30bf5bcd63"
+      },
+      "official": {
+        "sameNameInSource": false,
+        "bundledByOfficialDependencyGraph": false,
+        "sameImplementation": null,
+        "evidence": null,
+        "conclusion": "官方源码清单无此包名；不据此断言官方没有相似功能"
+      },
+      "api": {
+        "requirement": "unknown-missing-source",
+        "bridgeAndProfileReferences": [],
+        "externalImports": [],
+        "method": "Static text evidence; comments and guarded fallbacks are not automatically treated as mandatory dependencies."
+      },
+      "local": {
+        "builtFiles": [],
+        "fileCount": 0,
+        "availableFileCount": 0,
+        "missingBlobs": [],
+        "artifacts": []
+      },
+      "license": {
+        "declared": null,
+        "expectedByRegistry": "MIT",
+        "status": "unverified-no-license-text",
+        "canRedistribute": false,
+        "conditions": [
+          "需取得实际许可证文本或明确授权，声明/expected 字段本身不够"
+        ],
+        "evidence": [],
+        "assetRightsAudit": null
+      },
+      "knownFixes": [],
+      "install": {
+        "state": "missing-artifact",
+        "canInstall": false,
+        "reasons": [
+          "固定最新版 tree 无该目录制品；注册记录或旧公共 Manifest 不能替代作者包。",
+          "缺实际许可证文本，暂停再分发和安装。"
+        ],
+        "runtimeVerification": "not-tested"
+      },
+      "publicManifest": null,
+      "buildMaterials": {
+        "thirdPartyCommandsExecuted": false,
+        "scriptsDeclared": {},
+        "dependencies": {},
+        "peerDependencies": {},
+        "engines": {},
+        "externalImports": [],
+        "needed": [
+          "固定作者源码 commit",
+          "完整许可证与署名链",
+          "精确版本的原始 tgz 及 SHA256；或锁文件、精确工具链和隔离构建配方",
+          "官方 bundle 加载声明及运行依赖",
+          "官方 Desktop 安装及业务验证"
+        ]
+      },
+      "catalogProjection": {
+        "target": "listing-only",
+        "reason": "Use the separate v2 listings table; never invent package metadata or exact installed version."
+      }
+    },
+    {
+      "id": "dev.eac.settings-groups",
+      "registryId": "settings-groups",
+      "packageName": "dsh-settings-groups",
+      "version": "0.1.0",
+      "versionBasis": "registry-request-only",
+      "function": "设置页分组",
+      "functionBasis": "editorial-label-from-registration-not-runtime-proof",
+      "scope": "beta-registry",
+      "source": {
+        "commit": "dc22280beb9d0a6338d1e02d99f5e5346f72f4f0",
+        "path": "dsh-desktop/assets/plugins/dsh-settings-groups",
+        "registration": {
+          "id": "settings-groups",
+          "kind": "plugin",
+          "path": "dsh-desktop/assets/plugins/dsh-settings-groups",
+          "packageName": "dsh-settings-groups",
+          "class": "manual",
+          "source": {
+            "kind": "unknown",
+            "reason": "package.json does not declare a source repository; do not infer one from the directory name"
+          },
+          "request": {
+            "mode": "exact",
+            "version": "0.1.0"
+          },
+          "sync": {
+            "mode": "manual",
+            "patches": [],
+            "preservePaths": []
+          },
+          "runtimeUpdate": {
+            "allowed": false,
+            "defaultAction": "prompt"
+          },
+          "validation": {
+            "entrypoints": [
+              "lib/index.js"
+            ],
+            "commands": []
+          },
+          "license": {
+            "expected": "MIT",
+            "reviewOnChange": true
+          },
+          "owner": "desktop-plugins"
+        },
+        "distribution": {
+          "id": "settings-groups",
+          "distributionClass": "external",
+          "delivery": "market",
+          "migration": {
+            "current": "bundled",
+            "target": "market",
+            "state": "source-pending"
+          }
+        },
+        "lockEntry": {
+          "compatibility": {},
+          "local": {
+            "entrypoints": [
+              "lib/index.js"
+            ],
+            "excludedPaths": [],
+            "fileCount": 5,
+            "license": "MIT",
+            "packageName": "dsh-settings-groups",
+            "packageVersion": "0.1.0",
+            "path": "dsh-desktop/assets/plugins/dsh-settings-groups",
+            "treeSha256": "606544070d3843a6edb3656b77250dd405eeffcf3074ce4c16cef347f1d47f7d"
+          },
+          "manifestEntrySha256": "a2255801c11e5180489d8950ac373d1878d8bcca3bc66326e6d1e3183c0a85f2",
+          "patchFiles": [],
+          "patchSet": "none",
+          "patchSetSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "requested": "0.1.0",
+          "runtimeUpdate": "disabled",
+          "source": {
+            "kind": "unknown",
+            "sha256": "606544070d3843a6edb3656b77250dd405eeffcf3074ce4c16cef347f1d47f7d",
+            "version": "0.1.0"
+          },
+          "sourceCommit": null
+        },
+        "treeSha256": "sha256:afb5c85064cfbe614cbfc6a24f5d6dc2af42589c98cdf51121ddba30bf5bcd63"
+      },
+      "official": {
+        "sameNameInSource": false,
+        "bundledByOfficialDependencyGraph": false,
+        "sameImplementation": null,
+        "evidence": null,
+        "conclusion": "官方源码清单无此包名；不据此断言官方没有相似功能"
+      },
+      "api": {
+        "requirement": "unknown-missing-source",
+        "bridgeAndProfileReferences": [],
+        "externalImports": [],
+        "method": "Static text evidence; comments and guarded fallbacks are not automatically treated as mandatory dependencies."
+      },
+      "local": {
+        "builtFiles": [],
+        "fileCount": 0,
+        "availableFileCount": 0,
+        "missingBlobs": [],
+        "artifacts": []
+      },
+      "license": {
+        "declared": null,
+        "expectedByRegistry": "MIT",
+        "status": "unverified-no-license-text",
+        "canRedistribute": false,
+        "conditions": [
+          "需取得实际许可证文本或明确授权，声明/expected 字段本身不够"
+        ],
+        "evidence": [],
+        "assetRightsAudit": null
+      },
+      "knownFixes": [],
+      "install": {
+        "state": "missing-artifact",
+        "canInstall": false,
+        "reasons": [
+          "固定最新版 tree 无该目录制品；注册记录或旧公共 Manifest 不能替代作者包。",
+          "缺实际许可证文本，暂停再分发和安装。"
+        ],
+        "runtimeVerification": "not-tested"
+      },
+      "publicManifest": null,
+      "buildMaterials": {
+        "thirdPartyCommandsExecuted": false,
+        "scriptsDeclared": {},
+        "dependencies": {},
+        "peerDependencies": {},
+        "engines": {},
+        "externalImports": [],
+        "needed": [
+          "固定作者源码 commit",
+          "完整许可证与署名链",
+          "精确版本的原始 tgz 及 SHA256；或锁文件、精确工具链和隔离构建配方",
+          "官方 bundle 加载声明及运行依赖",
+          "官方 Desktop 安装及业务验证"
+        ]
+      },
+      "catalogProjection": {
+        "target": "listing-only",
+        "reason": "Use the separate v2 listings table; never invent package metadata or exact installed version."
+      }
+    },
+    {
+      "id": "dev.eac.side-session",
+      "registryId": "side-session",
+      "packageName": "@dsh-external/dsh-side-session",
+      "version": "0.2.8",
+      "versionBasis": "registry-request-only",
+      "function": "侧边会话",
+      "functionBasis": "editorial-label-from-registration-not-runtime-proof",
+      "scope": "beta-registry",
+      "source": {
+        "commit": "dc22280beb9d0a6338d1e02d99f5e5346f72f4f0",
+        "path": "dsh-desktop/assets/plugins/dsh-side-session",
+        "registration": {
+          "id": "side-session",
+          "kind": "plugin",
+          "path": "dsh-desktop/assets/plugins/dsh-side-session",
+          "packageName": "@dsh-external/dsh-side-session",
+          "class": "internal",
+          "source": {
+            "kind": "internal",
+            "name": "@dsh-external/dsh-side-session",
+            "reason": "maintained in this repository; no external source is declared"
+          },
+          "request": {
+            "mode": "exact",
+            "version": "0.2.8"
+          },
+          "sync": {
+            "mode": "manual",
+            "patches": [],
+            "preservePaths": []
+          },
+          "runtimeUpdate": {
+            "allowed": false,
+            "defaultAction": "prompt"
+          },
+          "validation": {
+            "entrypoints": [
+              "lib/index.js"
+            ],
+            "commands": []
+          },
+          "license": {
+            "expected": "MIT",
+            "reviewOnChange": true
+          },
+          "owner": "desktop-plugins"
+        },
+        "distribution": {
+          "id": "side-session",
+          "distributionClass": "external",
+          "delivery": "market",
+          "migration": {
+            "current": "bundled",
+            "target": "market",
+            "state": "source-pending"
+          }
+        },
+        "lockEntry": {
+          "compatibility": {},
+          "local": {
+            "entrypoints": [
+              "lib/index.js"
+            ],
+            "excludedPaths": [],
+            "fileCount": 8,
+            "license": "MIT",
+            "packageName": "@dsh-external/dsh-side-session",
+            "packageVersion": "0.2.8",
+            "path": "dsh-desktop/assets/plugins/dsh-side-session",
+            "treeSha256": "381e63c9f59756c79d4f8a3704ebf84ae19c7ea8f338893219c421e2f4c1edd4"
+          },
+          "manifestEntrySha256": "4c42d0b56fa7c10112725b7ce2376da2c00d72de9c6c99f2cb39b08b496c0db9",
+          "patchFiles": [],
+          "patchSet": "none",
+          "patchSetSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "requested": "0.2.8",
+          "runtimeUpdate": "disabled",
+          "source": {
+            "kind": "internal",
+            "name": "@dsh-external/dsh-side-session",
+            "sha256": "381e63c9f59756c79d4f8a3704ebf84ae19c7ea8f338893219c421e2f4c1edd4",
+            "version": "0.2.8"
+          },
+          "sourceCommit": null
+        },
+        "treeSha256": "sha256:afb5c85064cfbe614cbfc6a24f5d6dc2af42589c98cdf51121ddba30bf5bcd63"
+      },
+      "official": {
+        "sameNameInSource": false,
+        "bundledByOfficialDependencyGraph": false,
+        "sameImplementation": null,
+        "evidence": null,
+        "conclusion": "官方源码清单无此包名；不据此断言官方没有相似功能"
+      },
+      "api": {
+        "requirement": "unknown-missing-source",
+        "bridgeAndProfileReferences": [],
+        "externalImports": [],
+        "method": "Static text evidence; comments and guarded fallbacks are not automatically treated as mandatory dependencies."
+      },
+      "local": {
+        "builtFiles": [],
+        "fileCount": 0,
+        "availableFileCount": 0,
+        "missingBlobs": [],
+        "artifacts": []
+      },
+      "license": {
+        "declared": null,
+        "expectedByRegistry": "MIT",
+        "status": "unverified-no-license-text",
+        "canRedistribute": false,
+        "conditions": [
+          "需取得实际许可证文本或明确授权，声明/expected 字段本身不够"
+        ],
+        "evidence": [],
+        "assetRightsAudit": null
+      },
+      "knownFixes": [],
+      "install": {
+        "state": "missing-artifact",
+        "canInstall": false,
+        "reasons": [
+          "固定最新版 tree 无该目录制品；注册记录或旧公共 Manifest 不能替代作者包。",
+          "缺实际许可证文本，暂停再分发和安装。"
+        ],
+        "runtimeVerification": "not-tested"
+      },
+      "publicManifest": null,
+      "buildMaterials": {
+        "thirdPartyCommandsExecuted": false,
+        "scriptsDeclared": {},
+        "dependencies": {},
+        "peerDependencies": {},
+        "engines": {},
+        "externalImports": [],
+        "needed": [
+          "固定作者源码 commit",
+          "完整许可证与署名链",
+          "精确版本的原始 tgz 及 SHA256；或锁文件、精确工具链和隔离构建配方",
+          "官方 bundle 加载声明及运行依赖",
+          "官方 Desktop 安装及业务验证"
+        ]
+      },
+      "catalogProjection": {
+        "target": "listing-only",
+        "reason": "Use the separate v2 listings table; never invent package metadata or exact installed version."
+      }
+    },
+    {
+      "id": "dev.eac.think-zh-expand-eac",
+      "registryId": "think-zh-expand-eac",
+      "packageName": "dsh-think-zh-expand-eac",
+      "version": "1.0.0",
+      "versionBasis": "registry-lock-only",
+      "function": "思考文本中文化与展开",
+      "functionBasis": "editorial-label-from-registration-not-runtime-proof",
+      "scope": "beta-registry",
+      "source": {
+        "commit": "dc22280beb9d0a6338d1e02d99f5e5346f72f4f0",
+        "path": "dsh-desktop/assets/plugins/dsh-think-zh-expand-eac",
+        "registration": {
+          "id": "think-zh-expand-eac",
+          "kind": "plugin",
+          "path": "dsh-desktop/assets/plugins/dsh-think-zh-expand-eac",
+          "packageName": "dsh-think-zh-expand-eac",
+          "class": "follow-upstream",
+          "source": {
+            "kind": "github",
+            "repository": "https://github.com/jing-hy/dsh-think-zh-expand-eac"
+          },
+          "request": {
+            "mode": "latest",
+            "range": "*",
+            "releaseAgeHours": 24
+          },
+          "sync": {
+            "mode": "mirror",
+            "patches": [],
+            "preservePaths": []
+          },
+          "runtimeUpdate": {
+            "allowed": true,
+            "defaultAction": "prompt",
+            "source": {
+              "kind": "github",
+              "repository": "https://github.com/jing-hy/dsh-think-zh-expand-eac"
+            }
+          },
+          "validation": {
+            "entrypoints": [
+              "lib/index.js"
+            ],
+            "commands": []
+          },
+          "license": {
+            "expected": "MIT",
+            "reviewOnChange": true
+          },
+          "owner": "desktop-plugins"
+        },
+        "distribution": {
+          "id": "think-zh-expand-eac",
+          "distributionClass": "external",
+          "delivery": "market",
+          "migration": {
+            "current": "bundled",
+            "target": "market",
+            "state": "source-pending"
+          }
+        },
+        "lockEntry": {
+          "compatibility": {},
+          "local": {
+            "entrypoints": [
+              "lib/index.js"
+            ],
+            "excludedPaths": [],
+            "fileCount": 17,
+            "license": "MIT",
+            "packageName": "dsh-think-zh-expand-eac",
+            "packageVersion": "1.0.0",
+            "path": "dsh-desktop/assets/plugins/dsh-think-zh-expand-eac",
+            "treeSha256": "6772379b0eadcc7b688a22af355e2e623198f7c52766867f39b262dadc3ba080"
+          },
+          "manifestEntrySha256": "9f764900e15db9a0d92654317a8318c5424fd845fe9816ca51391fefc7d141d4",
+          "patchFiles": [],
+          "patchSet": "none",
+          "patchSetSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "requested": "latest",
+          "runtimeUpdate": "enabled",
+          "source": {
+            "kind": "github",
+            "repository": "https://github.com/jing-hy/dsh-think-zh-expand-eac",
+            "sha256": "6772379b0eadcc7b688a22af355e2e623198f7c52766867f39b262dadc3ba080",
+            "version": "1.0.0"
+          },
+          "sourceCommit": null
+        },
+        "treeSha256": "sha256:afb5c85064cfbe614cbfc6a24f5d6dc2af42589c98cdf51121ddba30bf5bcd63"
+      },
+      "official": {
+        "sameNameInSource": false,
+        "bundledByOfficialDependencyGraph": false,
+        "sameImplementation": null,
+        "evidence": null,
+        "conclusion": "官方源码清单无此包名；不据此断言官方没有相似功能"
+      },
+      "api": {
+        "requirement": "unknown-missing-source",
+        "bridgeAndProfileReferences": [],
+        "externalImports": [],
+        "method": "Static text evidence; comments and guarded fallbacks are not automatically treated as mandatory dependencies."
+      },
+      "local": {
+        "builtFiles": [],
+        "fileCount": 0,
+        "availableFileCount": 0,
+        "missingBlobs": [],
+        "artifacts": []
+      },
+      "license": {
+        "declared": null,
+        "expectedByRegistry": "MIT",
+        "status": "unverified-no-license-text",
+        "canRedistribute": false,
+        "conditions": [
+          "需取得实际许可证文本或明确授权，声明/expected 字段本身不够"
+        ],
+        "evidence": [],
+        "assetRightsAudit": null
+      },
+      "knownFixes": [],
+      "install": {
+        "state": "missing-artifact",
+        "canInstall": false,
+        "reasons": [
+          "固定最新版 tree 无该目录制品；注册记录或旧公共 Manifest 不能替代作者包。",
+          "缺实际许可证文本，暂停再分发和安装。"
+        ],
+        "runtimeVerification": "not-tested"
+      },
+      "publicManifest": null,
+      "buildMaterials": {
+        "thirdPartyCommandsExecuted": false,
+        "scriptsDeclared": {},
+        "dependencies": {},
+        "peerDependencies": {},
+        "engines": {},
+        "externalImports": [],
+        "needed": [
+          "固定作者源码 commit",
+          "完整许可证与署名链",
+          "精确版本的原始 tgz 及 SHA256；或锁文件、精确工具链和隔离构建配方",
+          "官方 bundle 加载声明及运行依赖",
+          "官方 Desktop 安装及业务验证"
+        ]
+      },
+      "catalogProjection": {
+        "target": "listing-only",
+        "reason": "Use the separate v2 listings table; never invent package metadata or exact installed version."
+      }
+    },
+    {
+      "id": "dev.eac.dsh-stt",
+      "registryId": "dsh-stt",
+      "packageName": "@deepseek-ai/dsh-stt",
+      "version": "0.3.0",
+      "versionBasis": "registry-lock-only",
+      "function": "语音转文字",
+      "functionBasis": "editorial-label-from-registration-not-runtime-proof",
+      "scope": "beta-registry",
+      "source": {
+        "commit": "dc22280beb9d0a6338d1e02d99f5e5346f72f4f0",
+        "path": "dsh-desktop/assets/plugins/dsh-stt",
+        "registration": {
+          "id": "dsh-stt",
+          "kind": "plugin",
+          "path": "dsh-desktop/assets/plugins/dsh-stt",
+          "packageName": "@deepseek-ai/dsh-stt",
+          "class": "follow-upstream",
+          "source": {
+            "kind": "github",
+            "repository": "https://github.com/BAIKAI23333/dsh-stt"
+          },
+          "request": {
+            "mode": "latest",
+            "range": "*",
+            "releaseAgeHours": 24
+          },
+          "sync": {
+            "mode": "mirror",
+            "patches": [],
+            "preservePaths": []
+          },
+          "runtimeUpdate": {
+            "allowed": false,
+            "defaultAction": "prompt"
+          },
+          "validation": {
+            "entrypoints": [
+              "src/index.js"
+            ],
+            "commands": []
+          },
+          "license": {
+            "expected": "MIT",
+            "reviewOnChange": true
+          },
+          "owner": "desktop-plugins",
+          "defaultDisabled": true
+        },
+        "distribution": {
+          "id": "dsh-stt",
+          "distributionClass": "external",
+          "delivery": "market",
+          "migration": {
+            "current": "bundled",
+            "target": "market",
+            "state": "source-pending"
+          }
+        },
+        "lockEntry": {
+          "compatibility": {},
+          "local": {
+            "entrypoints": [
+              "src/index.js"
+            ],
+            "excludedPaths": [],
+            "fileCount": 22,
+            "license": "MIT",
+            "packageName": "@deepseek-ai/dsh-stt",
+            "packageVersion": "0.3.0",
+            "path": "dsh-desktop/assets/plugins/dsh-stt",
+            "treeSha256": "8c925a4eabfbca70302be453c534f71785954c97fb4beaa01f042c398e6a7b5d"
+          },
+          "manifestEntrySha256": "5bbd22d00e2a267dd3d128dec54b364de4f6af7ee22cf14d8c5542b0fb367ff0",
+          "patchFiles": [],
+          "patchSet": "none",
+          "patchSetSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "requested": "latest",
+          "runtimeUpdate": "disabled",
+          "source": {
+            "kind": "github",
+            "repository": "https://github.com/BAIKAI23333/dsh-stt",
+            "sha256": "8c925a4eabfbca70302be453c534f71785954c97fb4beaa01f042c398e6a7b5d",
+            "version": "0.3.0"
+          },
+          "sourceCommit": null
+        },
+        "treeSha256": "sha256:afb5c85064cfbe614cbfc6a24f5d6dc2af42589c98cdf51121ddba30bf5bcd63"
+      },
+      "official": {
+        "sameNameInSource": false,
+        "bundledByOfficialDependencyGraph": false,
+        "sameImplementation": null,
+        "evidence": null,
+        "conclusion": "官方源码清单无此包名；不据此断言官方没有相似功能"
+      },
+      "api": {
+        "requirement": "unknown-missing-source",
+        "bridgeAndProfileReferences": [],
+        "externalImports": [],
+        "method": "Static text evidence; comments and guarded fallbacks are not automatically treated as mandatory dependencies."
+      },
+      "local": {
+        "builtFiles": [],
+        "fileCount": 0,
+        "availableFileCount": 0,
+        "missingBlobs": [],
+        "artifacts": []
+      },
+      "license": {
+        "declared": null,
+        "expectedByRegistry": "MIT",
+        "status": "unverified-no-license-text",
+        "canRedistribute": false,
+        "conditions": [
+          "需取得实际许可证文本或明确授权，声明/expected 字段本身不够"
+        ],
+        "evidence": [],
+        "assetRightsAudit": null
+      },
+      "knownFixes": [],
+      "install": {
+        "state": "missing-artifact",
+        "canInstall": false,
+        "reasons": [
+          "固定最新版 tree 无该目录制品；注册记录或旧公共 Manifest 不能替代作者包。",
+          "缺实际许可证文本，暂停再分发和安装。"
+        ],
+        "runtimeVerification": "not-tested"
+      },
+      "publicManifest": null,
+      "buildMaterials": {
+        "thirdPartyCommandsExecuted": false,
+        "scriptsDeclared": {},
+        "dependencies": {},
+        "peerDependencies": {},
+        "engines": {},
+        "externalImports": [],
+        "needed": [
+          "固定作者源码 commit",
+          "完整许可证与署名链",
+          "精确版本的原始 tgz 及 SHA256；或锁文件、精确工具链和隔离构建配方",
+          "官方 bundle 加载声明及运行依赖",
+          "官方 Desktop 安装及业务验证"
+        ]
+      },
+      "catalogProjection": {
+        "target": "listing-only",
+        "reason": "Use the separate v2 listings table; never invent package metadata or exact installed version."
+      }
+    }
+  ]
+}

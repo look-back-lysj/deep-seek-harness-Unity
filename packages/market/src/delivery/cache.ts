@@ -4,11 +4,11 @@
  * 下载成功不是安装成功；只有本地 tgz 的 SHA-256、包名和版本都符合精确 Delivery 后，
  * 返回的本地路径才允许交给官方安装器。缓存文件在仍有 active-task/installed 引用时绝不清理。
  */
-import { createHash } from 'node:crypto'
+import { createHash, randomUUID } from 'node:crypto'
 import { existsSync, mkdirSync, readFileSync, readdirSync, realpathSync, renameSync, statSync, unlinkSync, writeFileSync } from 'node:fs'
 import { isAbsolute, join, relative, resolve, sep } from 'node:path'
 import type { CatalogDelivery, DeliverySource } from '../contracts/types.ts'
-import { safeFetch, type RemoteSecurityOptions } from './security.ts'
+import { DeliverySecurityError, readLimitedResponse, safeFetch, type RemoteSecurityOptions } from './security.ts'
 import { verifyTgzFile, type TgzLimits, type VerifiedTgz } from './tgz.ts'
 
 export type CacheReferenceKind = 'active-task' | 'installed'
@@ -28,6 +28,7 @@ export interface ArtifactCacheOptions extends RemoteSecurityOptions {
 }
 
 export interface DownloadArtifactOptions {
+  readonly signal?: AbortSignal | undefined
   readonly requireBundle?: boolean
   readonly referenceId: string
   readonly referenceKind: CacheReferenceKind
@@ -82,21 +83,6 @@ function atomicJson(path: string, value: unknown): void {
 function isInside(root: string, candidate: string): boolean {
   const rel = relative(root, candidate)
   return rel === '' || (!rel.startsWith('..') && !isAbsolute(rel) && !rel.split(sep).includes('..'))
-}
-
-async function responseBytes(response: Response, maxBytes: number): Promise<Uint8Array> {
-  const declared = Number(response.headers.get('content-length') ?? '0')
-  if (Number.isFinite(declared) && declared > maxBytes) throw new DeliveryError('delivery/too-large', '下载声明体积超限')
-  const chunks: Buffer[] = []
-  let total = 0
-  const body = response.body as AsyncIterable<Uint8Array> | null
-  if (!body) throw new DeliveryError('delivery/empty-body', '下载响应没有正文')
-  for await (const chunk of body) {
-    total += chunk.byteLength
-    if (total > maxBytes) throw new DeliveryError('delivery/too-large', '下载体积超限')
-    chunks.push(Buffer.from(chunk))
-  }
-  return Buffer.concat(chunks, total)
 }
 
 export class ArtifactCache {
@@ -195,12 +181,17 @@ export class ArtifactCache {
     return readFileSync(path)
   }
 
-  private async remoteBytes(source: DeliverySource, maxBytes: number): Promise<Uint8Array> {
-    const response = await safeFetch(source.ref, this.options)
-    return responseBytes(response, maxBytes)
+  private async remoteBytes(source: DeliverySource, maxBytes: number, signal?: AbortSignal): Promise<Uint8Array> {
+    const timeout = AbortSignal.timeout(this.options.timeoutMs ?? 30_000)
+    const combined = signal ? AbortSignal.any([signal, timeout]) : timeout
+    const response = await safeFetch(source.ref, { ...this.options, signal: combined })
+    return readLimitedResponse(response, maxBytes, combined)
   }
 
   async download(delivery: CatalogDelivery, options: DownloadArtifactOptions): Promise<AcquiredArtifact> {
+    options.signal?.throwIfAborted()
+    // 复制全部来源描述；调用者在 await 期间修改目录不能改变本次下载目标。
+    delivery = structuredClone(delivery)
     const expectedDigest = normalizeDigest(delivery.artifactDigest)
     const target = this.pathFor(expectedDigest)
     mkdirSync(join(this.root, 'sha256'), { recursive: true })
@@ -214,15 +205,18 @@ export class ArtifactCache {
           version: delivery.version,
           ...(options.requireBundle === undefined ? {} : { requireBundle: options.requireBundle }),
         },
-        tgzLimits,
+        { ...tgzLimits, signal: options.signal },
       )
 
     if (existsSync(target)) {
       try {
         const verified = await verify(target)
+        options.signal?.throwIfAborted()
+        if (delivery.sources.some(source => source.size !== undefined && source.size !== verified.size)) throw new DeliveryError('delivery/size-mismatch', '缓存体积与冻结来源不符')
         this.retain(expectedDigest, { id: options.referenceId, kind: options.referenceKind })
         return { verified, localPath: target, attempts: [] }
       } catch (error) {
+        options.signal?.throwIfAborted()
         const references = this.readReferences().references[expectedDigest] ?? []
         if (references.length > 0) throw new DeliveryError('delivery/referenced-cache-corrupt', '缓存已被引用但校验失败，禁止覆盖或删除', [])
         unlinkSync(target)
@@ -234,6 +228,7 @@ export class ArtifactCache {
     const allowedRoots = this.allowedLocalRoots(options.allowLocalFileSources)
     const maxBytes = this.options.maxCompressedBytes ?? 200 * 1024 * 1024
     for (const source of sources) {
+      options.signal?.throwIfAborted()
       let bytes: Uint8Array
       try {
         if (source.kind === 'local-file') {
@@ -244,10 +239,17 @@ export class ArtifactCache {
           if (path !== target) throw new DeliveryError('delivery/unsafe-cache-source', 'cache 来源只接受目标摘要')
           bytes = readFileSync(path)
         } else {
-          bytes = await this.remoteBytes(source, maxBytes)
+          bytes = await this.remoteBytes(source, maxBytes, options.signal)
         }
       } catch (error) {
-        attempts.push({ source, status: 'network-failed', reason: error instanceof Error ? error.message : 'download failed' })
+        options.signal?.throwIfAborted()
+        const unsafe = error instanceof DeliverySecurityError && !['delivery/http-failed', 'delivery/dns-failed'].includes(error.code) || error instanceof DeliveryError && error.code.includes('unsafe')
+        attempts.push({ source, status: unsafe ? 'unsafe' : 'network-failed', reason: error instanceof Error ? error.message : 'download failed' })
+        continue
+      }
+      options.signal?.throwIfAborted()
+      if (source.size !== undefined && source.size !== bytes.byteLength) {
+        attempts.push({ source, status: 'identity-mismatch', reason: '实际字节大小与冻结来源不符' })
         continue
       }
       const actualDigest = digestOf(bytes)
@@ -255,16 +257,18 @@ export class ArtifactCache {
         attempts.push({ source, status: 'digest-mismatch', reason: `expected ${expectedDigest}, actual ${actualDigest}` })
         continue
       }
-      const temporary = join(this.root, 'tmp', `${expectedDigest.slice(7)}.${process.pid}.${Date.now()}.${attempts.length}.tgz`)
+      const temporary = join(this.root, 'tmp', `${expectedDigest.slice(7)}.${randomUUID()}.tgz`)
       writeFileSync(temporary, bytes, { flag: 'wx' })
       try {
         const verified = await verify(temporary)
+        options.signal?.throwIfAborted()
         renameSync(temporary, target)
         this.retain(expectedDigest, { id: options.referenceId, kind: options.referenceKind })
         attempts.push({ source, status: 'accepted' })
         return { verified: { ...verified, path: target }, localPath: target, attempts }
       } catch (error) {
-        unlinkSync(temporary)
+        if (existsSync(temporary)) unlinkSync(temporary)
+        options.signal?.throwIfAborted()
         attempts.push({
           source,
           status: error instanceof DeliveryError ? 'network-failed' : 'identity-mismatch',
@@ -277,7 +281,7 @@ export class ArtifactCache {
 }
 
 /** Host-only 结果转 UI 时只交摘要/大小/来源，不交本机绝对路径。 */
-export function publicArtifactView(artifact: AcquiredArtifact): Omit<VerifiedTgz, 'path'> {
-  const { path: _path, ...publicView } = artifact.verified
+export function publicArtifactView(artifact: AcquiredArtifact): Omit<VerifiedTgz, 'path' | 'packageJson' | 'files'> {
+  const { path: _path, packageJson: _packageJson, files: _files, ...publicView } = artifact.verified
   return publicView
 }

@@ -74,7 +74,7 @@ describe('JsonTaskStore', () => {
       },
     })) as Record<string, unknown>
     const migrated = migrateTaskDocument(legacy)
-    expect(migrated.schemaVersion).toBe(2)
+    expect(migrated.schemaVersion).toBe(3)
     expect(migrated.record.idempotency).toEqual({})
     expect(migrated.record.approvalIdempotency).toEqual({})
     expect(migrated.record.eventLogTruncated).toBe(false)

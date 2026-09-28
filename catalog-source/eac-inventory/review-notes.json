@@ -1,0 +1,28 @@
+{
+  "schemaVersion": "1",
+  "notes": {
+    "@deepseek-ai/dsh-client-file-changes": {"function":"会话文件更改查看、还原与预览", "api":"legacy-eac-bridge", "blockers":["文件还原和打开路径依赖 window.dshDesktop；缺标准 bundle patch。"]},
+    "dsh-compact": {"function":"请求路径上下文压缩及超限恢复", "api":"official-api-plus-eac-wiring", "blockers":["cordis.patch.yml 只修改 id:compact，没有 insert；官方默认补丁没有此行。lib/agent.js 的压缩引擎还需要独立 Agent 装配，不能把现成包结构当作完整功能安装。"], "knownFixes":["当前 built 包含有界溢出恢复和 settings-compat；只核实代码存在，未运行。"]},
+    "dsh-eac-core-bridge": {"function":"把 EAC 隔离扩展的工具和上下文接入 Agent", "api":"legacy-eac-bridge", "blockers":["依赖 EAC Supervisor 提供 DSH_EAC_BRIDGE_URL/TOKEN 和 Extension Host；官方宿主不提供该私桥。"]},
+    "dsh-eac-locale-compat": {"function":"为旧配套插件补充英文界面文本", "api":"official-client-dom", "blockers":[]},
+    "@deepseek-ai/dsh-easy-setup": {"function":"快速配置模型、人设，以及迁移 Skill/MCP/记忆", "api":"official-api-unverified", "blockers":[], "knownFixes":["主控经独立 API 缓存取得最新 Host/Client，已按固定 Git blob SHA1 校验；仍缺独立 bundle 声明和包内许可证全文。"]},
+    "@deepseek-ai/dsh-file-changes": {"function":"汇总会话文件变更并提供文件投影接口", "api":"official-host-service", "blockers":["仅有 Host 入口，无标准 bundle patch；zod 为外部导入但 package.json 未声明依赖，需补完整包装材料。"]},
+    "dsh-file-drop-eac": {"function":"拖入文件或文件夹到对话，生成文件卡片", "api":"legacy-eac-bridge-with-fallback", "blockers":["文件路径及桌面拖放分支使用 window.dshDesktop.getPathForFile/fileDrop；缺 bundle patch，浏览器回退不等于官方 Desktop 完整兼容。"]},
+    "@deepseek-ai/dsh-plugin-manager": {"function":"EAC 旧版插件设置页及启停管理", "api":"legacy-eac-bridge", "blockers":["与官方 @deepseek-ai/dsh-plugin-manager 同名但不是同一实现；禁止覆盖官方核心管理器。", "操作依赖 window.dshDesktop.pluginManager。"]},
+    "dsh-plugin-shield": {"function":"插件快照、回滚、健康检查及事故报告", "api":"legacy-eac-bridge", "blockers":["操作依赖 window.dshDesktop.guard 和 EAC 内置 plugin-guard 引擎。"]},
+    "dsh-settings-scroll-fix": {"function":"修复设置页滚动与布局约束", "api":"official-client-dom", "blockers":[], "knownFixes":["2.0.2 使用不依赖特定 CSS-module 哈希的滚动修复；真实官方 Desktop 效果待测试。"]},
+    "@deepseek-ai/dsh-terminal": {"function":"旧 EAC 会话内 SSE 命令行终端（非 PTY）", "api":"official-host-service-with-name-collision", "blockers":["与官方 @deepseek-ai/dsh-terminal 同名，但官方为持久终端服务、EAC 为旧 SSE 实现；禁止覆盖。"]},
+    "@dsh-eac/ui-skin-loader": {"function":"发现已加载皮肤、互斥切换、持久化恢复与换肤控制台", "api":"official-api", "blockers":[]},
+    "dsh-unified-market": {"function":"旧 EAC 统一插件市场、更新和功能包管理", "api":"legacy-eac-bridge-and-profile", "blockers":["包含 window.dshDesktop 与 web-desktop/DSH_DESKTOP_PROFILE 路径假设，且执行自有安装与自动升级流程；未经官方 profile 适配不能开放安装。"], "knownFixes":["0.4.0 内置 CAS、原子写及并集合并的 profile 同步；不构成官方宿主兼容证据。"]},
+    "dsh-viewport-lock": {"function":"限制页面外溢、稳定输入区与视口布局", "api":"official-client-dom", "blockers":[]},
+    "@dsh-eac/pack-installer": {"function":"按分级浏览和安装 EAC/Mojobox 整合包", "api":"official-api", "blockers":["内嵌目录仍引用 miku/trading 1.1.0 旧制品，需先重制快照并复核全部安装成员；不能借另一安装器绕过本轮旧包停用。"]},
+    "@dsh-eac/ui-skin-manager": {"function":"历史 EAC Tauri 皮肤契约、槽位绑定和一致性预览工具", "api":"legacy-eac-host-profile", "blockers":["不是当前 ui-skin-loader；无 dsh.bundle.patch，依赖 EAC 专有 HostProfile/槽位约定；归档内未包含 LICENSE。"]},
+    "@dsh-eac/desktop-pack": {"function":"面向官方 Desktop 的 14 成员聚合包，包含改名后的 EAC 配套组件", "api":"official-adaptation-with-degradations-unverified", "blockers":["原 tgz 已取得并校验；此包一次装配 14 个嵌套成员，需独立复核配置行冲突、全部成员许可及宿主运行，不能把内附 ACCEPTANCE 声明当本轮验证。", "DEGRADATIONS 明示扩展宿主缺席时断开、目录拖放不支持、保护中心不执行全树恢复、文件恢复范围受限；不能沿用独立插件的完整功能承诺。"]}
+  },
+  "functionHints": {
+    "agent-teams":"多 Agent 团队协作", "balance":"模型账户余额显示", "better-sidebar":"侧栏布局增强", "change-review":"代码变更审查", "composer-dynamic-island":"输入框动态状态展示", "computer-user":"电脑操作工具", "conversation-tweaks":"对话界面增强", "dock-settings":"Dock 设置", "dsh-dafeiyu":"大飞鱼资源与界面装饰", "dsh-feature-toggles":"EAC 功能开关", "dsh-navbar":"导航栏增强", "dsh-pet":"桌面宠物", "dsh-pet-settings":"桌面宠物设置", "dsh-phone":"手机端接入", "dsh-raw-html":"HTML 内容渲染", "dsh-session-manager":"会话管理", "dsh-undo":"文件变更保存点与撤回", "dsh-webui-prompt-optimizer":"提示词优化", "dsh-whale-widget":"余额鲸鱼挂件", "float-window":"悬浮窗口", "font-custom":"字体自定义", "image-paste":"图片粘贴", "meow-smooth":"界面滚动与动效优化", "message-rewind":"消息回退", "mobile-fix":"移动端界面适配", "offpeak":"低峰时段相关辅助", "openclaw-bridge":"OpenClaw 桥接", "picturereader":"图片读取工具", "plugin-wizard":"插件配置向导", "prompt-custom":"自定义提示词", "settings-groups":"设置页分组", "side-session":"侧边会话", "soul-md":"soul.md 人设编辑", "think-zh-expand-eac":"思考文本中文化与展开", "dsh-stt":"语音转文字"
+  },
+  "publicManifestFunctionHints": {
+    "dsh-drag-and-drop":"拖放文件到对话", "dsh-find-plugin":"查找插件", "dsh-meme":"表情与梗图", "dsh-smooth-stream":"流式输出显示优化", "dsh-status-rotator":"状态文案轮播", "dsh-plugin-wallpaper-engine":"壁纸与背景效果", "dsh-chat-outline":"对话大纲导航", "dsh-web-attention-badge":"浏览器注意力提示", "dsh-file-claim":"文件协作占用声明", "@tt-a1i/archify-dsh":"生成可交互架构和工作流图", "dsh-prompt-stash":"提示词收藏", "dsh-our-free-model":"社区模型配置"
+  }
+}

@@ -165,7 +165,7 @@ describe('InstallTaskManager', () => {
     expect(task.items[0]?.installOutcome).toBe('unknown')
   })
 
-  it('serializes different plans on the same profile queue', async () => {
+  it('executes a second plan after the first profile operation settles', async () => {
     const firstBundle = await makeBundle({ plugins: [{ packageName: 'first', version: '1.0.0' }], planId: 'plan-first' })
     const secondBundle = await makeBundle({ plugins: [{ packageName: 'second', version: '1.0.0' }], planId: 'plan-second' })
     const host = new FakeHost()
@@ -188,16 +188,16 @@ describe('InstallTaskManager', () => {
       idempotencyKey: 'first',
       confirmed: true,
     }, baseline)
+    await waitForTask(manager, first.task.taskId, (task) => task.status === 'installing')
+    expect(host.calls).toHaveLength(1)
+    gate.resolve()
+    await waitForTask(manager, first.task.taskId, (task) => task.status === 'completed')
     const second = await manager.start(secondBundle, {
       planId: secondBundle.plan.planId,
       planDigest: secondBundle.plan.planDigest,
       idempotencyKey: 'second',
       confirmed: true,
     }, baseline)
-    await waitForTask(manager, first.task.taskId, (task) => task.status === 'installing')
-    expect(host.calls).toHaveLength(1)
-    gate.resolve()
-    await waitForTask(manager, first.task.taskId, (task) => task.status === 'completed')
     await waitForTask(manager, second.task.taskId, (task) => task.status === 'completed')
     expect(host.calls.map((call) => call.packageName)).toEqual(['first', 'second'])
   })
@@ -236,7 +236,7 @@ describe('InstallTaskManager', () => {
     const { manager, taskId } = await makeManager(bundle, host)
     await waitForTask(manager, taskId, (task) => task.status === 'installing')
     const cancelling = await manager.cancel({ taskId, idempotencyKey: 'cancel-1' })
-    expect(cancelling.status).toBe('installing')
+    expect(cancelling.status).toBe('cancelling')
     expect(cancelling.items[0]?.status).toBe('installing')
     gate.resolve()
     const task = await waitForTask(manager, taskId, (state) => state.status === 'completed')

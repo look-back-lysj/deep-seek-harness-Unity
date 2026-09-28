@@ -1,0 +1,12 @@
+{
+  "packageName": "@dsh-eac/market",
+  "version": "0.1.0-mvp.4",
+  "bytes": 569779,
+  "sha256": "6fdbbe072d403fc4cff98092a131041fa59c910d1ea9c1d9efe852a394515b2f",
+  "url": "https://gitee.com/flowing-shadows-like-scenes/deep-seek-harness-unity-mirror/raw/96e69618167bfdc5cbb7732ad73ae812a0d192cf/artifacts/sha256/6fdbbe072d403fc4cff98092a131041fa59c910d1ea9c1d9efe852a394515b2f/dsh-eac-market-0.1.0-mvp.4.tgz",
+  "commit": "96e69618167bfdc5cbb7732ad73ae812a0d192cf",
+  "host": "official Desktop 0.1.7-rc.2",
+  "catalogRevision": "eac-distribution-20260928-3",
+  "sourceCount": 82,
+  "downloadablePlugins": 15
+}

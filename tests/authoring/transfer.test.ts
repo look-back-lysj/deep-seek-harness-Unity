@@ -26,6 +26,23 @@ async function withTemp<T>(action: (root: string) => T | Promise<T>): Promise<T>
 }
 
 describe('TransferChunkRequest.data base64 严格分块', () => {
+  it('并发末块或导入回执未知时不执行第二次，重建 manager 也保持阻断', async () => {
+    const root = mkdtempSync(join(tmpdir(), 'transfer-finalizer-'))
+    let release: () => void = () => undefined
+    const gate = new Promise<void>(resolve => { release = resolve })
+    let writes = 0
+    const manager = new TransferManager(root, { finisher: async () => { writes++; await gate; throw new Error('合成导入结果丢失') } })
+    const bytes = Buffer.from('x')
+    const transfer = manager.begin(request(1, bytes), { ownerId: 'owner-1' })
+    const chunk = { transferId: transfer.transferId, sequence: 0, data: bytes.toString('base64') }
+    const first = manager.writeChunk('owner-1', chunk)
+    await expect(manager.writeChunk('owner-1', chunk)).rejects.toMatchObject({ code: 'transfer/finish-unconfirmed' })
+    release()
+    await expect(first).rejects.toThrow(/结果丢失/)
+    const reopened = new TransferManager(root, { finisher: async () => { writes++; return 'should-not-run' } })
+    await expect(reopened.writeChunk('owner-1', chunk)).rejects.toMatchObject({ code: 'transfer/finish-unconfirmed' })
+    expect(writes).toBe(1)
+  })
   it('连续块、幂等重复块、乱序拒绝和 finish 摘要核验', async () => {
     await withTemp(async (root) => {
       const manager = new TransferManager(root, {

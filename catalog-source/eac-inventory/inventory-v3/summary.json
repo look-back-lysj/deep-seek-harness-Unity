@@ -1,0 +1,28 @@
+{
+  "registeredPlugins": 62,
+  "betaAssetPackages": 27,
+  "registryWithoutAssetDirectory": 35,
+  "betaPackManifests": 47,
+  "betaPackOnlyPackages": 12,
+  "retainedArchivePackages": 3,
+  "aggregateMemberOnlyPackages": 5,
+  "totalNamedPackages": 82,
+  "unresolvedArchives": 0,
+  "preparedArchives": 22,
+  "localInstallCandidates": 15,
+  "noncommercialCandidates": 2,
+  "v2Records": 55,
+  "listingOnlyRecords": 27,
+  "officialNameCollisions": [
+    "@deepseek-ai/dsh-plugin-manager",
+    "@deepseek-ai/dsh-terminal"
+  ],
+  "installationStates": {
+    "missing-artifact": 47,
+    "hard-blocked": 12,
+    "missing-bundle": 8,
+    "bundle-installable": 15
+  },
+  "published": false,
+  "runtimeTested": false
+}

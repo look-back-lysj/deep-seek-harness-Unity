@@ -17,6 +17,9 @@ export interface RemoteSecurityOptions {
 export interface SafeFetchOptions extends RemoteSecurityOptions {
   readonly headers?: Record<string, string>
   readonly fetch?: typeof fetch
+  readonly signal?: AbortSignal | undefined
+  /** 目录读者可进一步要求每跳都属于维护者登记的确切 URL。 */
+  readonly validateRedirect?: (url: URL) => void
 }
 
 export class DeliverySecurityError extends Error {
@@ -101,8 +104,44 @@ export async function assertSafeRemoteUrl(input: string | URL, options: RemoteSe
   return url
 }
 
-function timeoutSignal(timeoutMs: number): AbortSignal {
-  return AbortSignal.timeout(timeoutMs)
+/** 中止等待也用于 DNS 和自定义 Reader；取消后不能继续尝试镜像。 */
+export async function withAbort<T>(operation: Promise<T>, signal?: AbortSignal): Promise<T> {
+  if (!signal) return operation
+  signal.throwIfAborted()
+  let abort: () => void = () => undefined
+  const cancelled = new Promise<never>((_resolve, reject) => {
+    abort = () => reject(signal.reason ?? new DOMException('已取消', 'AbortError'))
+    signal.addEventListener('abort', abort, { once: true })
+    if (signal.aborted) abort()
+  })
+  try { return await Promise.race([operation, cancelled]) } finally { signal.removeEventListener('abort', abort) }
+}
+
+export async function readLimitedResponse(response: Response, maxBytes: number, signal?: AbortSignal): Promise<Uint8Array> {
+  signal?.throwIfAborted()
+  if (Number(response.headers.get('content-length') ?? '0') > maxBytes) {
+    void response.body?.cancel().catch(() => undefined)
+    throw new DeliverySecurityError('delivery/too-large', '响应声明体积超限')
+  }
+  if (!response.body) return Buffer.alloc(0)
+  const reader = response.body.getReader()
+  const chunks: Uint8Array[] = []
+  let total = 0
+  try {
+    while (true) {
+      const part = await withAbort(reader.read(), signal)
+      if (part.done) break
+      total += part.value.byteLength
+      if (total > maxBytes) throw new DeliverySecurityError('delivery/too-large', '响应体积超限')
+      chunks.push(part.value)
+    }
+    signal?.throwIfAborted()
+    return Buffer.concat(chunks, total)
+  } finally {
+    // cancel 不等待远端清理，避免自定义/失联流让取消操作重新阻塞。
+    void reader.cancel().catch(() => undefined)
+    reader.releaseLock()
+  }
 }
 
 /**
@@ -111,22 +150,31 @@ function timeoutSignal(timeoutMs: number): AbortSignal {
  */
 export async function safeFetch(input: string | URL, options: SafeFetchOptions = {}): Promise<Response> {
   const maxRedirects = options.maxRedirects ?? 5
-  let current = await assertSafeRemoteUrl(input, options)
+  const timeout = AbortSignal.timeout(options.timeoutMs ?? 30_000)
+  const signal = options.signal ? AbortSignal.any([options.signal, timeout]) : timeout
+  signal.throwIfAborted()
+  let current = await withAbort(assertSafeRemoteUrl(input, options), signal)
   for (let redirects = 0; redirects <= maxRedirects; redirects += 1) {
-    const response = await (options.fetch ?? fetch)(current, {
+    signal.throwIfAborted()
+    const response = await withAbort((options.fetch ?? fetch)(current, {
       method: 'GET',
       redirect: 'manual',
-      signal: timeoutSignal(options.timeoutMs ?? 30_000),
+      signal,
       headers: { accept: '*/*', ...options.headers },
-    })
+    }), signal)
     if ([301, 302, 303, 307, 308].includes(response.status)) {
+      void response.body?.cancel().catch(() => undefined)
       const location = response.headers.get('location')
       if (!location) throw new DeliverySecurityError('delivery/invalid-redirect', '重定向响应缺少 Location')
       if (redirects === maxRedirects) throw new DeliverySecurityError('delivery/too-many-redirects', '下载重定向次数过多')
-      current = await assertSafeRemoteUrl(new URL(location, current), options)
+      current = await withAbort(assertSafeRemoteUrl(new URL(location, current), options), signal)
+      options.validateRedirect?.(current)
       continue
     }
-    if (!response.ok) throw new DeliverySecurityError('delivery/http-failed', `来源返回 HTTP ${response.status}`)
+    if (!response.ok) {
+      void response.body?.cancel().catch(() => undefined)
+      throw new DeliverySecurityError('delivery/http-failed', `来源返回 HTTP ${response.status}`)
+    }
     return response
   }
   throw new DeliverySecurityError('delivery/too-many-redirects', '下载重定向次数过多')

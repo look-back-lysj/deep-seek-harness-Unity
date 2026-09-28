@@ -1,0 +1,18 @@
+{
+  "schemaVersion": "1",
+  "releaseId": null,
+  "pluginId": null,
+  "packageName": null,
+  "version": null,
+  "artifactDigest": null,
+  "metadataDigest": null,
+  "size": null,
+  "provenance": {
+    "kind": "author-release",
+    "repositoryUrl": null,
+    "commit": null,
+    "releaseUrl": null,
+    "license": null,
+    "authorization": { "basis": "license", "reference": null, "redistribution": false }
+  }
+}

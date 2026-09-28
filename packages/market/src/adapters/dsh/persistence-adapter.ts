@@ -3,6 +3,7 @@
  * paths are relative to the market-owned profile directory and cannot escape
  * it. Locks protect only market files and never nest the official package lock.
  */
+import { createHash } from 'node:crypto'
 import { appendFile, mkdir, readFile, readdir, rm, stat } from 'node:fs/promises'
 import { dirname, join, normalize, parse, relative, resolve } from 'node:path'
 import { withFileLock, writeFileAtomic } from '@deepseek-ai/dsh-atomic-write'
@@ -56,11 +57,16 @@ export class NodePersistenceFiles implements PersistenceFilePort {
     const safe = safeRelative(prefix.endsWith('/') ? prefix.slice(0, -1) : prefix)
     const directory = resolve(this.root, safe)
     try {
-      const entries = await readdir(directory, { withFileTypes: true })
-      return entries
-        .filter((entry) => entry.isFile())
-        .map((entry) => `${safe}/${entry.name}`)
-        .sort()
+      const walk = async (dir: string, prefix: string): Promise<string[]> => {
+        const result: string[] = []
+        for (const entry of await readdir(dir, { withFileTypes: true })) {
+          // Do not traverse symlinks/junctions outside market-owned storage.
+          if (entry.isFile()) result.push(prefix + '/' + entry.name)
+          else if (entry.isDirectory() && !entry.isSymbolicLink()) result.push(...await walk(join(dir, entry.name), prefix + '/' + entry.name))
+        }
+        return result
+      }
+      return (await walk(directory, safe)).sort()
     } catch (error) {
       if ((error as NodeJS.ErrnoException).code === 'ENOENT') return []
       throw error
@@ -85,7 +91,7 @@ export class AtomicProfileLocks implements ProfileLockPort {
   constructor(private readonly root: string, private readonly waitMs = 30_000) {}
 
   async acquire(profileKey: string, owner: string): Promise<ProfileLockHandle> {
-    const key = profileKey.replace(/[^A-Za-z0-9._-]/g, '_').slice(0, 120)
+    const key = createHash('sha256').update(profileKey).digest('hex')
     const filename = join(resolve(this.root), `.locks`, `${key}.lock`)
     await mkdir(dirname(filename), { recursive: true, mode: 0o700 })
     let releaseOperation: (() => void) | undefined

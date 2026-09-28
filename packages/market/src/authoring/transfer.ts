@@ -38,6 +38,8 @@ interface TransferRecord extends TransferBeginRequest {
   readonly receivedBytes: number
   readonly complete: boolean
   readonly resultId?: string
+  /** 在调用有副作用的导入回调前落盘。重启后不能重放结果未知的导入。 */
+  readonly finishing?: boolean
 }
 
 export class TransferError extends Error {
@@ -113,7 +115,7 @@ export class TransferManager {
 
   private write(record: TransferRecord): void {
     const path = this.metaPath(record.transferId)
-    const temporary = `${path}.${process.pid}.tmp`
+    const temporary = `${path}.${randomUUID()}.tmp`
     writeFileSync(temporary, JSON.stringify(record), { encoding: 'utf8', flag: 'wx' })
     renameSync(temporary, path)
   }
@@ -121,6 +123,7 @@ export class TransferManager {
   begin(request: TransferBeginRequest, context: TransferContext): TransferResult {
     if (!/^[a-zA-Z0-9._:-]{1,128}$/.test(context.ownerId)) throw new TransferError('transfer/owner', 'ownerId 无效')
     const filename = safeFilename(request.filename)
+    if (request.targetId !== undefined && context.targetId !== undefined && request.targetId !== context.targetId) throw new TransferError('transfer/target', '传输目标与 Host 绑定目标不一致')
     assertMediaType(request.purpose, request.mediaType)
     if (!Number.isSafeInteger(request.size) || request.size < 0 || request.size > this.limits.maxBytes) {
       throw new TransferError('transfer/size', `文件大小必须在0..${this.limits.maxBytes}`)
@@ -150,6 +153,7 @@ export class TransferManager {
     const record = this.read(request.transferId)
     if (record.ownerId !== ownerId || record.direction !== 'inbound') throw new TransferError('transfer/owner', '传输归属不匹配')
     if (record.complete) return { transferId: record.transferId, complete: true, receivedBytes: record.receivedBytes, ...(record.resultId === undefined ? {} : { resultId: record.resultId }) }
+    if (record.finishing) throw new TransferError('transfer/finish-unconfirmed', '该传输已开始导入，结果尚未确认；请先重开草稿核对，禁止重复导入')
     if (!Number.isSafeInteger(request.sequence) || request.sequence < 0) throw new TransferError('transfer/sequence', 'sequence 无效')
     const data = canonicalBase64(request.data)
     if (data.byteLength === 0 || data.byteLength > this.limits.blockBytes) throw new TransferError('transfer/block-size', `块大小必须在1..${this.limits.blockBytes}`)
@@ -191,8 +195,9 @@ export class TransferManager {
         this.write({ ...record, receivedBytes })
         throw new TransferError('transfer/digest-mismatch', `上传摘要不符：expected ${record.sha256}, actual ${actual}`)
       }
+      this.write({ ...record, receivedBytes, finishing: true })
       const resultId = await this.finisher?.({ transferId: record.transferId, path, request: record })
-      const complete: TransferRecord = { ...record, receivedBytes, complete: true, ...(resultId === undefined ? {} : { resultId }) }
+      const complete: TransferRecord = { ...record, receivedBytes, finishing: false, complete: true, ...(resultId === undefined ? {} : { resultId }) }
       this.write(complete)
       return { transferId: record.transferId, complete: true, receivedBytes, ...(resultId === undefined ? {} : { resultId }) }
     }

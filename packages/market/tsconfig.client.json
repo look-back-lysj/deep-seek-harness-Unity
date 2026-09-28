@@ -5,6 +5,7 @@
     "outDir": "lib/types",
     "tsBuildInfoFile": "lib/tsconfig.client.tsbuildinfo"
   },
+  "files": ["src/core/semver.ts"],
   "include": ["src/**/*.ts", "src/**/*.tsx"],
   "exclude": [
     "src/host/**",

@@ -32,8 +32,13 @@ type LocalIdentity = 'file' | 'link' | 'fork' | 'registry' | 'unknown'
 export interface InventorySourceEvidence {
   readonly packageName: string
   readonly kind: 'market-cache-file' | 'profile' | 'file' | 'link' | 'fork' | 'unknown'
-  readonly proven?: boolean
+  /** Produced only after durable receipt, dependency reference and bytes agree. */
+  readonly receiptId?: string
+  readonly version?: string
   readonly digest?: string
+  readonly dependencyRef?: string
+  readonly cacheRef?: string
+  readonly restartRequired?: boolean
 }
 
 type InventoryRowProjection = InventoryRow & {
@@ -81,9 +86,9 @@ function sourceFor(
 ): { source: InventoryItem['source']; localIdentity: LocalIdentity } {
   if (!booleanAt(item.installed)) return { source: 'installation', localIdentity: 'registry' }
   const name = stringAt(item.name)
-  const proven = evidence.find((candidate) => candidate.packageName === name && candidate.proven === true)
-  if (proven?.kind === 'market-cache-file') return { source: 'market-cache-file', localIdentity: 'file' }
-  if (proven?.kind === 'profile') return { source: 'profile', localIdentity: 'registry' }
+  const proven = evidence.find((candidate) => candidate.packageName === name && candidate.version === stringAt(item.version))
+  if (proven?.kind === 'market-cache-file' && proven.receiptId && proven.digest && proven.dependencyRef && proven.cacheRef) return { source: 'market-cache-file', localIdentity: 'file' }
+  // Registry ownership is not inferred merely from an unverified name.
   // No proof means no permission to overwrite a user file/link/fork package.
   return { source: 'unknown', localIdentity: proven?.kind === 'file' || proven?.kind === 'link' || proven?.kind === 'fork'
     ? proven.kind
@@ -95,7 +100,7 @@ export class DshManagerAdapter {
   constructor(
     private readonly ctx: Context,
     private readonly environmentId = 'current',
-    private readonly sourceEvidence: readonly InventorySourceEvidence[] = [],
+    private readonly sourceEvidence: readonly InventorySourceEvidence[] | (() => Promise<readonly InventorySourceEvidence[]>) = [],
   ) {}
 
   private get manager(): OfficialManager | undefined {
@@ -134,6 +139,11 @@ export class DshManagerAdapter {
       unknownItems.push(`listPlugins:${error instanceof Error ? error.message : 'unknown-error'}`)
     }
 
+    if (!Array.isArray(bundleValue)) { unknownItems.push('listBundles:invalid'); bundleValue = [] }
+    if (!Array.isArray(pluginValue)) { unknownItems.push('listPlugins:invalid'); pluginValue = [] }
+    let evidence: readonly InventorySourceEvidence[] = []
+    try { evidence = typeof this.sourceEvidence === 'function' ? await this.sourceEvidence() : this.sourceEvidence }
+    catch { unknownItems.push('source-evidence:unreadable') }
     const pluginsByEntry = new Map<string, RemoteRecord>()
     const standalone: RemoteRecord[] = []
     for (const raw of pluginValue) {
@@ -143,6 +153,7 @@ export class DshManagerAdapter {
         unknownItems.push(`plugin-entry:${stringAt(item.moduleName) ?? 'unknown'}`)
         continue
       }
+      if (pluginsByEntry.has(entryId)) unknownItems.push(`plugin-entry:duplicate:${entryId}`)
       pluginsByEntry.set(entryId, item)
       standalone.push(item)
     }
@@ -170,7 +181,7 @@ export class DshManagerAdapter {
         const row: InventoryRowProjection = {
           id: rowId,
           name: moduleName,
-          state: entryId === undefined ? 'unknown' : rowState(booleanAt(plugin?.enabled), fiberPhase, error),
+          state: entryId === undefined || plugin === undefined ? (booleanAt(item.enabled) ? 'unknown' : 'disabled') : rowState(booleanAt(plugin?.enabled), fiberPhase, error),
           rowId,
           moduleName,
           ...(entryId === undefined ? {} : { entryId }),
@@ -179,8 +190,8 @@ export class DshManagerAdapter {
         }
         rows.push(row)
       }
-      const source = sourceFor(item, this.sourceEvidence)
-      const hasUnknownRuntimeRow = rows.some((row) => row.state === 'unknown')
+      const source = sourceFor(item, evidence)
+      const restartRequired = evidence.some(proof => proof.packageName === name && proof.version === stringAt(item.version) && proof.restartRequired === true)
       const managementError = stringAt(record(item.error).code)
       const declaredReadOnly = stringAt(item.readOnlyReason)
       const readOnlyReason = declaredReadOnly === 'management-required' || declaredReadOnly === 'unaddressable'
@@ -189,16 +200,18 @@ export class DshManagerAdapter {
           ? managementError
           : undefined
       const version = stringAt(item.version)
+      if (booleanAt(item.installed) && version === undefined) unknownItems.push('bundle-version:' + name)
       items.push({
         packageName: name,
         ...(version === undefined ? {} : { version }),
+        ...(source.source === 'market-cache-file' ? { artifactDigest: evidence.find(proof => proof.packageName === name && proof.version === version)?.digest } : {}),
         source: source.source,
         installed: booleanAt(item.installed),
         bundleEnabled: booleanAt(item.enabled),
         removable: booleanAt(item.removable),
         ...(readOnlyReason === 'management-required' || readOnlyReason === 'unaddressable' ? { readOnlyReason } : {}),
         rows,
-        restartRequired: booleanAt(item.enabled) && hasUnknownRuntimeRow,
+        restartRequired,
         provenance: source.source === 'market-cache-file' || source.source === 'profile' || source.source === 'installation' ? source.source : 'unknown',
         localIdentity: source.localIdentity,
       })

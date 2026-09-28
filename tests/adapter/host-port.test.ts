@@ -1,16 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
-import { OfficialHostPort } from '../../packages/market/src/adapters/dsh/host-port.ts'
+import { OfficialHostPort, mapOfficialChange } from '../../packages/market/src/adapters/dsh/host-port.ts'
 import { pendingBuildsDigest } from '../../packages/market/src/core/canonical.ts'
-import type { ArtifactAcquisition } from '../../packages/market/src/core/ports.ts'
-
-const artifact: ArtifactAcquisition = {
-  pluginId: 'plugin',
-  packageName: '@test/plugin',
-  version: '1.0.0',
-  artifactDigest: 'sha256:0',
-  localRef: 'D:/isolated/cache/plugin.tgz',
-  size: 1,
-}
 
 function context(manager: unknown) {
   return {
@@ -28,8 +18,7 @@ describe('official HostPort mapping', () => {
       target: '@test/plugin',
       pendingBuilds: ['zod', 'esbuild'],
     }))
-    const port = new OfficialHostPort(context({ installBundle }))
-    const result = await port.install({ requestId: 'request-1', artifact, enabled: true })
+    const result = await mapOfficialChange(await installBundle() as never)
     expect(result.kind).toBe('awaiting-approval')
     if (result.kind !== 'awaiting-approval') throw new Error('unreachable')
     expect(result.pendingBuilds).toEqual(['esbuild', 'zod'])
@@ -43,11 +32,15 @@ describe('official HostPort mapping', () => {
       stage: 'install',
       target: '@test/plugin',
     }))
-    const port = new OfficialHostPort(context({ installBundle }))
-    const result = await port.install({ requestId: 'request-2', artifact, enabled: true })
+    const result = await mapOfficialChange(await installBundle() as never)
     expect(result.kind).toBe('unknown')
     if (result.kind !== 'unknown') throw new Error('unreachable')
     expect(result.error).toContain('overridden')
+  })
+
+  it('does not invent script permission changes from requested approvals', async () => {
+    const outcome = await mapOfficialChange({ application: 'failed', changed: false, stage: 'install', target: 'test', error: { code: 'stale-approval' } }, ['requested-only'])
+    expect(outcome.permissionChanges).toEqual([])
   })
 
   it('reports only capabilities the official manager actually exposes', () => {

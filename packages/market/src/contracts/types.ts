@@ -4,7 +4,7 @@
  * It never exposes local absolute paths, credentials, or executable callbacks.
  */
 
-export const PROTOCOL_VERSION = '1.0.0'
+export const PROTOCOL_VERSION = '1.1.0'
 export const SERVICE_NAME = 'eacMarket'
 export const MARKET_SCHEMA_VERSION = '1'
 
@@ -49,6 +49,7 @@ export interface CatalogMedia {
 
 export interface CatalogRecommendation {
   readonly pluginId: string
+  readonly version?: string
   readonly placement: 'featured' | 'category' | 'guide'
   readonly order: number
   readonly reason: string
@@ -60,6 +61,9 @@ export interface CatalogPlugin {
   readonly name: string
   readonly packageName: string
   readonly version: string
+  /** A navigation category only; derived from package metadata, never an execution grant. */
+  readonly kind?: 'plugin' | 'skin' | undefined
+  readonly skinId?: string | undefined
   readonly summary: string
   readonly author: string
   readonly authorUrl?: string
@@ -78,6 +82,31 @@ export interface CatalogPlugin {
   readonly requiresSetup: boolean
   readonly largeExternalResource: boolean
   readonly releasedAt?: string | undefined
+  /** Team-reviewed operation evidence; absent means no data-safety claim. */
+  readonly managementEvidence?: CatalogManagementEvidence | undefined
+}
+
+/** Research-only listing: no artifact, install plan, metadata or claimed exact
+ * installed version. It cannot enter the installable CatalogPlugin table. */
+export interface CatalogListing {
+  readonly id: string
+  readonly name: string
+  readonly packageName: string
+  readonly summary: string
+  readonly reason: string
+  readonly sourceUrl: string
+  readonly requestedVersion?: string | undefined
+}
+
+export interface CatalogManagementEvidence {
+  readonly reviewId: string
+  readonly artifactDigest: string
+  readonly reviewedBy: string
+  readonly reviewedAt: string
+  readonly stateless: boolean
+  readonly removePreservesExternalData: boolean
+  readonly downgradeFrom: readonly string[]
+  readonly explanation: string
 }
 
 export interface PackComponent {
@@ -111,6 +140,29 @@ export interface CatalogPack {
   readonly components: readonly PackComponent[]
   readonly lockDigest: string
   readonly execution: PackExecution
+}
+
+/** Market-private collection, distinct from Mojobox Pack and its npm Lock. */
+export interface CatalogCollectionView {
+  readonly kind: 'market-collection'
+  readonly id: string
+  readonly version: string
+  readonly name: string
+  readonly summary: string
+  readonly collectionDigest: string
+  readonly components: readonly {
+    readonly pluginId: string
+    readonly version: string
+    readonly releaseId: string
+    readonly artifactDigest: string
+    readonly required: boolean
+    readonly enabled: boolean
+  }[]
+  readonly execution: {
+    readonly coverage: 'complete' | 'partial' | 'unknown'
+    readonly edges: readonly PackExecutionEdge[]
+    readonly provenance: string
+  }
 }
 
 export interface CatalogPresentation {
@@ -147,10 +199,12 @@ export interface CatalogSnapshot {
   readonly origin: 'embedded' | 'online' | 'cache'
   readonly stale: boolean
   readonly plugins: readonly CatalogPlugin[]
+  readonly listings?: readonly CatalogListing[] | undefined
   readonly packs: readonly CatalogPack[]
   readonly presentations: readonly CatalogPresentation[]
   readonly deliveries: readonly CatalogDelivery[]
   readonly recommendations?: readonly CatalogRecommendation[] | undefined
+  readonly collections?: readonly CatalogCollectionView[] | undefined
 }
 
 export interface CatalogRefreshRequest {
@@ -179,6 +233,8 @@ export interface InventoryItem {
   readonly pluginId?: string | undefined
   readonly packageName: string
   readonly version?: string | undefined
+  /** Verified installed reference/cache receipt identity, not a claim about every runtime file. */
+  readonly artifactDigest?: string | undefined
   readonly source: 'profile' | 'installation' | 'market-cache-file' | 'unknown'
   readonly installed: boolean
   readonly bundleEnabled: boolean
@@ -211,6 +267,8 @@ export interface PlanCreateRequest {
   readonly planId?: string
   readonly packId?: string
   readonly packVersion?: string
+  readonly collectionId?: string
+  readonly collectionVersion?: string
   readonly selections: readonly PlanSelection[]
   readonly attemptUnknown?: boolean
 }
@@ -242,6 +300,9 @@ export interface InstallPlan {
   readonly packId?: string
   readonly packVersion?: string
   readonly packExecutionDigest?: string
+  readonly collectionId?: string
+  readonly collectionVersion?: string
+  readonly collectionDigest?: string
   readonly items: readonly InstallPlanItem[]
   readonly planDigest: string
 }
@@ -459,6 +520,22 @@ export interface ReadmeImportResult {
   readonly mediaWarnings: readonly string[]
 }
 
+export interface ReadmePreviewView {
+  readonly previewId: string
+  readonly expiresAt: string
+  readonly candidate: AuthorDraftInput
+  readonly before?: AuthorDraft
+  readonly repositoryUrl: string
+  readonly commit: string
+  readonly importedAt: string
+  readonly mediaWarnings: readonly string[]
+}
+
+export interface ReadmeApplyPreviewRequest {
+  readonly previewId: string
+  readonly expectedRevision?: string
+}
+
 export interface TransferBeginRequest {
   readonly purpose: 'draft-media' | 'author-export' | 'author-import'
   /** Draft/package target the transfer is bound to; Host rejects cross-target writes. */
@@ -503,6 +580,19 @@ export interface AuthorExportRequest {
   readonly notes?: string
 }
 
+/** Media is scoped to the saved draft; no arbitrary paths or URLs are accepted. */
+export interface AuthorMediaReadRequest {
+  readonly draftId: string
+  readonly mediaId: string
+}
+
+export interface AuthorMediaReadResult {
+  readonly id: string
+  readonly mediaType: string
+  readonly data: string
+  readonly sha256: string
+}
+
 export interface TransferResult {
   readonly transferId: string
   readonly complete: boolean
@@ -529,6 +619,28 @@ export interface AiProposal {
   readonly summary: string
   readonly facts: readonly string[]
   readonly actions: readonly AiProposedAction[]
+  readonly environmentId?: string | undefined
+  readonly taskId?: string | undefined
+  readonly diagnosticDigest?: string | undefined
+  /** The actual preflight presented for an install-class suggestion. */
+  readonly plan?: InstallPlan | undefined
+  readonly impact?: AiActionImpact | undefined
+}
+
+export interface AiActionImpact {
+  readonly summary: string
+  readonly currentVersion?: string | undefined
+  readonly targetVersion?: string | undefined
+  readonly affectedPackages: readonly string[]
+  readonly dataBehavior: string
+  readonly unknowns: readonly string[]
+}
+
+export interface AiRiskChallenge {
+  readonly id: string
+  readonly digest: string
+  readonly expiresAt: string
+  readonly impact: AiActionImpact
 }
 
 export interface AiAnalyzeRequest {
@@ -548,13 +660,16 @@ export interface AiConfirmRequest {
   readonly impactDigest: string
   readonly idempotencyKey: string
   readonly riskConfirmed?: true | undefined
+  readonly challengeId?: string | undefined
+  readonly challengeDigest?: string | undefined
 }
 
 export interface AiApplyResult {
-  readonly status: 'applied' | 'restart-required' | 'failed' | 'unknown' | 'blocked'
+  readonly status: 'applied' | 'restart-required' | 'failed' | 'unknown' | 'blocked' | 'requires-confirmation' | 'queued'
   readonly changed: boolean
   readonly taskId?: string | undefined
   readonly error?: string | undefined
+  readonly challenge?: AiRiskChallenge | undefined
 }
 
 export interface DiagnosticEntry {

@@ -1,16 +1,14 @@
 import { useEffect, useRef, useState } from 'react'
-import { Button, Input, MarkdownText, Modal, Pill, Tag } from './ui.tsx'
+import { Button, MarkdownText, Modal, Pill, Tag } from './ui.tsx'
 import type {
-  AuthorDraft,
-  AuthorDraftInput,
   CatalogPack,
+  CatalogCollectionView,
   CatalogPlugin,
   CatalogPresentation,
   CatalogSnapshot,
   DiagnosticExport,
   InventoryItem,
   TaskState,
-  TransferResult,
 } from '../types.ts'
 import {
   EMPTY_FILTERS,
@@ -21,16 +19,16 @@ import {
   hasCatalogUpdate,
   partitionInventory,
   pluginActionFeedback,
-  taskStateIsNewer,
   type BrowseSortMode,
   filterPlugins,
   findPlugin,
+  latestCompatiblePlugin,
   installabilityLabel,
   isInstalled,
   packCoverageLabel,
   presentationForPlugin,
+  recommendationMatches,
   verificationLabel,
-  type LoadState,
   type MarketRemote,
   type MarketView,
   type PluginFilters,
@@ -38,7 +36,6 @@ import {
 } from './model.ts'
 import {
   EmptyState,
-  FileTransferField,
   InstallPlanDialog,
   InventoryCard,
   PluginCard,
@@ -47,15 +44,29 @@ import {
   Status,
   TaskDrawer,
   errorMessage,
-  formatTransferStatus,
   type PlanTarget,
 } from './components.tsx'
 import { MARKET_CSS } from './marketStyles.ts'
+import { useMarketData, boundedRequest } from './data-controller.ts'
+import { AuthorWorkspace } from './AuthorWorkspace.tsx'
+import { SkinCenter, SkinCenterEntry } from './SkinCenter.tsx'
+import { PendingListings } from './PendingListings.tsx'
+import { isSkinPlugin, skinCatalogForInventory } from './skin-model.ts'
+import { SKIN_LOADER_PACKAGE, type SkinServiceBridge } from './skin-service.ts'
+import { EXTENSION_SLOTS, type ExtensionContext, type ExtensionDraftChange, type ExtensionDraftRef, type ExtensionSlot, type MarketExtensionHost } from './extensions/contract.ts'
 
 export type { MarketRemote } from './model.ts'
 
 export interface MarketPageProps {
   readonly remote: MarketRemote
+  readonly skinService?: SkinServiceBridge | undefined
+  readonly onOpenOfficialPlugins?: (() => void) | undefined
+  readonly homeSupplemental?: React.ReactNode
+  readonly authorSupplemental?: React.ReactNode
+  readonly detailSupplemental?: ((plugin: CatalogPlugin) => React.ReactNode) | undefined
+  readonly extensions?: MarketExtensionHost | undefined
+  /** E supplies its guarded renderer. No contribution is invoked directly here. */
+  readonly renderExtensionSurface?: ((props: { host: MarketExtensionHost; slot: ExtensionSlot; context: Readonly<ExtensionContext>; pageId?: string | undefined }) => React.ReactNode) | undefined
 }
 
 const MARKDOWN_LABELS = {
@@ -70,48 +81,24 @@ const HELP_STEPS = [
 ]
 
 function pageTab(view: MarketView): PrimaryView {
-  return view === 'all' || view === 'detail' ? 'all' : view === 'mine' ? 'mine' : 'discover'
+  return view === 'all' || view === 'detail' || view === 'skins' ? 'all' : view === 'mine' ? 'mine' : 'discover'
 }
 
-function initialDraft(): AuthorDraft {
-  return {
-    id: `draft-${Date.now()}`,
-    revision: 'local-1',
-    title: '',
-    summary: '',
-    markdown: '## 功能说明\n\n用简洁的标题、步骤和示例说明插件解决什么问题。\n\n## 使用方法\n\n1. 安装并完成必要设置\n2. 打开插件入口\n3. 按示例完成第一次使用\n',
-    mediaIds: [],
-    updatedAt: new Date().toISOString(),
-  }
-}
-
-function draftInput(draft: AuthorDraft): AuthorDraftInput {
-  return {
-    id: draft.id,
-    expectedRevision: draft.revision,
-    title: draft.title,
-    summary: draft.summary,
-    markdown: draft.markdown,
-    ...(draft.pluginId === undefined ? {} : { pluginId: draft.pluginId }),
-    ...(draft.pluginVersion === undefined ? {} : { pluginVersion: draft.pluginVersion }),
-    mediaIds: draft.mediaIds,
-    ...(draft.sourceCommit === undefined ? {} : { sourceCommit: draft.sourceCommit }),
-    ...(draft.sourceUrl === undefined ? {} : { sourceUrl: draft.sourceUrl }),
-  }
-}
-
-function packPlugins(pack: CatalogPack, catalogPlugins: readonly CatalogPlugin[]): readonly CatalogPlugin[] {
+export function packPlugins(pack: CatalogPack, catalogPlugins: readonly CatalogPlugin[]): readonly CatalogPlugin[] {
   return pack.components.flatMap((component) => {
-    const plugin = catalogPlugins.find((item) => item.id === component.pluginId)
+    const plugin = catalogPlugins.find((item) => item.id === component.pluginId && item.version === component.version)
     return plugin === undefined ? [] : [plugin]
   })
 }
 
-export function MarketPage({ remote }: MarketPageProps): React.JSX.Element {
-  const [state, setState] = useState<LoadState>({ status: 'loading' })
+export function MarketPage({ remote, skinService, onOpenOfficialPlugins, homeSupplemental, authorSupplemental, detailSupplemental, extensions, renderExtensionSurface }: MarketPageProps): React.JSX.Element {
+  const { state, notice: syncNotice, controller } = useMarketData(remote)
   const [view, setView] = useState<MarketView>('discover')
-  const [previousView, setPreviousView] = useState<PrimaryView>('discover')
-  const [selectedPluginId, setSelectedPluginId] = useState<string | undefined>(undefined)
+  const [previousView, setPreviousView] = useState<PrimaryView | 'skins'>('discover')
+  const [skinOrigin, setSkinOrigin] = useState<PrimaryView>('discover')
+  const [skinVisited, setSkinVisited] = useState(false)
+  const [skinInstallGuide, setSkinInstallGuide] = useState<CatalogPlugin>()
+  const [detailSelection, setDetailSelection] = useState<{ readonly id: string; readonly version: string }>()
   const [filters, setFilters] = useState<PluginFilters>(EMPTY_FILTERS)
   const [advanced, setAdvanced] = useState(false)
   const [page, setPage] = useState(1)
@@ -120,90 +107,27 @@ export function MarketPage({ remote }: MarketPageProps): React.JSX.Element {
   const [planTarget, setPlanTarget] = useState<PlanTarget | undefined>(undefined)
   const [removeTarget, setRemoveTarget] = useState<InventoryItem | undefined>(undefined)
   const [actionNotice, setActionNotice] = useState('')
-  const [draft, setDraft] = useState<AuthorDraft>(initialDraft)
-  const [draftDirty, setDraftDirty] = useState(false)
-  const [draftNotice, setDraftNotice] = useState('')
-  const [repoUrl, setRepoUrl] = useState('')
-  const [transfer, setTransfer] = useState<TransferResult | undefined>(undefined)
   const [diagnostic, setDiagnostic] = useState<DiagnosticExport | undefined>(undefined)
   const [tutorialOpen, setTutorialOpen] = useState(false)
   const [browseSort, setBrowseSort] = useState<BrowseSortMode>('rules')
   const [systemOpen, setSystemOpen] = useState(false)
   const scrollRef = useRef<HTMLDivElement | null>(null)
   const scrollPositions = useRef(new Map<string, number>())
-  const pollingRef = useRef(false)
-
-
-  async function load(showLoading = true): Promise<void> {
-    if (showLoading) setState({ status: 'loading' })
-    try {
-      const [hello, catalog, inventory, tasks] = await Promise.all([
-        remote.hello(),
-        remote.catalog(),
-        remote.inventory(),
-        remote.listTasks?.() ?? Promise.resolve([]),
-      ])
-      setState({ status: 'ready', hello, catalog, inventory, tasks })
-    } catch (error) {
-      setState({ status: 'error', message: errorMessage(error) })
-    }
-  }
-
-  useEffect(() => {
-    void load()
-  }, [remote])
-
-  useEffect(() => {
-    if (state.status !== 'ready' || remote.getTask === undefined) return
-    const pending = state.tasks.filter((task) => activeTasks([task]).length > 0)
-    if (pending.length === 0) return
-    let disposed = false
-    async function pollOnce(): Promise<void> {
-      if (disposed || pollingRef.current) return
-      pollingRef.current = true
-      try {
-        let becameTerminal = false
-        for (const previous of pending) {
-          if (disposed) break
-          try {
-            const task = await remote.getTask?.({ taskId: previous.taskId })
-            if (disposed || task === undefined) continue
-            becameTerminal ||= activeTasks([task]).length === 0
-            setState((current) => {
-              if (current.status !== 'ready') return current
-              const index = current.tasks.findIndex((item) => item.taskId === task.taskId)
-              if (index < 0 || !taskStateIsNewer(current.tasks[index], task)) return current
-              return { ...current, tasks: current.tasks.map((item, itemIndex) => itemIndex === index ? task : item) }
-            })
-          } catch {
-            // A transient read failure keeps the last real state visible.
-          }
-        }
-        if (becameTerminal && !disposed) {
-          try {
-            const inventory = await remote.inventory()
-            if (!disposed) setState((current) => current.status === 'ready' ? { ...current, inventory } : current)
-          } catch {
-            // The next manual refresh will reconcile inventory.
-          }
-        }
-      } finally {
-        pollingRef.current = false
-      }
-    }
-    const timer = window.setInterval(() => { void pollOnce() }, 700)
-    void pollOnce()
-    return () => {
-      disposed = true
-      window.clearInterval(timer)
-    }
-  }, [remote, state])
+  const [removeStep, setRemoveStep] = useState(false)
+  const [managementBusy, setManagementBusy] = useState(false)
+  const managementLock = useRef(false)
+  const [catalogBusy, setCatalogBusy] = useState(false)
+  const [extensionPage, setExtensionPage] = useState<string>()
+  const [extensionDraft, setExtensionDraft] = useState<ExtensionDraftRef>()
+  const [draftChange, setDraftChange] = useState<ExtensionDraftChange>()
+  const extensionLifetime = useRef(new AbortController())
+  useEffect(() => { const lifetime = new AbortController(); extensionLifetime.current = lifetime; return () => lifetime.abort() }, [remote])
 
   useEffect(() => {
     if (state.status !== 'ready') return
-    const plugin = findPlugin(state.catalog, selectedPluginId)
+    const plugin = findPlugin(state.catalog, detailSelection?.id, detailSelection?.version)
     if (view === 'detail' && plugin === undefined) setView(previousView)
-  }, [state, selectedPluginId, view, previousView])
+  }, [state, detailSelection, view, previousView])
 
   useEffect(() => {
     function onPointerDown(event: PointerEvent): void {
@@ -213,7 +137,7 @@ export function MarketPage({ remote }: MarketPageProps): React.JSX.Element {
     return () => document.removeEventListener('pointerdown', onPointerDown)
   }, [])
 
-  const selectedPlugin = state.status === 'ready' ? findPlugin(state.catalog, selectedPluginId) : undefined
+  const selectedPlugin = state.status === 'ready' ? findPlugin(state.catalog, detailSelection?.id, detailSelection?.version) : undefined
   const activeCount = state.status === 'ready' ? activeTasks(state.tasks).length : 0
 
   function navigate(next: PrimaryView): void {
@@ -221,14 +145,15 @@ export function MarketPage({ remote }: MarketPageProps): React.JSX.Element {
     setPreviousView(next)
     setPage(1)
     setActionNotice('')
+    if (next === 'mine') void controller.sync(true)
   }
 
   function openDetail(plugin: CatalogPlugin): void {
     if (state.status !== 'ready') return
-    const from = pageTab(view)
+    const from = view === 'skins' ? 'skins' : pageTab(view)
     scrollPositions.current.set(`${from}:${filters.category}:${filters.query}:${page}`, scrollRef.current?.scrollTop ?? 0)
     setPreviousView(from)
-    setSelectedPluginId(plugin.id)
+    setDetailSelection({ id: plugin.id, version: plugin.version })
     setView('detail')
   }
 
@@ -248,6 +173,10 @@ export function MarketPage({ remote }: MarketPageProps): React.JSX.Element {
   }
 
   function openPlanForPlugin(plugin: CatalogPlugin): void {
+    if (isSkinPlugin(plugin) && state.status === 'ready' && !state.inventory.items.some((item) => item.installed && item.packageName === SKIN_LOADER_PACKAGE)) {
+      setSkinInstallGuide(plugin)
+      return
+    }
     setPlanTarget({ plugin, plugins: [plugin] })
     setActionNotice('')
   }
@@ -259,43 +188,47 @@ export function MarketPage({ remote }: MarketPageProps): React.JSX.Element {
     setActionNotice('')
   }
 
-  function updateTask(task: TaskState): void {
-    setState((current) => {
-      if (current.status !== 'ready') return current
-      const index = current.tasks.findIndex((item) => item.taskId === task.taskId)
-      if (index < 0) return { ...current, tasks: [...current.tasks, task] }
-      if (!taskStateIsNewer(current.tasks[index], task)) return current
-      return { ...current, tasks: current.tasks.map((item, itemIndex) => itemIndex === index ? task : item) }
+  function openPlanForCollection(collection: CatalogCollectionView): void {
+    if (state.status !== 'ready') return
+    const plugins = collection.components.flatMap((component) => {
+      const plugin = state.catalog.plugins.find((item) => item.id === component.pluginId && item.version === component.version && item.artifactDigest === component.artifactDigest)
+      return plugin === undefined ? [] : [plugin]
     })
-    setTaskDrawer(true)
+    setPlanTarget({ collection, plugins })
+    setActionNotice('')
+  }
+
+  function updateTask(task: TaskState, reveal = true): void {
+    controller.acceptTask(task)
+    if (reveal) setTaskDrawer(true)
   }
 
   async function refreshCatalog(): Promise<void> {
-    setActionNotice('')
+    if (catalogBusy) return
+    setCatalogBusy(true); setActionNotice('')
     try {
-      if (remote.refreshCatalog === undefined) throw new Error('当前 DSH 运行时未开放目录刷新能力')
-      const catalog = await remote.refreshCatalog()
-      setState((current) => current.status === 'ready' ? { ...current, catalog } : current)
-      setActionNotice('目录已刷新。刷新目录不会安装或更新用户插件。')
-    } catch (error) {
-      setActionNotice(errorMessage(error))
-    }
+      const result = await controller.refreshCatalog()
+      setActionNotice(result.status === 'refreshed' ? '目录已刷新。插件不会自动安装或更新。' : '目录刷新失败，继续显示上次目录：' + (result.reason ?? '后台未提供原因'))
+    } catch (error) { setActionNotice(errorMessage(error)) }
+    finally { setCatalogBusy(false) }
   }
 
   async function toggleInventory(item: InventoryItem, enabled: boolean): Promise<void> {
+    if (managementLock.current) return
+    if (item.packageName === '@dsh-eac/market') { onOpenOfficialPlugins?.(); return }
+    managementLock.current = true; setManagementBusy(true)
     setActionNotice('')
     try {
       if (remote.setPluginEnabled === undefined) throw new Error('当前 DSH 运行时未开放启用/停用能力')
-      const action = await remote.setPluginEnabled({
+      const action = await boundedRequest(remote.setPluginEnabled({
         packageName: item.packageName,
         ...(item.version === undefined ? {} : { expectedVersion: item.version }),
         enabled,
         idempotencyKey: createIdempotencyKey('market-enable'),
-      })
+      }), '更改插件启停', 20_000)
       const feedback = pluginActionFeedback(action, enabled)
       try {
-        const inventory = await remote.inventory()
-        setState((current) => current.status === 'ready' ? { ...current, inventory } : current)
+        await controller.refreshInventory()
       } catch (inventoryError) {
         setActionNotice(`${feedback.message} 库存刷新失败：${errorMessage(inventoryError)}`)
         return
@@ -303,96 +236,38 @@ export function MarketPage({ remote }: MarketPageProps): React.JSX.Element {
       setActionNotice(feedback.message)
     } catch (error) {
       setActionNotice(errorMessage(error))
-    }
+    } finally { managementLock.current = false; setManagementBusy(false) }
   }
 
   async function removeInventory(item: InventoryItem): Promise<void> {
+    if (managementLock.current || !removeStep) return
+    if (item.packageName === '@dsh-eac/market') { onOpenOfficialPlugins?.(); return }
+    managementLock.current = true; setManagementBusy(true)
     setActionNotice('')
     try {
       if (remote.removePlugin === undefined) throw new Error('当前 DSH 运行时未开放卸载能力')
-      const action = await remote.removePlugin({
+      const action = await boundedRequest(remote.removePlugin({
         packageName: item.packageName,
         ...(item.version === undefined ? {} : { expectedVersion: item.version }),
         confirmed: true,
         idempotencyKey: createIdempotencyKey('market-remove'),
-      })
-      const inventory = await remote.inventory()
-      setState((current) => current.status === 'ready' ? { ...current, inventory } : current)
-      setRemoveTarget(undefined)
+      }), '卸载插件', 20_000)
+      await controller.refreshInventory()
+      setRemoveTarget((current) => current?.packageName === item.packageName ? undefined : current)
       if (action.status === 'failed') setActionNotice(action.error ? `卸载失败：${action.error}` : '卸载失败，官方结果未变为成功。')
       else if (action.status === 'unknown') setActionNotice('卸载结果未知，已重新读取库存；请核对后再继续。')
       else if (action.status === 'restart-required') setActionNotice('卸载请求已保存，需要重启 DSH 后才会完全生效。')
       else setActionNotice('已调用官方卸载。市场未额外清理独立配置、用户文件或未知目录。')
     } catch (error) {
       setActionNotice(errorMessage(error))
-    }
-  }
-
-  async function saveDraft(): Promise<void> {
-    setDraftNotice('')
-    try {
-      const updated = { ...draft, updatedAt: new Date().toISOString() }
-      if (remote.saveDraft !== undefined) {
-        const saved = await remote.saveDraft(draftInput(updated))
-        setDraft(saved)
-        try { window.localStorage.removeItem('eac-market-author-draft') } catch {}
-      } else {
-        setDraft(updated)
-        window.localStorage.setItem('eac-market-author-draft', JSON.stringify(updated))
-      }
-      setDraftDirty(false)
-      setDraftNotice('草稿已保存在当前客户端。没有在线投稿或发布状态。')
-    } catch (error) {
-      setDraftNotice(errorMessage(error))
-    }
-  }
-
-  async function importReadme(): Promise<void> {
-    setDraftNotice('')
-    try {
-      if (remote.importReadme === undefined) throw new Error('当前 DSH 运行时未开放 README 导入能力')
-      const result = await remote.importReadme({
-        repositoryUrl: repoUrl,
-        ...(draft.id === undefined ? {} : { targetDraftId: draft.id }),
-      })
-      setDraft(result.draft)
-      setDraftDirty(true)
-      setDraftNotice(`已导入 ${result.repositoryUrl} 的 README，提交 ${result.commit}。${result.mediaWarnings.join('；')}`)
-    } catch (error) {
-      setDraftNotice(errorMessage(error))
-    }
-  }
-
-  function importLocalMarkdown(file: File | undefined): void {
-    if (file === undefined) return
-    void file.text().then((text) => {
-      setDraft((current) => ({
-        ...current,
-        title: current.title || file.name.replace(/\.md$/i, ''),
-        markdown: text,
-        updatedAt: new Date().toISOString(),
-      }))
-      setDraftDirty(true)
-      setDraftNotice('Markdown 已载入草稿。若文件较大，请继续用分块传输保存附件。')
-    }).catch((error: unknown) => setDraftNotice(errorMessage(error)))
-  }
-
-  function exportDraft(): void {
-    const payload = JSON.stringify({ schemaVersion: '1', kind: 'eac-author-presentation', draft: draftInput(draft) }, null, 2)
-    const url = URL.createObjectURL(new Blob([payload], { type: 'application/json' }))
-    const anchor = document.createElement('a')
-    anchor.href = url
-    anchor.download = `${draft.title.trim() || 'eac-author-presentation'}.json`
-    anchor.click()
-    URL.revokeObjectURL(url)
-    setDraftNotice('已准备下载介绍资料包。保存完成后可交给团队校验；这不是“已上架”。')
+    } finally { managementLock.current = false; setManagementBusy(false) }
   }
 
   async function exportDiagnostic(): Promise<void> {
     setActionNotice('')
     try {
       if (remote.exportDiagnostic === undefined) throw new Error('当前 DSH 运行时未开放诊断导出能力')
-      setDiagnostic(await remote.exportDiagnostic())
+      setDiagnostic(await boundedRequest(remote.exportDiagnostic(), '生成诊断'))
     } catch (error) {
       setActionNotice(errorMessage(error))
     }
@@ -431,17 +306,42 @@ export function MarketPage({ remote }: MarketPageProps): React.JSX.Element {
         <section className="eac-market__error" role="alert">
           <h2>市场暂时无法读取状态</h2>
           <p>{state.message}</p>
-          <Button variant="primary" onClick={() => void load()}>重新读取</Button>
+          <Button variant="primary" onClick={() => void controller.start()}>重新读取</Button>
         </section>
       </MarketFrame>
     )
   }
 
-  const filtered = browseSortPlugins(filterPlugins(state.catalog.plugins, state.inventory.items, filters), browseSort)
-  const inventoryPartition = partitionInventory(state.inventory.items, state.catalog.plugins)
+  const functionalPlugins = state.catalog.plugins.filter((plugin) => !isSkinPlugin(plugin))
+  const marketPlugins = functionalPlugins.filter((plugin) => plugin.packageName !== SKIN_LOADER_PACKAGE)
+  const filtered = browseSortPlugins(filterPlugins(marketPlugins, state.inventory.items, filters), browseSort, state.catalog.recommendations)
+  const inventoryPartition = partitionInventory(state.inventory.items.filter((item) => !item.installed || !skinCatalogForInventory(item, state.catalog.plugins)), state.catalog.plugins)
+  const loaderPlugin = latestCompatiblePlugin(state.catalog, SKIN_LOADER_PACKAGE) ?? functionalPlugins.find((plugin) => plugin.packageName === SKIN_LOADER_PACKAGE)
+  const openSkins = () => {
+    const from = pageTab(view)
+    scrollPositions.current.set(`${from}:${filters.category}:${filters.query}:${page}`, scrollRef.current?.scrollTop ?? 0)
+    setSkinOrigin(from); setSkinVisited(true); setView('skins')
+    window.requestAnimationFrame(() => scrollRef.current?.scrollTo({ top: 0 }))
+  }
+  const skinEntry = <SkinCenterEntry plugins={state.catalog.plugins} inventory={state.inventory.items} onOpen={openSkins} />
   const perPage = 24
   const pageCount = Math.max(1, Math.ceil(filtered.length / perPage))
   const visible = filtered.slice((page - 1) * perPage, page * perPage)
+  const extensionContext: Readonly<ExtensionContext> = {
+    marketVersion: state.hello.marketVersion, dshVersion: state.hello.hostVersion, environmentId: state.hello.environmentId,
+    capabilities: ['browse', 'open-own-page', 'request-install-review', 'preview-draft-change'], signal: extensionLifetime.current.signal,
+    plugin: selectedPlugin === undefined ? undefined : { id: selectedPlugin.id, name: selectedPlugin.name, packageName: selectedPlugin.packageName, version: selectedPlugin.version, artifactDigest: selectedPlugin.artifactDigest },
+    draft: extensionDraft === undefined ? undefined : { ...extensionDraft },
+    openDetail(id) { const plugin = findPlugin(state.catalog, id); if (plugin) openDetail(plugin) },
+    openOwnPage(id) { setExtensionPage(id); setView('extension'); setMoreMenu(false) },
+    requestInstallReview(request) {
+      const plugin = state.catalog.plugins.find((item) => item.id === request.pluginId && item.version === request.version && item.artifactDigest === request.artifactDigest)
+      if (plugin) openPlanForPlugin(plugin)
+      else setActionNotice('扩展引用的插件版本已变化，请在全部插件中重新选择。')
+    },
+    previewDraftChange(change) { setDraftChange({ ...change }); setView('author') },
+  }
+  const surface = (slot: ExtensionSlot): React.ReactNode => extensions && renderExtensionSurface ? renderExtensionSurface({ host: extensions, slot, context: extensionContext, pageId: extensionPage }) : null
 
   return (
     <div className="eac-market-host">
@@ -454,7 +354,9 @@ export function MarketPage({ remote }: MarketPageProps): React.JSX.Element {
         moreMenu={moreMenu}
         scrollRef={scrollRef}
         onSecondary={(next) => { setMoreMenu(false); setView(next) }}
+        moreSupplemental={surface(EXTENSION_SLOTS.more)}
       >
+        {syncNotice && <div className="eac-market__notice eac-market__notice--warning" role="status">{syncNotice} <Button variant="outline" onClick={() => void controller.sync(true)}>重新读取</Button></div>}
         {actionNotice && <div className="eac-market__notice" role="status">{actionNotice}</div>}
 
         {view === 'discover' && (
@@ -464,8 +366,12 @@ export function MarketPage({ remote }: MarketPageProps): React.JSX.Element {
             onOpen={openDetail}
             onInstall={openPlanForPlugin}
             onPack={openPlanForPack}
+            onCollection={openPlanForCollection}
             onBrowse={browse}
             onHelp={() => setView('help')}
+            onSettings={() => setView('settings')}
+            skinEntry={skinEntry}
+            supplemental={<>{homeSupplemental}{surface(EXTENSION_SLOTS.home)}</>}
           />
         )}
 
@@ -475,19 +381,20 @@ export function MarketPage({ remote }: MarketPageProps): React.JSX.Element {
               <div><h1>全部插件</h1><p>按用途、作者或包名查找。未验证、已知不兼容和缺少安装包会明确区分。</p></div>
               <Button variant="outline" onClick={() => setAdvanced((value) => !value)} aria-expanded={advanced}>高级筛选</Button>
             </header>
+            {skinEntry}
             <div className="eac-market__toolbar">
               <SearchField value={filters.query} onChange={(query) => { setFilters({ ...filters, query }); setPage(1) }} />
               <div className="eac-market__filters">
                 <label className="eac-market__sr-only" htmlFor="eac-category">用途分类</label>
                 <select id="eac-category" value={filters.category} onChange={(event) => { setFilters({ ...filters, category: event.currentTarget.value }); setPage(1) }}>
                   <option value="all">全部用途</option>
-                  {categoriesOf(state.catalog.plugins).map((category) => <option key={category} value={category}>{category}</option>)}
+                  {categoriesOf(marketPlugins).map((category) => <option key={category} value={category}>{category}</option>)}
                 </select>
                 <label className="eac-market__sr-only" htmlFor="eac-sort">排序</label>
                 <select id="eac-sort" value={browseSort} onChange={(event) => setBrowseSort(event.currentTarget.value as BrowseSortMode)}>
                   <option value="rules">规则排序（默认）</option>
                   <option value="compatibility">兼容性优先</option>
-                  <option value="recommended">推荐标记优先（由我选择）</option>
+                  <option value="recommended">团队精选优先（由我选择）</option>
                 </select>
               </div>
             </div>
@@ -515,7 +422,7 @@ export function MarketPage({ remote }: MarketPageProps): React.JSX.Element {
               />
             ) : (
               <div className="eac-market__grid">
-                {visible.map((plugin) => <PluginCard key={plugin.id} plugin={plugin} inventory={state.inventory.items} onOpen={openDetail} onInstall={openPlanForPlugin} />)}
+                {visible.map((plugin) => <PluginCard key={plugin.id + ":" + plugin.version} plugin={plugin} inventory={state.inventory.items} onOpen={openDetail} onInstall={openPlanForPlugin} />)}
               </div>
             )}
             {pageCount > 1 && (
@@ -525,6 +432,7 @@ export function MarketPage({ remote }: MarketPageProps): React.JSX.Element {
                 <Button variant="outline" disabled={page >= pageCount} onClick={() => setPage((value) => value + 1)}>下一页</Button>
               </nav>
             )}
+            <PendingListings listings={state.catalog.listings ?? []} query={filters.query} />
           </>
         )}
 
@@ -533,9 +441,10 @@ export function MarketPage({ remote }: MarketPageProps): React.JSX.Element {
             <header className="eac-market__page-head">
               <div><h1>我的插件</h1><p>这里只显示官方插件管理器返回的真实安装和启停状态。</p></div>
             </header>
+            {skinEntry}
             {state.inventory.unknownItems.length > 0 && (
               <div className="eac-market__notice eac-market__notice--warning">
-                有 {state.inventory.unknownItems.length} 个条目无法归类：{state.inventory.unknownItems.join('、')}
+                <details><summary>有 {state.inventory.unknownItems.length} 个条目待核对</summary>{state.inventory.unknownItems.join('、')}</details>
               </div>
             )}
             {state.inventory.items.length === 0 ? (
@@ -545,48 +454,43 @@ export function MarketPage({ remote }: MarketPageProps): React.JSX.Element {
                 <div className="eac-market__grid">
                   {inventoryPartition.userItems.map((item) => (
                     <InventoryCard
-                      key={item.packageName}
+                      key={item.packageName + ":" + (item.version ?? "unknown")}
                       item={item}
-                      catalogPlugin={state.catalog.plugins.find((plugin) => plugin.packageName === item.packageName)}
+                      catalogPlugin={state.catalog.plugins.find((plugin) => plugin.packageName === item.packageName && plugin.version === item.version)}
+                      updatePlugin={latestCompatiblePlugin(state.catalog, item.packageName)}
                       onToggle={(target, enabled) => void toggleInventory(target, enabled)}
-                      onRemove={setRemoveTarget}
+                      onRemove={(item) => { setRemoveStep(false); setRemoveTarget(item) }}
+                      onOpenOfficialPlugins={onOpenOfficialPlugins}
+                      busy={managementBusy}
                       onUpdate={(_target, plugin) => openPlanForPlugin(plugin)}
                     />
                   ))}
                 </div>
-                {inventoryPartition.systemItems.some((item) => item.rows.some((row) => row.state === 'load-error' || row.state === 'unknown') || item.restartRequired) && (
-                  <section className="eac-market__section" aria-labelledby="system-attention-title">
-                    <div className="eac-market__section-head"><h2 id="system-attention-title">系统组件需处理</h2><p>这些真实错误和重启状态不会被折叠隐藏。</p></div>
-                    <div className="eac-market__grid">
-                      {inventoryPartition.systemItems.filter((item) => item.rows.some((row) => row.state === 'load-error' || row.state === 'unknown') || item.restartRequired).map((item) => (
-                        <InventoryCard
-                          key={`attention-${item.packageName}`}
-                          item={item}
-                          catalogPlugin={state.catalog.plugins.find((plugin) => plugin.packageName === item.packageName)}
-                          onToggle={(target, enabled) => void toggleInventory(target, enabled)}
-                          onRemove={setRemoveTarget}
-                          onUpdate={(_target, plugin) => openPlanForPlugin(plugin)}
-                        />
-                      ))}
-                    </div>
-                  </section>
-                )}
+                {inventoryPartition.systemItems.length > 0 && (
                 <details className="eac-market__system-group" open={systemOpen} onToggle={(event) => setSystemOpen(event.currentTarget.open)}>
-                  <summary>系统组件（{inventoryPartition.systemItems.length}）</summary>
-                  <p className="eac-market__system-note">默认折叠的是系统内部组件，不按包名前缀猜测；展开后仍显示真实版本、启停、错误和只读原因。</p>
+                  <summary>
+                    <span>官方与系统组件（{inventoryPartition.systemItems.length}）</span>
+                    {inventoryPartition.systemNeedsAttention && <span className="eac-market__group-warning">{inventoryPartition.systemAttentionCount} 项待核对或重启</span>}
+                    <span className="eac-market__group-action">{systemOpen ? '收起' : '展开'}</span>
+                  </summary>
+                  <p className="eac-market__system-note">DSH 自带功能与内部组件。展开查看版本和运行状态；受保护的项目请在官方插件页管理。</p>
                   <div className="eac-market__grid">
-                    {inventoryPartition.systemItems.filter((item) => !(item.rows.some((row) => row.state === 'load-error' || row.state === 'unknown') || item.restartRequired)).map((item) => (
+                    {systemOpen && inventoryPartition.systemItems.map((item) => (
                       <InventoryCard
-                        key={`system-${item.packageName}`}
+                        key={`system-${item.packageName}:${item.version ?? "unknown"}`}
                         item={item}
-                        catalogPlugin={state.catalog.plugins.find((plugin) => plugin.packageName === item.packageName)}
+                        catalogPlugin={state.catalog.plugins.find((plugin) => plugin.packageName === item.packageName && plugin.version === item.version)}
+                      updatePlugin={latestCompatiblePlugin(state.catalog, item.packageName)}
                         onToggle={(target, enabled) => void toggleInventory(target, enabled)}
-                        onRemove={setRemoveTarget}
+                        onRemove={(item) => { setRemoveStep(false); setRemoveTarget(item) }}
+                      onOpenOfficialPlugins={onOpenOfficialPlugins}
+                      busy={managementBusy}
                         onUpdate={(_target, plugin) => openPlanForPlugin(plugin)}
                       />
                     ))}
                   </div>
                 </details>
+                )}
               </>
             )}
             {state.inventory.items.some((item) => item.restartRequired) && (
@@ -597,15 +501,30 @@ export function MarketPage({ remote }: MarketPageProps): React.JSX.Element {
           </>
         )}
 
+        {skinVisited && <div hidden={view !== 'skins'}><SkinCenter
+          catalog={state.catalog} inventory={state.inventory.items} skinService={skinService}
+          onBack={() => { setView(skinOrigin); window.requestAnimationFrame(() => scrollRef.current?.scrollTo({ top: scrollPositions.current.get(`${skinOrigin}:${filters.category}:${filters.query}:${page}`) ?? 0 })) }}
+          onOpen={openDetail} onInstall={openPlanForPlugin}
+          onToggle={(item, enabled) => void toggleInventory(item, enabled)}
+          onRemove={(item) => { setRemoveStep(false); setRemoveTarget(item) }}
+          onOpenOfficialPlugins={onOpenOfficialPlugins} managementBusy={managementBusy}
+          canInstall={remote.createPlan !== undefined && remote.startTask !== undefined}
+        /></div>}
+
         {view === 'detail' && selectedPlugin !== undefined && (
           <DetailView
+            key={selectedPlugin.id + ":" + selectedPlugin.version}
             plugin={selectedPlugin}
+            updatePlugin={latestCompatiblePlugin(state.catalog, selectedPlugin.packageName)}
             presentation={presentationForPlugin(state.catalog, selectedPlugin)}
             inventory={state.inventory.items}
             onBack={backFromDetail}
+            backLabel={previousView === 'skins' ? '返回皮肤中心' : undefined}
             onInstall={openPlanForPlugin}
             onUpdate={openPlanForPlugin}
             canInstall={remote.createPlan !== undefined && remote.startTask !== undefined}
+            onOpenOfficialPlugins={onOpenOfficialPlugins}
+            supplemental={<>{detailSupplemental?.(selectedPlugin)}{surface(EXTENSION_SLOTS.detail)}</>}
 
           />
         )}
@@ -634,18 +553,18 @@ export function MarketPage({ remote }: MarketPageProps): React.JSX.Element {
 
         {view === 'settings' && (
           <>
-            <header className="eac-market__page-head"><div><h1>设置</h1><p>只展示当前 DSH 契约真正支持的设置，不创建无法工作的开关。</p></div></header>
+            <header className="eac-market__page-head"><div><h1>设置</h1><p>查看目录、外观和诊断信息。</p></div></header>
             <div className="eac-market__settings-list">
               <section className="eac-market__setting">
-                <div><h3>目录状态</h3><p>目录来源：{state.catalog.origin}{state.catalog.stale ? '（缓存已过期）' : ''} · 修订 {state.catalog.revision}。刷新目录不会安装或更新插件。</p></div>
-                <Button variant="outline" disabled={remote.refreshCatalog === undefined} onClick={() => void refreshCatalog()}>刷新目录</Button>
+                <div><h3>目录状态</h3><p>目录来源：{{ embedded: '随包目录', online: '在线目录', cache: '本地缓存' }[state.catalog.origin]}{state.catalog.stale ? '（缓存已过期）' : ''} · 目录生成时间：{new Date(state.catalog.generatedAt).toLocaleString('zh-CN')}。刷新目录不会安装或更新插件。</p></div>
+                <Button variant="outline" disabled={catalogBusy || remote.refreshCatalog === undefined} onClick={() => void refreshCatalog()}>刷新目录</Button>
               </section>
               <section className="eac-market__setting">
-                <div><h3>下载来源</h3><p>自动优先使用经核验的同版本来源。当前冻结 Host 契约未提供来源偏好写入，因此不显示假开关。</p></div>
+                <div><h3>下载来源</h3><p>自动使用已登记并通过文件校验的同版本来源。</p></div>
                 <Status tone="neutral">自动优先</Status>
               </section>
               <section className="eac-market__setting">
-                <div><h3>缓存清理</h3><p>只清理不使用中的下载缓存；不会删除插件配置或用户文件。当前 Host 契约未提供缓存管理。</p></div>
+                <div><h3>缓存清理</h3><p>当前版本暂不提供缓存清理。</p></div>
                 <Button variant="outline" disabled title="当前 DSH 运行时未提供缓存清理能力">暂不可用</Button>
               </section>
               <section className="eac-market__setting">
@@ -669,48 +588,10 @@ export function MarketPage({ remote }: MarketPageProps): React.JSX.Element {
           </>
         )}
 
-        {view === 'author' && (
-          <>
-            <header className="eac-market__page-head">
-              <div><h1>作者资料编辑器</h1><p>本地编辑和预览插件介绍，导出后交给团队私下校验。MVP 不提供在线投稿、认领或发布。</p></div>
-              <Status tone={draftDirty ? 'warning' : 'neutral'}>{draftDirty ? '有未保存修改' : '草稿已同步'}</Status>
-            </header>
-            <div className="eac-market__button-row" style={{ marginBottom: 16 }}>
-              <Button variant="primary" onClick={() => void saveDraft()}>保存草稿</Button>
-              <Button variant="outline" onClick={exportDraft}>准备导出资料包</Button>
-              <label className="eac-market__link" style={{ cursor: 'pointer' }}>
-                导入本地 Markdown
-                <input className="eac-market__sr-only" type="file" accept=".md,text/markdown" onChange={(event) => importLocalMarkdown(event.currentTarget.files?.[0])} />
-              </label>
-            </div>
-            <div className="eac-market__split">
-              <section>
-                <div className="eac-market__form">
-                  <div className="eac-market__field"><label htmlFor="draft-title">标题</label><Input id="draft-title" value={draft.title} placeholder="例如：结构化任务面板" onChange={(event) => { setDraft({ ...draft, title: event.currentTarget.value }); setDraftDirty(true) }} /></div>
-                  <div className="eac-market__field"><label htmlFor="draft-summary">一句话简介</label><Input id="draft-summary" value={draft.summary} placeholder="用一句话说明用户能得到什么" onChange={(event) => { setDraft({ ...draft, summary: event.currentTarget.value }); setDraftDirty(true) }} /></div>
-                  <div className="eac-market__field"><label htmlFor="draft-markdown">图文正文</label><small>支持 Markdown 标题、段落、列表、表格、代码示例和 HTTPS 图片。代码只复制，不执行。</small><textarea id="draft-markdown" value={draft.markdown} onChange={(event) => { setDraft({ ...draft, markdown: event.currentTarget.value }); setDraftDirty(true) }} /></div>
-                  <div className="eac-market__field"><label>附件分块传输</label><FileTransferField remote={remote} purpose="draft-media" label="选择图片或附件" accept="image/*,.json,.zip" onComplete={(result) => { setTransfer(result); setDraft({ ...draft, mediaIds: [...draft.mediaIds, result.resultId ?? result.transferId] }); setDraftDirty(true) }} /><small>{formatTransferStatus(transfer)}。文件以 base64 文本块发送，避免 JSON 二进制不兼容。</small></div>
-                  <div className="eac-market__field">
-                    <label htmlFor="repo-url">从 GitHub README 导入</label>
-                    <small>必须由 Host 获取并保留仓库、提交和署名信息；市场不自行抓取任意网页。</small>
-                    <div className="eac-market__button-row"><Input id="repo-url" value={repoUrl} placeholder="https://github.com/owner/repository" onChange={(event) => setRepoUrl(event.currentTarget.value)} /><Button variant="outline" disabled={remote.importReadme === undefined || repoUrl.trim() === ''} onClick={() => void importReadme()}>导入 README</Button></div>
-                  </div>
-                </div>
-              </section>
-              <section>
-                <div className="eac-market__section-head"><h2>阅读预览</h2></div>
-                <div className="eac-market__preview eac-market__prose">
-                  <h1>{draft.title || '未命名插件介绍'}</h1>
-                  <p style={{ color: 'var(--eac-text-2)' }}>{draft.summary || '还没有一句话简介。'}</p>
-                  <MarkdownText text={draft.markdown} labels={MARKDOWN_LABELS} />
-                </div>
-              </section>
-            </div>
-            {draftNotice && <div className="eac-market__notice" role="status">{draftNotice}</div>}
-          </>
-        )}
+        {view === 'extension' && <section><Button variant="outline" onClick={() => navigate('discover')}>返回发现</Button>{surface(EXTENSION_SLOTS.page)}</section>}
+        <div hidden={view !== 'author'}><AuthorWorkspace remote={remote} onDraftSnapshot={setExtensionDraft} draftChange={draftChange} supplemental={<>{authorSupplemental}{surface(EXTENSION_SLOTS.author)}</>} /></div>
 
-        <p className="eac-market__footer-note">EAC 是社区整合市场，不代表 DeepSeek 官方认证。MVP 不提供 Star、GitHub 登录或在线投稿。</p>
+        <p className="eac-market__footer-note">EAC 是社区整合市场，不代表 DeepSeek 官方认证。</p>
       </MarketFrame>
 
       <TaskDrawer
@@ -718,7 +599,9 @@ export function MarketPage({ remote }: MarketPageProps): React.JSX.Element {
         tasks={state.status === 'ready' ? state.tasks : []}
         onClose={() => setTaskDrawer(false)}
         remote={remote}
-        onChanged={updateTask}
+        onChanged={(task) => updateTask(task, false)}
+        onRefresh={() => void controller.sync(true)}
+        onOpenOfficialPlugins={onOpenOfficialPlugins}
       />
       <InstallPlanDialog
         target={planTarget}
@@ -728,9 +611,20 @@ export function MarketPage({ remote }: MarketPageProps): React.JSX.Element {
         onClose={() => setPlanTarget(undefined)}
         onStarted={updateTask}
       />
-      <Modal open={removeTarget !== undefined} onClose={() => setRemoveTarget(undefined)} title="确认卸载" closeLabel="关闭卸载确认">
+      <Modal open={skinInstallGuide !== undefined} onClose={() => setSkinInstallGuide(undefined)} title="安装皮肤前，先准备管理器" closeLabel="关闭皮肤安装引导">
+        <p>尚未安装皮肤管理器。{skinInstallGuide?.name} 安装后需要管理器登记并由你选择，才会改变界面。</p>
+        <p>下一步只打开完整安装方案；确认前不会安装，也不会自动添加其他包。</p>
+        {!loaderPlugin && <p>当前目录缺少皮肤管理器，请在官方插件页安装作者提供的管理器。</p>}
+        <div className="eac-market__button-row">
+          {loaderPlugin && <Button variant="primary" onClick={() => { setSkinInstallGuide(undefined); openPlanForPlugin(loaderPlugin) }}>先查看管理器安装方案</Button>}
+          <Button variant="outline" onClick={() => { if (skinInstallGuide) setPlanTarget({ plugin: skinInstallGuide, plugins: [skinInstallGuide] }); setSkinInstallGuide(undefined) }}>仅查看此皮肤安装方案</Button>
+          <Button variant="ghost" onClick={() => setSkinInstallGuide(undefined)}>取消</Button>
+        </div>
+      </Modal>
+      <Modal open={removeTarget !== undefined} onClose={() => setRemoveTarget(undefined)} title={removeStep ? '再次确认卸载影响' : '确认卸载'} closeLabel="关闭卸载确认">
         <p>将卸载 <strong>{removeTarget?.packageName}</strong>。只调用必要卸载能力，不额外清理独立配置、用户文件或未知目录。</p>
-        <div className="eac-market__button-row"><Button variant="outline" onClick={() => setRemoveTarget(undefined)}>取消</Button><Button variant="primary" onClick={() => { if (removeTarget !== undefined) void removeInventory(removeTarget) }}>确认卸载</Button></div>
+        {removeStep && <div className="eac-market__notice eac-market__notice--warning"><p>版本：{removeTarget?.version ?? '未能确认'}。受影响成员：{removeTarget?.rows.map((row) => row.name).join('、') || '官方未列出运行成员'}。</p><p>市场没有此插件的完整反向依赖和数据迁移资料。第三方插件自身的卸载行为可能影响数据；请先保存工作。</p></div>}
+        <div className="eac-market__button-row"><Button variant="outline" onClick={() => setRemoveTarget(undefined)}>取消</Button><Button variant="primary" disabled={managementBusy} onClick={() => { if (!removeStep) setRemoveStep(true); else if (removeTarget !== undefined) void removeInventory(removeTarget) }}>{managementBusy ? '正在提交…' : removeStep ? '已了解影响，再次确认卸载' : '继续查看卸载影响'}</Button></div>
       </Modal>
       <Modal open={tutorialOpen} onClose={() => setTutorialOpen(false)} title="三步上手" closeLabel="关闭教程">
         <div className="eac-market__help-steps">{HELP_STEPS.map((step, index) => <section className="eac-market__help-step" key={step.title}><Tag tone="info">第 {index + 1} 步</Tag><h3>{step.title}</h3><p>{step.text}</p></section>)}</div>
@@ -740,7 +634,7 @@ export function MarketPage({ remote }: MarketPageProps): React.JSX.Element {
   )
 }
 
-export function MarketFrame({ view, activeCount, onNavigate, onTasks, onMore, moreMenu, onSecondary, scrollRef, children }: {
+export function MarketFrame({ view, activeCount, onNavigate, onTasks, onMore, moreMenu, onSecondary, scrollRef, children, moreSupplemental }: {
   readonly view: MarketView
   readonly activeCount: number
   readonly onNavigate: (view: PrimaryView) => void
@@ -748,14 +642,18 @@ export function MarketFrame({ view, activeCount, onNavigate, onTasks, onMore, mo
   readonly onMore: () => void
   readonly moreMenu: boolean
   readonly onSecondary: (view: 'help' | 'settings' | 'author') => void
+  readonly moreSupplemental?: React.ReactNode
   readonly scrollRef?: React.Ref<HTMLDivElement>
   readonly children: React.ReactNode
 }): React.JSX.Element {
   const currentTab = pageTab(view)
+  const moreTrigger = useRef<HTMLButtonElement>(null)
+  const menuRef = useRef<HTMLDivElement>(null)
+  useEffect(() => { if (moreMenu) menuRef.current?.querySelector<HTMLElement>('[role="menuitem"]')?.focus() }, [moreMenu])
   return (
     <div className="eac-market">
       <style dangerouslySetInnerHTML={{ __html: MARKET_CSS }} />
-      <div className="eac-market__scroll" ref={scrollRef}>
+      <div className="eac-market__scroll" ref={scrollRef} tabIndex={0} role="region" aria-label="市场内容">
         <div className="eac-market__shell">
           <header className="eac-market__topbar">
             <div className="eac-market__brand"><strong>EAC</strong><span>插件市场</span></div>
@@ -769,12 +667,25 @@ export function MarketFrame({ view, activeCount, onNavigate, onTasks, onMore, mo
               <button type="button" className="eac-market__top-action" onClick={onTasks}>任务{activeCount > 0 && <span className="eac-market__task-count">{activeCount}</span>}</button>
               <button type="button" className="eac-market__top-action" onClick={() => onSecondary('help')}>帮助</button>
               <div className="eac-market__menu-wrap">
-                <button type="button" className="eac-market__top-action" aria-haspopup="menu" aria-expanded={moreMenu} onClick={onMore}>更多</button>
+                <button ref={moreTrigger} type="button" className="eac-market__top-action" aria-haspopup="menu" aria-expanded={moreMenu} onClick={onMore}>更多</button>
                 {moreMenu && (
-                  <div className="eac-market__menu" role="menu">
+                  <div ref={menuRef} className="eac-market__menu" role="menu" onKeyDown={(event) => {
+                    if (event.key === 'Escape' || event.key === 'Tab') {
+                      if (event.key === 'Escape') event.preventDefault()
+                      onMore(); moreTrigger.current?.focus(); return
+                    }
+                    const options = [...(menuRef.current?.querySelectorAll<HTMLElement>('[role="menuitem"]') ?? [])]
+                    const index = options.indexOf(document.activeElement as HTMLElement)
+                    if (['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key)) {
+                      event.preventDefault()
+                      const next = event.key === 'Home' ? 0 : event.key === 'End' ? options.length - 1 : (index + (event.key === 'ArrowDown' ? 1 : -1) + options.length) % options.length
+                      options[next]?.focus()
+                    }
+                  }}>
                     <button type="button" role="menuitem" onClick={() => onSecondary('settings')}>设置</button>
                     <button type="button" role="menuitem" onClick={() => onSecondary('author')}>作者工具</button>
                     <button type="button" role="menuitem" onClick={() => onSecondary('help')}>关于 EAC</button>
+                    {moreSupplemental}
                   </div>
                 )}
               </div>
@@ -787,66 +698,42 @@ export function MarketFrame({ view, activeCount, onNavigate, onTasks, onMore, mo
   )
 }
 
-export function DiscoverView({ catalog, inventory, onOpen, onInstall, onPack, onBrowse, onHelp }: {
+export function DiscoverView({ catalog, inventory, onOpen, onInstall, onPack, onCollection, onBrowse, onHelp, onSettings, skinEntry, supplemental }: {
   readonly catalog: CatalogSnapshot
   readonly inventory: readonly InventoryItem[]
   readonly onOpen: (plugin: CatalogPlugin) => void
   readonly onInstall: (plugin: CatalogPlugin) => void
   readonly onPack: (pack: CatalogPack) => void
+  readonly onCollection?: ((collection: CatalogCollectionView) => void) | undefined
   readonly onBrowse: (category?: string) => void
   readonly onHelp: () => void
+  readonly onSettings?: (() => void) | undefined
+  readonly skinEntry?: React.ReactNode
+  readonly supplemental?: React.ReactNode
 }): React.JSX.Element {
+  catalog = { ...catalog, plugins: catalog.plugins.filter((plugin) => !isSkinPlugin(plugin) && plugin.packageName !== SKIN_LOADER_PACKAGE) }
   const categories = categoriesOf(catalog.plugins)
-  const recommended = catalog.plugins.filter((plugin) => plugin.distribution === 'recommended')
-  const ruleSorted = browseSortPlugins(catalog.plugins, 'rules')
+  const recommended = (catalog.recommendations ?? []).filter((record) => record.placement === 'featured' && record.reason.trim() !== '').sort((a, b) => a.order - b.order || a.pluginId.localeCompare(b.pluginId)).flatMap((record) => { const plugin = catalog.plugins.find((item) => recommendationMatches(record, item)); return plugin ? [{ plugin, reason: record.reason }] : [] })
+  const ruleSorted = browseSortPlugins(catalog.plugins.filter(plugin => plugin.installability === 'bundle-installable' && plugin.verification !== 'hard-incompatible'), 'rules')
   return (
     <>
-      <section className="eac-market__hero">
-        <div>
-          <h1>精选功能，轻松装进 DSH</h1>
-          <p>EAC 把插件用途、真实版本、安装条件和使用入口放在一起。先看懂，再按需安装，不需要命令行或包名知识。</p>
-          <div className="eac-market__hero-actions">
-            <Button variant="primary" onClick={() => onBrowse()}>搜索全部插件</Button>
-            <Button variant="outline" onClick={onHelp}>查看三步上手</Button>
-          </div>
-        </div>
-        <div className="eac-market__steps" aria-label="使用步骤">
-          {HELP_STEPS.map((step, index) => (
-            <div className="eac-market__step" key={step.title}>
-              <span className="eac-market__step-number">{index + 1}</span>
-              <div><strong>{step.title}</strong><span>{step.text}</span></div>
-            </div>
-          ))}
-        </div>
-      </section>
-
+      <header className="eac-market__page-head eac-market__discover-head">
+        <div><h1>发现适合你的插件</h1><p>浏览用途和安装条件，按需扩展 DSH。</p></div>
+        <div className="eac-market__button-row"><Button variant="primary" onClick={() => onBrowse()}>搜索全部插件</Button><Button variant="ghost" onClick={onHelp}>使用帮助</Button></div>
+      </header>
+      {skinEntry}
       {catalog.plugins.length === 0 ? (
-        <section className="eac-market__section">
-          <EmptyState
-            title="随包目录暂无插件"
-            description="当前目录没有可真实展示的推荐或套餐。你可以查看全部插件，或稍后刷新在线目录；市场不会填入假榜单、下载量或空推广卡片。"
-            action={<Button variant="primary" onClick={() => onBrowse()}>查看全部插件</Button>}
-          />
-        </section>
+        <section className="eac-market__notice"><strong>目录暂无功能插件</strong><p>可到设置刷新目录，或在「我的插件」查看已有功能。外观集中在皮肤中心。</p>{onSettings && <Button variant="outline" onClick={onSettings}>查看目录设置</Button>}</section>
       ) : (
         <>
-          <section className="eac-market__section">
-            <div className="eac-market__section-head">
-              <div><h2>团队精选</h2><p>推荐理由：当前目录没有独立团队精选理由字段，下面只展示目录的真实 recommended 标记和一句话用途，不冒充团队审核或官方认证。</p></div>
-              <button type="button" className="eac-market__link" onClick={() => onBrowse()}>查看全部插件</button>
-            </div>
-            {recommended.length === 0 ? (
-              <EmptyState title="暂无团队精选记录" description="目录没有可核实的推荐位置时，这里保持空态；规则发现仍可使用。" action={<Button variant="outline" onClick={() => onBrowse()}>查看全部插件</Button>} />
-            ) : (
-              <div className="eac-market__grid">
-                {recommended.slice(0, 6).map((plugin) => <PluginCard key={plugin.id} plugin={plugin} inventory={inventory} onOpen={onOpen} onInstall={onInstall} />)}
-              </div>
-            )}
-          </section>
+          {recommended.length > 0 && <section className="eac-market__section">
+            <div className="eac-market__section-head"><h2>团队精选</h2><p>每项推荐都有对应理由。</p></div>
+            <div className="eac-market__grid">{recommended.slice(0, 6).map(({ plugin, reason }) => <div key={plugin.id + ":" + plugin.version}><p className="eac-market__recommendation">推荐理由：{reason}</p><PluginCard plugin={plugin} inventory={inventory} onOpen={onOpen} onInstall={onInstall} /></div>)}</div>
+          </section>}
 
           <section className="eac-market__section">
             <div className="eac-market__section-head">
-              <div><h2>规则发现</h2><p>排序依据：兼容状态 → 用途 → 名称。目录没有可靠版本发布时间，因此不显示“最近更新”假排序。</p></div>
+              <div><h2>规则发现</h2><p>仅展示已有安装包的功能。排序依据：兼容状态、用途和发布时间；待适配内容在全部插件中保留。</p></div>
             </div>
             {categories.length > 0 && (
               <div className="eac-market__filters" aria-label="按用途进入全部插件">
@@ -854,7 +741,7 @@ export function DiscoverView({ catalog, inventory, onOpen, onInstall, onPack, on
               </div>
             )}
             <div className="eac-market__grid">
-              {ruleSorted.slice(0, 6).map((plugin) => <PluginCard key={plugin.id} plugin={plugin} inventory={inventory} onOpen={onOpen} onInstall={onInstall} />)}
+              {ruleSorted.slice(0, 6).map((plugin) => <PluginCard key={plugin.id + ":" + plugin.version} plugin={plugin} inventory={inventory} onOpen={onOpen} onInstall={onInstall} />)}
             </div>
           </section>
 
@@ -863,8 +750,8 @@ export function DiscoverView({ catalog, inventory, onOpen, onInstall, onPack, on
               <div className="eac-market__section-head"><h2>套餐</h2><p>一次查看所有组件与版本调整。</p></div>
               <div className="eac-market__grid grid--two eac-market__grid--two">
                 {catalog.packs.map((pack) => (
-                  <article className="eac-market__card" key={pack.id}>
-                    <div className="eac-market__tags"><Tag tone="info">{pack.category}</Tag><Status tone={pack.execution.coverage === 'complete' ? 'success' : 'warning'}>{packCoverageLabel(pack.execution.coverage)}</Status></div>
+                  <article className="eac-market__card" key={pack.id + ":" + pack.version}>
+                    <div className="eac-market__tags"><Tag tone="info">{{ function: '功能', appearance: '外观', workflow: '工作流', unclassified: '未分类' }[pack.category]}</Tag><Status tone={pack.execution.coverage === 'complete' ? 'success' : 'warning'}>{packCoverageLabel(pack.execution.coverage)}</Status></div>
                     <h3>{pack.name}</h3>
                     <p className="eac-market__plugin-summary">{pack.summary}</p>
                     <div className="eac-market__plugin-bottom">
@@ -878,24 +765,37 @@ export function DiscoverView({ catalog, inventory, onOpen, onInstall, onPack, on
           )}
         </>
       )}
+      {(catalog.collections?.length ?? 0) > 0 && <section className="eac-market__section" aria-label="市场组合">
+        <div className="eac-market__section-head"><h2>市场组合</h2><p>按组合列出的确切版本预检，逐项确认安装范围。</p></div>
+        <div className="eac-market__grid eac-market__grid--two">{catalog.collections?.map((collection) => <article className="eac-market__card" key={collection.id + ':' + collection.version} data-collection-id={collection.id}>
+          <div className="eac-market__tags"><Tag tone="info">市场组合</Tag><Status tone={collection.execution.coverage === 'complete' ? 'success' : 'warning'}>{packCoverageLabel(collection.execution.coverage)}</Status></div>
+          <h3>{collection.name}</h3><p className="eac-market__plugin-summary">{collection.summary}</p>
+          <div className="eac-market__plugin-bottom"><span className="eac-market__status">{collection.components.length} 个组件 · {collection.version}</span><Button size="sm" variant="primary" disabled={onCollection === undefined} onClick={() => onCollection?.(collection)}>查看组合变更</Button></div>
+        </article>)}</div>
+      </section>}
+      {supplemental}
     </>
   )
 }
 
-export function DetailView({ plugin, presentation, inventory, onBack, onInstall, onUpdate, canInstall = false }: {
+export function DetailView({ plugin, presentation, inventory, onBack, backLabel, onInstall, onUpdate, updatePlugin, canInstall = false, onOpenOfficialPlugins, supplemental }: {
   readonly plugin: CatalogPlugin
   readonly presentation: CatalogPresentation | undefined
   readonly inventory: readonly InventoryItem[]
   readonly onBack: () => void
+  readonly backLabel?: string | undefined
   readonly onInstall: (plugin: CatalogPlugin) => void
   readonly onUpdate?: (plugin: CatalogPlugin) => void
+  readonly updatePlugin?: CatalogPlugin | undefined
   readonly canInstall?: boolean
+  readonly onOpenOfficialPlugins?: (() => void) | undefined
+  readonly supplemental?: React.ReactNode
 }): React.JSX.Element {
   const installed = isInstalled(inventory, plugin)
   const blocked = !canInstall || plugin.verification === 'hard-incompatible' || plugin.installability !== 'bundle-installable'
   return (
     <>
-      <Button variant="ghost" onClick={onBack}>返回插件列表</Button>
+      <Button variant="ghost" onClick={onBack}>{backLabel ?? '返回插件列表'}</Button>
       <div className="eac-market__detail">
         <div className="eac-market__detail-main">
           <div className="eac-market__plugin-head">
@@ -907,15 +807,16 @@ export function DetailView({ plugin, presentation, inventory, onBack, onInstall,
             <Button variant="primary" disabled={blocked || installed !== undefined} title={!canInstall ? '当前 DSH 运行时未开放正式安装计划' : blocked ? installabilityLabel(plugin.installability) : installed !== undefined ? '已安装，请到我的插件管理' : undefined} onClick={() => onInstall(plugin)}>
               {installed !== undefined ? '已安装' : blocked ? '暂不可安装' : plugin.verification === 'unverified' || plugin.verification === 'unknown' ? '确认安装条件' : '安装'}
             </Button>
-            {installed !== undefined && hasCatalogUpdate(installed, plugin) && canInstall && onUpdate !== undefined && (
-              <Button variant="primary" onClick={() => onUpdate(plugin)}>更新到 {plugin.version}</Button>
+            {installed !== undefined && updatePlugin !== undefined && hasCatalogUpdate(installed, updatePlugin) && canInstall && onUpdate !== undefined && (
+              <Button variant="primary" onClick={() => onUpdate(updatePlugin)}>更新到 {updatePlugin.version}</Button>
             )}
             {installed?.restartRequired === true && <Status tone="warning">需要重启</Status>}
           </div>
           {installed !== undefined && (
             <div className="eac-market__notice" style={{ marginTop: 14 }}>
               <strong>使用入口：</strong>
-              {plugin.requiresSetup ? '此插件需要先完成设置；当前市场契约没有可调用的设置接口，请在 DSH 官方插件页按作者说明完成设置。' : '当前市场契约没有可调用的打开接口；请在 DSH 官方插件页或作者说明的入口打开。'}
+              {plugin.requiresSetup ? '此插件需要设置，请在 DSH 官方插件页按作者说明完成。' : '请在 DSH 官方插件页或作者说明的入口打开。'}
+              {onOpenOfficialPlugins && <Button variant="outline" onClick={onOpenOfficialPlugins}>打开官方插件页</Button>}
               {plugin.sourceUrl !== undefined && <> <a href={plugin.sourceUrl} target="_blank" rel="noreferrer">查看作者公开来源</a></>}
             </div>
           )}
@@ -938,6 +839,7 @@ export function DetailView({ plugin, presentation, inventory, onBack, onInstall,
           </section>
         </div>
         <aside className="eac-market__detail-side">
+          <details><summary>来源与兼容详情</summary>
           <div className="eac-market__section-head"><h2>安装信息</h2></div>
           <dl className="eac-market__facts">
             <dt>目标版本</dt><dd>{plugin.version}</dd>
@@ -952,8 +854,10 @@ export function DetailView({ plugin, presentation, inventory, onBack, onInstall,
             <dt>产物摘要</dt><dd>{plugin.artifactDigest ?? '暂无摘要'}</dd>
           </dl>
           <p className="eac-market__footer-note">固定信息由目录与官方插件管理器维护，作者正文不能改写这些状态。</p>
+          </details>
         </aside>
       </div>
+      {supplemental}
     </>
   )
 }

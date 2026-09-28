@@ -10,7 +10,7 @@ function context(manager: unknown) {
 }
 
 describe('AUD-F07/F09 adapter state mapping', () => {
-  it('separates configured-enabled from running-active when restart is pending', async () => {
+  it('keeps pending runtime unknown without inventing a restart receipt', async () => {
     const adapter = new DshManagerAdapter(context({
       listBundles: async () => [{
         name: 'restart-bundle',
@@ -30,7 +30,7 @@ describe('AUD-F07/F09 adapter state mapping', () => {
       }],
     }))
     const inventory = await adapter.inventory('env-test')
-    expect(inventory.items[0]).toMatchObject({ bundleEnabled: true, restartRequired: true })
+    expect(inventory.items[0]).toMatchObject({ bundleEnabled: true, restartRequired: false })
     expect(inventory.items[0]?.rows[0]).toMatchObject({ state: 'unknown', fiberPhase: 'pending' })
   })
 

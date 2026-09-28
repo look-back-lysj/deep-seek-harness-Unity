@@ -1,0 +1,5 @@
+# Catalog publication checks compare exact bytes across Git checkouts and mirrors.
+packages/market/data/index.json text eol=lf
+catalog-source/distribution/*.json text eol=lf
+# Preserve vendored license bytes, including upstream final blank lines.
+releases/eac-skins-1.1.0/licenses/** -text whitespace=cr-at-eol,-blank-at-eof

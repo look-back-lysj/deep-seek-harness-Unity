@@ -5,10 +5,12 @@
  * 不使用 GitHub 登录、cookie 或用户 token。网络失败时保留手动粘贴路径，不伪造导入成功。
  */
 import { posix } from 'node:path'
-import type { ReadmeImportRequest, ReadmeImportResult } from '../contracts/types.ts'
+import { randomUUID } from 'node:crypto'
+import type { AuthorDraft, AuthorDraftInput, ReadmeImportRequest, ReadmeImportResult } from '../contracts/types.ts'
 import { AuthorDraftStore, AuthorDraftConflictError, type DraftStoreOptions } from './drafts.ts'
 import { rewriteRelativeLinks } from './markdown.ts'
 import { MediaStore, type MediaLimits } from './media.ts'
+import { AuthorPackageService } from './package.ts'
 import { safeFetch, type RemoteSecurityOptions } from '../delivery/security.ts'
 
 export interface RemoteBytesReader {
@@ -27,6 +29,26 @@ export interface ReadmeImporterOptions {
 }
 
 export type ReadmeImportRequestWithRevision = ReadmeImportRequest & { readonly expectedRevision?: string | undefined }
+
+export interface ReadmePreview {
+  readonly previewId: string
+  readonly expiresAt: string
+  readonly before?: AuthorDraft
+  readonly candidate: AuthorDraftInput
+  readonly repositoryUrl: string
+  readonly commit: string
+  readonly importedAt: string
+  readonly mediaWarnings: readonly string[]
+}
+
+interface PreparedReadme {
+  readonly input: AuthorDraftInput
+  readonly before?: AuthorDraft
+  readonly repositoryUrl: string
+  readonly commit: string
+  readonly importedAt: string
+  readonly mediaWarnings: readonly string[]
+}
 
 export class ReadmeImportError extends Error {
   readonly code: string
@@ -125,10 +147,13 @@ export class ReadmeImporter {
   private readonly maxReadmeBytes: number
   private readonly maxMediaFiles: number
   private readonly now: () => Date
+  private readonly previews = new Map<string, { readonly value: ReadmePreview; readonly prepared: PreparedReadme }>()
+  private readonly packages: AuthorPackageService
 
   constructor(root: string, options: ReadmeImporterOptions = {}) {
-    this.drafts = new AuthorDraftStore(`${root}/drafts`, options.draft)
-    this.media = new MediaStore(`${root}/media`, options.media)
+    this.packages = new AuthorPackageService(root, { ...(options.draft ? { draft: options.draft } : {}), ...(options.media ? { media: options.media } : {}) })
+    this.drafts = this.packages.drafts
+    this.media = this.packages.media
     this.remote = options.remote ?? defaultRemote(options.security ?? {})
     this.maxReadmeBytes = options.maxReadmeBytes ?? 512 * 1024
     this.maxMediaFiles = options.maxMediaFiles ?? 20
@@ -136,6 +161,46 @@ export class ReadmeImporter {
   }
 
   async importReadme(request: ReadmeImportRequestWithRevision): Promise<ReadmeImportResult> {
+    return this.applyPrepared(await this.prepare(request))
+  }
+
+  /** 只生成差异候选；下载图片可留为无引用缓存，不更改目标正文/revision。 */
+  async previewReadme(request: ReadmeImportRequestWithRevision): Promise<ReadmePreview> {
+    const prepared = await this.prepare(request)
+    for (const [id, entry] of this.previews) if (Date.parse(entry.value.expiresAt) <= this.now().getTime()) this.previews.delete(id)
+    if (this.previews.size >= 32) throw new ReadmeImportError('readme/preview-limit', '未完成预览过多，请稍后重试')
+    const previewId = randomUUID()
+    const value: ReadmePreview = { previewId, expiresAt: new Date(this.now().getTime() + 15 * 60_000).toISOString(), candidate: prepared.input, ...(prepared.before ? { before: prepared.before } : {}), repositoryUrl: prepared.repositoryUrl, commit: prepared.commit, importedAt: prepared.importedAt, mediaWarnings: prepared.mediaWarnings }
+    this.previews.set(previewId, { value, prepared })
+    return structuredClone(value)
+  }
+
+  /** 用户确认后消费同一份候选字节；不重新请求浮动分支。 */
+  applyReadmePreview(request: { readonly previewId: string; readonly expectedRevision?: string }): ReadmeImportResult {
+    const entry = this.previews.get(request.previewId)
+    if (!entry || Date.parse(entry.value.expiresAt) <= this.now().getTime()) throw new ReadmeImportError('readme/preview-expired', '预览不存在或已过期，请重新导入预览')
+    if (entry.prepared.before?.revision !== request.expectedRevision) throw new ReadmeImportError('readme/preview-revision', '确认未绑定预览时的目标 revision')
+    const result = this.applyPrepared(entry.prepared)
+    this.previews.delete(request.previewId)
+    return result
+  }
+
+  private applyPrepared(prepared: PreparedReadme): ReadmeImportResult {
+    const input = prepared.input
+    const existing = prepared.before === undefined ? {} : this.packages.readProvenance(prepared.before.id)
+    // GitHub API 的 license 只是线索，不能写成已经确认的转载授权。
+    const provenance = { ...existing, repositoryUrl: prepared.repositoryUrl, commit: prepared.commit }
+    const draft = input.id === undefined ? this.drafts.create(input, provenance) : this.drafts.update({ ...input, id: input.id }, provenance)
+    return { draft, repositoryUrl: prepared.repositoryUrl, commit: prepared.commit, importedAt: prepared.importedAt, mediaWarnings: prepared.mediaWarnings }
+  }
+
+  private async prepare(request: ReadmeImportRequestWithRevision): Promise<PreparedReadme> {
+    // 网络前检查一次，下载后 update 再检查，防止网络期间手工保存被覆盖。
+    const target = request.targetDraftId === undefined ? undefined : this.drafts.get(request.targetDraftId)
+    if (target !== undefined) {
+      if (request.expectedRevision === undefined) throw new ReadmeImportError('readme/revision-required', '更新 README 必须带用户看到的 expectedRevision')
+      if (target.revision !== request.expectedRevision) throw new AuthorDraftConflictError(request.expectedRevision, target.revision)
+    }
     const coordinates = githubCoordinates(request.repositoryUrl)
     const repoUrl = `https://api.github.com/repos/${coordinates.owner}/${coordinates.repository}`
     const repository = await this.remote.readJson(repoUrl) as GithubRepository
@@ -155,7 +220,7 @@ export class ReadmeImporter {
     const relativeImages = [...markdown.matchAll(/!\[[^\]]*\]\(([^)\s]+)\)/g)]
       .map((match) => match[1] ?? '')
       .filter((href) => href && !/^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(href) && !href.startsWith('/'))
-    for (const relativePath of relativeImages) {
+    for (const relativePath of new Set(relativeImages)) {
       if (mediaIds.length >= this.maxMediaFiles) {
         warnings.push(`相对图片超过 ${this.maxMediaFiles} 张，已跳过：${relativePath}`)
         continue
@@ -166,7 +231,7 @@ export class ReadmeImporter {
         const mediaUrl = new URL(mediaPath.split('/').map(encodeURIComponent).join('/'), rawRoot).href
         const bytes = await this.remote.readBytes(mediaUrl)
         const stored = this.media.save(bytes, posix.basename(mediaPath))
-        mediaIds.push(stored.id)
+        if (!mediaIds.includes(stored.id)) mediaIds.push(stored.id)
         replacements.set(relativePath, stored.id)
       } catch (error) {
         warnings.push(`相对图片导入失败：${relativePath}；${error instanceof Error ? error.message : 'unknown error'}`)
@@ -194,7 +259,10 @@ export class ReadmeImporter {
     ]
     const finalMarkdown = `${rewritten}${provenanceLines.join('\n')}`
     const input = {
+      ...(target?.pluginId === undefined ? {} : { pluginId: target.pluginId }),
+      ...(target?.pluginVersion === undefined ? {} : { pluginVersion: target.pluginVersion }),
       ...(request.targetDraftId === undefined ? {} : { id: request.targetDraftId }),
+      ...(request.expectedRevision === undefined ? {} : { expectedRevision: request.expectedRevision }),
       title: text(repository.full_name ?? coordinates.repository, 'repository name', 200),
       summary: summaryFromMarkdown(markdown),
       markdown: finalMarkdown,
@@ -202,15 +270,9 @@ export class ReadmeImporter {
       sourceCommit: commit,
       sourceUrl: coordinates.repositoryUrl,
     }
-    let draft
-    if (request.targetDraftId === undefined) {
-      draft = this.drafts.create(input)
-    } else {
-      if (request.expectedRevision === undefined) throw new ReadmeImportError('readme/revision-required', '更新 README 必须带用户看到的 expectedRevision')
-      draft = this.drafts.update({ ...input, id: request.targetDraftId, expectedRevision: request.expectedRevision })
-    }
     return {
-      draft,
+      input,
+      ...(target === undefined ? {} : { before: target }),
       repositoryUrl: coordinates.repositoryUrl,
       commit,
       importedAt: this.now().toISOString(),

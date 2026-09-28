@@ -1,0 +1,855 @@
+{
+  "schemaVersion": "1",
+  "localOnly": true,
+  "artifacts": [
+    {
+      "filename": "dsh-eac-skin-aurora-1.1.0.tgz",
+      "path": "artifacts/dsh-eac-skin-aurora-1.1.0.tgz",
+      "packageName": "@dsh-eac/skin-aurora",
+      "version": "1.1.0",
+      "bytes": 13706,
+      "sha256": "sha256:3abf546ccbea8fa106290ed0a96c77661a9620e88fadb57b76afa12aa503cd35",
+      "metadataDigest": "sha256:1068e2a66370a580908cfb11217d521e2c7ba076d467570f3800607023b7532a",
+      "kind": "author-release",
+      "commit": "afa947215a862a9c3304f6fff7a812efe5a42fdc",
+      "sourcePath": ".verify/pkgs-v1.1.0-final/dsh-eac-skin-aurora-1.1.0.tgz",
+      "installCandidate": true,
+      "runtimeVerification": "not-tested",
+      "metadata": {
+        "kind": "official-bundle",
+        "packageJson": {
+          "contentBase64": "ewogICJuYW1lIjogIkBkc2gtZWFjL3NraW4tYXVyb3JhIiwKICAidmVyc2lvbiI6ICIxLjEuMCIsCiAgInByaXZhdGUiOiB0cnVlLAogICJ0eXBlIjogIm1vZHVsZSIsCiAgIm1haW4iOiAibGliL2luZGV4LmpzIiwKICAiZXhwb3J0cyI6IHsKICAgICIuIjogIi4vbGliL2luZGV4LmpzIiwKICAgICIuL2NsaWVudCI6ICIuL2xpYi9jbGllbnQuanMiLAogICAgIi4vcGFja2FnZS5qc29uIjogIi4vcGFja2FnZS5qc29uIgogIH0sCiAgImRlc2NyaXB0aW9uIjogIuOAjOaegeWFieS5i+WknOOAjeKAlCDmt7HoibLnjrvnkoPmi5/mgIEgKyDmnoHlhYnmuJDlj5jog4zmma/nmoQgRFNIIFVJIOearuiCpO+8iOWFrOe6puWPguiAg+WunueOsOekuuS+i++8ieOAgiIsCiAgInBlZXJEZXBlbmRlbmNpZXMiOiB7CiAgICAiQGRlZXBzZWVrLWFpL2RzaCI6ICIwLjEuNy1yYy4yIiwKICAgICJAZGVlcHNlZWstYWkvY29yZGlzIjogIn40LjAuNCIKICB9LAogICJkZXBlbmRlbmNpZXMiOiB7CiAgICAiQGRlZXBzZWVrLWFpL3NjaGVtYXN0ZXJ5IjogIn4zLjE4LjQiCiAgfSwKICAiZW5naW5lcyI6IHsKICAgICJkc2giOiAiMC4xLjctcmMuMiIsCiAgICAibm9kZSI6ICI+PTI0IgogIH0sCiAgImRzaCI6IHsKICAgICJtYW5pZmVzdFZlcnNpb24iOiAxLAogICAgInNraW4iOiB7CiAgICAgICJhcGlWZXJzaW9uIjogImRzaC5lY29zeXN0ZW0udWktc2tpbi1sb2FkZXIvdjEiLAogICAgICAiaWQiOiAiZHNoLWVhYy5za2luLmF1cm9yYSIsCiAgICAgICJuYW1lIjogIuaegeWFieS5i+WknCIsCiAgICAgICJ2ZXJzaW9uIjogIjEuMS4wIiwKICAgICAgImF1dGhvciI6ICJEU0gtRUFDIiwKICAgICAgImRlc2NyaXB0aW9uIjogIua3seiJsueOu+eSg+aLn+aAgSArIOaegeWFiea4kOWPmOiDjOaZr+eahOWGhee9ruekuuS+i+earuiCpO+8iOWFrOe6puWPguiAg+WunueOsO+8ieOAgiIsCiAgICAgICJ0YWdzIjogWwogICAgICAgICJkYXJrIiwKICAgICAgICAiZ2xhc3Ntb3JwaGlzbSIsCiAgICAgICAgImV4YW1wbGUiCiAgICAgIF0sCiAgICAgICJwcmV2aWV3IjogIjxzdmcgeG1sbnM9XCJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2Z1wiIHZpZXdCb3g9XCIwIDAgMzIwIDE4MFwiIHJvbGU9XCJpbWdcIiBhcmlhLWxhYmVsPVwi5p6B5YWJ5LmL5aScXCI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPVwic2tuLWF1cm9yYS1wcmV2aWV3LWJnXCIgeDE9XCIwXCIgeTE9XCIwXCIgeDI9XCIwXCIgeTI9XCIxXCI+PHN0b3Agb2Zmc2V0PVwiMFwiIHN0b3AtY29sb3I9XCIjMGIxMDI2XCIvPjxzdG9wIG9mZnNldD1cIjFcIiBzdG9wLWNvbG9yPVwiIzFiMjE0OFwiLz48L2xpbmVhckdyYWRpZW50PjxsaW5lYXJHcmFkaWVudCBpZD1cInNrbi1hdXJvcmEtcHJldmlldy1yaWJib25cIiB4MT1cIjBcIiB5MT1cIjBcIiB4Mj1cIjFcIiB5Mj1cIjBcIj48c3RvcCBvZmZzZXQ9XCIwXCIgc3RvcC1jb2xvcj1cIiMzOWQwYTRcIi8+PHN0b3Agb2Zmc2V0PVwiLjVcIiBzdG9wLWNvbG9yPVwiIzRmOGRmZlwiLz48c3RvcCBvZmZzZXQ9XCIxXCIgc3RvcC1jb2xvcj1cIiNhMDZiZmZcIi8+PC9saW5lYXJHcmFkaWVudD48L2RlZnM+PHJlY3Qgd2lkdGg9XCIzMjBcIiBoZWlnaHQ9XCIxODBcIiBmaWxsPVwidXJsKCNza24tYXVyb3JhLXByZXZpZXctYmcpXCIvPjxwYXRoIGQ9XCJNLTIwIDExOCBDIDYwIDU4LCAxMjAgMTUwLCAyMDAgODAgUyAzMjAgNTgsIDM0MCA4OFwiIGZpbGw9XCJub25lXCIgc3Ryb2tlPVwidXJsKCNza24tYXVyb3JhLXByZXZpZXctcmliYm9uKVwiIHN0cm9rZS13aWR0aD1cIjI2XCIgc3Ryb2tlLWxpbmVjYXA9XCJyb3VuZFwiIG9wYWNpdHk9XCIuNTVcIi8+PHBhdGggZD1cIk0tMjAgMTQyIEMgODAgOTIsIDE1MCAxNzIsIDI0MCAxMDIgUyAzMzAgOTIsIDM0MCAxMTJcIiBmaWxsPVwibm9uZVwiIHN0cm9rZT1cInVybCgjc2tuLWF1cm9yYS1wcmV2aWV3LXJpYmJvbilcIiBzdHJva2Utd2lkdGg9XCIxM1wiIHN0cm9rZS1saW5lY2FwPVwicm91bmRcIiBvcGFjaXR5PVwiLjMzXCIvPjx0ZXh0IHg9XCIxNjBcIiB5PVwiNDJcIiB0ZXh0LWFuY2hvcj1cIm1pZGRsZVwiIGZvbnQtZmFtaWx5PVwic2Fucy1zZXJpZlwiIGZvbnQtc2l6ZT1cIjIwXCIgZm9udC13ZWlnaHQ9XCI2MDBcIiBmaWxsPVwiI2U4ZWNmZlwiPuaegeWFieS5i+WknDwvdGV4dD48dGV4dCB4PVwiMTYwXCIgeT1cIjE2NlwiIHRleHQtYW5jaG9yPVwibWlkZGxlXCIgZm9udC1mYW1pbHk9XCJzYW5zLXNlcmlmXCIgZm9udC1zaXplPVwiMTFcIiBsZXR0ZXItc3BhY2luZz1cIi4yZW1cIiBmaWxsPVwiIzlmYjBlOFwiPkFVUk9SQSBOSUdIVDwvdGV4dD48L3N2Zz4iCiAgICB9LAogICAgImJ1bmRsZSI6IHsKICAgICAgInBhdGNoIjogIi4vY29yZGlzLnBhdGNoLnltbCIKICAgIH0sCiAgICAiY2xpZW50IjogewogICAgICAicGxhdGZvcm0iOiAid2ViIiwKICAgICAgImluamVjdCI6IFtdLAogICAgICAiZXh0ZXJuYWwiOiBbXSwKICAgICAgImltbWVkaWF0ZWx5IjogZmFsc2UKICAgIH0KICB9LAogICJzY3JpcHRzIjogewogICAgImJ1aWxkIjogInRzYyAtLW5vRW1pdCAmJiBub2RlIHNjcmlwdHMvYnVpbGQtYXJ0aWZhY3QubWpzIiwKICAgICJ0eXBlY2hlY2siOiAidHNjIC0tbm9FbWl0IiwKICAgICJsaW50IjogImVzbGludCBzcmMiLAogICAgInRlc3QiOiAibm9kZSAtLXRlc3QgXCJzcmMvKiovKi50ZXN0LnRzXCIiCiAgfSwKICAiZmlsZXMiOiBbCiAgICAibGliIiwKICAgICJjb3JkaXMucGF0Y2gueW1sIiwKICAgICJSRUFETUUubWQiLAogICAgIlRISVJELVBBUlRZLU5PVElDRVMubWQiLAogICAgIkxJQ0VOU0UiLAogICAgIk5PVElDRSIKICBdLAogICJsaWNlbnNlIjogIk1JVCIKfQo=",
+          "sha256": "sha256:1068e2a66370a580908cfb11217d521e2c7ba076d467570f3800607023b7532a"
+        },
+        "files": [
+          "LICENSE",
+          "NOTICE",
+          "README.md",
+          "THIRD-PARTY-NOTICES.md",
+          "cordis.patch.yml",
+          "lib/client.js",
+          "lib/index.js",
+          "package.json"
+        ]
+      },
+      "releaseId": "release-1eb42156b7ff3b842b23a1f60b44e1afe1715d36b294c9eaf8a7dec10a8c3d71"
+    },
+    {
+      "filename": "dsh-eac-skin-blue-fantasy-1.1.0.tgz",
+      "path": "artifacts/dsh-eac-skin-blue-fantasy-1.1.0.tgz",
+      "packageName": "@dsh-eac/skin-blue-fantasy",
+      "version": "1.1.0",
+      "bytes": 5086165,
+      "sha256": "sha256:b89297f957c93ce76cc9984ebfdf73d49889c89d568200ac4e06a8b90dc94a44",
+      "metadataDigest": "sha256:3cc4c82acfded5accedbf767ae2749b27c0067232205b19626fb5c7ecc28bdb7",
+      "kind": "author-release",
+      "commit": "afa947215a862a9c3304f6fff7a812efe5a42fdc",
+      "sourcePath": ".verify/pkgs-v1.1.0-final/dsh-eac-skin-blue-fantasy-1.1.0.tgz",
+      "installCandidate": true,
+      "runtimeVerification": "not-tested",
+      "metadata": {
+        "kind": "official-bundle",
+        "packageJson": {
+          "contentBase64": "ewogICJuYW1lIjogIkBkc2gtZWFjL3NraW4tYmx1ZS1mYW50YXN5IiwKICAidmVyc2lvbiI6ICIxLjEuMCIsCiAgInByaXZhdGUiOiB0cnVlLAogICJ0eXBlIjogIm1vZHVsZSIsCiAgIm1haW4iOiAibGliL2luZGV4LmpzIiwKICAiZXhwb3J0cyI6IHsKICAgICIuIjogIi4vbGliL2luZGV4LmpzIiwKICAgICIuL2NsaWVudCI6ICIuL2xpYi9jbGllbnQuanMiLAogICAgIi4vcGFja2FnZS5qc29uIjogIi4vcGFja2FnZS5qc29uIgogIH0sCiAgImRlc2NyaXB0aW9uIjogIkRyZWFtU2tpbiB3aGFsZSBhcnR3b3JrIGFuZCBwZXJpd2lua2xlIGluZGlnbyBzdXJmYWNlcyBtaWdyYXRlZCBmcm9tIERTSC1EZXNrdG9wLUVBQzsgY292ZW5hbnQtY29udmVydGVkIGxpZmVjeWNsZS4iLAogICJsaWNlbnNlIjogIk1JVCBBTkQgQlNELTMtQ2xhdXNlIiwKICAicGVlckRlcGVuZGVuY2llcyI6IHsKICAgICJAZGVlcHNlZWstYWkvZHNoIjogIjAuMS43LXJjLjIiLAogICAgIkBkZWVwc2Vlay1haS9jb3JkaXMiOiAifjQuMC40IgogIH0sCiAgImVuZ2luZXMiOiB7CiAgICAiZHNoIjogIjAuMS43LXJjLjIiLAogICAgIm5vZGUiOiAiPj0yNCIKICB9LAogICJkc2giOiB7CiAgICAibWFuaWZlc3RWZXJzaW9uIjogMSwKICAgICJza2luIjogewogICAgICAiYXBpVmVyc2lvbiI6ICJkc2guZWNvc3lzdGVtLnVpLXNraW4tbG9hZGVyL3YxIiwKICAgICAgImlkIjogImRzaC1lYWMuc2tpbi5ibHVlLWZhbnRhc3kiLAogICAgICAibmFtZSI6ICLok53oibLlubvmg7MiLAogICAgICAidmVyc2lvbiI6ICIxLjEuMCIsCiAgICAgICJhdXRob3IiOiAicG93ZXJkb2c5OTYgKERyZWFtU2tpbikgwrcgemh1MTA5MDA5MzY1OSAoZHNoLXdlYi11aSkgwrcgRFNILUVBQyIsCiAgICAgICJkZXNjcmlwdGlvbiI6ICJEcmVhbVNraW4gd2hhbGUgYXJ0d29yayBhbmQgcGVyaXdpbmtsZSBpbmRpZ28gc3VyZmFjZXMgbWlncmF0ZWQgZnJvbSBEU0gtRGVza3RvcC1FQUM7IGNvdmVuYW50LWNvbnZlcnRlZCBsaWZlY3ljbGUuIiwKICAgICAgInRhZ3MiOiBbCiAgICAgICAgImRyZWFtc2tpbiIsCiAgICAgICAgIndoYWxlIiwKICAgICAgICAiaW5kaWdvIiwKICAgICAgICAiYXJ0IiwKICAgICAgICAidHJhbnNsdWNlbnQiLAogICAgICAgICJtaWdyYXRlZCIKICAgICAgXSwKICAgICAgInByZXZpZXciOiAiPHN2ZyB4bWxucz1cImh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnXCIgdmlld0JveD1cIjAgMCAzMjAgMTgwXCIgcm9sZT1cImltZ1wiIGFyaWEtbGFiZWw9XCLok53oibLlubvmg7NcIj48ZGVmcz48bGluZWFyR3JhZGllbnQgaWQ9XCJza24tYmx1ZS1mYW50YXN5LWJnXCIgeDE9XCIwXCIgeTE9XCIwXCIgeDI9XCIwXCIgeTI9XCIxXCI+PHN0b3Agb2Zmc2V0PVwiMFwiIHN0b3AtY29sb3I9XCIjNGE1ZmE4XCIvPjxzdG9wIG9mZnNldD1cIjFcIiBzdG9wLWNvbG9yPVwiIzExMTgyN1wiLz48L2xpbmVhckdyYWRpZW50PjwvZGVmcz48cmVjdCB3aWR0aD1cIjMyMFwiIGhlaWdodD1cIjE4MFwiIGZpbGw9XCJ1cmwoI3Nrbi1ibHVlLWZhbnRhc3ktYmcpXCIvPjxjaXJjbGUgY3g9XCIyNTBcIiBjeT1cIjcwXCIgcj1cIjQ4XCIgZmlsbD1cIiNmZmZcIiBvcGFjaXR5PVwiLjEyXCIvPjxwYXRoIGQ9XCJNMCAxNDIgQzgwIDEwNCAxNTAgMTY2IDMyMCA5NiBMMzIwIDE4MCBMMCAxODBaXCIgZmlsbD1cIiNmZmZcIiBvcGFjaXR5PVwiLjEyXCIvPjx0ZXh0IHg9XCIxNjBcIiB5PVwiNDRcIiB0ZXh0LWFuY2hvcj1cIm1pZGRsZVwiIGZvbnQtZmFtaWx5PVwic2Fucy1zZXJpZlwiIGZvbnQtc2l6ZT1cIjE4XCIgZm9udC13ZWlnaHQ9XCI2MDBcIiBmaWxsPVwiI2ZmZlwiPuiTneiJsuW5u+aDszwvdGV4dD48dGV4dCB4PVwiMTYwXCIgeT1cIjE2MFwiIHRleHQtYW5jaG9yPVwibWlkZGxlXCIgZm9udC1mYW1pbHk9XCJzYW5zLXNlcmlmXCIgZm9udC1zaXplPVwiMTBcIiBsZXR0ZXItc3BhY2luZz1cIi4xOGVtXCIgZmlsbD1cIiNmZmZcIiBvcGFjaXR5PVwiLjc1XCI+QkxVRSBGQU5UQVNZPC90ZXh0Pjwvc3ZnPiIKICAgIH0sCiAgICAiYnVuZGxlIjogewogICAgICAicGF0Y2giOiAiLi9jb3JkaXMucGF0Y2gueW1sIgogICAgfSwKICAgICJjbGllbnQiOiB7CiAgICAgICJwbGF0Zm9ybSI6ICJ3ZWIiLAogICAgICAiaW5qZWN0IjogW10sCiAgICAgICJleHRlcm5hbCI6IFtdLAogICAgICAiaW1tZWRpYXRlbHkiOiBmYWxzZQogICAgfQogIH0sCiAgInNjcmlwdHMiOiB7CiAgICAiYnVpbGQiOiAidHNjIC0tbm9FbWl0ICYmIG5vZGUgc2NyaXB0cy9idWlsZC1hcnRpZmFjdC5tanMiLAogICAgInR5cGVjaGVjayI6ICJ0c2MgLS1ub0VtaXQiLAogICAgImxpbnQiOiAiZXNsaW50IHNyYyIsCiAgICAidGVzdCI6ICJub2RlIC0tdGVzdCBcInNyYy8qKi8qLnRlc3QudHNcIiIKICB9LAogICJmaWxlcyI6IFsKICAgICJsaWIiLAogICAgImNvcmRpcy5wYXRjaC55bWwiLAogICAgIlRISVJELVBBUlRZLU5PVElDRVMubWQiLAogICAgIlJFQURNRS5tZCIsCiAgICAiTElDRU5TRSIsCiAgICAiTk9USUNFIiwKICAgICJwcmV2aWV3IgogIF0KfQo=",
+          "sha256": "sha256:3cc4c82acfded5accedbf767ae2749b27c0067232205b19626fb5c7ecc28bdb7"
+        },
+        "files": [
+          "LICENSE",
+          "NOTICE",
+          "README.md",
+          "THIRD-PARTY-NOTICES.md",
+          "cordis.patch.yml",
+          "lib/client.js",
+          "lib/index.js",
+          "package.json",
+          "preview/dark.png",
+          "preview/light.png"
+        ]
+      },
+      "releaseId": "release-d070733e6bc8773c5c977fb37595c0a7641fd5ec80bcfb27aa302bae4f626ee9"
+    },
+    {
+      "filename": "dsh-eac-skin-deep-whale-day-night-1.1.0.tgz",
+      "path": "artifacts/dsh-eac-skin-deep-whale-day-night-1.1.0.tgz",
+      "packageName": "@dsh-eac/skin-deep-whale-day-night",
+      "version": "1.1.0",
+      "bytes": 7531975,
+      "sha256": "sha256:8d1f42ed937e1ac84e1726e0cae5b2fc20fc2735671d2268e4f9f31c13aec7d6",
+      "metadataDigest": "sha256:c9e06d1a0b36c2ffe9a0623a555656a06175e6c0e8d3bda0dc6c2b9cb330f27f",
+      "kind": "author-release",
+      "commit": "afa947215a862a9c3304f6fff7a812efe5a42fdc",
+      "sourcePath": ".verify/pkgs-v1.1.0-final/dsh-eac-skin-deep-whale-day-night-1.1.0.tgz",
+      "installCandidate": true,
+      "runtimeVerification": "not-tested",
+      "metadata": {
+        "kind": "official-bundle",
+        "packageJson": {
+          "contentBase64": "ewogICJuYW1lIjogIkBkc2gtZWFjL3NraW4tZGVlcC13aGFsZS1kYXktbmlnaHQiLAogICJ2ZXJzaW9uIjogIjEuMS4wIiwKICAicHJpdmF0ZSI6IHRydWUsCiAgInR5cGUiOiAibW9kdWxlIiwKICAibWFpbiI6ICJsaWIvaW5kZXguanMiLAogICJleHBvcnRzIjogewogICAgIi4iOiAiLi9saWIvaW5kZXguanMiLAogICAgIi4vY2xpZW50IjogIi4vbGliL2NsaWVudC5qcyIsCiAgICAiLi9wYWNrYWdlLmpzb24iOiAiLi9wYWNrYWdlLmpzb24iCiAgfSwKICAiZGVzY3JpcHRpb24iOiAiRGVlcCBXaGFsZSBEYXkgJiBOaWdodCBza2luIG1pZ3JhdGVkIGZyb20gYSBwaW5uZWQgdXBzdHJlYW0gcGFja2FnZTsgQ0MgQlktTkMtU0EgNC4wIG5vbi1jb21tZXJjaWFsLiIsCiAgImxpY2Vuc2UiOiAiQ0MtQlktTkMtU0EtNC4wIiwKICAicGVlckRlcGVuZGVuY2llcyI6IHsKICAgICJAZGVlcHNlZWstYWkvZHNoIjogIjAuMS43LXJjLjIiLAogICAgIkBkZWVwc2Vlay1haS9jb3JkaXMiOiAifjQuMC40IgogIH0sCiAgImVuZ2luZXMiOiB7CiAgICAiZHNoIjogIjAuMS43LXJjLjIiLAogICAgIm5vZGUiOiAiPj0yNCIKICB9LAogICJkc2giOiB7CiAgICAibWFuaWZlc3RWZXJzaW9uIjogMSwKICAgICJza2luIjogewogICAgICAiYXBpVmVyc2lvbiI6ICJkc2guZWNvc3lzdGVtLnVpLXNraW4tbG9hZGVyL3YxIiwKICAgICAgImlkIjogImRzaC1lYWMuc2tpbi5kZWVwLXdoYWxlLWRheS1uaWdodCIsCiAgICAgICJuYW1lIjogIumyuOmxvOWomOaYvOWknOW3peWdiiIsCiAgICAgICJ2ZXJzaW9uIjogIjEuMS4wIiwKICAgICAgImF1dGhvciI6ICJTbWFsbC10YWlscXdxIMK3IOS4iuWWhCDCtyB6aXB6aXAgwrcgRFNILUVBQyIsCiAgICAgICJkZXNjcmlwdGlvbiI6ICJEZWVwIFdoYWxlIERheSAmIE5pZ2h0IHNraW4gd2l0aCBmdWxsIENDIEJZLU5DLVNBIDQuMCBhdHRyaWJ1dGlvbiBjaGFpbi4iLAogICAgICAidGFncyI6IFsKICAgICAgICAiYW5pbWUiLAogICAgICAgICJtYWlkIiwKICAgICAgICAid2hhbGUiLAogICAgICAgICJkYXktbmlnaHQiLAogICAgICAgICJhbmltYXRlZCIsCiAgICAgICAgIm1pZ3JhdGVkIgogICAgICBdLAogICAgICAicHJldmlldyI6ICI8c3ZnIHhtbG5zPVwiaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmdcIiB2aWV3Qm94PVwiMCAwIDMyMCAxODBcIiByb2xlPVwiaW1nXCIgYXJpYS1sYWJlbD1cIua3sea1t+Wls+S7huW3peWdilwiPjxkZWZzPjxsaW5lYXJHcmFkaWVudCBpZD1cInNrbi1tYWlkLWF0ZWxpZXItYmdcIiB4MT1cIjBcIiB5MT1cIjBcIiB4Mj1cIjBcIiB5Mj1cIjFcIj48c3RvcCBvZmZzZXQ9XCIwXCIgc3RvcC1jb2xvcj1cIiNjNWE0NjhcIi8+PHN0b3Agb2Zmc2V0PVwiMVwiIHN0b3AtY29sb3I9XCIjMTExODI3XCIvPjwvbGluZWFyR3JhZGllbnQ+PC9kZWZzPjxyZWN0IHdpZHRoPVwiMzIwXCIgaGVpZ2h0PVwiMTgwXCIgZmlsbD1cInVybCgjc2tuLW1haWQtYXRlbGllci1iZylcIi8+PGNpcmNsZSBjeD1cIjI1MFwiIGN5PVwiNzBcIiByPVwiNDhcIiBmaWxsPVwiI2ZmZlwiIG9wYWNpdHk9XCIuMTJcIi8+PHBhdGggZD1cIk0wIDE0MiBDODAgMTA0IDE1MCAxNjYgMzIwIDk2IEwzMjAgMTgwIEwwIDE4MFpcIiBmaWxsPVwiI2ZmZlwiIG9wYWNpdHk9XCIuMTJcIi8+PHRleHQgeD1cIjE2MFwiIHk9XCI0NFwiIHRleHQtYW5jaG9yPVwibWlkZGxlXCIgZm9udC1mYW1pbHk9XCJzYW5zLXNlcmlmXCIgZm9udC1zaXplPVwiMThcIiBmb250LXdlaWdodD1cIjYwMFwiIGZpbGw9XCIjZmZmXCI+5rex5rW35aWz5LuG5bel5Z2KPC90ZXh0Pjx0ZXh0IHg9XCIxNjBcIiB5PVwiMTYwXCIgdGV4dC1hbmNob3I9XCJtaWRkbGVcIiBmb250LWZhbWlseT1cInNhbnMtc2VyaWZcIiBmb250LXNpemU9XCIxMFwiIGxldHRlci1zcGFjaW5nPVwiLjE4ZW1cIiBmaWxsPVwiI2ZmZlwiIG9wYWNpdHk9XCIuNzVcIj5BQllTU0FMIE1BSUQgQVRFTElFUjwvdGV4dD48L3N2Zz4iCiAgICB9LAogICAgImJ1bmRsZSI6IHsKICAgICAgInBhdGNoIjogIi4vY29yZGlzLnBhdGNoLnltbCIKICAgIH0sCiAgICAiY2xpZW50IjogewogICAgICAicGxhdGZvcm0iOiAid2ViIiwKICAgICAgImluamVjdCI6IFsKICAgICAgICAidWlTa2luTG9hZGVyIiwKICAgICAgICAidGhlbWUiCiAgICAgIF0sCiAgICAgICJleHRlcm5hbCI6IFtdLAogICAgICAiaW1tZWRpYXRlbHkiOiBmYWxzZQogICAgfQogIH0sCiAgInNjcmlwdHMiOiB7CiAgICAiYnVpbGQiOiAidHNjIC0tbm9FbWl0ICYmIG5vZGUgc2NyaXB0cy9idWlsZC1hcnRpZmFjdC5tanMiLAogICAgInR5cGVjaGVjayI6ICJ0c2MgLS1ub0VtaXQiLAogICAgImxpbnQiOiAiZXNsaW50IHNyYyIsCiAgICAidGVzdCI6ICJub2RlIC0tdGVzdCBcInNyYy8qKi8qLnRlc3QudHNcIiIKICB9LAogICJmaWxlcyI6IFsKICAgICJsaWIiLAogICAgImNvcmRpcy5wYXRjaC55bWwiLAogICAgIlRISVJELVBBUlRZLU5PVElDRVMubWQiLAogICAgIlJFQURNRS5tZCIsCiAgICAiTElDRU5TRSIsCiAgICAiTk9USUNFIiwKICAgICJwcmV2aWV3IgogIF0KfQo=",
+          "sha256": "sha256:c9e06d1a0b36c2ffe9a0623a555656a06175e6c0e8d3bda0dc6c2b9cb330f27f"
+        },
+        "files": [
+          "LICENSE",
+          "NOTICE",
+          "README.md",
+          "THIRD-PARTY-NOTICES.md",
+          "cordis.patch.yml",
+          "lib/client.js",
+          "lib/index.js",
+          "package.json",
+          "preview/dark.webp",
+          "preview/light.webp"
+        ]
+      },
+      "releaseId": "release-ab9c9addd9015ef2e01cc849175e1bde9533374b65a4095f987b41cc2ed0eaf1"
+    },
+    {
+      "filename": "dsh-eac-skin-dragon-heir-1.1.0.tgz",
+      "path": "artifacts/dsh-eac-skin-dragon-heir-1.1.0.tgz",
+      "packageName": "@dsh-eac/skin-dragon-heir",
+      "version": "1.1.0",
+      "bytes": 179728,
+      "sha256": "sha256:c315837b67597107612a0c663ec8e8168e6f90622017bb6735614b4a3a322ba3",
+      "metadataDigest": "sha256:12b0b0d1a45624b5172be755f4a2b64f15d8bcf486620b8aa282e9e33bec91de",
+      "kind": "author-release",
+      "commit": "afa947215a862a9c3304f6fff7a812efe5a42fdc",
+      "sourcePath": ".verify/pkgs-v1.1.0-final/dsh-eac-skin-dragon-heir-1.1.0.tgz",
+      "installCandidate": true,
+      "runtimeVerification": "not-tested",
+      "metadata": {
+        "kind": "official-bundle",
+        "packageJson": {
+          "contentBase64": "ewogICJuYW1lIjogIkBkc2gtZWFjL3NraW4tZHJhZ29uLWhlaXIiLAogICJ2ZXJzaW9uIjogIjEuMS4wIiwKICAicHJpdmF0ZSI6IHRydWUsCiAgInR5cGUiOiAibW9kdWxlIiwKICAibWFpbiI6ICJsaWIvaW5kZXguanMiLAogICJleHBvcnRzIjogewogICAgIi4iOiAiLi9saWIvaW5kZXguanMiLAogICAgIi4vY2xpZW50IjogIi4vbGliL2NsaWVudC5qcyIsCiAgICAiLi9wYWNrYWdlLmpzb24iOiAiLi9wYWNrYWdlLmpzb24iCiAgfSwKICAiZGVzY3JpcHRpb24iOiAi44CM6b6Z55qE5Lyg5Lq644CN4oCUIOS4jeWxiOm+memtgi/kuIfph4zplb/ln47lj4zkuLvpopggKyDmnLHnoILpvpnljbDnmoQgRFNIIFVJIOearuiCpO+8iOiHqiBEU0gtRGVza3RvcC1FQUMg6L+B56e777yMY292ZW5hbnQtY29udmVydGVk77yJ44CCIiwKICAicGVlckRlcGVuZGVuY2llcyI6IHsKICAgICJAZGVlcHNlZWstYWkvZHNoIjogIjAuMS43LXJjLjIiLAogICAgIkBkZWVwc2Vlay1haS9jb3JkaXMiOiAifjQuMC40IgogIH0sCiAgImVuZ2luZXMiOiB7CiAgICAiZHNoIjogIjAuMS43LXJjLjIiLAogICAgIm5vZGUiOiAiPj0yNCIKICB9LAogICJkc2giOiB7CiAgICAibWFuaWZlc3RWZXJzaW9uIjogMSwKICAgICJza2luIjogewogICAgICAiYXBpVmVyc2lvbiI6ICJkc2guZWNvc3lzdGVtLnVpLXNraW4tbG9hZGVyL3YxIiwKICAgICAgImlkIjogImRzaC1lYWMuc2tpbi5kcmFnb24taGVpciIsCiAgICAgICJuYW1lIjogIum+meeahOS8oOS6uiIsCiAgICAgICJ2ZXJzaW9uIjogIjEuMS4wIiwKICAgICAgImF1dGhvciI6ICJ6aHUxMDkwMDkzNjU5IChkc2gtd2ViLXVpKSDCtyBEU0gtRUFDIChjb3ZlbmFudCBjb252ZXJzaW9uKSIsCiAgICAgICJkZXNjcmlwdGlvbiI6ICLkuI3lsYjpvpnprYIgwrcg5LiH6YeM6ZW/5Z+O5Y+M5Li76aKYIMK3IOacseeggum+meWNsOOAguinguaEn+WGheWuueWOn+agt+i/geenu+iHqiBkc2gtd2ViLXVp77yIQlNELTMtQ2xhdXNlIMKpIHpodTEwOTAwOTM2NTnvvInnu48gRFNILURlc2t0b3AtRUFDQDI2ODQxZjUg5YiG5Y+R77yM5omn6KGM6aqo5p625bey5YWs57qm5YyW77yIYWN0aXZhdGUvZGVhY3RpdmF0Ze+8ie+8m+ingSBUSElSRC1QQVJUWS1OT1RJQ0VTLm1k44CCIiwKICAgICAgInRhZ3MiOiBbCiAgICAgICAgImRyYWdvbiIsCiAgICAgICAgImxvb25nIiwKICAgICAgICAiY2hpbmVzZSIsCiAgICAgICAgImluay13YXNoIiwKICAgICAgICAiZ3JlYXQtd2FsbCIsCiAgICAgICAgImR1YWwtdGhlbWUiLAogICAgICAgICJtaWdyYXRlZCIKICAgICAgXSwKICAgICAgInByZXZpZXciOiAiPHN2ZyB4bWxucz1cImh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnXCIgdmlld0JveD1cIjAgMCAzMjAgMTgwXCIgcm9sZT1cImltZ1wiIGFyaWEtbGFiZWw9XCLpvpnnmoTkvKDkurpcIj48ZGVmcz48bGluZWFyR3JhZGllbnQgaWQ9XCJza24tZHJhZ29uLWhlaXItcHJldmlldy1iZ1wiIHgxPVwiMFwiIHkxPVwiMFwiIHgyPVwiMFwiIHkyPVwiMVwiPjxzdG9wIG9mZnNldD1cIjBcIiBzdG9wLWNvbG9yPVwiI2Y0ZWZlNFwiLz48c3RvcCBvZmZzZXQ9XCIxXCIgc3RvcC1jb2xvcj1cIiNlNWRjYzhcIi8+PC9saW5lYXJHcmFkaWVudD48bGluZWFyR3JhZGllbnQgaWQ9XCJza24tZHJhZ29uLWhlaXItcHJldmlldy13YWxsXCIgeDE9XCIwXCIgeTE9XCIwXCIgeDI9XCIwXCIgeTI9XCIxXCI+PHN0b3Agb2Zmc2V0PVwiMFwiIHN0b3AtY29sb3I9XCIjY2NjMGE2XCIvPjxzdG9wIG9mZnNldD1cIjFcIiBzdG9wLWNvbG9yPVwiI2E4OWM4MlwiLz48L2xpbmVhckdyYWRpZW50PjwvZGVmcz48cmVjdCB3aWR0aD1cIjMyMFwiIGhlaWdodD1cIjE4MFwiIGZpbGw9XCJ1cmwoI3Nrbi1kcmFnb24taGVpci1wcmV2aWV3LWJnKVwiLz48cGF0aCBkPVwiTS04IDE1MCBDIDYwIDEwOCwgMTMwIDEyOCwgMTkwIDk2IFMgMzAwIDkyLCAzMjggNzQgTCAzMjggMTgwIEwgLTggMTgwIFpcIiBmaWxsPVwidXJsKCNza24tZHJhZ29uLWhlaXItcHJldmlldy13YWxsKVwiIG9wYWNpdHk9XCIuNzVcIi8+PHBhdGggZD1cIk0tOCAxNjIgQyA4MCAxMjgsIDE3MCAxNTAsIDI2MCAxMTggUyAzMTYgMTE2LCAzMjggMTEwXCIgZmlsbD1cIm5vbmVcIiBzdHJva2U9XCIjNTQ0YzNjXCIgc3Ryb2tlLXdpZHRoPVwiM1wiIG9wYWNpdHk9XCIuNVwiLz48cGF0aCBkPVwiTTMwIDYwIEMgODAgMzAsIDE1MCAzNCwgMjEwIDUyIFMgMjkwIDUwLCAzMTIgMzZcIiBmaWxsPVwibm9uZVwiIHN0cm9rZT1cIiMyNjIzMTlcIiBzdHJva2Utd2lkdGg9XCI3XCIgc3Ryb2tlLWxpbmVjYXA9XCJyb3VuZFwiIG9wYWNpdHk9XCIuNjJcIi8+PHBhdGggZD1cIk01OCA3NCBDIDEwOCA1MiwgMTY4IDU4LCAyMjQgNjhcIiBmaWxsPVwibm9uZVwiIHN0cm9rZT1cIiMyNjIzMTlcIiBzdHJva2Utd2lkdGg9XCIzXCIgc3Ryb2tlLWxpbmVjYXA9XCJyb3VuZFwiIG9wYWNpdHk9XCIuNFwiLz48cmVjdCB4PVwiMjU4XCIgeT1cIjE4XCIgd2lkdGg9XCIzNlwiIGhlaWdodD1cIjM2XCIgcng9XCI1XCIgZmlsbD1cIiNjMzI3MmJcIi8+PHRleHQgeD1cIjI3NlwiIHk9XCI0NFwiIHRleHQtYW5jaG9yPVwibWlkZGxlXCIgZm9udC1mYW1pbHk9XCJzZXJpZlwiIGZvbnQtc2l6ZT1cIjIyXCIgZm9udC13ZWlnaHQ9XCI2MDBcIiBmaWxsPVwiI2ZkZjhlZVwiPum+mTwvdGV4dD48dGV4dCB4PVwiMTYwXCIgeT1cIjE2NFwiIHRleHQtYW5jaG9yPVwibWlkZGxlXCIgZm9udC1mYW1pbHk9XCJzYW5zLXNlcmlmXCIgZm9udC1zaXplPVwiMTFcIiBsZXR0ZXItc3BhY2luZz1cIi4yZW1cIiBmaWxsPVwiIzU0NGMzY1wiPkRSQUdPTiBIRUlSPC90ZXh0Pjwvc3ZnPiIKICAgIH0sCiAgICAiYnVuZGxlIjogewogICAgICAicGF0Y2giOiAiLi9jb3JkaXMucGF0Y2gueW1sIgogICAgfSwKICAgICJjbGllbnQiOiB7CiAgICAgICJwbGF0Zm9ybSI6ICJ3ZWIiLAogICAgICAiaW5qZWN0IjogW10sCiAgICAgICJleHRlcm5hbCI6IFtdLAogICAgICAiaW1tZWRpYXRlbHkiOiBmYWxzZQogICAgfQogIH0sCiAgInNjcmlwdHMiOiB7CiAgICAiYnVpbGQiOiAidHNjIC0tbm9FbWl0ICYmIG5vZGUgc2NyaXB0cy9idWlsZC1hcnRpZmFjdC5tanMiLAogICAgInR5cGVjaGVjayI6ICJ0c2MgLS1ub0VtaXQiLAogICAgImxpbnQiOiAiZXNsaW50IHNyYyIsCiAgICAidGVzdCI6ICJub2RlIC0tdGVzdCBcInNyYy8qKi8qLnRlc3QudHNcIiIKICB9LAogICJmaWxlcyI6IFsKICAgICJsaWIiLAogICAgImNvcmRpcy5wYXRjaC55bWwiLAogICAgIlJFQURNRS5tZCIsCiAgICAiVEhJUkQtUEFSVFktTk9USUNFUy5tZCIsCiAgICAiTElDRU5TRSIsCiAgICAiTk9USUNFIgogIF0sCiAgImxpY2Vuc2UiOiAiTUlUIEFORCBCU0QtMy1DbGF1c2UiCn0K",
+          "sha256": "sha256:12b0b0d1a45624b5172be755f4a2b64f15d8bcf486620b8aa282e9e33bec91de"
+        },
+        "files": [
+          "LICENSE",
+          "NOTICE",
+          "README.md",
+          "THIRD-PARTY-NOTICES.md",
+          "cordis.patch.yml",
+          "lib/client.js",
+          "lib/index.js",
+          "package.json"
+        ]
+      },
+      "releaseId": "release-41448e02d9da71b751046e405fcad31ecaa6d985879854fb68dde4b3a4e99ccf"
+    },
+    {
+      "filename": "dsh-eac-skin-inkwash-1.1.0.tgz",
+      "path": "artifacts/dsh-eac-skin-inkwash-1.1.0.tgz",
+      "packageName": "@dsh-eac/skin-inkwash",
+      "version": "1.1.0",
+      "bytes": 8669,
+      "sha256": "sha256:775754b4354043965b19888aaee238854e7fd4d4cc9096b7bbc0826e8e2adcf3",
+      "metadataDigest": "sha256:d93482a6bb455018b550ee5ad31723156dc59fb2d10139e554579077f021c76d",
+      "kind": "author-release",
+      "commit": "afa947215a862a9c3304f6fff7a812efe5a42fdc",
+      "sourcePath": ".verify/pkgs-v1.1.0-final/dsh-eac-skin-inkwash-1.1.0.tgz",
+      "installCandidate": true,
+      "runtimeVerification": "not-tested",
+      "metadata": {
+        "kind": "official-bundle",
+        "packageJson": {
+          "contentBase64": "ewogICJuYW1lIjogIkBkc2gtZWFjL3NraW4taW5rd2FzaCIsCiAgInZlcnNpb24iOiAiMS4xLjAiLAogICJwcml2YXRlIjogdHJ1ZSwKICAidHlwZSI6ICJtb2R1bGUiLAogICJtYWluIjogImxpYi9pbmRleC5qcyIsCiAgImV4cG9ydHMiOiB7CiAgICAiLiI6ICIuL2xpYi9pbmRleC5qcyIsCiAgICAiLi9jbGllbnQiOiAiLi9saWIvY2xpZW50LmpzIiwKICAgICIuL3BhY2thZ2UuanNvbiI6ICIuL3BhY2thZ2UuanNvbiIKICB9LAogICJkZXNjcmlwdGlvbiI6ICLjgIzmsLTloqjpnZLng5/jgI3igJQg5rWF6Imy57q46LSo5oSfICsg5rC05aKo5rCb5Zu06IOM5pmv55qEIERTSCBVSSDnmq7ogqTvvIjlhaznuqblj4LogIPlrp7njrDnpLrkvovvvIzkuI3mj5Dkvpvoh6rlrprkuYnorr7nva7vvInjgIIiLAogICJwZWVyRGVwZW5kZW5jaWVzIjogewogICAgIkBkZWVwc2Vlay1haS9kc2giOiAiMC4xLjctcmMuMiIsCiAgICAiQGRlZXBzZWVrLWFpL2NvcmRpcyI6ICJ+NC4wLjQiCiAgfSwKICAiZW5naW5lcyI6IHsKICAgICJkc2giOiAiMC4xLjctcmMuMiIsCiAgICAibm9kZSI6ICI+PTI0IgogIH0sCiAgImRzaCI6IHsKICAgICJtYW5pZmVzdFZlcnNpb24iOiAxLAogICAgInNraW4iOiB7CiAgICAgICJhcGlWZXJzaW9uIjogImRzaC5lY29zeXN0ZW0udWktc2tpbi1sb2FkZXIvdjEiLAogICAgICAiaWQiOiAiZHNoLWVhYy5za2luLmlua3dhc2giLAogICAgICAibmFtZSI6ICLmsLTloqjpnZLng58iLAogICAgICAidmVyc2lvbiI6ICIxLjEuMCIsCiAgICAgICJhdXRob3IiOiAiRFNILUVBQyIsCiAgICAgICJkZXNjcmlwdGlvbiI6ICLmtYXoibLnurjotKjmhJ8gKyDmsLTloqjmsJvlm7Tog4zmma/nmoTlhoXnva7npLrkvovnmq7ogqTvvIjlhaznuqblj4LogIPlrp7njrDvvJvkuI3mj5Dkvpvoh6rlrprkuYnorr7nva7vvInjgIIiLAogICAgICAidGFncyI6IFsKICAgICAgICAibGlnaHQiLAogICAgICAgICJwYXBlciIsCiAgICAgICAgImV4YW1wbGUiCiAgICAgIF0sCiAgICAgICJwcmV2aWV3IjogIjxzdmcgeG1sbnM9XCJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2Z1wiIHZpZXdCb3g9XCIwIDAgMzIwIDE4MFwiIHJvbGU9XCJpbWdcIiBhcmlhLWxhYmVsPVwi5rC05aKo6Z2S54OfXCI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPVwic2tuLWlua3dhc2gtcHJldmlldy1iZ1wiIHgxPVwiMFwiIHkxPVwiMFwiIHgyPVwiMFwiIHkyPVwiMVwiPjxzdG9wIG9mZnNldD1cIjBcIiBzdG9wLWNvbG9yPVwiI2Y3ZjVlZlwiLz48c3RvcCBvZmZzZXQ9XCIxXCIgc3RvcC1jb2xvcj1cIiNlY2VhZGVcIi8+PC9saW5lYXJHcmFkaWVudD48cmFkaWFsR3JhZGllbnQgaWQ9XCJza24taW5rd2FzaC1wcmV2aWV3LW1pc3RcIiBjeD1cIi4zNVwiIGN5PVwiLjQyXCIgcj1cIi42NVwiPjxzdG9wIG9mZnNldD1cIjBcIiBzdG9wLWNvbG9yPVwiIzNhNDU1MFwiIHN0b3Atb3BhY2l0eT1cIi4zOFwiLz48c3RvcCBvZmZzZXQ9XCIxXCIgc3RvcC1jb2xvcj1cIiMzYTQ1NTBcIiBzdG9wLW9wYWNpdHk9XCIwXCIvPjwvcmFkaWFsR3JhZGllbnQ+PC9kZWZzPjxyZWN0IHdpZHRoPVwiMzIwXCIgaGVpZ2h0PVwiMTgwXCIgZmlsbD1cInVybCgjc2tuLWlua3dhc2gtcHJldmlldy1iZylcIi8+PGVsbGlwc2UgY3g9XCIxMTJcIiBjeT1cIjc2XCIgcng9XCIxMjhcIiByeT1cIjcyXCIgZmlsbD1cInVybCgjc2tuLWlua3dhc2gtcHJldmlldy1taXN0KVwiLz48cGF0aCBkPVwiTTI4IDEzMiBDIDc0IDEwOCwgMTE4IDEyNiwgMTU4IDExMiBTIDI0NiAxMjIsIDI5MiAxMDZcIiBmaWxsPVwibm9uZVwiIHN0cm9rZT1cIiM0YTU1NjBcIiBzdHJva2Utd2lkdGg9XCIzLjVcIiBvcGFjaXR5PVwiLjU1XCIgc3Ryb2tlLWxpbmVjYXA9XCJyb3VuZFwiLz48cGF0aCBkPVwiTTUyIDE0OCBDIDEwOCAxMzYsIDE3MCAxNTAsIDI2OCAxMzJcIiBmaWxsPVwibm9uZVwiIHN0cm9rZT1cIiM0YTU1NjBcIiBzdHJva2Utd2lkdGg9XCIxLjZcIiBvcGFjaXR5PVwiLjMyXCIgc3Ryb2tlLWxpbmVjYXA9XCJyb3VuZFwiLz48dGV4dCB4PVwiMTYwXCIgeT1cIjQ2XCIgdGV4dC1hbmNob3I9XCJtaWRkbGVcIiBmb250LWZhbWlseT1cInNlcmlmXCIgZm9udC1zaXplPVwiMjJcIiBmb250LXdlaWdodD1cIjYwMFwiIGZpbGw9XCIjMmYzYTQ0XCI+5rC05aKo6Z2S54OfPC90ZXh0Pjx0ZXh0IHg9XCIxNjBcIiB5PVwiMTY4XCIgdGV4dC1hbmNob3I9XCJtaWRkbGVcIiBmb250LWZhbWlseT1cInNhbnMtc2VyaWZcIiBmb250LXNpemU9XCIxMVwiIGxldHRlci1zcGFjaW5nPVwiLjJlbVwiIGZpbGw9XCIjN2E4Mjg4XCI+SU5LV0FTSCBNSVNUPC90ZXh0Pjwvc3ZnPiIKICAgIH0sCiAgICAiYnVuZGxlIjogewogICAgICAicGF0Y2giOiAiLi9jb3JkaXMucGF0Y2gueW1sIgogICAgfSwKICAgICJjbGllbnQiOiB7CiAgICAgICJwbGF0Zm9ybSI6ICJ3ZWIiLAogICAgICAiaW5qZWN0IjogW10sCiAgICAgICJleHRlcm5hbCI6IFtdLAogICAgICAiaW1tZWRpYXRlbHkiOiBmYWxzZQogICAgfQogIH0sCiAgInNjcmlwdHMiOiB7CiAgICAiYnVpbGQiOiAidHNjIC0tbm9FbWl0ICYmIG5vZGUgc2NyaXB0cy9idWlsZC1hcnRpZmFjdC5tanMiLAogICAgInR5cGVjaGVjayI6ICJ0c2MgLS1ub0VtaXQiLAogICAgImxpbnQiOiAiZXNsaW50IHNyYyIsCiAgICAidGVzdCI6ICJub2RlIC0tdGVzdCBcInNyYy8qKi8qLnRlc3QudHNcIiIKICB9LAogICJmaWxlcyI6IFsKICAgICJsaWIiLAogICAgImNvcmRpcy5wYXRjaC55bWwiLAogICAgIlJFQURNRS5tZCIsCiAgICAiVEhJUkQtUEFSVFktTk9USUNFUy5tZCIsCiAgICAiTElDRU5TRSIsCiAgICAiTk9USUNFIgogIF0sCiAgImxpY2Vuc2UiOiAiTUlUIgp9Cg==",
+          "sha256": "sha256:d93482a6bb455018b550ee5ad31723156dc59fb2d10139e554579077f021c76d"
+        },
+        "files": [
+          "LICENSE",
+          "NOTICE",
+          "README.md",
+          "THIRD-PARTY-NOTICES.md",
+          "cordis.patch.yml",
+          "lib/client.js",
+          "lib/index.js",
+          "package.json"
+        ]
+      },
+      "releaseId": "release-cb408fa0823b08ddef3d5491a1beae8e58143f547bc4c0f090c47c18b2c6d19b"
+    },
+    {
+      "filename": "dsh-eac-skin-maid-atelier-1.1.0.tgz",
+      "path": "artifacts/dsh-eac-skin-maid-atelier-1.1.0.tgz",
+      "packageName": "@dsh-eac/skin-maid-atelier",
+      "version": "1.1.0",
+      "bytes": 2518380,
+      "sha256": "sha256:e1cc9c348d6f3d2ab34f7d31ca5cb89f3c9820d92086b136d2b64137a8376971",
+      "metadataDigest": "sha256:1535b7622c93a952cb3be30bc13bca7313985e864f70c21bb6fa12c4a42df3d2",
+      "kind": "author-release",
+      "commit": "afa947215a862a9c3304f6fff7a812efe5a42fdc",
+      "sourcePath": ".verify/pkgs-v1.1.0-final/dsh-eac-skin-maid-atelier-1.1.0.tgz",
+      "installCandidate": true,
+      "runtimeVerification": "not-tested",
+      "metadata": {
+        "kind": "official-bundle",
+        "packageJson": {
+          "contentBase64": "ewogICJuYW1lIjogIkBkc2gtZWFjL3NraW4tbWFpZC1hdGVsaWVyIiwKICAidmVyc2lvbiI6ICIxLjEuMCIsCiAgInByaXZhdGUiOiB0cnVlLAogICJ0eXBlIjogIm1vZHVsZSIsCiAgIm1haW4iOiAibGliL2luZGV4LmpzIiwKICAiZXhwb3J0cyI6IHsKICAgICIuIjogIi4vbGliL2luZGV4LmpzIiwKICAgICIuL2NsaWVudCI6ICIuL2xpYi9jbGllbnQuanMiLAogICAgIi4vcGFja2FnZS5qc29uIjogIi4vcGFja2FnZS5qc29uIgogIH0sCiAgImRlc2NyaXB0aW9uIjogIkFieXNzYWwgbWFpZCBhdGVsaWVyIHNraW4gbWlncmF0ZWQgZnJvbSBEU0gtRGVza3RvcC1FQUM7IGFydHdvcmsgcmVtYWlucyB1bmRlciBDQyBCWS1OQy1TQSA0LjAgd2l0aCBmdWxsIGF0dHJpYnV0aW9uIGNoYWluLiIsCiAgImxpY2Vuc2UiOiAiTUlUIEFORCBDQy1CWS1OQy1TQS00LjAiLAogICJwZWVyRGVwZW5kZW5jaWVzIjogewogICAgIkBkZWVwc2Vlay1haS9kc2giOiAiMC4xLjctcmMuMiIsCiAgICAiQGRlZXBzZWVrLWFpL2NvcmRpcyI6ICJ+NC4wLjQiCiAgfSwKICAiZW5naW5lcyI6IHsKICAgICJkc2giOiAiMC4xLjctcmMuMiIsCiAgICAibm9kZSI6ICI+PTI0IgogIH0sCiAgImRzaCI6IHsKICAgICJtYW5pZmVzdFZlcnNpb24iOiAxLAogICAgInNraW4iOiB7CiAgICAgICJhcGlWZXJzaW9uIjogImRzaC5lY29zeXN0ZW0udWktc2tpbi1sb2FkZXIvdjEiLAogICAgICAiaWQiOiAiZHNoLWVhYy5za2luLm1haWQtYXRlbGllciIsCiAgICAgICJuYW1lIjogIua3sea1t+Wls+S7huW3peWdiiIsCiAgICAgICJ2ZXJzaW9uIjogIjEuMS4wIiwKICAgICAgImF1dGhvciI6ICJTbWFsbC10YWlscXdxIMK3IOS4iuWWhCDCtyB6aXB6aXAgwrcgRFNILUVBQyIsCiAgICAgICJkZXNjcmlwdGlvbiI6ICJBYnlzc2FsIG1haWQgYXRlbGllciBza2luIG1pZ3JhdGVkIGZyb20gRFNILURlc2t0b3AtRUFDOyBhcnR3b3JrIHJlbWFpbnMgdW5kZXIgQ0MgQlktTkMtU0EgNC4wIHdpdGggZnVsbCBhdHRyaWJ1dGlvbiBjaGFpbi4iLAogICAgICAidGFncyI6IFsKICAgICAgICAiYW5pbWUiLAogICAgICAgICJtYWlkIiwKICAgICAgICAid2hhbGUiLAogICAgICAgICJuYXZ5IiwKICAgICAgICAib3JuYXRlIiwKICAgICAgICAiZ2xhc3MiLAogICAgICAgICJtaWdyYXRlZCIKICAgICAgXSwKICAgICAgInByZXZpZXciOiAiPHN2ZyB4bWxucz1cImh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnXCIgdmlld0JveD1cIjAgMCAzMjAgMTgwXCIgcm9sZT1cImltZ1wiIGFyaWEtbGFiZWw9XCLmt7HmtbflpbPku4blt6XlnYpcIj48ZGVmcz48bGluZWFyR3JhZGllbnQgaWQ9XCJza24tbWFpZC1hdGVsaWVyLWJnXCIgeDE9XCIwXCIgeTE9XCIwXCIgeDI9XCIwXCIgeTI9XCIxXCI+PHN0b3Agb2Zmc2V0PVwiMFwiIHN0b3AtY29sb3I9XCIjYzVhNDY4XCIvPjxzdG9wIG9mZnNldD1cIjFcIiBzdG9wLWNvbG9yPVwiIzExMTgyN1wiLz48L2xpbmVhckdyYWRpZW50PjwvZGVmcz48cmVjdCB3aWR0aD1cIjMyMFwiIGhlaWdodD1cIjE4MFwiIGZpbGw9XCJ1cmwoI3Nrbi1tYWlkLWF0ZWxpZXItYmcpXCIvPjxjaXJjbGUgY3g9XCIyNTBcIiBjeT1cIjcwXCIgcj1cIjQ4XCIgZmlsbD1cIiNmZmZcIiBvcGFjaXR5PVwiLjEyXCIvPjxwYXRoIGQ9XCJNMCAxNDIgQzgwIDEwNCAxNTAgMTY2IDMyMCA5NiBMMzIwIDE4MCBMMCAxODBaXCIgZmlsbD1cIiNmZmZcIiBvcGFjaXR5PVwiLjEyXCIvPjx0ZXh0IHg9XCIxNjBcIiB5PVwiNDRcIiB0ZXh0LWFuY2hvcj1cIm1pZGRsZVwiIGZvbnQtZmFtaWx5PVwic2Fucy1zZXJpZlwiIGZvbnQtc2l6ZT1cIjE4XCIgZm9udC13ZWlnaHQ9XCI2MDBcIiBmaWxsPVwiI2ZmZlwiPua3sea1t+Wls+S7huW3peWdijwvdGV4dD48dGV4dCB4PVwiMTYwXCIgeT1cIjE2MFwiIHRleHQtYW5jaG9yPVwibWlkZGxlXCIgZm9udC1mYW1pbHk9XCJzYW5zLXNlcmlmXCIgZm9udC1zaXplPVwiMTBcIiBsZXR0ZXItc3BhY2luZz1cIi4xOGVtXCIgZmlsbD1cIiNmZmZcIiBvcGFjaXR5PVwiLjc1XCI+QUJZU1NBTCBNQUlEIEFURUxJRVI8L3RleHQ+PC9zdmc+IgogICAgfSwKICAgICJidW5kbGUiOiB7CiAgICAgICJwYXRjaCI6ICIuL2NvcmRpcy5wYXRjaC55bWwiCiAgICB9LAogICAgImNsaWVudCI6IHsKICAgICAgInBsYXRmb3JtIjogIndlYiIsCiAgICAgICJpbmplY3QiOiBbXSwKICAgICAgImV4dGVybmFsIjogW10sCiAgICAgICJpbW1lZGlhdGVseSI6IGZhbHNlCiAgICB9CiAgfSwKICAic2NyaXB0cyI6IHsKICAgICJidWlsZCI6ICJ0c2MgLS1ub0VtaXQgJiYgbm9kZSBzY3JpcHRzL2J1aWxkLWFydGlmYWN0Lm1qcyIsCiAgICAidHlwZWNoZWNrIjogInRzYyAtLW5vRW1pdCIsCiAgICAibGludCI6ICJlc2xpbnQgc3JjIiwKICAgICJ0ZXN0IjogIm5vZGUgLS10ZXN0IFwic3JjLyoqLyoudGVzdC50c1wiIgogIH0sCiAgImZpbGVzIjogWwogICAgImxpYiIsCiAgICAiY29yZGlzLnBhdGNoLnltbCIsCiAgICAiVEhJUkQtUEFSVFktTk9USUNFUy5tZCIsCiAgICAiUkVBRE1FLm1kIiwKICAgICJMSUNFTlNFIiwKICAgICJOT1RJQ0UiLAogICAgInByZXZpZXciCiAgXQp9Cg==",
+          "sha256": "sha256:1535b7622c93a952cb3be30bc13bca7313985e864f70c21bb6fa12c4a42df3d2"
+        },
+        "files": [
+          "LICENSE",
+          "NOTICE",
+          "README.md",
+          "THIRD-PARTY-NOTICES.md",
+          "cordis.patch.yml",
+          "lib/client.js",
+          "lib/index.js",
+          "package.json",
+          "preview/dark.webp",
+          "preview/light.webp"
+        ]
+      },
+      "releaseId": "release-d20d980af8a9d361d7e2d6bc7d89ac508715c95c208a1e65951dc25cd032c62e"
+    },
+    {
+      "filename": "dsh-eac-skin-miku-1.1.0.tgz",
+      "path": "artifacts/dsh-eac-skin-miku-1.1.0.tgz",
+      "packageName": "@dsh-eac/skin-miku",
+      "version": "1.1.0",
+      "bytes": 1725128,
+      "sha256": "sha256:565544e5073adf34920c8be2560546339a9cbe43b283b7eaf35e8766e59f104f",
+      "metadataDigest": "sha256:d0e226051324f8de99de5efad5d3752366a0f011da57faf7a69fbbcec4eeabea",
+      "kind": "author-release",
+      "commit": "afa947215a862a9c3304f6fff7a812efe5a42fdc",
+      "sourcePath": ".verify/pkgs-v1.1.0-final/dsh-eac-skin-miku-1.1.0.tgz",
+      "installCandidate": false,
+      "runtimeVerification": "not-tested",
+      "metadata": {
+        "kind": "official-bundle",
+        "packageJson": {
+          "contentBase64": "ewogICJuYW1lIjogIkBkc2gtZWFjL3NraW4tbWlrdSIsCiAgInZlcnNpb24iOiAiMS4xLjAiLAogICJwcml2YXRlIjogdHJ1ZSwKICAidHlwZSI6ICJtb2R1bGUiLAogICJtYWluIjogImxpYi9pbmRleC5qcyIsCiAgImV4cG9ydHMiOiB7CiAgICAiLiI6ICIuL2xpYi9pbmRleC5qcyIsCiAgICAiLi9jbGllbnQiOiAiLi9saWIvY2xpZW50LmpzIiwKICAgICIuL3BhY2thZ2UuanNvbiI6ICIuL3BhY2thZ2UuanNvbiIKICB9LAogICJkZXNjcmlwdGlvbiI6ICJNaWt1LWluc3BpcmVkIGJsdWUtdmlvbGV0IGVsZWN0cm9uaWMgc2luZ2VyIHNraW4gbWlncmF0ZWQgZnJvbSBEU0gtRGVza3RvcC1FQUM7IGNvdmVuYW50LWNvbnZlcnRlZCBsaWZlY3ljbGUuIiwKICAibGljZW5zZSI6ICJNSVQgQU5EIEJTRC0zLUNsYXVzZSIsCiAgInBlZXJEZXBlbmRlbmNpZXMiOiB7CiAgICAiQGRlZXBzZWVrLWFpL2RzaCI6ICIwLjEuNy1yYy4yIiwKICAgICJAZGVlcHNlZWstYWkvY29yZGlzIjogIn40LjAuNCIKICB9LAogICJlbmdpbmVzIjogewogICAgImRzaCI6ICIwLjEuNy1yYy4yIiwKICAgICJub2RlIjogIj49MjQiCiAgfSwKICAiZHNoIjogewogICAgIm1hbmlmZXN0VmVyc2lvbiI6IDEsCiAgICAic2tpbiI6IHsKICAgICAgImFwaVZlcnNpb24iOiAiZHNoLmVjb3N5c3RlbS51aS1za2luLWxvYWRlci92MSIsCiAgICAgICJpZCI6ICJkc2gtZWFjLnNraW4ubWlrdSIsCiAgICAgICJuYW1lIjogIuWInemfs+acquadpSDCtyDnlLXlrZDmrYzlp6wiLAogICAgICAidmVyc2lvbiI6ICIxLjEuMCIsCiAgICAgICJhdXRob3IiOiAi5raC5bGx6IuP6IuPIMK3IHpodTEwOTAwOTM2NTkgKGRzaC13ZWItdWkpIMK3IERTSC1FQUMiLAogICAgICAiZGVzY3JpcHRpb24iOiAiTWlrdS1pbnNwaXJlZCBibHVlLXZpb2xldCBlbGVjdHJvbmljIHNpbmdlciBza2luIG1pZ3JhdGVkIGZyb20gRFNILURlc2t0b3AtRUFDOyBjb3ZlbmFudC1jb252ZXJ0ZWQgbGlmZWN5Y2xlLiIsCiAgICAgICJ0YWdzIjogWwogICAgICAgICJtaWt1IiwKICAgICAgICAidm9jYWxvaWQiLAogICAgICAgICJibHVlIiwKICAgICAgICAibXVzaWMiLAogICAgICAgICJpZG9sIiwKICAgICAgICAid2F2ZWZvcm0iLAogICAgICAgICJtaWdyYXRlZCIKICAgICAgXSwKICAgICAgInByZXZpZXciOiAiPHN2ZyB4bWxucz1cImh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnXCIgdmlld0JveD1cIjAgMCAzMjAgMTgwXCIgcm9sZT1cImltZ1wiIGFyaWEtbGFiZWw9XCLliJ3pn7PmnKrmnaUgwrcg55S15a2Q5q2M5aesXCI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPVwic2tuLW1pa3UtYmdcIiB4MT1cIjBcIiB5MT1cIjBcIiB4Mj1cIjBcIiB5Mj1cIjFcIj48c3RvcCBvZmZzZXQ9XCIwXCIgc3RvcC1jb2xvcj1cIiMyZTliZmZcIi8+PHN0b3Agb2Zmc2V0PVwiMVwiIHN0b3AtY29sb3I9XCIjMTExODI3XCIvPjwvbGluZWFyR3JhZGllbnQ+PC9kZWZzPjxyZWN0IHdpZHRoPVwiMzIwXCIgaGVpZ2h0PVwiMTgwXCIgZmlsbD1cInVybCgjc2tuLW1pa3UtYmcpXCIvPjxjaXJjbGUgY3g9XCIyNTBcIiBjeT1cIjcwXCIgcj1cIjQ4XCIgZmlsbD1cIiNmZmZcIiBvcGFjaXR5PVwiLjEyXCIvPjxwYXRoIGQ9XCJNMCAxNDIgQzgwIDEwNCAxNTAgMTY2IDMyMCA5NiBMMzIwIDE4MCBMMCAxODBaXCIgZmlsbD1cIiNmZmZcIiBvcGFjaXR5PVwiLjEyXCIvPjx0ZXh0IHg9XCIxNjBcIiB5PVwiNDRcIiB0ZXh0LWFuY2hvcj1cIm1pZGRsZVwiIGZvbnQtZmFtaWx5PVwic2Fucy1zZXJpZlwiIGZvbnQtc2l6ZT1cIjE4XCIgZm9udC13ZWlnaHQ9XCI2MDBcIiBmaWxsPVwiI2ZmZlwiPuWInemfs+acquadpSDCtyDnlLXlrZDmrYzlp6w8L3RleHQ+PHRleHQgeD1cIjE2MFwiIHk9XCIxNjBcIiB0ZXh0LWFuY2hvcj1cIm1pZGRsZVwiIGZvbnQtZmFtaWx5PVwic2Fucy1zZXJpZlwiIGZvbnQtc2l6ZT1cIjEwXCIgbGV0dGVyLXNwYWNpbmc9XCIuMThlbVwiIGZpbGw9XCIjZmZmXCIgb3BhY2l0eT1cIi43NVwiPkhBVFNVTkUgTUlLVTwvdGV4dD48L3N2Zz4iCiAgICB9LAogICAgImJ1bmRsZSI6IHsKICAgICAgInBhdGNoIjogIi4vY29yZGlzLnBhdGNoLnltbCIKICAgIH0sCiAgICAiY2xpZW50IjogewogICAgICAicGxhdGZvcm0iOiAid2ViIiwKICAgICAgImluamVjdCI6IFtdLAogICAgICAiZXh0ZXJuYWwiOiBbXSwKICAgICAgImltbWVkaWF0ZWx5IjogZmFsc2UKICAgIH0KICB9LAogICJmaWxlcyI6IFsKICAgICJsaWIiLAogICAgImNvcmRpcy5wYXRjaC55bWwiLAogICAgIlRISVJELVBBUlRZLU5PVElDRVMubWQiLAogICAgIlJFQURNRS5tZCIsCiAgICAiTElDRU5TRSIsCiAgICAiTk9USUNFIiwKICAgICJwcmV2aWV3IgogIF0sCiAgInNjcmlwdHMiOiB7CiAgICAiYnVpbGQiOiAidHNjIC0tbm9FbWl0ICYmIG5vZGUgc2NyaXB0cy9idWlsZC1hcnRpZmFjdC5tanMiLAogICAgInR5cGVjaGVjayI6ICJ0c2MgLS1ub0VtaXQiLAogICAgImxpbnQiOiAiZXNsaW50IHNyYyIsCiAgICAidGVzdCI6ICJub2RlIC0tdGVzdCBcInNyYy8qKi8qLnRlc3QudHNcIiIKICB9Cn0=",
+          "sha256": "sha256:d0e226051324f8de99de5efad5d3752366a0f011da57faf7a69fbbcec4eeabea"
+        },
+        "files": [
+          "LICENSE",
+          "NOTICE",
+          "README.md",
+          "THIRD-PARTY-NOTICES.md",
+          "cordis.patch.yml",
+          "lib/client.js",
+          "lib/index.js",
+          "package.json",
+          "preview/dark.png",
+          "preview/light.png"
+        ]
+      },
+      "releaseId": "release-6ad93a57b2aa4bff5cde85c36da482525e5edce89d077e4c4b3dc80142b25c01"
+    },
+    {
+      "filename": "dsh-eac-skin-minecraft-1.1.0.tgz",
+      "path": "artifacts/dsh-eac-skin-minecraft-1.1.0.tgz",
+      "packageName": "@dsh-eac/skin-minecraft",
+      "version": "1.1.0",
+      "bytes": 641033,
+      "sha256": "sha256:738d98d107514a68d31ee2890ae948c0086cc168c3a8c83ac4e90bfd8feb1c1b",
+      "metadataDigest": "sha256:46cbcb6c9d1f831f5e15bee18a41f8c7d516d26ef8c0d92cde606b63855d1af1",
+      "kind": "author-release",
+      "commit": "afa947215a862a9c3304f6fff7a812efe5a42fdc",
+      "sourcePath": ".verify/pkgs-v1.1.0-final/dsh-eac-skin-minecraft-1.1.0.tgz",
+      "installCandidate": true,
+      "runtimeVerification": "not-tested",
+      "metadata": {
+        "kind": "official-bundle",
+        "packageJson": {
+          "contentBase64": "ewogICJuYW1lIjogIkBkc2gtZWFjL3NraW4tbWluZWNyYWZ0IiwKICAidmVyc2lvbiI6ICIxLjEuMCIsCiAgInByaXZhdGUiOiB0cnVlLAogICJ0eXBlIjogIm1vZHVsZSIsCiAgIm1haW4iOiAibGliL2luZGV4LmpzIiwKICAiZXhwb3J0cyI6IHsKICAgICIuIjogIi4vbGliL2luZGV4LmpzIiwKICAgICIuL2NsaWVudCI6ICIuL2xpYi9jbGllbnQuanMiLAogICAgIi4vcGFja2FnZS5qc29uIjogIi4vcGFja2FnZS5qc29uIgogIH0sCiAgImRlc2NyaXB0aW9uIjogIlByb2NlZHVyYWwgdm94ZWwgcGFub3JhbWEgYW5kIHNpZ25ib2FyZCBjb250cm9scyBtaWdyYXRlZCBmcm9tIERTSC1EZXNrdG9wLUVBQzsgY292ZW5hbnQtY29udmVydGVkIGxpZmVjeWNsZS4iLAogICJsaWNlbnNlIjogIk1JVCBBTkQgQlNELTMtQ2xhdXNlIiwKICAicGVlckRlcGVuZGVuY2llcyI6IHsKICAgICJAZGVlcHNlZWstYWkvZHNoIjogIjAuMS43LXJjLjIiLAogICAgIkBkZWVwc2Vlay1haS9jb3JkaXMiOiAifjQuMC40IgogIH0sCiAgImVuZ2luZXMiOiB7CiAgICAiZHNoIjogIjAuMS43LXJjLjIiLAogICAgIm5vZGUiOiAiPj0yNCIKICB9LAogICJkc2giOiB7CiAgICAibWFuaWZlc3RWZXJzaW9uIjogMSwKICAgICJza2luIjogewogICAgICAiYXBpVmVyc2lvbiI6ICJkc2guZWNvc3lzdGVtLnVpLXNraW4tbG9hZGVyL3YxIiwKICAgICAgImlkIjogImRzaC1lYWMuc2tpbi5taW5lY3JhZnQiLAogICAgICAibmFtZSI6ICJNaW5lY3JhZnQg5pa55Z2X5LiW55WMIiwKICAgICAgInZlcnNpb24iOiAiMS4xLjAiLAogICAgICAiYXV0aG9yIjogInpodTEwOTAwOTM2NTkgKGRzaC13ZWItdWkpIMK3IERTSC1FQUMiLAogICAgICAiZGVzY3JpcHRpb24iOiAiUHJvY2VkdXJhbCB2b3hlbCBwYW5vcmFtYSBhbmQgc2lnbmJvYXJkIGNvbnRyb2xzIG1pZ3JhdGVkIGZyb20gRFNILURlc2t0b3AtRUFDOyBjb3ZlbmFudC1jb252ZXJ0ZWQgbGlmZWN5Y2xlLiIsCiAgICAgICJ0YWdzIjogWwogICAgICAgICJtaW5lY3JhZnQiLAogICAgICAgICJ2b3hlbCIsCiAgICAgICAgInBpeGVsIiwKICAgICAgICAiZ2FtZSIsCiAgICAgICAgInBhbm9yYW1hIiwKICAgICAgICAic2t5Ym94IiwKICAgICAgICAibWlncmF0ZWQiCiAgICAgIF0sCiAgICAgICJwcmV2aWV3IjogIjxzdmcgeG1sbnM9XCJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2Z1wiIHZpZXdCb3g9XCIwIDAgMzIwIDE4MFwiIHJvbGU9XCJpbWdcIiBhcmlhLWxhYmVsPVwiTWluZWNyYWZ0IOaWueWdl+S4lueVjFwiPjxkZWZzPjxsaW5lYXJHcmFkaWVudCBpZD1cInNrbi1taW5lY3JhZnQtYmdcIiB4MT1cIjBcIiB5MT1cIjBcIiB4Mj1cIjBcIiB5Mj1cIjFcIj48c3RvcCBvZmZzZXQ9XCIwXCIgc3RvcC1jb2xvcj1cIiM3Y2JkNGJcIi8+PHN0b3Agb2Zmc2V0PVwiMVwiIHN0b3AtY29sb3I9XCIjMTExODI3XCIvPjwvbGluZWFyR3JhZGllbnQ+PC9kZWZzPjxyZWN0IHdpZHRoPVwiMzIwXCIgaGVpZ2h0PVwiMTgwXCIgZmlsbD1cInVybCgjc2tuLW1pbmVjcmFmdC1iZylcIi8+PGNpcmNsZSBjeD1cIjI1MFwiIGN5PVwiNzBcIiByPVwiNDhcIiBmaWxsPVwiI2ZmZlwiIG9wYWNpdHk9XCIuMTJcIi8+PHBhdGggZD1cIk0wIDE0MiBDODAgMTA0IDE1MCAxNjYgMzIwIDk2IEwzMjAgMTgwIEwwIDE4MFpcIiBmaWxsPVwiI2ZmZlwiIG9wYWNpdHk9XCIuMTJcIi8+PHRleHQgeD1cIjE2MFwiIHk9XCI0NFwiIHRleHQtYW5jaG9yPVwibWlkZGxlXCIgZm9udC1mYW1pbHk9XCJzYW5zLXNlcmlmXCIgZm9udC1zaXplPVwiMThcIiBmb250LXdlaWdodD1cIjYwMFwiIGZpbGw9XCIjZmZmXCI+TWluZWNyYWZ0IOaWueWdl+S4lueVjDwvdGV4dD48dGV4dCB4PVwiMTYwXCIgeT1cIjE2MFwiIHRleHQtYW5jaG9yPVwibWlkZGxlXCIgZm9udC1mYW1pbHk9XCJzYW5zLXNlcmlmXCIgZm9udC1zaXplPVwiMTBcIiBsZXR0ZXItc3BhY2luZz1cIi4xOGVtXCIgZmlsbD1cIiNmZmZcIiBvcGFjaXR5PVwiLjc1XCI+TUlORUNSQUZUIFZPWEVMPC90ZXh0Pjwvc3ZnPiIKICAgIH0sCiAgICAiYnVuZGxlIjogewogICAgICAicGF0Y2giOiAiLi9jb3JkaXMucGF0Y2gueW1sIgogICAgfSwKICAgICJjbGllbnQiOiB7CiAgICAgICJwbGF0Zm9ybSI6ICJ3ZWIiLAogICAgICAiaW5qZWN0IjogW10sCiAgICAgICJleHRlcm5hbCI6IFtdLAogICAgICAiaW1tZWRpYXRlbHkiOiBmYWxzZQogICAgfQogIH0sCiAgImZpbGVzIjogWwogICAgImxpYiIsCiAgICAiY29yZGlzLnBhdGNoLnltbCIsCiAgICAiVEhJUkQtUEFSVFktTk9USUNFUy5tZCIsCiAgICAiUkVBRE1FLm1kIiwKICAgICJMSUNFTlNFIiwKICAgICJOT1RJQ0UiLAogICAgInByZXZpZXciCiAgXSwKICAic2NyaXB0cyI6IHsKICAgICJidWlsZCI6ICJ0c2MgLS1ub0VtaXQgJiYgbm9kZSBzY3JpcHRzL2J1aWxkLWFydGlmYWN0Lm1qcyIsCiAgICAidHlwZWNoZWNrIjogInRzYyAtLW5vRW1pdCIsCiAgICAibGludCI6ICJlc2xpbnQgc3JjIiwKICAgICJ0ZXN0IjogIm5vZGUgLS10ZXN0IFwic3JjLyoqLyoudGVzdC50c1wiIgogIH0KfQ==",
+          "sha256": "sha256:46cbcb6c9d1f831f5e15bee18a41f8c7d516d26ef8c0d92cde606b63855d1af1"
+        },
+        "files": [
+          "LICENSE",
+          "NOTICE",
+          "README.md",
+          "THIRD-PARTY-NOTICES.md",
+          "cordis.patch.yml",
+          "lib/client.js",
+          "lib/index.js",
+          "package.json",
+          "preview/dark.png",
+          "preview/light.png"
+        ]
+      },
+      "releaseId": "release-04f31dfee79db3b51bba1b070d35a254984e3858f4f9cd439df5ea43e30779cc"
+    },
+    {
+      "filename": "dsh-eac-skin-qq98-1.1.0.tgz",
+      "path": "artifacts/dsh-eac-skin-qq98-1.1.0.tgz",
+      "packageName": "@dsh-eac/skin-qq98",
+      "version": "1.1.0",
+      "bytes": 860517,
+      "sha256": "sha256:a9c803781c7640e54e5fe3d9b6d4f7c6158e51376d69b6b3805ca61bccc650e4",
+      "metadataDigest": "sha256:46f5e56a446649d3ec0bafb9c7e5794006ab6ef241f6321449a83b5917f7328c",
+      "kind": "author-release",
+      "commit": "afa947215a862a9c3304f6fff7a812efe5a42fdc",
+      "sourcePath": ".verify/pkgs-v1.1.0-final/dsh-eac-skin-qq98-1.1.0.tgz",
+      "installCandidate": true,
+      "runtimeVerification": "not-tested",
+      "metadata": {
+        "kind": "official-bundle",
+        "packageJson": {
+          "contentBase64": "ewogICJuYW1lIjogIkBkc2gtZWFjL3NraW4tcXE5OCIsCiAgInZlcnNpb24iOiAiMS4xLjAiLAogICJwcml2YXRlIjogdHJ1ZSwKICAidHlwZSI6ICJtb2R1bGUiLAogICJtYWluIjogImxpYi9pbmRleC5qcyIsCiAgImV4cG9ydHMiOiB7CiAgICAiLiI6ICIuL2xpYi9pbmRleC5qcyIsCiAgICAiLi9jbGllbnQiOiAiLi9saWIvY2xpZW50LmpzIiwKICAgICIuL3BhY2thZ2UuanNvbiI6ICIuL3BhY2thZ2UuanNvbiIKICB9LAogICJkZXNjcmlwdGlvbiI6ICJDcnlzdGFsLWJsdWUgUVEyMDA4IHJldHJvIHNraW4gbWlncmF0ZWQgZnJvbSBEU0gtRGVza3RvcC1FQUM7IGNvdmVuYW50LWNvbnZlcnRlZCBsaWZlY3ljbGUuIiwKICAibGljZW5zZSI6ICJNSVQgQU5EIEJTRC0zLUNsYXVzZSIsCiAgInBlZXJEZXBlbmRlbmNpZXMiOiB7CiAgICAiQGRlZXBzZWVrLWFpL2RzaCI6ICIwLjEuNy1yYy4yIiwKICAgICJAZGVlcHNlZWstYWkvY29yZGlzIjogIn40LjAuNCIKICB9LAogICJlbmdpbmVzIjogewogICAgImRzaCI6ICIwLjEuNy1yYy4yIiwKICAgICJub2RlIjogIj49MjQiCiAgfSwKICAiZHNoIjogewogICAgIm1hbmlmZXN0VmVyc2lvbiI6IDEsCiAgICAic2tpbiI6IHsKICAgICAgImFwaVZlcnNpb24iOiAiZHNoLmVjb3N5c3RlbS51aS1za2luLWxvYWRlci92MSIsCiAgICAgICJpZCI6ICJkc2gtZWFjLnNraW4ucXE5OCIsCiAgICAgICJuYW1lIjogIlFRMjAwOCDmgIDml6fniYgiLAogICAgICAidmVyc2lvbiI6ICIxLjEuMCIsCiAgICAgICJhdXRob3IiOiAiemh1MTA5MDA5MzY1OSAoZHNoLXdlYi11aSkgwrcgRFNILUVBQyIsCiAgICAgICJkZXNjcmlwdGlvbiI6ICJDcnlzdGFsLWJsdWUgUVEyMDA4IHJldHJvIHNraW4gbWlncmF0ZWQgZnJvbSBEU0gtRGVza3RvcC1FQUM7IGNvdmVuYW50LWNvbnZlcnRlZCBsaWZlY3ljbGUuIiwKICAgICAgInRhZ3MiOiBbCiAgICAgICAgInJldHJvIiwKICAgICAgICAicXEiLAogICAgICAgICIyMDA4IiwKICAgICAgICAiY3J5c3RhbC1ibHVlIiwKICAgICAgICAibm9zdGFsZ2lhIiwKICAgICAgICAibWlncmF0ZWQiCiAgICAgIF0sCiAgICAgICJwcmV2aWV3IjogIjxzdmcgeG1sbnM9XCJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2Z1wiIHZpZXdCb3g9XCIwIDAgMzIwIDE4MFwiIHJvbGU9XCJpbWdcIiBhcmlhLWxhYmVsPVwiUVEyMDA4IOaAgOaXp+eJiFwiPjxkZWZzPjxsaW5lYXJHcmFkaWVudCBpZD1cInNrbi1xcTk4LWJnXCIgeDE9XCIwXCIgeTE9XCIwXCIgeDI9XCIwXCIgeTI9XCIxXCI+PHN0b3Agb2Zmc2V0PVwiMFwiIHN0b3AtY29sb3I9XCIjMmI3Y2Q5XCIvPjxzdG9wIG9mZnNldD1cIjFcIiBzdG9wLWNvbG9yPVwiIzExMTgyN1wiLz48L2xpbmVhckdyYWRpZW50PjwvZGVmcz48cmVjdCB3aWR0aD1cIjMyMFwiIGhlaWdodD1cIjE4MFwiIGZpbGw9XCJ1cmwoI3Nrbi1xcTk4LWJnKVwiLz48Y2lyY2xlIGN4PVwiMjUwXCIgY3k9XCI3MFwiIHI9XCI0OFwiIGZpbGw9XCIjZmZmXCIgb3BhY2l0eT1cIi4xMlwiLz48cGF0aCBkPVwiTTAgMTQyIEM4MCAxMDQgMTUwIDE2NiAzMjAgOTYgTDMyMCAxODAgTDAgMTgwWlwiIGZpbGw9XCIjZmZmXCIgb3BhY2l0eT1cIi4xMlwiLz48dGV4dCB4PVwiMTYwXCIgeT1cIjQ0XCIgdGV4dC1hbmNob3I9XCJtaWRkbGVcIiBmb250LWZhbWlseT1cInNhbnMtc2VyaWZcIiBmb250LXNpemU9XCIxOFwiIGZvbnQtd2VpZ2h0PVwiNjAwXCIgZmlsbD1cIiNmZmZcIj5RUTIwMDgg5oCA5pen54mIPC90ZXh0Pjx0ZXh0IHg9XCIxNjBcIiB5PVwiMTYwXCIgdGV4dC1hbmNob3I9XCJtaWRkbGVcIiBmb250LWZhbWlseT1cInNhbnMtc2VyaWZcIiBmb250LXNpemU9XCIxMFwiIGxldHRlci1zcGFjaW5nPVwiLjE4ZW1cIiBmaWxsPVwiI2ZmZlwiIG9wYWNpdHk9XCIuNzVcIj5RUTIwMDggUkVUUk88L3RleHQ+PC9zdmc+IgogICAgfSwKICAgICJidW5kbGUiOiB7CiAgICAgICJwYXRjaCI6ICIuL2NvcmRpcy5wYXRjaC55bWwiCiAgICB9LAogICAgImNsaWVudCI6IHsKICAgICAgInBsYXRmb3JtIjogIndlYiIsCiAgICAgICJpbmplY3QiOiBbXSwKICAgICAgImV4dGVybmFsIjogW10sCiAgICAgICJpbW1lZGlhdGVseSI6IGZhbHNlCiAgICB9CiAgfSwKICAiZmlsZXMiOiBbCiAgICAibGliIiwKICAgICJjb3JkaXMucGF0Y2gueW1sIiwKICAgICJUSElSRC1QQVJUWS1OT1RJQ0VTLm1kIiwKICAgICJSRUFETUUubWQiLAogICAgIkxJQ0VOU0UiLAogICAgIk5PVElDRSIsCiAgICAicHJldmlldyIKICBdLAogICJzY3JpcHRzIjogewogICAgImJ1aWxkIjogInRzYyAtLW5vRW1pdCAmJiBub2RlIHNjcmlwdHMvYnVpbGQtYXJ0aWZhY3QubWpzIiwKICAgICJ0eXBlY2hlY2siOiAidHNjIC0tbm9FbWl0IiwKICAgICJsaW50IjogImVzbGludCBzcmMiLAogICAgInRlc3QiOiAibm9kZSAtLXRlc3QgXCJzcmMvKiovKi50ZXN0LnRzXCIiCiAgfQp9",
+          "sha256": "sha256:46f5e56a446649d3ec0bafb9c7e5794006ab6ef241f6321449a83b5917f7328c"
+        },
+        "files": [
+          "LICENSE",
+          "NOTICE",
+          "README.md",
+          "THIRD-PARTY-NOTICES.md",
+          "cordis.patch.yml",
+          "lib/client.js",
+          "lib/index.js",
+          "package.json",
+          "preview/dark.png",
+          "preview/light.png"
+        ]
+      },
+      "releaseId": "release-36a8a750a9fcbb48fefbfb7b65979ea7033262b1e131305ee8d64335b1a3dd78"
+    },
+    {
+      "filename": "dsh-eac-skin-ths-1.1.0.tgz",
+      "path": "artifacts/dsh-eac-skin-ths-1.1.0.tgz",
+      "packageName": "@dsh-eac/skin-ths",
+      "version": "1.1.0",
+      "bytes": 708867,
+      "sha256": "sha256:6538ec4533f12ae4201894c043ecf9b32c5d60b05f18714859f4083c2b8a585d",
+      "metadataDigest": "sha256:fec31b10c34f4dd23cd5e7e32c1d40691e57d00f0716b9fe81e7a2b3bf68a49e",
+      "kind": "author-release",
+      "commit": "afa947215a862a9c3304f6fff7a812efe5a42fdc",
+      "sourcePath": ".verify/pkgs-v1.1.0-final/dsh-eac-skin-ths-1.1.0.tgz",
+      "installCandidate": true,
+      "runtimeVerification": "not-tested",
+      "metadata": {
+        "kind": "official-bundle",
+        "packageJson": {
+          "contentBase64": "ewogICJuYW1lIjogIkBkc2gtZWFjL3NraW4tdGhzIiwKICAidmVyc2lvbiI6ICIxLjEuMCIsCiAgInByaXZhdGUiOiB0cnVlLAogICJ0eXBlIjogIm1vZHVsZSIsCiAgIm1haW4iOiAibGliL2luZGV4LmpzIiwKICAiZXhwb3J0cyI6IHsKICAgICIuIjogIi4vbGliL2luZGV4LmpzIiwKICAgICIuL2NsaWVudCI6ICIuL2xpYi9jbGllbnQuanMiLAogICAgIi4vcGFja2FnZS5qc29uIjogIi4vcGFja2FnZS5qc29uIgogIH0sCiAgImRlc2NyaXB0aW9uIjogIlJlZC1tYXJrZXQgcXVvdGUgdGVybWluYWwgc2tpbiBtaWdyYXRlZCBmcm9tIERTSC1EZXNrdG9wLUVBQzsgY292ZW5hbnQtY29udmVydGVkIGxpZmVjeWNsZS4iLAogICJsaWNlbnNlIjogIk1JVCBBTkQgQlNELTMtQ2xhdXNlIiwKICAicGVlckRlcGVuZGVuY2llcyI6IHsKICAgICJAZGVlcHNlZWstYWkvZHNoIjogIjAuMS43LXJjLjIiLAogICAgIkBkZWVwc2Vlay1haS9jb3JkaXMiOiAifjQuMC40IgogIH0sCiAgImVuZ2luZXMiOiB7CiAgICAiZHNoIjogIjAuMS43LXJjLjIiLAogICAgIm5vZGUiOiAiPj0yNCIKICB9LAogICJkc2giOiB7CiAgICAibWFuaWZlc3RWZXJzaW9uIjogMSwKICAgICJza2luIjogewogICAgICAiYXBpVmVyc2lvbiI6ICJkc2guZWNvc3lzdGVtLnVpLXNraW4tbG9hZGVyL3YxIiwKICAgICAgImlkIjogImRzaC1lYWMuc2tpbi50aHMiLAogICAgICAibmFtZSI6ICLlkIzoirHpobrpo47moLwiLAogICAgICAidmVyc2lvbiI6ICIxLjEuMCIsCiAgICAgICJhdXRob3IiOiAiemh1MTA5MDA5MzY1OSAoZHNoLXdlYi11aSkgwrcgRFNILUVBQyIsCiAgICAgICJkZXNjcmlwdGlvbiI6ICJSZWQtbWFya2V0IHF1b3RlIHRlcm1pbmFsIHNraW4gbWlncmF0ZWQgZnJvbSBEU0gtRGVza3RvcC1FQUM7IGNvdmVuYW50LWNvbnZlcnRlZCBsaWZlY3ljbGUuIiwKICAgICAgInRhZ3MiOiBbCiAgICAgICAgInN0b2NrIiwKICAgICAgICAidHJhZGluZyIsCiAgICAgICAgInRlcm1pbmFsIiwKICAgICAgICAicmVkIiwKICAgICAgICAibWlncmF0ZWQiCiAgICAgIF0sCiAgICAgICJwcmV2aWV3IjogIjxzdmcgeG1sbnM9XCJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2Z1wiIHZpZXdCb3g9XCIwIDAgMzIwIDE4MFwiIHJvbGU9XCJpbWdcIiBhcmlhLWxhYmVsPVwi5ZCM6Iqx6aG66aOO5qC8XCI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPVwic2tuLXRocy1iZ1wiIHgxPVwiMFwiIHkxPVwiMFwiIHgyPVwiMFwiIHkyPVwiMVwiPjxzdG9wIG9mZnNldD1cIjBcIiBzdG9wLWNvbG9yPVwiI2U2MDAxMlwiLz48c3RvcCBvZmZzZXQ9XCIxXCIgc3RvcC1jb2xvcj1cIiMxMTE4MjdcIi8+PC9saW5lYXJHcmFkaWVudD48L2RlZnM+PHJlY3Qgd2lkdGg9XCIzMjBcIiBoZWlnaHQ9XCIxODBcIiBmaWxsPVwidXJsKCNza24tdGhzLWJnKVwiLz48Y2lyY2xlIGN4PVwiMjUwXCIgY3k9XCI3MFwiIHI9XCI0OFwiIGZpbGw9XCIjZmZmXCIgb3BhY2l0eT1cIi4xMlwiLz48cGF0aCBkPVwiTTAgMTQyIEM4MCAxMDQgMTUwIDE2NiAzMjAgOTYgTDMyMCAxODAgTDAgMTgwWlwiIGZpbGw9XCIjZmZmXCIgb3BhY2l0eT1cIi4xMlwiLz48dGV4dCB4PVwiMTYwXCIgeT1cIjQ0XCIgdGV4dC1hbmNob3I9XCJtaWRkbGVcIiBmb250LWZhbWlseT1cInNhbnMtc2VyaWZcIiBmb250LXNpemU9XCIxOFwiIGZvbnQtd2VpZ2h0PVwiNjAwXCIgZmlsbD1cIiNmZmZcIj7lkIzoirHpobrpo47moLw8L3RleHQ+PHRleHQgeD1cIjE2MFwiIHk9XCIxNjBcIiB0ZXh0LWFuY2hvcj1cIm1pZGRsZVwiIGZvbnQtZmFtaWx5PVwic2Fucy1zZXJpZlwiIGZvbnQtc2l6ZT1cIjEwXCIgbGV0dGVyLXNwYWNpbmc9XCIuMThlbVwiIGZpbGw9XCIjZmZmXCIgb3BhY2l0eT1cIi43NVwiPlRPTkdIVUFTSFVOIFRSQURJTkc8L3RleHQ+PC9zdmc+IgogICAgfSwKICAgICJidW5kbGUiOiB7CiAgICAgICJwYXRjaCI6ICIuL2NvcmRpcy5wYXRjaC55bWwiCiAgICB9LAogICAgImNsaWVudCI6IHsKICAgICAgInBsYXRmb3JtIjogIndlYiIsCiAgICAgICJpbmplY3QiOiBbXSwKICAgICAgImV4dGVybmFsIjogW10sCiAgICAgICJpbW1lZGlhdGVseSI6IGZhbHNlCiAgICB9CiAgfSwKICAiZmlsZXMiOiBbCiAgICAibGliIiwKICAgICJjb3JkaXMucGF0Y2gueW1sIiwKICAgICJUSElSRC1QQVJUWS1OT1RJQ0VTLm1kIiwKICAgICJSRUFETUUubWQiLAogICAgIkxJQ0VOU0UiLAogICAgIk5PVElDRSIsCiAgICAicHJldmlldyIKICBdLAogICJzY3JpcHRzIjogewogICAgImJ1aWxkIjogInRzYyAtLW5vRW1pdCAmJiBub2RlIHNjcmlwdHMvYnVpbGQtYXJ0aWZhY3QubWpzIiwKICAgICJ0eXBlY2hlY2siOiAidHNjIC0tbm9FbWl0IiwKICAgICJsaW50IjogImVzbGludCBzcmMiLAogICAgInRlc3QiOiAibm9kZSAtLXRlc3QgXCJzcmMvKiovKi50ZXN0LnRzXCIiCiAgfQp9",
+          "sha256": "sha256:fec31b10c34f4dd23cd5e7e32c1d40691e57d00f0716b9fe81e7a2b3bf68a49e"
+        },
+        "files": [
+          "LICENSE",
+          "NOTICE",
+          "README.md",
+          "THIRD-PARTY-NOTICES.md",
+          "cordis.patch.yml",
+          "lib/client.js",
+          "lib/index.js",
+          "package.json",
+          "preview/dark.png",
+          "preview/light.png"
+        ]
+      },
+      "releaseId": "release-abd115e4c5d8662069872943953b051b8280aa4cc397c3ae522031767c0732a3"
+    },
+    {
+      "filename": "dsh-eac-skin-trading-1.1.0.tgz",
+      "path": "artifacts/dsh-eac-skin-trading-1.1.0.tgz",
+      "packageName": "@dsh-eac/skin-trading",
+      "version": "1.1.0",
+      "bytes": 21874,
+      "sha256": "sha256:f77b0a06dccf595d02208e290875381a97705cea434eb05936aab6fe0120fb0e",
+      "metadataDigest": "sha256:c6577d179f4618853f0709b39f73b47793ac4bf238e2717584ba580fa8264e56",
+      "kind": "author-release",
+      "commit": "afa947215a862a9c3304f6fff7a812efe5a42fdc",
+      "sourcePath": ".verify/pkgs-v1.1.0-final/dsh-eac-skin-trading-1.1.0.tgz",
+      "installCandidate": false,
+      "runtimeVerification": "not-tested",
+      "metadata": {
+        "kind": "official-bundle",
+        "packageJson": {
+          "contentBase64": "ewogICJuYW1lIjogIkBkc2gtZWFjL3NraW4tdHJhZGluZyIsCiAgInZlcnNpb24iOiAiMS4xLjAiLAogICJwcml2YXRlIjogdHJ1ZSwKICAidHlwZSI6ICJtb2R1bGUiLAogICJtYWluIjogImxpYi9pbmRleC5qcyIsCiAgImV4cG9ydHMiOiB7CiAgICAiLiI6ICIuL2xpYi9pbmRleC5qcyIsCiAgICAiLi9jbGllbnQiOiAiLi9saWIvY2xpZW50LmpzIiwKICAgICIuL3BhY2thZ2UuanNvbiI6ICIuL3BhY2thZ2UuanNvbiIKICB9LAogICJkZXNjcmlwdGlvbiI6ICLjgIzkuqTmmJPnu4jnq6/jgI3igJQg5a6e5pe26KGM5oOF6LeR6ams54GvICsg5Lqk5piT5pe25q6154q25oCB5qCPICsg57qi5rao57u/6LeM6YWN6Imy77yI6IeqIERTSC1EZXNrdG9wLUVBQyDov4Hnp7vnmoQgRFNIIFVJIOearuiCpO+8jGNvdmVuYW50LWNvbnZlcnRlZO+8ieOAgiIsCiAgInBlZXJEZXBlbmRlbmNpZXMiOiB7CiAgICAiQGRlZXBzZWVrLWFpL2RzaCI6ICIwLjEuNy1yYy4yIiwKICAgICJAZGVlcHNlZWstYWkvY29yZGlzIjogIn40LjAuNCIKICB9LAogICJlbmdpbmVzIjogewogICAgImRzaCI6ICIwLjEuNy1yYy4yIiwKICAgICJub2RlIjogIj49MjQiCiAgfSwKICAiZHNoIjogewogICAgIm1hbmlmZXN0VmVyc2lvbiI6IDEsCiAgICAic2tpbiI6IHsKICAgICAgImFwaVZlcnNpb24iOiAiZHNoLmVjb3N5c3RlbS51aS1za2luLWxvYWRlci92MSIsCiAgICAgICJpZCI6ICJkc2gtZWFjLnNraW4udHJhZGluZyIsCiAgICAgICJuYW1lIjogIuS6pOaYk+e7iOerryIsCiAgICAgICJ2ZXJzaW9uIjogIjEuMS4wIiwKICAgICAgImF1dGhvciI6ICJ6aHUxMDkwMDkzNjU5IChkc2gtd2ViLXVpKSDCtyBEU0gtRUFDIChjb3ZlbmFudCBjb252ZXJzaW9uKSIsCiAgICAgICJkZXNjcmlwdGlvbiI6ICLlrp7ml7booYzmg4Xot5Hpqaznga8gwrcg6ZW/5qGl5riv576O6IKh6KGM5oOFIMK3IOe6oua2qOe7v+i3jOS6pOaYk+e7iOerr+OAguinguaEn+WGheWuueWOn+agt+i/geenu+iHqiBkc2gtd2ViLXVp77yIQlNELTMtQ2xhdXNlIMKpIHpodTEwOTAwOTM2NTnvvInnu48gRFNILURlc2t0b3AtRUFDQDI2ODQxZjUg5YiG5Y+R77yM5omn6KGM6aqo5p625bey5YWs57qm5YyW77yIYWN0aXZhdGUvZGVhY3RpdmF0Ze+8ie+8m+ingSBUSElSRC1QQVJUWS1OT1RJQ0VTLm1k44CCIiwKICAgICAgInRhZ3MiOiBbCiAgICAgICAgInN0b2NrIiwKICAgICAgICAidHJhZGluZyIsCiAgICAgICAgInRpY2tlciIsCiAgICAgICAgImxpdmUiLAogICAgICAgICJ0ZXJtaW5hbCIsCiAgICAgICAgIm1pZ3JhdGVkIgogICAgICBdLAogICAgICAicHJldmlldyI6ICI8c3ZnIHhtbG5zPVwiaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmdcIiB2aWV3Qm94PVwiMCAwIDMyMCAxODBcIiByb2xlPVwiaW1nXCIgYXJpYS1sYWJlbD1cIuS6pOaYk+e7iOerr1wiPjxkZWZzPjxsaW5lYXJHcmFkaWVudCBpZD1cInNrbi10cmFkaW5nLXByZXZpZXctYmdcIiB4MT1cIjBcIiB5MT1cIjBcIiB4Mj1cIjBcIiB5Mj1cIjFcIj48c3RvcCBvZmZzZXQ9XCIwXCIgc3RvcC1jb2xvcj1cIiMxMDE1MWRcIi8+PHN0b3Agb2Zmc2V0PVwiMVwiIHN0b3AtY29sb3I9XCIjMWEyMjJlXCIvPjwvbGluZWFyR3JhZGllbnQ+PGxpbmVhckdyYWRpZW50IGlkPVwic2tuLXRyYWRpbmctcHJldmlldy10YXBlXCIgeDE9XCIwXCIgeTE9XCIwXCIgeDI9XCIxXCIgeTI9XCIwXCI+PHN0b3Agb2Zmc2V0PVwiMFwiIHN0b3AtY29sb3I9XCIjZjIzNjQ1XCIvPjxzdG9wIG9mZnNldD1cIi41XCIgc3RvcC1jb2xvcj1cIiM3Yzg4OTdcIi8+PHN0b3Agb2Zmc2V0PVwiMVwiIHN0b3AtY29sb3I9XCIjMDg5OTgxXCIvPjwvbGluZWFyR3JhZGllbnQ+PC9kZWZzPjxyZWN0IHdpZHRoPVwiMzIwXCIgaGVpZ2h0PVwiMTgwXCIgZmlsbD1cInVybCgjc2tuLXRyYWRpbmctcHJldmlldy1iZylcIi8+PHJlY3QgeD1cIjBcIiB5PVwiMjZcIiB3aWR0aD1cIjMyMFwiIGhlaWdodD1cIjIyXCIgZmlsbD1cIiMxNTFiMjVcIi8+PHJlY3QgeD1cIjE0XCIgeT1cIjMzXCIgd2lkdGg9XCIyOTJcIiBoZWlnaHQ9XCI4XCIgcng9XCI0XCIgZmlsbD1cInVybCgjc2tuLXRyYWRpbmctcHJldmlldy10YXBlKVwiIG9wYWNpdHk9XCIuOFwiLz48cmVjdCB4PVwiMTRcIiB5PVwiNjJcIiB3aWR0aD1cIjEzMFwiIGhlaWdodD1cIjEwXCIgcng9XCIzXCIgZmlsbD1cIiNkYmUyZWNcIiBvcGFjaXR5PVwiLjg1XCIvPjxyZWN0IHg9XCIxNFwiIHk9XCI4MFwiIHdpZHRoPVwiODhcIiBoZWlnaHQ9XCI3XCIgcng9XCIzXCIgZmlsbD1cIiM0ODU2NmNcIi8+PHJlY3QgeD1cIjE0XCIgeT1cIjEwNFwiIHdpZHRoPVwiMjkyXCIgaGVpZ2h0PVwiMVwiIGZpbGw9XCIjMjQyZTNkXCIvPjxyZWN0IHg9XCIxNFwiIHk9XCIxMTJcIiB3aWR0aD1cIjI5MlwiIGhlaWdodD1cIjFcIiBmaWxsPVwiIzI0MmUzZFwiLz48cmVjdCB4PVwiMTRcIiB5PVwiMTIwXCIgd2lkdGg9XCIyOTJcIiBoZWlnaHQ9XCIxXCIgZmlsbD1cIiMyNDJlM2RcIi8+PHRleHQgeD1cIjI1MlwiIHk9XCI4NlwiIGZvbnQtZmFtaWx5PVwibW9ub3NwYWNlXCIgZm9udC1zaXplPVwiMTNcIiBmb250LXdlaWdodD1cIjYwMFwiIGZpbGw9XCIjZjIzNjQ1XCI+KzIuNDElPC90ZXh0Pjx0ZXh0IHg9XCIyNTJcIiB5PVwiMTAyXCIgZm9udC1mYW1pbHk9XCJtb25vc3BhY2VcIiBmb250LXNpemU9XCIxM1wiIGZvbnQtd2VpZ2h0PVwiNjAwXCIgZmlsbD1cIiMwODk5ODFcIj4tMS4wOCU8L3RleHQ+PHJlY3QgeD1cIjBcIiB5PVwiMTU4XCIgd2lkdGg9XCIzMjBcIiBoZWlnaHQ9XCIyMlwiIGZpbGw9XCIjMGUxMzFiXCIvPjx0ZXh0IHg9XCIxNjBcIiB5PVwiMTczXCIgdGV4dC1hbmNob3I9XCJtaWRkbGVcIiBmb250LWZhbWlseT1cIm1vbm9zcGFjZVwiIGZvbnQtc2l6ZT1cIjEwXCIgbGV0dGVyLXNwYWNpbmc9XCIuMmVtXCIgZmlsbD1cIiM3Yzg4OTdcIj5UUkFESU5HIFRFUk1JTkFMPC90ZXh0Pjwvc3ZnPiIKICAgIH0sCiAgICAiYnVuZGxlIjogewogICAgICAicGF0Y2giOiAiLi9jb3JkaXMucGF0Y2gueW1sIgogICAgfSwKICAgICJjbGllbnQiOiB7CiAgICAgICJwbGF0Zm9ybSI6ICJ3ZWIiLAogICAgICAiaW5qZWN0IjogW10sCiAgICAgICJleHRlcm5hbCI6IFtdLAogICAgICAiaW1tZWRpYXRlbHkiOiBmYWxzZQogICAgfQogIH0sCiAgInNjcmlwdHMiOiB7CiAgICAiYnVpbGQiOiAidHNjIC0tbm9FbWl0ICYmIG5vZGUgc2NyaXB0cy9idWlsZC1hcnRpZmFjdC5tanMiLAogICAgInR5cGVjaGVjayI6ICJ0c2MgLS1ub0VtaXQiLAogICAgImxpbnQiOiAiZXNsaW50IHNyYyIsCiAgICAidGVzdCI6ICJub2RlIC0tdGVzdCBcInNyYy8qKi8qLnRlc3QudHNcIiIKICB9LAogICJmaWxlcyI6IFsKICAgICJsaWIiLAogICAgImNvcmRpcy5wYXRjaC55bWwiLAogICAgIlJFQURNRS5tZCIsCiAgICAiVEhJUkQtUEFSVFktTk9USUNFUy5tZCIsCiAgICAiTElDRU5TRSIsCiAgICAiTk9USUNFIgogIF0sCiAgImxpY2Vuc2UiOiAiTUlUIEFORCBCU0QtMy1DbGF1c2UiCn0K",
+          "sha256": "sha256:c6577d179f4618853f0709b39f73b47793ac4bf238e2717584ba580fa8264e56"
+        },
+        "files": [
+          "LICENSE",
+          "NOTICE",
+          "README.md",
+          "THIRD-PARTY-NOTICES.md",
+          "cordis.patch.yml",
+          "lib/client.js",
+          "lib/index.js",
+          "package.json"
+        ]
+      },
+      "releaseId": "release-86ea367ea9c52120a7ff13f455c491beaa85431f96e15d7c54364cc4343cf865"
+    },
+    {
+      "filename": "dsh-eac-skin-whale-song-1.1.0.tgz",
+      "path": "artifacts/dsh-eac-skin-whale-song-1.1.0.tgz",
+      "packageName": "@dsh-eac/skin-whale-song",
+      "version": "1.1.0",
+      "bytes": 26332,
+      "sha256": "sha256:7becbd60588e67b0974e7524c3adbbdc3f986b4b2c6ccef0c54bf0741a70f5ce",
+      "metadataDigest": "sha256:38ea591e02e65765ccc1238652f7e06dfbbbfc43b3ba50a371f1661aade6af59",
+      "kind": "author-release",
+      "commit": "afa947215a862a9c3304f6fff7a812efe5a42fdc",
+      "sourcePath": ".verify/pkgs-v1.1.0-final/dsh-eac-skin-whale-song-1.1.0.tgz",
+      "installCandidate": true,
+      "runtimeVerification": "not-tested",
+      "metadata": {
+        "kind": "official-bundle",
+        "packageJson": {
+          "contentBase64": "ewogICJuYW1lIjogIkBkc2gtZWFjL3NraW4td2hhbGUtc29uZyIsCiAgInZlcnNpb24iOiAiMS4xLjAiLAogICJwcml2YXRlIjogdHJ1ZSwKICAidHlwZSI6ICJtb2R1bGUiLAogICJtYWluIjogImxpYi9pbmRleC5qcyIsCiAgImV4cG9ydHMiOiB7CiAgICAiLiI6ICIuL2xpYi9pbmRleC5qcyIsCiAgICAiLi9jbGllbnQiOiAiLi9saWIvY2xpZW50LmpzIiwKICAgICIuL3BhY2thZ2UuanNvbiI6ICIuL3BhY2thZ2UuanNvbiIKICB9LAogICJkZXNjcmlwdGlvbiI6ICLjgIzpsrjlkJ/jgI3igJQg5rex5rW35rCb5Zu06IOM5pmvICsg5Yaw6JOd5rW35rSL6LCD6Imy5p2/55qEIERTSCBVSSDnmq7ogqTvvIjoh6ogRFNILURlc2t0b3AtRUFDIOi/geenu++8jGNvdmVuYW50LWNvbnZlcnRlZO+8ieOAgiIsCiAgInBlZXJEZXBlbmRlbmNpZXMiOiB7CiAgICAiQGRlZXBzZWVrLWFpL2RzaCI6ICIwLjEuNy1yYy4yIiwKICAgICJAZGVlcHNlZWstYWkvY29yZGlzIjogIn40LjAuNCIKICB9LAogICJlbmdpbmVzIjogewogICAgImRzaCI6ICIwLjEuNy1yYy4yIiwKICAgICJub2RlIjogIj49MjQiCiAgfSwKICAiZHNoIjogewogICAgIm1hbmlmZXN0VmVyc2lvbiI6IDEsCiAgICAic2tpbiI6IHsKICAgICAgImFwaVZlcnNpb24iOiAiZHNoLmVjb3N5c3RlbS51aS1za2luLWxvYWRlci92MSIsCiAgICAgICJpZCI6ICJkc2gtZWFjLnNraW4ud2hhbGUtc29uZyIsCiAgICAgICJuYW1lIjogIumyuOWQnyIsCiAgICAgICJ2ZXJzaW9uIjogIjEuMS4wIiwKICAgICAgImF1dGhvciI6ICJ6aHUxMDkwMDkzNjU5IChkc2gtd2ViLXVpKSDCtyBEU0gtRUFDIChjb3ZlbmFudCBjb252ZXJzaW9uKSIsCiAgICAgICJkZXNjcmlwdGlvbiI6ICLmt7HmtbfmsJvlm7Tog4zmma8gwrcg5Yaw6JOd5rW35rSL6LCD6Imy5p2/IMK3IOmHkeiJsue7hue6v+eCuee8gOOAguinguaEn+WGheWuueWOn+agt+i/geenu+iHqiBkc2gtd2ViLXVp77yIQlNELTMtQ2xhdXNlIMKpIHpodTEwOTAwOTM2NTnvvInnu48gRFNILURlc2t0b3AtRUFDQDI2ODQxZjUg5YiG5Y+R77yb5YW36LGh5Y6f55S75bey5oyJIFIxMyDnp7vpmaTvvIzmm7/mjaLkuLrljp/oibLmnb/mtL7nlJ/nmoTpnZ7lhbfosaHmsLTlvanlvI8gQ1NTIOWkhOeQhuOAguaJp+ihjOmqqOaetuW3suWFrOe6puWMlu+8iGFjdGl2YXRlL2RlYWN0aXZhdGXvvInvvJvop4EgVEhJUkQtUEFSVFktTk9USUNFUy5tZOOAgiIsCiAgICAgICJ0YWdzIjogWwogICAgICAgICJ3aGFsZSIsCiAgICAgICAgIm9jZWFuIiwKICAgICAgICAiaWNlLWJsdWUiLAogICAgICAgICJhcnQiLAogICAgICAgICJ0cmFuc2x1Y2VudCIsCiAgICAgICAgIm1pZ3JhdGVkIgogICAgICBdLAogICAgICAicHJldmlldyI6ICI8c3ZnIHhtbG5zPVwiaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmdcIiB2aWV3Qm94PVwiMCAwIDMyMCAxODBcIiByb2xlPVwiaW1nXCIgYXJpYS1sYWJlbD1cIumyuOWQn1wiPjxkZWZzPjxsaW5lYXJHcmFkaWVudCBpZD1cInNrbi13aGFsZS1zb25nLXByZXZpZXctYmdcIiB4MT1cIjBcIiB5MT1cIjBcIiB4Mj1cIjBcIiB5Mj1cIjFcIj48c3RvcCBvZmZzZXQ9XCIwXCIgc3RvcC1jb2xvcj1cIiNlYWYyZmFcIi8+PHN0b3Agb2Zmc2V0PVwiMVwiIHN0b3AtY29sb3I9XCIjYzlkY2VlXCIvPjwvbGluZWFyR3JhZGllbnQ+PGxpbmVhckdyYWRpZW50IGlkPVwic2tuLXdoYWxlLXNvbmctcHJldmlldy1zZWFcIiB4MT1cIjBcIiB5MT1cIjBcIiB4Mj1cIjBcIiB5Mj1cIjFcIj48c3RvcCBvZmZzZXQ9XCIwXCIgc3RvcC1jb2xvcj1cIiM4ZmI4ZGRcIi8+PHN0b3Agb2Zmc2V0PVwiMVwiIHN0b3AtY29sb3I9XCIjMmE0YTc0XCIvPjwvbGluZWFyR3JhZGllbnQ+PHJhZGlhbEdyYWRpZW50IGlkPVwic2tuLXdoYWxlLXNvbmctcHJldmlldy1nbG93XCIgY3g9XCIuMjZcIiBjeT1cIi4zOFwiIHI9XCIuNTVcIj48c3RvcCBvZmZzZXQ9XCIwXCIgc3RvcC1jb2xvcj1cIiM0ZDhmZDRcIiBzdG9wLW9wYWNpdHk9XCIuNVwiLz48c3RvcCBvZmZzZXQ9XCIxXCIgc3RvcC1jb2xvcj1cIiM0ZDhmZDRcIiBzdG9wLW9wYWNpdHk9XCIwXCIvPjwvcmFkaWFsR3JhZGllbnQ+PC9kZWZzPjxyZWN0IHdpZHRoPVwiMzIwXCIgaGVpZ2h0PVwiMTgwXCIgZmlsbD1cInVybCgjc2tuLXdoYWxlLXNvbmctcHJldmlldy1iZylcIi8+PGVsbGlwc2UgY3g9XCI4NlwiIGN5PVwiNjRcIiByeD1cIjE2MFwiIHJ5PVwiODZcIiBmaWxsPVwidXJsKCNza24td2hhbGUtc29uZy1wcmV2aWV3LWdsb3cpXCIvPjxwYXRoIGQ9XCJNLTEwIDExNiBDIDYwIDEwNCwgMTMwIDExMiwgMjAwIDEwNCBTIDMwMCAxMDAsIDMzMCA5NCBMIDMzMCAxODAgTCAtMTAgMTgwIFpcIiBmaWxsPVwidXJsKCNza24td2hhbGUtc29uZy1wcmV2aWV3LXNlYSlcIiBvcGFjaXR5PVwiLjgyXCIvPjxwYXRoIGQ9XCJNLTEwIDEzOCBDIDcwIDEyOCwgMTUwIDEzNiwgMjMwIDEyNiBTIDMxMCAxMjIsIDMzMCAxMTggTCAzMzAgMTgwIEwgLTEwIDE4MCBaXCIgZmlsbD1cIiMyYTRhNzRcIiBvcGFjaXR5PVwiLjM4XCIvPjxwYXRoIGQ9XCJNLTEwIDE1OCBDIDgwIDE1MCwgMTcwIDE1NiwgMjYwIDE0OCBMIDMzMCAxNDQgTCAzMzAgMTgwIEwgLTEwIDE4MCBaXCIgZmlsbD1cIiMxNDI4NGFcIiBvcGFjaXR5PVwiLjVcIi8+PGNpcmNsZSBjeD1cIjYwXCIgY3k9XCI0MFwiIHI9XCIxLjZcIiBmaWxsPVwiI2Q4YjQ1YVwiLz48Y2lyY2xlIGN4PVwiMTE4XCIgY3k9XCIyNlwiIHI9XCIxLjJcIiBmaWxsPVwiI2Q4YjQ1YVwiLz48Y2lyY2xlIGN4PVwiMjMyXCIgY3k9XCIzNFwiIHI9XCIxLjRcIiBmaWxsPVwiI2Q4YjQ1YVwiLz48Y2lyY2xlIGN4PVwiMjg0XCIgY3k9XCIyMlwiIHI9XCIxLjFcIiBmaWxsPVwiI2Q4YjQ1YVwiLz48dGV4dCB4PVwiMTYwXCIgeT1cIjE2NFwiIHRleHQtYW5jaG9yPVwibWlkZGxlXCIgZm9udC1mYW1pbHk9XCJzYW5zLXNlcmlmXCIgZm9udC1zaXplPVwiMTFcIiBsZXR0ZXItc3BhY2luZz1cIi4zZW1cIiBmaWxsPVwiI2RiZTdmMlwiPldIQUxFIFNPTkc8L3RleHQ+PC9zdmc+IgogICAgfSwKICAgICJidW5kbGUiOiB7CiAgICAgICJwYXRjaCI6ICIuL2NvcmRpcy5wYXRjaC55bWwiCiAgICB9LAogICAgImNsaWVudCI6IHsKICAgICAgInBsYXRmb3JtIjogIndlYiIsCiAgICAgICJpbmplY3QiOiBbXSwKICAgICAgImV4dGVybmFsIjogW10sCiAgICAgICJpbW1lZGlhdGVseSI6IGZhbHNlCiAgICB9CiAgfSwKICAic2NyaXB0cyI6IHsKICAgICJidWlsZCI6ICJ0c2MgLS1ub0VtaXQgJiYgbm9kZSBzY3JpcHRzL2J1aWxkLWFydGlmYWN0Lm1qcyIsCiAgICAidHlwZWNoZWNrIjogInRzYyAtLW5vRW1pdCIsCiAgICAibGludCI6ICJlc2xpbnQgc3JjIiwKICAgICJ0ZXN0IjogIm5vZGUgLS10ZXN0IFwic3JjLyoqLyoudGVzdC50c1wiIgogIH0sCiAgImZpbGVzIjogWwogICAgImxpYiIsCiAgICAiY29yZGlzLnBhdGNoLnltbCIsCiAgICAiUkVBRE1FLm1kIiwKICAgICJUSElSRC1QQVJUWS1OT1RJQ0VTLm1kIiwKICAgICJMSUNFTlNFIiwKICAgICJOT1RJQ0UiCiAgXSwKICAibGljZW5zZSI6ICJNSVQgQU5EIEJTRC0zLUNsYXVzZSIKfQo=",
+          "sha256": "sha256:38ea591e02e65765ccc1238652f7e06dfbbbfc43b3ba50a371f1661aade6af59"
+        },
+        "files": [
+          "LICENSE",
+          "NOTICE",
+          "README.md",
+          "THIRD-PARTY-NOTICES.md",
+          "cordis.patch.yml",
+          "lib/client.js",
+          "lib/index.js",
+          "package.json"
+        ]
+      },
+      "releaseId": "release-d23eca2aa4c5dc2392dd0554664ec34fdfe3e32929ecd078ec88164d746b4443"
+    },
+    {
+      "filename": "dsh-eac-skin-xp-1.1.0.tgz",
+      "path": "artifacts/dsh-eac-skin-xp-1.1.0.tgz",
+      "packageName": "@dsh-eac/skin-xp",
+      "version": "1.1.0",
+      "bytes": 596237,
+      "sha256": "sha256:aeee9bf1e0b520e1faadd232db1b8c440766592581907256410ad97d0bf5b4ac",
+      "metadataDigest": "sha256:bb32c5afc423e32c31abd39002d682368b0c324df6ba9bc39ab517fa09808818",
+      "kind": "author-release",
+      "commit": "afa947215a862a9c3304f6fff7a812efe5a42fdc",
+      "sourcePath": ".verify/pkgs-v1.1.0-final/dsh-eac-skin-xp-1.1.0.tgz",
+      "installCandidate": true,
+      "runtimeVerification": "not-tested",
+      "metadata": {
+        "kind": "official-bundle",
+        "packageJson": {
+          "contentBase64": "ewogICJuYW1lIjogIkBkc2gtZWFjL3NraW4teHAiLAogICJ2ZXJzaW9uIjogIjEuMS4wIiwKICAicHJpdmF0ZSI6IHRydWUsCiAgInR5cGUiOiAibW9kdWxlIiwKICAibWFpbiI6ICJsaWIvaW5kZXguanMiLAogICJleHBvcnRzIjogewogICAgIi4iOiAiLi9saWIvaW5kZXguanMiLAogICAgIi4vY2xpZW50IjogIi4vbGliL2NsaWVudC5qcyIsCiAgICAiLi9wYWNrYWdlLmpzb24iOiAiLi9wYWNrYWdlLmpzb24iCiAgfSwKICAiZGVzY3JpcHRpb24iOiAiV2luZG93cyBYUCBMdW5hIGNocm9tZSBhbmQgQmxpc3Mtc3R5bGUgZGVza3RvcCBtaWdyYXRlZCBmcm9tIERTSC1EZXNrdG9wLUVBQzsgY292ZW5hbnQtY29udmVydGVkIGxpZmVjeWNsZS4iLAogICJsaWNlbnNlIjogIk1JVCBBTkQgQlNELTMtQ2xhdXNlIiwKICAicGVlckRlcGVuZGVuY2llcyI6IHsKICAgICJAZGVlcHNlZWstYWkvZHNoIjogIjAuMS43LXJjLjIiLAogICAgIkBkZWVwc2Vlay1haS9jb3JkaXMiOiAifjQuMC40IgogIH0sCiAgImVuZ2luZXMiOiB7CiAgICAiZHNoIjogIjAuMS43LXJjLjIiLAogICAgIm5vZGUiOiAiPj0yNCIKICB9LAogICJkc2giOiB7CiAgICAibWFuaWZlc3RWZXJzaW9uIjogMSwKICAgICJza2luIjogewogICAgICAiYXBpVmVyc2lvbiI6ICJkc2guZWNvc3lzdGVtLnVpLXNraW4tbG9hZGVyL3YxIiwKICAgICAgImlkIjogImRzaC1lYWMuc2tpbi54cCIsCiAgICAgICJuYW1lIjogIldpbmRvd3MgWFAgKEx1bmEpIiwKICAgICAgInZlcnNpb24iOiAiMS4xLjAiLAogICAgICAiYXV0aG9yIjogInpodTEwOTAwOTM2NTkgKGRzaC13ZWItdWkpIMK3IERTSC1FQUMiLAogICAgICAiZGVzY3JpcHRpb24iOiAiV2luZG93cyBYUCBMdW5hIGNocm9tZSBhbmQgQmxpc3Mtc3R5bGUgZGVza3RvcCBtaWdyYXRlZCBmcm9tIERTSC1EZXNrdG9wLUVBQzsgY292ZW5hbnQtY29udmVydGVkIGxpZmVjeWNsZS4iLAogICAgICAidGFncyI6IFsKICAgICAgICAicmV0cm8iLAogICAgICAgICJ4cCIsCiAgICAgICAgImx1bmEiLAogICAgICAgICJ3aW5kb3dzIiwKICAgICAgICAic3RhcnQtYnV0dG9uIiwKICAgICAgICAibWlncmF0ZWQiCiAgICAgIF0sCiAgICAgICJwcmV2aWV3IjogIjxzdmcgeG1sbnM9XCJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2Z1wiIHZpZXdCb3g9XCIwIDAgMzIwIDE4MFwiIHJvbGU9XCJpbWdcIiBhcmlhLWxhYmVsPVwiV2luZG93cyBYUCAoTHVuYSlcIj48ZGVmcz48bGluZWFyR3JhZGllbnQgaWQ9XCJza24teHAtYmdcIiB4MT1cIjBcIiB5MT1cIjBcIiB4Mj1cIjBcIiB5Mj1cIjFcIj48c3RvcCBvZmZzZXQ9XCIwXCIgc3RvcC1jb2xvcj1cIiMzMTZhYzVcIi8+PHN0b3Agb2Zmc2V0PVwiMVwiIHN0b3AtY29sb3I9XCIjMTExODI3XCIvPjwvbGluZWFyR3JhZGllbnQ+PC9kZWZzPjxyZWN0IHdpZHRoPVwiMzIwXCIgaGVpZ2h0PVwiMTgwXCIgZmlsbD1cInVybCgjc2tuLXhwLWJnKVwiLz48Y2lyY2xlIGN4PVwiMjUwXCIgY3k9XCI3MFwiIHI9XCI0OFwiIGZpbGw9XCIjZmZmXCIgb3BhY2l0eT1cIi4xMlwiLz48cGF0aCBkPVwiTTAgMTQyIEM4MCAxMDQgMTUwIDE2NiAzMjAgOTYgTDMyMCAxODAgTDAgMTgwWlwiIGZpbGw9XCIjZmZmXCIgb3BhY2l0eT1cIi4xMlwiLz48dGV4dCB4PVwiMTYwXCIgeT1cIjQ0XCIgdGV4dC1hbmNob3I9XCJtaWRkbGVcIiBmb250LWZhbWlseT1cInNhbnMtc2VyaWZcIiBmb250LXNpemU9XCIxOFwiIGZvbnQtd2VpZ2h0PVwiNjAwXCIgZmlsbD1cIiNmZmZcIj5XaW5kb3dzIFhQIChMdW5hKTwvdGV4dD48dGV4dCB4PVwiMTYwXCIgeT1cIjE2MFwiIHRleHQtYW5jaG9yPVwibWlkZGxlXCIgZm9udC1mYW1pbHk9XCJzYW5zLXNlcmlmXCIgZm9udC1zaXplPVwiMTBcIiBsZXR0ZXItc3BhY2luZz1cIi4xOGVtXCIgZmlsbD1cIiNmZmZcIiBvcGFjaXR5PVwiLjc1XCI+V0lORE9XUyBYUCBMVU5BPC90ZXh0Pjwvc3ZnPiIKICAgIH0sCiAgICAiYnVuZGxlIjogewogICAgICAicGF0Y2giOiAiLi9jb3JkaXMucGF0Y2gueW1sIgogICAgfSwKICAgICJjbGllbnQiOiB7CiAgICAgICJwbGF0Zm9ybSI6ICJ3ZWIiLAogICAgICAiaW5qZWN0IjogW10sCiAgICAgICJleHRlcm5hbCI6IFtdLAogICAgICAiaW1tZWRpYXRlbHkiOiBmYWxzZQogICAgfQogIH0sCiAgImZpbGVzIjogWwogICAgImxpYiIsCiAgICAiY29yZGlzLnBhdGNoLnltbCIsCiAgICAiVEhJUkQtUEFSVFktTk9USUNFUy5tZCIsCiAgICAiUkVBRE1FLm1kIiwKICAgICJMSUNFTlNFIiwKICAgICJOT1RJQ0UiLAogICAgInByZXZpZXciCiAgXSwKICAic2NyaXB0cyI6IHsKICAgICJidWlsZCI6ICJ0c2MgLS1ub0VtaXQgJiYgbm9kZSBzY3JpcHRzL2J1aWxkLWFydGlmYWN0Lm1qcyIsCiAgICAidHlwZWNoZWNrIjogInRzYyAtLW5vRW1pdCIsCiAgICAibGludCI6ICJlc2xpbnQgc3JjIiwKICAgICJ0ZXN0IjogIm5vZGUgLS10ZXN0IFwic3JjLyoqLyoudGVzdC50c1wiIgogIH0KfQ==",
+          "sha256": "sha256:bb32c5afc423e32c31abd39002d682368b0c324df6ba9bc39ab517fa09808818"
+        },
+        "files": [
+          "LICENSE",
+          "NOTICE",
+          "README.md",
+          "THIRD-PARTY-NOTICES.md",
+          "cordis.patch.yml",
+          "lib/client.js",
+          "lib/index.js",
+          "package.json",
+          "preview/dark.png",
+          "preview/light.png"
+        ]
+      },
+      "releaseId": "release-beac99f41d76fa67e3135122ff87cc8a4a33e80c2fe7f4a28662a6e3e33ecba3"
+    },
+    {
+      "filename": "dsh-eac-ui-skin-loader-1.1.0.tgz",
+      "path": "artifacts/dsh-eac-ui-skin-loader-1.1.0.tgz",
+      "packageName": "@dsh-eac/ui-skin-loader",
+      "version": "1.1.0",
+      "bytes": 22667,
+      "sha256": "sha256:b926aad7d312c9573226414867049a48b6825e2bb15d8ba76a3d707095ef1ba6",
+      "metadataDigest": "sha256:e0c5b9d9a3f57422defa65f40e7f032b5a9b6035e1ebc0594d7dbd2a7d34e1f9",
+      "kind": "author-release",
+      "commit": "afa947215a862a9c3304f6fff7a812efe5a42fdc",
+      "sourcePath": ".verify/pkgs-v1.1.0-final/dsh-eac-ui-skin-loader-1.1.0.tgz",
+      "installCandidate": true,
+      "runtimeVerification": "not-tested",
+      "metadata": {
+        "kind": "official-bundle",
+        "packageJson": {
+          "contentBase64": "ewogICJuYW1lIjogIkBkc2gtZWFjL3VpLXNraW4tbG9hZGVyIiwKICAidmVyc2lvbiI6ICIxLjEuMCIsCiAgInByaXZhdGUiOiB0cnVlLAogICJ0eXBlIjogIm1vZHVsZSIsCiAgIm1haW4iOiAibGliL2luZGV4LmpzIiwKICAibGljZW5zZSI6ICJNSVQiLAogICJkZXNjcmlwdGlvbiI6ICJEU0ggVUkg55qu6IKk5Yqg6L295Zmo77ya5byx57qm5p2f5YWs57qmIGRzaC5lY29zeXN0ZW0udWktc2tpbi1sb2FkZXIvdjEg55qE5Y+C6ICD5a6e546w77yI55qu6IKk5Y+R546w55m76K6wIC8g5YWo5bGA5LqS5pal5YiH5o2iIC8g5oyB5LmF5YyW5oGi5aSNIC8g5pWF6Zqc6ZqU56a7IC8g5o2i6IKk5o6n5Yi25Y+w77yJ44CCIiwKICAiZXhwb3J0cyI6IHsKICAgICIuIjogIi4vbGliL2luZGV4LmpzIiwKICAgICIuL2NsaWVudCI6ICIuL2xpYi9jbGllbnQuanMiLAogICAgIi4vcGFja2FnZS5qc29uIjogIi4vcGFja2FnZS5qc29uIgogIH0sCiAgInBlZXJEZXBlbmRlbmNpZXMiOiB7CiAgICAiQGRlZXBzZWVrLWFpL2RzaCI6ICIwLjEuNy1yYy4yIiwKICAgICJAZGVlcHNlZWstYWkvY29yZGlzIjogIn40LjAuNCIKICB9LAogICJlbmdpbmVzIjogewogICAgImRzaCI6ICIwLjEuNy1yYy4yIiwKICAgICJub2RlIjogIj49MjQiCiAgfSwKICAiZHNoIjogewogICAgIm1hbmlmZXN0VmVyc2lvbiI6IDEsCiAgICAiYnVuZGxlIjogewogICAgICAicGF0Y2giOiAiLi9jb3JkaXMucGF0Y2gueW1sIgogICAgfSwKICAgICJjbGllbnQiOiB7CiAgICAgICJwbGF0Zm9ybSI6ICJ3ZWIiLAogICAgICAiaW5qZWN0IjogW10sCiAgICAgICJleHRlcm5hbCI6IFtdLAogICAgICAiaW1tZWRpYXRlbHkiOiBmYWxzZQogICAgfQogIH0sCiAgInNjcmlwdHMiOiB7CiAgICAiYnVpbGQiOiAidHNjIC0tbm9FbWl0ICYmIG5vZGUgc2NyaXB0cy9idWlsZC1hcnRpZmFjdC5tanMiLAogICAgInR5cGVjaGVjayI6ICJ0c2MgLS1ub0VtaXQiLAogICAgImxpbnQiOiAiZXNsaW50IHNyYyIsCiAgICAidGVzdCI6ICJub2RlIC0tdGVzdCBcInNyYy8qKi8qLnRlc3QudHNcIiIKICB9LAogICJmaWxlcyI6IFsKICAgICJsaWIiLAogICAgImNvcmRpcy5wYXRjaC55bWwiLAogICAgIlJFQURNRS5tZCIsCiAgICAiVEhJUkQtUEFSVFktTk9USUNFUy5tZCIsCiAgICAiTElDRU5TRSIsCiAgICAiTk9USUNFIgogIF0sCiAgImRlcGVuZGVuY2llcyI6IHsKICAgICJAZGVlcHNlZWstYWkvc2NoZW1hc3RlcnkiOiAifjMuMTguNCIKICB9Cn0K",
+          "sha256": "sha256:e0c5b9d9a3f57422defa65f40e7f032b5a9b6035e1ebc0594d7dbd2a7d34e1f9"
+        },
+        "files": [
+          "LICENSE",
+          "NOTICE",
+          "README.md",
+          "THIRD-PARTY-NOTICES.md",
+          "cordis.patch.yml",
+          "lib/client.js",
+          "lib/index.js",
+          "package.json"
+        ]
+      },
+      "releaseId": "release-32ca6eb7c1be537600144ac1675b2cd29feab4246872cd7fa4c0f6fdce89292f"
+    },
+    {
+      "filename": "dsh-eac-skin-miku-1.1.1-eac.dc22280.2.tgz",
+      "path": "artifacts/dsh-eac-skin-miku-1.1.1-eac.dc22280.2.tgz",
+      "packageName": "@dsh-eac/skin-miku",
+      "version": "1.1.1-eac.dc22280.2",
+      "bytes": 1725894,
+      "sha256": "sha256:b0ee8cb34ba52f0edacb3f36153d2a0e1bb5e2b4a16c39e3d52a50f278f087fc",
+      "metadataDigest": "sha256:6ddf5ccd18751e6c25e52af9c85f6427a27577b19ece981b9fcc282f1ea3048a",
+      "kind": "derived-built-repack",
+      "commit": "dc22280beb9d0a6338d1e02d99f5e5346f72f4f0",
+      "sourcePath": "dsh-desktop/assets/plugins/dsh-eac-skin-miku",
+      "installCandidate": true,
+      "runtimeVerification": "not-tested",
+      "metadata": {
+        "kind": "official-bundle",
+        "packageJson": {
+          "contentBase64": "ewogICJuYW1lIjogIkBkc2gtZWFjL3NraW4tbWlrdSIsCiAgInZlcnNpb24iOiAiMS4xLjEtZWFjLmRjMjIyODAuMiIsCiAgInByaXZhdGUiOiB0cnVlLAogICJ0eXBlIjogIm1vZHVsZSIsCiAgIm1haW4iOiAibGliL2luZGV4LmpzIiwKICAiZXhwb3J0cyI6IHsKICAgICIuIjogIi4vbGliL2luZGV4LmpzIiwKICAgICIuL2NsaWVudCI6ICIuL2xpYi9jbGllbnQuanMiLAogICAgIi4vcGFja2FnZS5qc29uIjogIi4vcGFja2FnZS5qc29uIgogIH0sCiAgImRlc2NyaXB0aW9uIjogIk1pa3UtaW5zcGlyZWQgYmx1ZS12aW9sZXQgZWxlY3Ryb25pYyBzaW5nZXIgc2tpbiBtaWdyYXRlZCBmcm9tIERTSC1EZXNrdG9wLUVBQzsgY292ZW5hbnQtY29udmVydGVkIGxpZmVjeWNsZS4iLAogICJsaWNlbnNlIjogIk1JVCBBTkQgQlNELTMtQ2xhdXNlIiwKICAicGVlckRlcGVuZGVuY2llcyI6IHsKICAgICJAZGVlcHNlZWstYWkvZHNoIjogIjAuMS43LXJjLjIiLAogICAgIkBkZWVwc2Vlay1haS9jb3JkaXMiOiAifjQuMC40IgogIH0sCiAgImVuZ2luZXMiOiB7CiAgICAiZHNoIjogIjAuMS43LXJjLjIiLAogICAgIm5vZGUiOiAiPj0yNCIKICB9LAogICJkc2giOiB7CiAgICAibWFuaWZlc3RWZXJzaW9uIjogMSwKICAgICJza2luIjogewogICAgICAiYXBpVmVyc2lvbiI6ICJkc2guZWNvc3lzdGVtLnVpLXNraW4tbG9hZGVyL3YxIiwKICAgICAgImlkIjogImRzaC1lYWMuc2tpbi5taWt1IiwKICAgICAgIm5hbWUiOiAi5Yid6Z+z5pyq5p2lIMK3IOeUteWtkOatjOWnrCIsCiAgICAgICJ2ZXJzaW9uIjogIjEuMS4xLWVhYy5kYzIyMjgwLjIiLAogICAgICAiYXV0aG9yIjogIua2guWxseiLj+iLjyDCtyB6aHUxMDkwMDkzNjU5IChkc2gtd2ViLXVpKSDCtyBEU0gtRUFDIiwKICAgICAgImRlc2NyaXB0aW9uIjogIk1pa3UtaW5zcGlyZWQgYmx1ZS12aW9sZXQgZWxlY3Ryb25pYyBzaW5nZXIgc2tpbiBtaWdyYXRlZCBmcm9tIERTSC1EZXNrdG9wLUVBQzsgY292ZW5hbnQtY29udmVydGVkIGxpZmVjeWNsZS4iLAogICAgICAidGFncyI6IFsKICAgICAgICAibWlrdSIsCiAgICAgICAgInZvY2Fsb2lkIiwKICAgICAgICAiYmx1ZSIsCiAgICAgICAgIm11c2ljIiwKICAgICAgICAiaWRvbCIsCiAgICAgICAgIndhdmVmb3JtIiwKICAgICAgICAibWlncmF0ZWQiCiAgICAgIF0sCiAgICAgICJwcmV2aWV3IjogIjxzdmcgeG1sbnM9XCJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2Z1wiIHZpZXdCb3g9XCIwIDAgMzIwIDE4MFwiIHJvbGU9XCJpbWdcIiBhcmlhLWxhYmVsPVwi5Yid6Z+z5pyq5p2lIMK3IOeUteWtkOatjOWnrFwiPjxkZWZzPjxsaW5lYXJHcmFkaWVudCBpZD1cInNrbi1taWt1LWJnXCIgeDE9XCIwXCIgeTE9XCIwXCIgeDI9XCIwXCIgeTI9XCIxXCI+PHN0b3Agb2Zmc2V0PVwiMFwiIHN0b3AtY29sb3I9XCIjMmU5YmZmXCIvPjxzdG9wIG9mZnNldD1cIjFcIiBzdG9wLWNvbG9yPVwiIzExMTgyN1wiLz48L2xpbmVhckdyYWRpZW50PjwvZGVmcz48cmVjdCB3aWR0aD1cIjMyMFwiIGhlaWdodD1cIjE4MFwiIGZpbGw9XCJ1cmwoI3Nrbi1taWt1LWJnKVwiLz48Y2lyY2xlIGN4PVwiMjUwXCIgY3k9XCI3MFwiIHI9XCI0OFwiIGZpbGw9XCIjZmZmXCIgb3BhY2l0eT1cIi4xMlwiLz48cGF0aCBkPVwiTTAgMTQyIEM4MCAxMDQgMTUwIDE2NiAzMjAgOTYgTDMyMCAxODAgTDAgMTgwWlwiIGZpbGw9XCIjZmZmXCIgb3BhY2l0eT1cIi4xMlwiLz48dGV4dCB4PVwiMTYwXCIgeT1cIjQ0XCIgdGV4dC1hbmNob3I9XCJtaWRkbGVcIiBmb250LWZhbWlseT1cInNhbnMtc2VyaWZcIiBmb250LXNpemU9XCIxOFwiIGZvbnQtd2VpZ2h0PVwiNjAwXCIgZmlsbD1cIiNmZmZcIj7liJ3pn7PmnKrmnaUgwrcg55S15a2Q5q2M5aesPC90ZXh0Pjx0ZXh0IHg9XCIxNjBcIiB5PVwiMTYwXCIgdGV4dC1hbmNob3I9XCJtaWRkbGVcIiBmb250LWZhbWlseT1cInNhbnMtc2VyaWZcIiBmb250LXNpemU9XCIxMFwiIGxldHRlci1zcGFjaW5nPVwiLjE4ZW1cIiBmaWxsPVwiI2ZmZlwiIG9wYWNpdHk9XCIuNzVcIj5IQVRTVU5FIE1JS1U8L3RleHQ+PC9zdmc+IgogICAgfSwKICAgICJidW5kbGUiOiB7CiAgICAgICJwYXRjaCI6ICIuL2NvcmRpcy5wYXRjaC55bWwiCiAgICB9LAogICAgImNsaWVudCI6IHsKICAgICAgInBsYXRmb3JtIjogIndlYiIsCiAgICAgICJpbmplY3QiOiBbXSwKICAgICAgImV4dGVybmFsIjogW10sCiAgICAgICJpbW1lZGlhdGVseSI6IGZhbHNlCiAgICB9CiAgfSwKICAic2NyaXB0cyI6IHsKICAgICJidWlsZCI6ICJ0c2MgLS1ub0VtaXQgJiYgbm9kZSBzY3JpcHRzL2J1aWxkLWFydGlmYWN0Lm1qcyIsCiAgICAidHlwZWNoZWNrIjogInRzYyAtLW5vRW1pdCIsCiAgICAibGludCI6ICJlc2xpbnQgc3JjIiwKICAgICJ0ZXN0IjogIm5vZGUgLS10ZXN0IFwic3JjLyoqLyoudGVzdC50c1wiIgogIH0sCiAgImZpbGVzIjogWwogICAgImxpYiIsCiAgICAiY29yZGlzLnBhdGNoLnltbCIsCiAgICAiVEhJUkQtUEFSVFktTk9USUNFUy5tZCIsCiAgICAiUkVBRE1FLm1kIiwKICAgICJMSUNFTlNFIiwKICAgICJOT1RJQ0UiLAogICAgInByZXZpZXciCiAgXQp9Cg==",
+          "sha256": "sha256:6ddf5ccd18751e6c25e52af9c85f6427a27577b19ece981b9fcc282f1ea3048a"
+        },
+        "files": [
+          "EAC-DERIVATION.json",
+          "LICENSE",
+          "NOTICE",
+          "README.md",
+          "THIRD-PARTY-NOTICES.md",
+          "UPSTREAM-PACKAGE.json",
+          "cordis.patch.yml",
+          "lib/client.js",
+          "lib/index.js",
+          "package.json",
+          "preview/dark.png",
+          "preview/light.png"
+        ]
+      },
+      "recipePath": "recipes/dsh-eac-skin-miku-1.1.1-eac.dc22280.2/build-recipe.json",
+      "releaseId": "release-c00a032d3f4af22a19c26dc9c21fad7d04ddee2896a4f9f4364f29a489ce6c8d"
+    },
+    {
+      "filename": "dsh-eac-skin-trading-1.1.1-eac.dc22280.2.tgz",
+      "path": "artifacts/dsh-eac-skin-trading-1.1.1-eac.dc22280.2.tgz",
+      "packageName": "@dsh-eac/skin-trading",
+      "version": "1.1.1-eac.dc22280.2",
+      "bytes": 23708,
+      "sha256": "sha256:e873a0f8e2475d2ccdc273e451ee253790a1aa4bcf405849a4b590a73ef80e1d",
+      "metadataDigest": "sha256:23ae46fb8071de7bc237d1cd7467b72bb2da77ca48309c99b57978c0c72095ac",
+      "kind": "derived-built-repack",
+      "commit": "dc22280beb9d0a6338d1e02d99f5e5346f72f4f0",
+      "sourcePath": "dsh-desktop/assets/plugins/dsh-eac-skin-trading",
+      "installCandidate": true,
+      "runtimeVerification": "not-tested",
+      "metadata": {
+        "kind": "official-bundle",
+        "packageJson": {
+          "contentBase64": "ewogICJuYW1lIjogIkBkc2gtZWFjL3NraW4tdHJhZGluZyIsCiAgInZlcnNpb24iOiAiMS4xLjEtZWFjLmRjMjIyODAuMiIsCiAgInByaXZhdGUiOiB0cnVlLAogICJ0eXBlIjogIm1vZHVsZSIsCiAgIm1haW4iOiAibGliL2luZGV4LmpzIiwKICAiZXhwb3J0cyI6IHsKICAgICIuIjogIi4vbGliL2luZGV4LmpzIiwKICAgICIuL2NsaWVudCI6ICIuL2xpYi9jbGllbnQuanMiLAogICAgIi4vcGFja2FnZS5qc29uIjogIi4vcGFja2FnZS5qc29uIgogIH0sCiAgImRlc2NyaXB0aW9uIjogIuOAjOS6pOaYk+e7iOerr+OAjeKAlCDlrp7ml7booYzmg4Xot5Hpqaznga8gKyDkuqTmmJPml7bmrrXnirbmgIHmoI8gKyDnuqLmtqjnu7/ot4zphY3oibLvvIjoh6ogRFNILURlc2t0b3AtRUFDIOi/geenu+eahCBEU0ggVUkg55qu6IKk77yMY292ZW5hbnQtY29udmVydGVk77yJ44CCIiwKICAicGVlckRlcGVuZGVuY2llcyI6IHsKICAgICJAZGVlcHNlZWstYWkvZHNoIjogIjAuMS43LXJjLjIiLAogICAgIkBkZWVwc2Vlay1haS9jb3JkaXMiOiAifjQuMC40IgogIH0sCiAgImVuZ2luZXMiOiB7CiAgICAiZHNoIjogIjAuMS43LXJjLjIiLAogICAgIm5vZGUiOiAiPj0yNCIKICB9LAogICJkc2giOiB7CiAgICAibWFuaWZlc3RWZXJzaW9uIjogMSwKICAgICJza2luIjogewogICAgICAiYXBpVmVyc2lvbiI6ICJkc2guZWNvc3lzdGVtLnVpLXNraW4tbG9hZGVyL3YxIiwKICAgICAgImlkIjogImRzaC1lYWMuc2tpbi50cmFkaW5nIiwKICAgICAgIm5hbWUiOiAi5Lqk5piT57uI56uvIiwKICAgICAgInZlcnNpb24iOiAiMS4xLjEtZWFjLmRjMjIyODAuMiIsCiAgICAgICJhdXRob3IiOiAiemh1MTA5MDA5MzY1OSAoZHNoLXdlYi11aSkgwrcgRFNILUVBQyAoY292ZW5hbnQgY29udmVyc2lvbikiLAogICAgICAiZGVzY3JpcHRpb24iOiAi5a6e5pe26KGM5oOF6LeR6ams54GvIMK3IOmVv+ahpea4r+e+juiCoeihjOaDhSDCtyDnuqLmtqjnu7/ot4zkuqTmmJPnu4jnq6/jgILop4LmhJ/lhoXlrrnljp/moLfov4Hnp7voh6ogZHNoLXdlYi11ae+8iEJTRC0zLUNsYXVzZSDCqSB6aHUxMDkwMDkzNjU577yJ57uPIERTSC1EZXNrdG9wLUVBQ0AyNjg0MWY1IOWIhuWPke+8jOaJp+ihjOmqqOaetuW3suWFrOe6puWMlu+8iGFjdGl2YXRlL2RlYWN0aXZhdGXvvInvvJvop4EgVEhJUkQtUEFSVFktTk9USUNFUy5tZOOAgiIsCiAgICAgICJ0YWdzIjogWwogICAgICAgICJzdG9jayIsCiAgICAgICAgInRyYWRpbmciLAogICAgICAgICJ0aWNrZXIiLAogICAgICAgICJsaXZlIiwKICAgICAgICAidGVybWluYWwiLAogICAgICAgICJtaWdyYXRlZCIKICAgICAgXSwKICAgICAgInByZXZpZXciOiAiPHN2ZyB4bWxucz1cImh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnXCIgdmlld0JveD1cIjAgMCAzMjAgMTgwXCIgcm9sZT1cImltZ1wiIGFyaWEtbGFiZWw9XCLkuqTmmJPnu4jnq69cIj48ZGVmcz48bGluZWFyR3JhZGllbnQgaWQ9XCJza24tdHJhZGluZy1wcmV2aWV3LWJnXCIgeDE9XCIwXCIgeTE9XCIwXCIgeDI9XCIwXCIgeTI9XCIxXCI+PHN0b3Agb2Zmc2V0PVwiMFwiIHN0b3AtY29sb3I9XCIjMTAxNTFkXCIvPjxzdG9wIG9mZnNldD1cIjFcIiBzdG9wLWNvbG9yPVwiIzFhMjIyZVwiLz48L2xpbmVhckdyYWRpZW50PjxsaW5lYXJHcmFkaWVudCBpZD1cInNrbi10cmFkaW5nLXByZXZpZXctdGFwZVwiIHgxPVwiMFwiIHkxPVwiMFwiIHgyPVwiMVwiIHkyPVwiMFwiPjxzdG9wIG9mZnNldD1cIjBcIiBzdG9wLWNvbG9yPVwiI2YyMzY0NVwiLz48c3RvcCBvZmZzZXQ9XCIuNVwiIHN0b3AtY29sb3I9XCIjN2M4ODk3XCIvPjxzdG9wIG9mZnNldD1cIjFcIiBzdG9wLWNvbG9yPVwiIzA4OTk4MVwiLz48L2xpbmVhckdyYWRpZW50PjwvZGVmcz48cmVjdCB3aWR0aD1cIjMyMFwiIGhlaWdodD1cIjE4MFwiIGZpbGw9XCJ1cmwoI3Nrbi10cmFkaW5nLXByZXZpZXctYmcpXCIvPjxyZWN0IHg9XCIwXCIgeT1cIjI2XCIgd2lkdGg9XCIzMjBcIiBoZWlnaHQ9XCIyMlwiIGZpbGw9XCIjMTUxYjI1XCIvPjxyZWN0IHg9XCIxNFwiIHk9XCIzM1wiIHdpZHRoPVwiMjkyXCIgaGVpZ2h0PVwiOFwiIHJ4PVwiNFwiIGZpbGw9XCJ1cmwoI3Nrbi10cmFkaW5nLXByZXZpZXctdGFwZSlcIiBvcGFjaXR5PVwiLjhcIi8+PHJlY3QgeD1cIjE0XCIgeT1cIjYyXCIgd2lkdGg9XCIxMzBcIiBoZWlnaHQ9XCIxMFwiIHJ4PVwiM1wiIGZpbGw9XCIjZGJlMmVjXCIgb3BhY2l0eT1cIi44NVwiLz48cmVjdCB4PVwiMTRcIiB5PVwiODBcIiB3aWR0aD1cIjg4XCIgaGVpZ2h0PVwiN1wiIHJ4PVwiM1wiIGZpbGw9XCIjNDg1NjZjXCIvPjxyZWN0IHg9XCIxNFwiIHk9XCIxMDRcIiB3aWR0aD1cIjI5MlwiIGhlaWdodD1cIjFcIiBmaWxsPVwiIzI0MmUzZFwiLz48cmVjdCB4PVwiMTRcIiB5PVwiMTEyXCIgd2lkdGg9XCIyOTJcIiBoZWlnaHQ9XCIxXCIgZmlsbD1cIiMyNDJlM2RcIi8+PHJlY3QgeD1cIjE0XCIgeT1cIjEyMFwiIHdpZHRoPVwiMjkyXCIgaGVpZ2h0PVwiMVwiIGZpbGw9XCIjMjQyZTNkXCIvPjx0ZXh0IHg9XCIyNTJcIiB5PVwiODZcIiBmb250LWZhbWlseT1cIm1vbm9zcGFjZVwiIGZvbnQtc2l6ZT1cIjEzXCIgZm9udC13ZWlnaHQ9XCI2MDBcIiBmaWxsPVwiI2YyMzY0NVwiPisyLjQxJTwvdGV4dD48dGV4dCB4PVwiMjUyXCIgeT1cIjEwMlwiIGZvbnQtZmFtaWx5PVwibW9ub3NwYWNlXCIgZm9udC1zaXplPVwiMTNcIiBmb250LXdlaWdodD1cIjYwMFwiIGZpbGw9XCIjMDg5OTgxXCI+LTEuMDglPC90ZXh0PjxyZWN0IHg9XCIwXCIgeT1cIjE1OFwiIHdpZHRoPVwiMzIwXCIgaGVpZ2h0PVwiMjJcIiBmaWxsPVwiIzBlMTMxYlwiLz48dGV4dCB4PVwiMTYwXCIgeT1cIjE3M1wiIHRleHQtYW5jaG9yPVwibWlkZGxlXCIgZm9udC1mYW1pbHk9XCJtb25vc3BhY2VcIiBmb250LXNpemU9XCIxMFwiIGxldHRlci1zcGFjaW5nPVwiLjJlbVwiIGZpbGw9XCIjN2M4ODk3XCI+VFJBRElORyBURVJNSU5BTDwvdGV4dD48L3N2Zz4iCiAgICB9LAogICAgImJ1bmRsZSI6IHsKICAgICAgInBhdGNoIjogIi4vY29yZGlzLnBhdGNoLnltbCIKICAgIH0sCiAgICAiY2xpZW50IjogewogICAgICAicGxhdGZvcm0iOiAid2ViIiwKICAgICAgImluamVjdCI6IFtdLAogICAgICAiZXh0ZXJuYWwiOiBbXSwKICAgICAgImltbWVkaWF0ZWx5IjogZmFsc2UKICAgIH0KICB9LAogICJzY3JpcHRzIjogewogICAgImJ1aWxkIjogInRzYyAtLW5vRW1pdCAmJiBub2RlIHNjcmlwdHMvYnVpbGQtYXJ0aWZhY3QubWpzIiwKICAgICJ0eXBlY2hlY2siOiAidHNjIC0tbm9FbWl0IiwKICAgICJsaW50IjogImVzbGludCBzcmMiLAogICAgInRlc3QiOiAibm9kZSAtLXRlc3QgXCJzcmMvKiovKi50ZXN0LnRzXCIiCiAgfSwKICAiZmlsZXMiOiBbCiAgICAibGliIiwKICAgICJjb3JkaXMucGF0Y2gueW1sIiwKICAgICJSRUFETUUubWQiLAogICAgIlRISVJELVBBUlRZLU5PVElDRVMubWQiLAogICAgIkxJQ0VOU0UiLAogICAgIk5PVElDRSIKICBdLAogICJsaWNlbnNlIjogIk1JVCBBTkQgQlNELTMtQ2xhdXNlIgp9Cg==",
+          "sha256": "sha256:23ae46fb8071de7bc237d1cd7467b72bb2da77ca48309c99b57978c0c72095ac"
+        },
+        "files": [
+          "EAC-DERIVATION.json",
+          "LICENSE",
+          "NOTICE",
+          "README.md",
+          "THIRD-PARTY-NOTICES.md",
+          "UPSTREAM-PACKAGE.json",
+          "cordis.patch.yml",
+          "lib/client.js",
+          "lib/index.js",
+          "package.json"
+        ]
+      },
+      "recipePath": "recipes/dsh-eac-skin-trading-1.1.1-eac.dc22280.2/build-recipe.json",
+      "releaseId": "release-9c3a08857f265d8e0085676b35cb372dd68c2569470ba426253f261d0ad6c3e1"
+    },
+    {
+      "filename": "dsh-compact-1.0.0.tgz",
+      "path": "artifacts/dsh-compact-1.0.0.tgz",
+      "packageName": "dsh-compact",
+      "version": "1.0.0",
+      "bytes": 16190,
+      "sha256": "sha256:671611232dcf089a8a6b21939baf8212bfbee258b13d11792104c7887cd0a5c7",
+      "metadataDigest": "sha256:af6e86ba5f1f65a0c9a5fd74623e408d3581ce8ec16bf51a7d4def686c6d0a1c",
+      "kind": "built-repack",
+      "commit": "dc22280beb9d0a6338d1e02d99f5e5346f72f4f0",
+      "sourcePath": "dsh-desktop/assets/plugins/dsh-compact",
+      "installCandidate": false,
+      "runtimeVerification": "not-tested",
+      "metadata": {
+        "kind": "official-bundle",
+        "packageJson": {
+          "contentBase64": "ewogICJuYW1lIjogImRzaC1jb21wYWN0IiwKICAidmVyc2lvbiI6ICIxLjAuMCIsCiAgImRlc2NyaXB0aW9uIjogIlJlcXVlc3QtcGF0aCBjb250ZXh0IGNvbXBhY3Rpb24gd2l0aCBib3VuZGVkIG92ZXJmbG93IHJlY292ZXJ5IGZvciBEZWVwU2VlayBIYXJuZXNzIiwKICAidHlwZSI6ICJtb2R1bGUiLAogICJtYWluIjogImxpYi9pbmRleC5qcyIsCiAgImV4cG9ydHMiOiB7CiAgICAiLiI6ICIuL2xpYi9pbmRleC5qcyIsCiAgICAiLi9hZ2VudCI6ICIuL2xpYi9hZ2VudC5qcyIsCiAgICAiLi9lbmdpbmUiOiAiLi9saWIvZW5naW5lLmpzIiwKICAgICIuL2NsaWVudCI6ICIuL2xpYi9jbGllbnQuanMiLAogICAgIi4vcGFja2FnZS5qc29uIjogIi4vcGFja2FnZS5qc29uIgogIH0sCiAgImZpbGVzIjogWwogICAgImxpYi8iLAogICAgImNvcmRpcy5wYXRjaC55bWwiLAogICAgIkxJQ0VOU0UiCiAgXSwKICAiZHNoIjogewogICAgImNsaWVudCI6IHsKICAgICAgInBsYXRmb3JtIjogIndlYiIsCiAgICAgICJpbmplY3QiOiBbCiAgICAgICAgIkBkZWVwc2Vlay1haS9kc2gtY2xpZW50LXVpLXJlbmRlcmVyIiwKICAgICAgICAiQGRlZXBzZWVrLWFpL2RzaC1jbGllbnQtdWktc2V0dGluZ3MiLAogICAgICAgICJAZGVlcHNlZWstYWkvZHNoLWNsaWVudC11aS1zZXR0aW5ncy1wbHVnaW5zIgogICAgICBdLAogICAgICAiZXh0ZXJuYWwiOiBbCiAgICAgICAgIkBkZWVwc2Vlay1haS9kc2gtY2xpZW50LXVpLXJlbmRlcmVyIgogICAgICBdCiAgICB9LAogICAgImJ1bmRsZSI6IHsKICAgICAgInBhdGNoIjogImNvcmRpcy5wYXRjaC55bWwiCiAgICB9CiAgfSwKICAicGVlckRlcGVuZGVuY2llcyI6IHsKICAgICJAZGVlcHNlZWstYWkvY29yZGlzIjogIl40LjAuMSIsCiAgICAiQGRlZXBzZWVrLWFpL2RzaC1hZ2VudCI6ICJeMC4xLjAtcmMuNyIsCiAgICAiQGRlZXBzZWVrLWFpL2RzaC1jb21tYW5kLWNvbXBhY3QiOiAiXjAuMS4wLXJjLjciLAogICAgIkBkZWVwc2Vlay1haS9kc2gtY29tcGFjdGlvbi1iYXNpYyI6ICJeMC4xLjAtcmMuNyIsCiAgICAiQGRlZXBzZWVrLWFpL2RzaC1jb21wYWN0aW9uLXRvb2wtcmVzdWx0LXBydW5lciI6ICJeMC4xLjAtcmMuNyIsCiAgICAiQGRlZXBzZWVrLWFpL2RzaC1sbG0iOiAiXjAuMS4wLXJjLjciLAogICAgIkBkZWVwc2Vlay1haS9kc2gtc2V0dGluZ3MiOiAiXjAuMS4wLXJjLjciLAogICAgIkBkZWVwc2Vlay1haS9zY2hlbWFzdGVyeSI6ICJeMy4xOC4xIgogIH0sCiAgImxpY2Vuc2UiOiAiTUlUIgp9Cg==",
+          "sha256": "sha256:af6e86ba5f1f65a0c9a5fd74623e408d3581ce8ec16bf51a7d4def686c6d0a1c"
+        },
+        "files": [
+          "LICENSE",
+          "cordis.patch.yml",
+          "dsh-plugin.json",
+          "lib/agent.js",
+          "lib/client.js",
+          "lib/engine.js",
+          "lib/index.js",
+          "lib/policy.js",
+          "lib/settings-compat.js",
+          "package.json"
+        ]
+      },
+      "recipePath": "recipes/dsh-compact-1.0.0/build-recipe.json",
+      "releaseId": "release-d4eb54edc64b9a38d8679e899c39c1ce07d3947f8977a4fc8bb7d2e161e43bf5"
+    },
+    {
+      "filename": "dsh-settings-scroll-fix-2.0.2.tgz",
+      "path": "artifacts/dsh-settings-scroll-fix-2.0.2.tgz",
+      "packageName": "dsh-settings-scroll-fix",
+      "version": "2.0.2",
+      "bytes": 10083,
+      "sha256": "sha256:e160298f49cc9064212fcedb6eea808a436bbaf585f38872dbcc20fb06b23204",
+      "metadataDigest": "sha256:3cb445f76c1571f00ea19e0e844f26838dccb09c0d80b1fd3d91a32f56f8fcb0",
+      "kind": "built-repack",
+      "commit": "dc22280beb9d0a6338d1e02d99f5e5346f72f4f0",
+      "sourcePath": "dsh-desktop/assets/plugins/dsh-settings-scroll-fix",
+      "installCandidate": true,
+      "runtimeVerification": "not-tested",
+      "metadata": {
+        "kind": "official-bundle",
+        "packageJson": {
+          "contentBase64": "ewogICJuYW1lIjogImRzaC1zZXR0aW5ncy1zY3JvbGwtZml4IiwKICAidmVyc2lvbiI6ICIyLjAuMiIsCiAgInByaXZhdGUiOiB0cnVlLAogICJkZXNjcmlwdGlvbiI6ICJEU0ggc2V0dGluZ3Mgc2Nyb2xsaW5nIHJlcGFpciB3aXRob3V0IHZlcnNpb24tc3BlY2lmaWMgQ1NTLW1vZHVsZSBoYXNoZXMuIiwKICAidHlwZSI6ICJtb2R1bGUiLAogICJtYWluIjogIi4vbGliL2luZGV4LmpzIiwKICAiZXhwb3J0cyI6IHsKICAgICIuIjogIi4vbGliL2luZGV4LmpzIiwKICAgICIuL2NsaWVudCI6ICIuL2xpYi9jbGllbnQuanMiLAogICAgIi4vcGFja2FnZS5qc29uIjogIi4vcGFja2FnZS5qc29uIgogIH0sCiAgImZpbGVzIjogWwogICAgImxpYiIsCiAgICAic3JjIiwKICAgICJzY3JpcHRzIiwKICAgICJ0ZXN0cyIsCiAgICAiY29yZGlzLnBhdGNoLnltbCIsCiAgICAiUkVBRE1FLm1kIiwKICAgICJBVURJVC5tZCIsCiAgICAiTElDRU5TRSIKICBdLAogICJzY3JpcHRzIjogewogICAgImJ1aWxkIjogIm5vZGUgc2NyaXB0cy9idWlsZC5tanMiLAogICAgInRlc3QiOiAibm9kZSB0ZXN0cy9zbW9rZS5tanMiLAogICAgImNoZWNrIjogIm5vZGUgLS1jaGVjayBzcmMvaW5kZXguanMgJiYgbm9kZSAtLWNoZWNrIHNyYy9jbGllbnQuanMiCiAgfSwKICAiZHNoIjogewogICAgImJ1bmRsZSI6IHsKICAgICAgInBhdGNoIjogIi4vY29yZGlzLnBhdGNoLnltbCIKICAgIH0sCiAgICAiY2xpZW50IjogewogICAgICAiaW5qZWN0IjogWwogICAgICAgICJAZGVlcHNlZWstYWkvZHNoLWNsaWVudC11aS1zZXR0aW5ncyIKICAgICAgXSwKICAgICAgInBsYXRmb3JtIjogIndlYiIsCiAgICAgICJpbW1lZGlhdGVseSI6IHRydWUKICAgIH0KICB9LAogICJsaWNlbnNlIjogIk1JVCIKfQo=",
+          "sha256": "sha256:3cb445f76c1571f00ea19e0e844f26838dccb09c0d80b1fd3d91a32f56f8fcb0"
+        },
+        "files": [
+          "AUDIT.md",
+          "LICENSE",
+          "README.md",
+          "cordis.patch.yml",
+          "dsh-plugin.json",
+          "lib/client.js",
+          "lib/index.js",
+          "package.json",
+          "scripts/build.mjs",
+          "src/client.js",
+          "src/index.js",
+          "tests/smoke.mjs"
+        ]
+      },
+      "recipePath": "recipes/dsh-settings-scroll-fix-2.0.2/build-recipe.json",
+      "releaseId": "release-aeeb9a1fd5e6052b0be47a6e35251f4ffb6b35ff99383356184f276d1b8bc4cd"
+    },
+    {
+      "filename": "dsh-unified-market-0.4.0.tgz",
+      "path": "artifacts/dsh-unified-market-0.4.0.tgz",
+      "packageName": "dsh-unified-market",
+      "version": "0.4.0",
+      "bytes": 109067,
+      "sha256": "sha256:c4e428d209bfef7dc1fac18466408a035207514a340c0b451f0d635f5b14c6b2",
+      "metadataDigest": "sha256:9f4a472598eac80840f98a55dc5663110c91b58a892a3d72ecb72c06ed42f696",
+      "kind": "built-repack",
+      "commit": "dc22280beb9d0a6338d1e02d99f5e5346f72f4f0",
+      "sourcePath": "dsh-desktop/assets/plugins/dsh-unified-market",
+      "installCandidate": false,
+      "runtimeVerification": "not-tested",
+      "metadata": {
+        "kind": "official-bundle",
+        "packageJson": {
+          "contentBase64": "ewogICJuYW1lIjogImRzaC11bmlmaWVkLW1hcmtldCIsCiAgImRlc2NyaXB0aW9uIjogIue7n+S4gOaPkuS7tuW4guWcuu+8iFVuaWZpZWQgUGx1Z2luIE1hcmtldCBmb3IgRGVlcFNlZWsgSGFybmVzc++8ie+8muiBmuWQiOeyvumAieebruW9le+8iGF3ZXNvbWUtZHNoLXBsdWdpbi5jb23vvIkrIEdpdEh1YiBkc2gtcGx1Z2luIOeUn+aAgSArIG5wbSByZWdpc3RyeSDkuInmupDvvJvlr7kgRFNIIERlc2t0b3DvvIhFQUPvvInnibnljJbvvIh3ZWItZGVza3RvcCBwcm9maWxl77yJ77yb5p2l5rqQ55m95ZCN5Y2VICsg5Yay56qB6aKE5qOAICsg6K+V6KOF6aqM6K+B77yb5ZCO5Y+w6Ieq5Yqo5qOA5rWLICsg5Y+v6YWN572u6Ieq5Yqo5Y2H57qnICsg5biC5Zy66Ieq5pu05paw77yb5LiA6ZSu5qOA5p+lL+WFqOmDqOabtOaWsC/pgJDkuKrmm7TmlrDvvIzmm7TmlrDov5vluqbnqpflj6PvvJt2MC4zLjAg6LW36ZuG5oiQIEVBQyDlip/og73ljIXvvIguZHNocGFja++8ieeuoeeQhu+8iPCfk6Yg5Yqf6IO95YyFIHRhYu+8jOS6pOS6kue8luaOkuWxgu+8ie+8m3YwLjQuMCDotbcgcHJvZmlsZSDphY3nva7mlLnkuLrlj4zovrnlkIzmraXlhpnlhaXvvIhDQVMgKyDljp/lrZDlhpkgKyDlubbpm4blkIjlubbvvIzlpJbpg6jmlLnliqjkuI3lho3ooqvopobnm5bvvIkiLAogICJ2ZXJzaW9uIjogIjAuNC4wIiwKICAibGljZW5zZSI6ICJNSVQiLAogICJ0eXBlIjogIm1vZHVsZSIsCiAgIm1haW4iOiAibGliL2hvc3QuanMiLAogICJleHBvcnRzIjogewogICAgIi4iOiAiLi9saWIvaG9zdC5qcyIsCiAgICAiLi9jbGllbnQiOiAiLi9saWIvY2xpZW50LmpzIiwKICAgICIuL3BhY2thZ2UuanNvbiI6ICIuL3BhY2thZ2UuanNvbiIKICB9LAogICJkc2giOiB7CiAgICAiYnVuZGxlIjogewogICAgICAicGF0Y2giOiAiLi9jb3JkaXMucGF0Y2gueW1sIgogICAgfSwKICAgICJjbGllbnQiOiB7CiAgICAgICJwbGF0Zm9ybSI6ICJ3ZWIiCiAgICB9CiAgfSwKICAia2V5d29yZHMiOiBbCiAgICAiZHNoIiwKICAgICJkZWVwc2Vlay1oYXJuZXNzIiwKICAgICJwbHVnaW4iLAogICAgIm1hcmtldHBsYWNlIiwKICAgICJtYXJrZXQiLAogICAgImRzaC1wbHVnaW4iLAogICAgImVhYyIsCiAgICAiZGVza3RvcCIKICBdLAogICJmaWxlcyI6IFsKICAgICJsaWIvIiwKICAgICJkYXRhLyIsCiAgICAiY29yZGlzLnBhdGNoLnltbCIsCiAgICAiUkVBRE1FLm1kIiwKICAgICJDSEFOR0VMT0cubWQiLAogICAgIkxJQ0VOU0UiCiAgXSwKICAiZW5naW5lcyI6IHsKICAgICJub2RlIjogIj49MTguMTgiCiAgfSwKICAicmVwb3NpdG9yeSI6IHsKICAgICJ0eXBlIjogImdpdCIsCiAgICAidXJsIjogImdpdCtodHRwczovL2dpdGh1Yi5jb20vamluZy1oeS9kc2gtdW5pZmllZC1tYXJrZXQuZ2l0IgogIH0sCiAgImhvbWVwYWdlIjogImh0dHBzOi8vZ2l0aHViLmNvbS9qaW5nLWh5L2RzaC11bmlmaWVkLW1hcmtldCNyZWFkbWUiLAogICJidWdzIjogewogICAgInVybCI6ICJodHRwczovL2dpdGh1Yi5jb20vamluZy1oeS9kc2gtdW5pZmllZC1tYXJrZXQvaXNzdWVzIgogIH0sCiAgInB1Ymxpc2hDb25maWciOiB7CiAgICAiYWNjZXNzIjogInB1YmxpYyIKICB9Cn0=",
+          "sha256": "sha256:9f4a472598eac80840f98a55dc5663110c91b58a892a3d72ecb72c06ed42f696"
+        },
+        "files": [
+          ".gitignore",
+          "CHANGELOG.md",
+          "LICENSE",
+          "README.md",
+          "cordis.patch.yml",
+          "data/catalog-snapshot.json",
+          "data/eac-recommended.json",
+          "data/packs-snapshot.json",
+          "dsh-plugin.json",
+          "lib/allow-builds.mjs",
+          "lib/artifact-keep.mjs",
+          "lib/client.js",
+          "lib/host.js",
+          "lib/plugin-conflict-scan.mjs",
+          "lib/profile-sync.mjs",
+          "package.json"
+        ]
+      },
+      "recipePath": "recipes/dsh-unified-market-0.4.0/build-recipe.json",
+      "releaseId": "release-420d35d06c26c5631da53bf3e0654f8c24959707eecaeffe5e89f9acb9838231"
+    },
+    {
+      "filename": "dsh-eac-desktop-pack-1.0.0.tgz",
+      "path": "artifacts/dsh-eac-desktop-pack-1.0.0.tgz",
+      "packageName": "@dsh-eac/desktop-pack",
+      "version": "1.0.0",
+      "bytes": 250554,
+      "sha256": "sha256:7a328030e4ba8472bc5f53e439bd969f8212f6affe73f339865cc9c95023d187",
+      "metadataDigest": "sha256:87c903fd92865dfdcd92bfea1e2ecfe22996b63c38b58c45fa08df95f212f276",
+      "kind": "author-release",
+      "commit": "dc22280beb9d0a6338d1e02d99f5e5346f72f4f0",
+      "sourcePath": "final-artifacts/official-desktop-pack/dsh-eac-desktop-pack-1.0.0.tgz",
+      "installCandidate": false,
+      "runtimeVerification": "not-tested",
+      "metadata": {
+        "kind": "official-bundle",
+        "packageJson": {
+          "contentBase64": "ewogICJuYW1lIjogIkBkc2gtZWFjL2Rlc2t0b3AtcGFjayIsCiAgInZlcnNpb24iOiAiMS4wLjAiLAogICJkZXNjcmlwdGlvbiI6ICJPZmZpY2lhbCBEU0ggRGVza3RvcCAwLjEuNy1yYy4yIEVBQyBidW5kbGU6IDE0IHBsdWdpbnMgaW4gb25lIGluc3RhbGxhYmxlIHBhY2thZ2UuIiwKICAidHlwZSI6ICJtb2R1bGUiLAogICJtYWluIjogImxpYi9pbmRleC5qcyIsCiAgImZpbGVzIjogWwogICAgImxpYiIsCiAgICAibm9kZV9tb2R1bGVzIiwKICAgICJjb3JkaXMucGF0Y2gueW1sIiwKICAgICJkc2gtcGx1Z2luLmpzb24iLAogICAgIlJFQURNRS5tZCIsCiAgICAiQUNDRVBUQU5DRS5tZCIsCiAgICAiREVHUkFEQVRJT05TLm1kIiwKICAgICJMSUNFTlNFIgogIF0sCiAgImVuZ2luZXMiOiB7CiAgICAibm9kZSI6ICI+PTI0IiwKICAgICJkc2giOiAiMC4xLjctcmMuMiIKICB9LAogICJkZXBlbmRlbmNpZXMiOiB7CiAgICAiQGRzaC1lYWMvdGVybWluYWwiOiAiZmlsZTpub2RlX21vZHVsZXMvQGRzaC1lYWMvdGVybWluYWwiLAogICAgImRzaC12aWV3cG9ydC1sb2NrIjogImZpbGU6bm9kZV9tb2R1bGVzL2RzaC12aWV3cG9ydC1sb2NrIiwKICAgICJkc2gtZWFjLWxvY2FsZS1jb21wYXQiOiAiZmlsZTpub2RlX21vZHVsZXMvZHNoLWVhYy1sb2NhbGUtY29tcGF0IiwKICAgICJkc2gtY29tcGFjdCI6ICJmaWxlOm5vZGVfbW9kdWxlcy9kc2gtY29tcGFjdCIsCiAgICAiZHNoLWVhYy1jb3JlLWJyaWRnZSI6ICJmaWxlOm5vZGVfbW9kdWxlcy9kc2gtZWFjLWNvcmUtYnJpZGdlIiwKICAgICJAZHNoLWVhYy9lYXN5LXNldHVwIjogImZpbGU6bm9kZV9tb2R1bGVzL0Bkc2gtZWFjL2Vhc3ktc2V0dXAiLAogICAgIkBkc2gtZWFjL2ZpbGUtY2hhbmdlcyI6ICJmaWxlOm5vZGVfbW9kdWxlcy9AZHNoLWVhYy9maWxlLWNoYW5nZXMiLAogICAgImRzaC1zZXR0aW5ncy1zY3JvbGwtZml4IjogImZpbGU6bm9kZV9tb2R1bGVzL2RzaC1zZXR0aW5ncy1zY3JvbGwtZml4IiwKICAgICJkc2gtdW5pZmllZC1tYXJrZXQiOiAiZmlsZTpub2RlX21vZHVsZXMvZHNoLXVuaWZpZWQtbWFya2V0IiwKICAgICJAZHNoLWVhYy9wbHVnaW4tbWFuYWdlciI6ICJmaWxlOm5vZGVfbW9kdWxlcy9AZHNoLWVhYy9wbHVnaW4tbWFuYWdlciIsCiAgICAiZHNoLXBsdWdpbi1zaGllbGQiOiAiZmlsZTpub2RlX21vZHVsZXMvZHNoLXBsdWdpbi1zaGllbGQiLAogICAgImRzaC1maWxlLWRyb3AtZWFjIjogImZpbGU6bm9kZV9tb2R1bGVzL2RzaC1maWxlLWRyb3AtZWFjIiwKICAgICJAZHNoLWVhYy9jbGllbnQtZmlsZS1jaGFuZ2VzIjogImZpbGU6bm9kZV9tb2R1bGVzL0Bkc2gtZWFjL2NsaWVudC1maWxlLWNoYW5nZXMiLAogICAgIkBkc2gtZWFjL3VpLXNraW4tbG9hZGVyIjogImZpbGU6bm9kZV9tb2R1bGVzL0Bkc2gtZWFjL3VpLXNraW4tbG9hZGVyIgogIH0sCiAgImJ1bmRsZWREZXBlbmRlbmNpZXMiOiBbCiAgICAiQGRzaC1lYWMvdGVybWluYWwiLAogICAgImRzaC12aWV3cG9ydC1sb2NrIiwKICAgICJkc2gtZWFjLWxvY2FsZS1jb21wYXQiLAogICAgImRzaC1jb21wYWN0IiwKICAgICJkc2gtZWFjLWNvcmUtYnJpZGdlIiwKICAgICJAZHNoLWVhYy9lYXN5LXNldHVwIiwKICAgICJAZHNoLWVhYy9maWxlLWNoYW5nZXMiLAogICAgImRzaC1zZXR0aW5ncy1zY3JvbGwtZml4IiwKICAgICJkc2gtdW5pZmllZC1tYXJrZXQiLAogICAgIkBkc2gtZWFjL3BsdWdpbi1tYW5hZ2VyIiwKICAgICJkc2gtcGx1Z2luLXNoaWVsZCIsCiAgICAiZHNoLWZpbGUtZHJvcC1lYWMiLAogICAgIkBkc2gtZWFjL2NsaWVudC1maWxlLWNoYW5nZXMiLAogICAgIkBkc2gtZWFjL3VpLXNraW4tbG9hZGVyIgogIF0sCiAgImRzaCI6IHsKICAgICJtYW5pZmVzdFZlcnNpb24iOiAxLAogICAgImJ1bmRsZSI6IHsKICAgICAgInBhdGNoIjogIi4vY29yZGlzLnBhdGNoLnltbCIKICAgIH0sCiAgICAiY2xpZW50IjogewogICAgICAicGxhdGZvcm0iOiAibm9uZSIKICAgIH0KICB9LAogICJsaWNlbnNlIjogIk1JVCIKfQo=",
+          "sha256": "sha256:87c903fd92865dfdcd92bfea1e2ecfe22996b63c38b58c45fa08df95f212f276"
+        },
+        "files": [
+          "ACCEPTANCE.md",
+          "DEGRADATIONS.md",
+          "LICENSE",
+          "README.md",
+          "cordis.patch.yml",
+          "dsh-plugin.json",
+          "lib/index.js",
+          "node_modules/@dsh-eac/client-file-changes/dsh-plugin.json",
+          "node_modules/@dsh-eac/client-file-changes/lib/client.js",
+          "node_modules/@dsh-eac/client-file-changes/lib/index.js",
+          "node_modules/@dsh-eac/client-file-changes/package.json",
+          "node_modules/@dsh-eac/easy-setup/dsh-plugin.json",
+          "node_modules/@dsh-eac/easy-setup/lib/client.js",
+          "node_modules/@dsh-eac/easy-setup/lib/index.js",
+          "node_modules/@dsh-eac/easy-setup/lib/logic.js",
+          "node_modules/@dsh-eac/easy-setup/package.json",
+          "node_modules/@dsh-eac/file-changes/dsh-plugin.json",
+          "node_modules/@dsh-eac/file-changes/lib/index.js",
+          "node_modules/@dsh-eac/file-changes/package.json",
+          "node_modules/@dsh-eac/plugin-manager/dsh-plugin.json",
+          "node_modules/@dsh-eac/plugin-manager/lib/client.js",
+          "node_modules/@dsh-eac/plugin-manager/lib/index.js",
+          "node_modules/@dsh-eac/plugin-manager/package.json",
+          "node_modules/@dsh-eac/terminal/dsh-plugin.json",
+          "node_modules/@dsh-eac/terminal/lib/client.js",
+          "node_modules/@dsh-eac/terminal/lib/index.js",
+          "node_modules/@dsh-eac/terminal/package.json",
+          "node_modules/@dsh-eac/ui-skin-loader/LICENSE",
+          "node_modules/@dsh-eac/ui-skin-loader/NOTICE",
+          "node_modules/@dsh-eac/ui-skin-loader/README.md",
+          "node_modules/@dsh-eac/ui-skin-loader/THIRD-PARTY-NOTICES.md",
+          "node_modules/@dsh-eac/ui-skin-loader/cordis.patch.yml",
+          "node_modules/@dsh-eac/ui-skin-loader/dsh-plugin.json",
+          "node_modules/@dsh-eac/ui-skin-loader/lib/client.js",
+          "node_modules/@dsh-eac/ui-skin-loader/lib/index.js",
+          "node_modules/@dsh-eac/ui-skin-loader/package.json",
+          "node_modules/dsh-compact/LICENSE",
+          "node_modules/dsh-compact/cordis.patch.yml",
+          "node_modules/dsh-compact/dsh-plugin.json",
+          "node_modules/dsh-compact/lib/agent.js",
+          "node_modules/dsh-compact/lib/client.js",
+          "node_modules/dsh-compact/lib/engine.js",
+          "node_modules/dsh-compact/lib/index.js",
+          "node_modules/dsh-compact/lib/policy.js",
+          "node_modules/dsh-compact/lib/settings-compat.js",
+          "node_modules/dsh-compact/package.json",
+          "node_modules/dsh-eac-core-bridge/dsh-plugin.json",
+          "node_modules/dsh-eac-core-bridge/index.js",
+          "node_modules/dsh-eac-core-bridge/package.json",
+          "node_modules/dsh-eac-locale-compat/dsh-plugin.json",
+          "node_modules/dsh-eac-locale-compat/lib/client.js",
+          "node_modules/dsh-eac-locale-compat/lib/index.js",
+          "node_modules/dsh-eac-locale-compat/package.json",
+          "node_modules/dsh-file-drop-eac/LICENSE",
+          "node_modules/dsh-file-drop-eac/README.md",
+          "node_modules/dsh-file-drop-eac/dsh-plugin.json",
+          "node_modules/dsh-file-drop-eac/lib/client.js",
+          "node_modules/dsh-file-drop-eac/lib/index.js",
+          "node_modules/dsh-file-drop-eac/package.json",
+          "node_modules/dsh-plugin-shield/dsh-plugin.json",
+          "node_modules/dsh-plugin-shield/lib/client.js",
+          "node_modules/dsh-plugin-shield/lib/index.js",
+          "node_modules/dsh-plugin-shield/package.json",
+          "node_modules/dsh-settings-scroll-fix/AUDIT.md",
+          "node_modules/dsh-settings-scroll-fix/LICENSE",
+          "node_modules/dsh-settings-scroll-fix/README.md",
+          "node_modules/dsh-settings-scroll-fix/cordis.patch.yml",
+          "node_modules/dsh-settings-scroll-fix/dsh-plugin.json",
+          "node_modules/dsh-settings-scroll-fix/lib/client.js",
+          "node_modules/dsh-settings-scroll-fix/lib/index.js",
+          "node_modules/dsh-settings-scroll-fix/package.json",
+          "node_modules/dsh-settings-scroll-fix/scripts/build.mjs",
+          "node_modules/dsh-settings-scroll-fix/src/client.js",
+          "node_modules/dsh-settings-scroll-fix/src/index.js",
+          "node_modules/dsh-settings-scroll-fix/tests/smoke.mjs",
+          "node_modules/dsh-unified-market/CHANGELOG.md",
+          "node_modules/dsh-unified-market/LICENSE",
+          "node_modules/dsh-unified-market/README.md",
+          "node_modules/dsh-unified-market/cordis.patch.yml",
+          "node_modules/dsh-unified-market/data/catalog-snapshot.json",
+          "node_modules/dsh-unified-market/data/eac-recommended.json",
+          "node_modules/dsh-unified-market/data/packs-snapshot.json",
+          "node_modules/dsh-unified-market/dsh-plugin.json",
+          "node_modules/dsh-unified-market/lib/allow-builds.mjs",
+          "node_modules/dsh-unified-market/lib/artifact-keep.mjs",
+          "node_modules/dsh-unified-market/lib/client.js",
+          "node_modules/dsh-unified-market/lib/host.js",
+          "node_modules/dsh-unified-market/lib/plugin-conflict-scan.mjs",
+          "node_modules/dsh-unified-market/lib/profile-sync.mjs",
+          "node_modules/dsh-unified-market/package.json",
+          "node_modules/dsh-viewport-lock/dsh-plugin.json",
+          "node_modules/dsh-viewport-lock/lib/client.js",
+          "node_modules/dsh-viewport-lock/lib/index.js",
+          "node_modules/dsh-viewport-lock/package.json",
+          "package.json"
+        ]
+      }
+    },
+    {
+      "filename": "dsh-eac-pack-installer-1.0.0.tgz",
+      "path": "artifacts/dsh-eac-pack-installer-1.0.0.tgz",
+      "packageName": "@dsh-eac/pack-installer",
+      "version": "1.0.0",
+      "bytes": 29641,
+      "sha256": "sha256:49c0b05296f91606ba0f2045beb38866c44a2cfc3ad95311040e509b1f15ab4c",
+      "metadataDigest": "sha256:c3477e1cd29070b433051dd916e951949d8d76eb15f6d2f343c076e7bcddb7bb",
+      "kind": "author-release",
+      "commit": "dc22280beb9d0a6338d1e02d99f5e5346f72f4f0",
+      "sourcePath": "handover/dsh-eac-pack-installer-src/dsh-eac-pack-installer-1.0.0.tgz",
+      "installCandidate": false,
+      "runtimeVerification": "not-tested",
+      "metadata": {
+        "kind": "official-bundle",
+        "packageJson": {
+          "contentBase64": "ewogICJuYW1lIjogIkBkc2gtZWFjL3BhY2staW5zdGFsbGVyIiwKICAidmVyc2lvbiI6ICIxLjAuMCIsCiAgInByaXZhdGUiOiB0cnVlLAogICJkZXNjcmlwdGlvbiI6ICJFQUMg5pW05ZCI5YyF5a6J6KOF5Zmo77ya5ZyoIERTSCDorr7nva7pobXmtY/op4ggRUFDL01vam9ib3gg5pW05ZCI5YyF77yM5oyJ5YiG57qn5Yu+6YCJ5bm25LiA6ZSu5a6J6KOF77yI56a757q/5YaF5bWM5b+r54Wn77yJIiwKICAidHlwZSI6ICJtb2R1bGUiLAogICJtYWluIjogImxpYi9pbmRleC5qcyIsCiAgImV4cG9ydHMiOiB7CiAgICAiLiI6IHsKICAgICAgImRlZmF1bHQiOiAiLi9saWIvaW5kZXguanMiCiAgICB9LAogICAgIi4vY2xpZW50IjogewogICAgICAiZGVmYXVsdCI6ICIuL2xpYi9jbGllbnQuanMiCiAgICB9LAogICAgIi4vcGFja2FnZS5qc29uIjogIi4vcGFja2FnZS5qc29uIgogIH0sCiAgImZpbGVzIjogWwogICAgImxpYiIsCiAgICAiY29yZGlzLnBhdGNoLnltbCIsCiAgICAiZHNoLXBsdWdpbi5qc29uIiwKICAgICJSRUFETUUubWQiCiAgXSwKICAibGljZW5zZSI6ICJNSVQiLAogICJlbmdpbmVzIjogewogICAgIm5vZGUiOiAiPj0yNCIsCiAgICAiZHNoIjogIjAuMS43LXJjLjIiCiAgfSwKICAiZHNoIjogewogICAgIm1hbmlmZXN0VmVyc2lvbiI6IDEsCiAgICAiYnVuZGxlIjogewogICAgICAicGF0Y2giOiAiLi9jb3JkaXMucGF0Y2gueW1sIgogICAgfSwKICAgICJjbGllbnQiOiB7CiAgICAgICJwbGF0Zm9ybSI6ICJ3ZWIiLAogICAgICAiaW5qZWN0IjogWwogICAgICAgICJAZGVlcHNlZWstYWkvZHNoLWFwaS1nYXRld2F5IiwKICAgICAgICAiQGRlZXBzZWVrLWFpL2RzaC1jbGllbnQtdWktc2V0dGluZ3MiCiAgICAgIF0sCiAgICAgICJleHRlcm5hbCI6IFtdLAogICAgICAiaW1tZWRpYXRlbHkiOiBmYWxzZQogICAgfQogIH0sCiAgInNjcmlwdHMiOiB7CiAgICAiYnVpbGQiOiAibnBtIHJ1biBidWlsZDpzbmFwc2hvdCAmJiBub2RlIHNjcmlwdHMvYnVpbGQubWpzIiwKICAgICJidWlsZDpzbmFwc2hvdCI6ICJub2RlIHNjcmlwdHMvYnVpbGQtc25hcHNob3QubWpzIiwKICAgICJ0eXBlY2hlY2siOiAidHNjIC0tbm9FbWl0IiwKICAgICJsaW50IjogImVzbGludCBzcmMgc2NyaXB0cyIsCiAgICAidGVzdCI6ICJub2RlIC0tdGVzdCBcInNyYy8qKi8qLnRlc3QudHNcIiIsIAogICAgInNtb2tlIjogIm5vZGUgc2NyaXB0cy9zbW9rZS1kc2gtaG9tZS5tanMiLAogICAgInZlcmlmeSI6ICJucG0gcnVuIHR5cGVjaGVjayAmJiBucG0gcnVuIGxpbnQgJiYgbnBtIHRlc3QiCiAgfSwKICAicGVlckRlcGVuZGVuY2llcyI6IHsKICAgICJAZGVlcHNlZWstYWkvY29yZGlzIjogIn40LjAuNCIsCiAgICAiQGRlZXBzZWVrLWFpL2RzaC10eXBlcnQtcHJvdG9jb2wiOiAiMC4xLjctcmMuMiIsCiAgICAiQGRlZXBzZWVrLWFpL3NjaGVtYXN0ZXJ5IjogIn4zLjE4LjQiLAogICAgInJlYWN0IjogIj49MTgiCiAgfSwKICAicGVlckRlcGVuZGVuY2llc01ldGEiOiB7CiAgICAicmVhY3QiOiB7CiAgICAgICJvcHRpb25hbCI6IHRydWUKICAgIH0KICB9LAogICJkZXZEZXBlbmRlbmNpZXMiOiB7CiAgICAiQGRlZXBzZWVrLWFpL2NvcmRpcyI6ICJeNC4wLjQiLAogICAgIkBkZWVwc2Vlay1haS9kc2gtdHlwZXJ0LXByb3RvY29sIjogIl4wLjEuNy1yYy4yIiwKICAgICJAZGVlcHNlZWstYWkvc2NoZW1hc3RlcnkiOiAiXjMuMTguNCIsCiAgICAiQHR5cGVzL25vZGUiOiAiXjI0LjEwLjEiLAogICAgIkB0eXBlcy9yZWFjdCI6ICJeMTguMy4yNyIsCiAgICAiQHR5cGVzL3JlYWN0LWRvbSI6ICJeMTguMy43IiwKICAgICJlc2J1aWxkIjogIl4wLjI1LjEwIiwKICAgICJlc2xpbnQiOiAiXjkuMzkuMSIsCiAgICAicmVhY3QiOiAiXjE4LjMuMSIsCiAgICAicmVhY3QtZG9tIjogIl4xOC4zLjEiLAogICAgInR5cGVzY3JpcHQiOiAiXjUuOS4zIiwKICAgICJ0eXBlc2NyaXB0LWVzbGludCI6ICJeOC40Ni4yIgogIH0KfQo=",
+          "sha256": "sha256:c3477e1cd29070b433051dd916e951949d8d76eb15f6d2f343c076e7bcddb7bb"
+        },
+        "files": [
+          "LICENSE",
+          "README.md",
+          "cordis.patch.yml",
+          "dsh-plugin.json",
+          "lib/client.js",
+          "lib/index.js",
+          "package.json"
+        ]
+      },
+      "releaseId": "release-a937160e99ff5745faa94c7993fb587d45fa21fc0dc761191f2546d288135d5f"
+    },
+    {
+      "filename": "dsh-eac-ui-skin-manager-0.1.0-preview.1.tgz",
+      "path": "artifacts/dsh-eac-ui-skin-manager-0.1.0-preview.1.tgz",
+      "packageName": "@dsh-eac/ui-skin-manager",
+      "version": "0.1.0-preview.1",
+      "bytes": 15917,
+      "sha256": "sha256:13a4c5dbd1a31c9512f535a9c14f5072f933f284634f6763e569e65614a63378",
+      "metadataDigest": "sha256:2e289cbcbc41b50b9dd7903bfb297277e6e501181717f4b7c1896a0d6d788843",
+      "kind": "author-release",
+      "commit": "dc22280beb9d0a6338d1e02d99f5e5346f72f4f0",
+      "sourcePath": "tauri-shell/artifacts/dsh-eac-ui-skin-manager-0.1.0-preview.1.tgz",
+      "installCandidate": false,
+      "runtimeVerification": "not-tested",
+      "metadata": {
+        "kind": "official-bundle",
+        "packageJson": {
+          "contentBase64": "ewogICJuYW1lIjogIkBkc2gtZWFjL3VpLXNraW4tbWFuYWdlciIsCiAgInZlcnNpb24iOiAiMC4xLjAtcHJldmlldy4xIiwKICAiZGVzY3JpcHRpb24iOiAiRUFDLXNwZWNpZmljIFVJIFNraW4gcGFja2FnZSBjb250cmFjdHMgYW5kIGNvbmZvcm1hbmNlIHByZXZpZXciLAogICJ0eXBlIjogIm1vZHVsZSIsCiAgInByaXZhdGUiOiBmYWxzZSwKICAiZW5naW5lcyI6IHsKICAgICJub2RlIjogIj49MjIuNiIKICB9LAogICJleHBvcnRzIjogewogICAgIi4iOiAiLi9zcmMvaW5kZXgudHMiCiAgfSwKICAiYmluIjogewogICAgImRzaC11aS1za2luLWNvbmZvcm1hbmNlLXByZXZpZXciOiAiLi9iaW4vY29uZm9ybWFuY2UtcHJldmlldy5tanMiCiAgfSwKICAiZmlsZXMiOiBbImJpbiIsICJzY2hlbWFzIiwgInNyYyJdLAogICJzY3JpcHRzIjogewogICAgInRlc3QiOiAibm9kZSAtLWV4cGVyaW1lbnRhbC1zdHJpcC10eXBlcyAtLXRlc3QgLS10ZXN0LWNvbmN1cnJlbmN5PTEgdGVzdC8qLnRlc3QudHMgdGVzdC9ydW50aW1lLyoudGVzdC50cyIsCiAgICAidGVzdDpzY2hlbWEiOiAibm9kZSAtLWV4cGVyaW1lbnRhbC1zdHJpcC10eXBlcyAtLXRlc3QgLS10ZXN0LWNvbmN1cnJlbmN5PTEgdGVzdC9zY2hlbWEudGVzdC50cyIsCiAgICAiY29uZm9ybWFuY2UiOiAibm9kZSAtLWV4cGVyaW1lbnRhbC1zdHJpcC10eXBlcyBiaW4vY29uZm9ybWFuY2UtcHJldmlldy5tanMiLAogICAgImZvcm1hdDpjaGVjayI6ICJub2RlIHRvb2xzL2NoZWNrLWZvcm1hdC5tanMiCiAgfSwKICAibGljZW5zZSI6ICJNSVQiCn0K",
+          "sha256": "sha256:2e289cbcbc41b50b9dd7903bfb297277e6e501181717f4b7c1896a0d6d788843"
+        },
+        "files": [
+          "README.md",
+          "bin/conformance-preview.mjs",
+          "package.json",
+          "schemas/dispose-report.schema.json",
+          "schemas/fault-event.schema.json",
+          "schemas/host-profile.schema.json",
+          "schemas/skin-package.schema.json",
+          "schemas/slot-binding.schema.json",
+          "schemas/slot-contribution.schema.json",
+          "src/bindings/binding-store.ts",
+          "src/catalog/package-catalog.ts",
+          "src/contracts/constants.ts",
+          "src/contracts/models.ts",
+          "src/contracts/validation.ts",
+          "src/diagnostics/diagnostic-store.ts",
+          "src/index.ts",
+          "src/installer/package-installer.ts",
+          "src/lifecycle/effect-ledger.ts",
+          "src/lifecycle/fault-isolation.ts",
+          "src/lifecycle/slot-lifecycle.ts",
+          "src/persistence/atomic-json-store.ts",
+          "src/resolver/package-resolver.ts",
+          "src/runtime/dsh-client/adapter.ts",
+          "src/runtime/error-boundary/runtime-supervisor.ts",
+          "src/runtime/index.ts",
+          "src/runtime/slots/host-slots.ts",
+          "src/runtime/slots/runtime-types.ts",
+          "src/runtime/theme/theme-registry.ts"
+        ]
+      }
+    }
+  ]
+}

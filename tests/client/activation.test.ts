@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import { activateMarketClient, remoteFacade } from '../../packages/market/src/client/activation.ts'
+import type { AuthorDraft, ReadmeApplyPreviewRequest, ReadmeImportRequest, ReadmePreviewView } from '../../packages/market/src/types.ts'
 
 function emptyComponent() {
   return null
@@ -10,11 +11,42 @@ describe('client activation order', () => {
     const calls: unknown[][] = []
     const facade = remoteFacade({
       planCreate: async (...args: unknown[]) => { calls.push(['planCreate', ...args]); return { ok: true, value: 'plan' } },
-      catalogRefresh: async (...args: unknown[]) => { calls.push(['catalogRefresh', ...args]); return { ok: true, value: { current: 'catalog' } } },
+      catalogRefresh: async (...args: unknown[]) => { calls.push(['catalogRefresh', ...args]); return { ok: true, value: { status: 'refreshed', current: 'catalog' } } },
     })
     expect(await facade.createPlan?.({ packId: 'pack', packVersion: '1.0.0', selections: [], attemptUnknown: false })).toBe('plan')
-    expect(await facade.refreshCatalog?.()).toBe('catalog')
+    expect(await facade.refreshCatalog?.()).toEqual({ status: 'refreshed', current: 'catalog' })
     expect(calls[1]).toEqual(['catalogRefresh', {}])
+  })
+
+  it('目录刷新失败保留状态、原因与上次可用目录', async () => {
+    const failure = { status: 'failed', current: { revision: 'last-good' }, reason: '没有可用目录来源' }
+    const facade = remoteFacade({ catalogRefresh: async () => ({ ok: true, value: failure }) })
+    expect(await facade.refreshCatalog?.()).toEqual(failure)
+  })
+
+  it('README两阶段alias保留候选、revision和确认结果，预览不触发应用', async () => {
+    const draft: AuthorDraft = { id: 'test-draft', revision: 'r1', title: '合成草稿', summary: '测试', markdown: '原正文', mediaIds: [], updatedAt: '2026-09-28T00:00:00Z' }
+    const preview: ReadmePreviewView = {
+      previewId: 'test-preview', expiresAt: '2026-09-28T00:15:00Z', before: draft,
+      candidate: { id: draft.id, expectedRevision: draft.revision, title: draft.title, summary: draft.summary, markdown: '候选正文', mediaIds: [] },
+      repositoryUrl: 'https://github.com/example/test', commit: 'a'.repeat(40), importedAt: draft.updatedAt, mediaWarnings: ['合成媒体提示'],
+    }
+    const result = { draft: { ...draft, revision: 'r2', markdown: preview.candidate.markdown }, repositoryUrl: preview.repositoryUrl, commit: preview.commit, importedAt: preview.importedAt, mediaWarnings: preview.mediaWarnings }
+    const read = vi.fn(async (_request: ReadmeImportRequest) => ({ ok: true, value: preview }))
+    const apply = vi.fn(async (_request: ReadmeApplyPreviewRequest) => ({ ok: true, value: result }))
+    const facade = remoteFacade({ authorReadmePreview: read, authorReadmeApplyPreview: apply })
+    const request: ReadmeImportRequest = { repositoryUrl: preview.repositoryUrl, targetDraftId: draft.id, expectedRevision: draft.revision }
+    expect(await facade.previewReadme?.(request)).toEqual(preview)
+    expect(read).toHaveBeenCalledWith(request)
+    expect(apply).not.toHaveBeenCalled()
+    const confirmation: ReadmeApplyPreviewRequest = { previewId: preview.previewId, expectedRevision: draft.revision }
+    expect(await facade.applyReadmePreview?.(confirmation)).toEqual(result)
+    expect(apply).toHaveBeenCalledExactlyOnceWith(confirmation)
+  })
+
+  it('README确认的revision冲突穿过alias后仍是失败', async () => {
+    const facade = remoteFacade({ authorReadmeApplyPreview: async () => ({ ok: false, error: { code: 'draft/revision-conflict', message: '草稿已在另一窗口更新', retryable: false } }) })
+    await expect(facade.applyReadmePreview?.({ previewId: 'test-preview', expectedRevision: 'old' })).rejects.toMatchObject({ code: 'draft/revision-conflict', message: '草稿已在另一窗口更新', retryable: false })
   })
 
   it('preserves stable Remote failure fields while remaining an Error', async () => {

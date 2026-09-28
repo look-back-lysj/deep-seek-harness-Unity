@@ -28,7 +28,6 @@ import type {
   ArtifactPort,
   EventLogPage,
   HostInstallOutcome,
-  HostPort,
   HostReadState,
   PlanBundle,
   ProfileLockPort,
@@ -39,6 +38,9 @@ import type {
   TaskStorePort,
 } from './ports.ts'
 import { verifyPlanBundle } from './planner.ts'
+import { executionOf, hasUncertainWrite, withExecution, type RecoverableHostPort, type CoordinatedManagementRequest, type ManagementRecord } from './execution-state.ts'
+import { decodeJson, encodeJson, type PersistenceFilePort } from '../persistence/files.ts'
+export type { CoordinatedManagementRequest } from './execution-state.ts'
 
 const SUCCESS_ITEM_STATUS: ReadonlySet<TaskItemStatus> = new Set([
   'installed', 'enabled', 'disabled', 'restart-required',
@@ -47,11 +49,15 @@ const ACTIVE_ITEM_STATUS: ReadonlySet<TaskItemStatus> = new Set([
   'pending', 'downloading', 'verifying', 'installing', 'blocked-on-restart',
 ])
 const TERMINAL_TASK_STATUS: ReadonlySet<TaskStatus> = new Set([
-  'completed', 'partial', 'failed', 'cancelled', 'needs-attention', 'unknown',
+  'completed', 'partial', 'failed', 'cancelled',
 ])
 
 export interface TaskManagerDeps {
-  readonly host: HostPort
+  readonly host: RecoverableHostPort
+  readonly coordinationFiles?: PersistenceFilePort
+  /** Host revalidates release withdrawal/hard incompatibility by frozen identity,
+   * independent of presentation revisions. Rejecting never authorizes a write. */
+  readonly validateWrite?: (bundle: PlanBundle, pluginId: string) => Promise<void>
   readonly artifacts: ArtifactPort
   readonly store: TaskStorePort
   readonly locks: ProfileLockPort
@@ -83,27 +89,6 @@ function cloneState(state: TaskState): TaskState {
     events: state.events.map((event) => ({ ...event })),
     ...(state.approval === undefined ? {} : { approval: { ...state.approval, packages: [...state.approval.packages] } }),
     ...(state.resume === undefined ? {} : { resume: { ...state.resume, remainingPluginIds: [...state.resume.remainingPluginIds] } }),
-  }
-}
-
-function mergeNonterminal(current: TaskRecord, incoming: TaskRecord): TaskRecord {
-  const currentItems = new Map(current.task.items.map((item) => [item.pluginId, item]))
-  const items = incoming.task.items.map((item) => {
-    const prior = currentItems.get(item.pluginId)
-    if (prior !== undefined && (prior.status === 'cancelled' || prior.status === 'failed' || prior.status === 'unknown')) return prior
-    return item
-  })
-  const events = [...current.task.events, ...incoming.task.events]
-    .filter((event, index, all) => all.findIndex((candidate) => candidate.sequence === event.sequence) === index)
-    .sort((left, right) => left.sequence - right.sequence)
-  return {
-    ...cloneRecord(incoming),
-    task: { ...cloneState(incoming.task), items, events },
-    idempotency: { ...current.idempotency, ...incoming.idempotency },
-    approvalIdempotency: { ...current.approvalIdempotency, ...incoming.approvalIdempotency },
-    resumeIdempotency: { ...current.resumeIdempotency, ...incoming.resumeIdempotency },
-    cancellationRequested: current.cancellationRequested || incoming.cancellationRequested,
-    nextSequence: Math.max(current.nextSequence, incoming.nextSequence),
   }
 }
 
@@ -153,7 +138,7 @@ function itemResult(item: PlanBundle['plan']['items'][number]): TaskItemResult {
 function makeFacts(bundle: PlanBundle): Record<string, TaskItemFact> {
   return Object.fromEntries(bundle.expected.map((item) => [item.pluginId, {
     installed: item.version !== undefined,
-    active: item.enabled && item.version !== undefined,
+    active: false,
   }]))
 }
 
@@ -194,6 +179,7 @@ function nextActionFor(status: TaskStatus, items: readonly TaskItemResult[]): st
 
 export class InstallTaskManager {
   private readonly queues = new Map<string, SerialQueue>()
+  private readonly downloads = new Map<string, AbortController>()
   private readonly owner: string
   private readonly now: () => Date
   private readonly maxEventHistory: number
@@ -204,32 +190,64 @@ export class InstallTaskManager {
     this.maxEventHistory = deps.maxEventHistory ?? 200
   }
 
-  /** Mark in-memory-only work left by a previous process for explicit reconciliation. */
+  /** Reconcile receipts under the same execution occupation as every new writer.
+   * Disk version alone never proves which interrupted request produced it.
+   */
   async reconcileInterrupted(environmentId: string): Promise<number> {
-    return this.withLock(environmentId, async () => {
-      const state = await this.deps.host.readState()
+    const handle = await this.deps.locks.acquire('execution:' + environmentId, this.owner)
+    try {
+      await this.reconcileManagement(environmentId)
       let changed = 0
       for (const stored of await this.deps.store.list(environmentId)) {
-        const active = ['queued', 'downloading', 'verifying', 'installing', 'applying', 'checking', 'cancelling']
-        if (stored.task.status === 'awaiting-resume') {
-          await this.prepareResumeLocked(stored)
-          continue
+        await this.flushEvents(stored)
+        if (isTerminal(stored.task.status) && !hasUncertainWrite(stored)) continue
+        let record = cloneRecord(stored)
+        let state = await this.deps.host.readState()
+        if (!this.stateStable(state) || state.inventory.environmentId !== environmentId) { await this.pause(record, '恢复时无法证明旧写入停止且库存完整', true); changed++; continue }
+        const wasUncertain = hasUncertainWrite(record)
+        let unresolved = false
+        let accounted = false
+        for (const attempt of record.attempts) {
+          const fact = executionOf(record)?.attempts[attempt.id]
+          if (fact?.stage === 'prepared' || fact?.stage === 'verified' || attempt.phase === 'approved' || attempt.phase === 'awaiting-approval') continue
+          if (!wasUncertain && attempt.phase === 'finished') continue
+          const savedOutcome = fact?.outcome
+          const outcome = savedOutcome !== undefined && savedOutcome.kind !== 'unknown' && !(savedOutcome.kind === 'failed' && savedOutcome.unknownSharedImpact)
+            ? savedOutcome : await this.deps.host.reconcileInstall?.(attempt.requestId)
+          if (outcome === undefined || outcome.kind === 'unknown' || (outcome.kind === 'failed' && outcome.unknownSharedImpact)) { unresolved = true; continue }
+          state = await this.deps.host.readState()
+          if (!this.stateStable(state)) { unresolved = true; continue }
+          const index = record.task.items.findIndex(item => item.pluginId === attempt.pluginId)
+          record = this.applyOutcome(record, index, attempt, outcome, state.inventory)
+          if (record.task.items[index]?.status === 'unknown') { unresolved = true; continue }
+          const target = record.task.items[index]
+          const observed = target === undefined ? undefined : packageItem(state.inventory, target.packageName)
+          record = withExecution(record, { attempts: { ...executionOf(record)?.attempts,
+            [attempt.id]: { stage: 'verified', sessionRevision: fact?.sessionRevision ?? '', outcome } },
+            restartBarriers: { ...executionOf(record)?.restartBarriers,
+              ...(outcome.kind === 'applied' && outcome.restartRequired ? { [attempt.pluginId]: fact?.sessionRevision ?? state.sessionRevision } : {}) },
+            observed: { ...executionOf(record)?.observed, ...(observed === undefined ? {} : { [attempt.pluginId]: observed }) },
+          })
+          accounted = true
         }
-        if (!active.includes(stored.task.status)) continue
-        let next = cloneRecord(stored)
-        if (!state.activity.stable || state.activity.unknownSharedImpact) {
-          next = await this.appendEvent(next, 'needs-attention', state.activity.reason ?? '恢复时无法证明旧包管理进程已停止', 'error')
-          next = { ...next, task: { ...cloneState(next.task), status: 'needs-attention', nextAction: nextActionFor('needs-attention', next.task.items) } }
-        } else {
-          next = await this.appendEvent(next, 'interrupted', '检测到上次进程退出；磁盘状态需核对后才能继续', 'warning')
-          next = { ...next, task: { ...cloneState(next.task), status: 'interrupted', nextAction: 'reconcile-before-retrying' } }
+        // Legacy unknown items without identifiable requests cannot be turned into success.
+        if (wasUncertain && record.attempts.length === 0 && (record.activeRequestId !== undefined
+          || record.task.items.some(item => item.status === 'unknown' || item.status === 'installing'))) unresolved = true
+        if (unresolved) { await this.pause(record, '缺少旧请求的可靠回执；状态待核对且禁止重放', true); changed++; continue }
+        record = withExecution(this.clearActiveRequest(record), { writeUncertain: false })
+        record = this.refreshFacts(record, state)
+        if (record.cancellationRequested) record = this.finalize(this.cancelPending(record))
+        else if (record.task.status !== 'awaiting-approval') {
+          const finalized = this.finalize(record)
+          record = isTerminal(finalized.task.status) ? finalized : { ...record,
+            task: { ...cloneState(record.task), status: 'interrupted', nextAction: 'reconcile-before-retrying' } }
         }
-        next = await this.save(next)
-        changed += 1
-        if (next.task.status === 'interrupted') await this.prepareResumeLocked(next)
+        record = await this.save(await this.appendEvent(record, record.task.status, accounted ? '已用旧回执和当前库存结算；未重放安装' : '已核对旧写入停止；剩余步骤等待明确确认', 'info'))
+        if (!isTerminal(record.task.status) && record.task.status !== 'awaiting-approval') await this.prepareResumeLocked(record)
+        changed++
       }
       return changed
-    })
+    } finally { await handle.release() }
   }
 
   private queue(environmentId: string): SerialQueue {
@@ -250,55 +268,62 @@ export class InstallTaskManager {
   private async withLockFromTask<T>(taskId: string, operation: (record: TaskRecord) => Promise<T>): Promise<T> {
     const record = await this.deps.store.get(taskId)
     if (record === undefined) throw new MarketCoreError('task/not-found', '任务不存在', { nextAction: 'refresh-tasks' })
-    return this.withLock(record.task.environmentId, () => operation(record))
+    return this.withLock(record.task.environmentId, async () => {
+      const current = await this.deps.store.get(taskId)
+      if (current === undefined) throw new MarketCoreError('task/not-found', '任务不存在')
+      return operation(current)
+    })
   }
 
+  // Events are committed with the authoritative summary first. The JSONL log is
+  // a repairable projection; an event append can never authorize an uncommitted write.
   private async appendEvent(record: TaskRecord, phase: TaskStatus, message: string, level: TaskEvent['level'], pluginId?: string): Promise<TaskRecord> {
-    let persisted = await this.deps.store.get(record.task.taskId)
-    if (persisted !== undefined && isTerminal(persisted.task.status) && (!isTerminal(record.task.status) || persisted.nextSequence > record.nextSequence)) {
-      return cloneRecord(persisted)
-    }
-    if (persisted !== undefined && !isTerminal(persisted.task.status) && (persisted.nextSequence > record.nextSequence || persisted.cancellationRequested)) {
-      record = mergeNonterminal(persisted, record)
-    }
-    const event: TaskEvent = {
-      sequence: record.nextSequence,
-      at: this.now().toISOString(),
-      phase,
-      message,
-      level,
-      ...(pluginId === undefined ? {} : { pluginId }),
-    }
-    if (this.deps.events !== undefined) await this.deps.events.append(record.task.taskId, event)
-    const task: TaskState = {
-      ...cloneState(record.task),
-      events: [...record.task.events, event].slice(-this.maxEventHistory),
-      updatedAt: event.at,
-    }
-    return { ...cloneRecord(record), task, nextSequence: record.nextSequence + 1 }
+    const event: TaskEvent = { sequence: record.nextSequence, at: this.now().toISOString(), phase, message, level,
+      ...(pluginId === undefined ? {} : { pluginId }) }
+    return { ...cloneRecord(record), task: { ...cloneState(record.task),
+      events: [...record.task.events, event].slice(-this.maxEventHistory), updatedAt: event.at }, nextSequence: record.nextSequence + 1 }
   }
 
-  private async save(record: TaskRecord): Promise<TaskRecord> {
-    const current = await this.deps.store.get(record.task.taskId)
-    if (current !== undefined && isTerminal(current.task.status) && (!isTerminal(record.task.status) || current.nextSequence > record.nextSequence)) {
-      return cloneRecord(current)
+  private async save(record: TaskRecord, cancellationOnly = false): Promise<TaskRecord> {
+    const handle = await this.deps.locks.acquire('record:' + record.task.taskId, this.owner)
+    try {
+      const current = await this.deps.store.get(record.task.taskId)
+      if (current !== undefined && isTerminal(current.task.status)) return cloneRecord(current)
+      if (current !== undefined && cancellationOnly) record = {
+        ...cloneRecord(current), cancellationRequested: true, idempotency: { ...current.idempotency, ...record.idempotency },
+        task: { ...cloneState(current.task), status: 'cancelling', nextAction: 'waiting-for-cancellation-result', events: record.task.events },
+      }
+      const identity = (event: TaskEvent): string => canonicalJson({ ...event, sequence: 0 })
+      const seen = new Set(current?.task.events.map(identity) ?? [])
+      let sequence = current?.nextSequence ?? 0
+      const events = [...current?.task.events ?? [], ...record.task.events.filter(event => !seen.has(identity(event))).map(event => ({ ...event, sequence: sequence++ }))]
+      const next: TaskRecord = { ...cloneRecord(record),
+        cancellationRequested: record.cancellationRequested || current?.cancellationRequested === true,
+        idempotency: { ...current?.idempotency, ...record.idempotency },
+        task: { ...cloneState(record.task), events: events.slice(-this.maxEventHistory) },
+        nextSequence: sequence,
+      }
+      await this.deps.store.put(next)
+      await this.flushEvents(next)
+      return next
+    } finally { await handle.release() }
+  }
+
+  private async flushEvents(record: TaskRecord): Promise<void> {
+    if (this.deps.events === undefined) return
+    const page = await this.deps.events.read(record.task.taskId, -1, Number.MAX_SAFE_INTEGER)
+    for (const event of record.task.events) {
+      if (event.sequence >= page.nextSequence) await this.deps.events.append(record.task.taskId, event)
     }
-    const next = current === undefined || isTerminal(current.task.status)
-      ? cloneRecord(record)
-      : mergeNonterminal(current, record)
-    await this.deps.store.put(next)
-    return next
   }
 
   async start(bundle: PlanBundle, request: TaskStartRequest, baseline: HostReadState): Promise<TaskStartOutcome> {
+    if (request.confirmed !== true || !request.idempotencyKey) throw new MarketCoreError('plan/not-confirmed', '缺少明确确认或幂等键')
     if (!await verifyPlanBundle(bundle)) {
       throw new MarketCoreError('plan/digest-mismatch', '计划摘要与内容不一致', { nextAction: 'create-a-new-plan' })
     }
     if (request.planId !== bundle.plan.planId || request.planDigest !== bundle.plan.planDigest) {
       throw new MarketCoreError('plan/confirmation-mismatch', '确认的计划与 Host 保存的计划不一致', { nextAction: 'review-plan' })
-    }
-    if (Date.parse(bundle.plan.expiresAt) <= this.now().getTime()) {
-      throw new MarketCoreError('plan/stale', '计划已过期，需要重新核对清单', { retryable: true, nextAction: 'create-a-new-plan' })
     }
     return this.withLock(bundle.plan.environmentId, async () => {
       const existing = await this.deps.store.getByPlan(bundle.plan.environmentId, bundle.plan.planId)
@@ -312,6 +337,31 @@ export class InstallTaskManager {
         }
         return { task: cloneState(existing.task), created: false }
       }
+      if (Date.parse(bundle.plan.expiresAt) <= this.now().getTime()) {
+        throw new MarketCoreError('plan/stale', '计划已过期，需要重新核对清单', { retryable: true, nextAction: 'create-a-new-plan' })
+      }
+      const intentDigest = await this.intentDigest(bundle)
+      const records = await this.deps.store.list(bundle.plan.environmentId)
+      for (const prior of records) {
+        const same = (executionOf(prior)?.intentDigest || await this.intentDigest(prior.bundle)) === intentDigest
+        if (prior.idempotency[request.idempotencyKey] === 'start') {
+          if (!same) throw new MarketCoreError('task/idempotency-conflict', '幂等键已用于不同安装意图')
+          return { task: cloneState(prior.task), created: false }
+        }
+        const waitingForWriter = hasUncertainWrite(prior) || !['needs-attention', 'unknown'].includes(prior.task.status)
+        if (same && !isTerminal(prior.task.status) && waitingForWriter) return { task: cloneState(prior.task), created: false }
+      }
+      await this.assertNoUncertainWriter(bundle.plan.environmentId)
+      if (request.retryOfTaskId !== undefined) {
+        const prior = await this.deps.store.get(request.retryOfTaskId)
+        if (prior === undefined || prior.task.environmentId !== bundle.plan.environmentId
+          || !['failed', 'partial', 'cancelled'].includes(prior.task.status) || hasUncertainWrite(prior)
+          || !prior.task.items.some(item => bundle.plan.items.some(target => target.packageName === item.packageName))) {
+          throw new MarketCoreError('task/invalid-retry', '只允许关联本环境中结果已核定的失败、部分完成或取消任务')
+        }
+      }
+      const active = records.find(prior => !isTerminal(prior.task.status) && !['needs-attention', 'unknown'].includes(prior.task.status))
+      if (active !== undefined) throw new MarketCoreError('task/environment-busy', '环境已有活动任务：' + active.task.taskId)
       const now = this.now()
       const taskId = `task-${(await sha256Hex(`${bundle.plan.environmentId}:${bundle.plan.planId}`)).slice(0, 32)}`
       const state: TaskState = {
@@ -320,6 +370,7 @@ export class InstallTaskManager {
         planDigest: bundle.plan.planDigest,
         environmentId: bundle.plan.environmentId,
         status: 'queued',
+        ...(request.retryOfTaskId === undefined ? {} : { retryOfTaskId: request.retryOfTaskId }),
         createdAt: now.toISOString(),
         updatedAt: now.toISOString(),
         items: bundle.plan.items.map(itemResult),
@@ -340,11 +391,126 @@ export class InstallTaskManager {
         cancellationRequested: false,
         eventLogTruncated: false,
       }
-      const withEvent = await this.appendEvent(record, 'queued', '任务已持久化，等待执行', 'info')
+      const withEvent = await this.appendEvent(withExecution(record, { intentDigest, sessionRevision: baseline.sessionRevision }), 'queued', '任务已持久化，等待执行', 'info')
       await this.save(withEvent)
       void this.queue(bundle.plan.environmentId).enqueue(() => this.runTaskLockedId(taskId))
       return { task: cloneState(withEvent.task), created: true }
     })
+  }
+
+  private async intentDigest(bundle: PlanBundle): Promise<string> {
+    return sha256Hex(canonicalJson({ environmentId: bundle.plan.environmentId, host: bundle.plan.hostFingerprint,
+      items: bundle.plan.items.map(item => ({ packageName: item.packageName, version: item.targetVersion,
+        digest: item.targetDigest, enabled: item.requestedEnabled, verification: item.verification,
+        blocked: item.action === 'blocked' })).sort((a, b) => a.packageName.localeCompare(b.packageName)),
+      dependencies: [...bundle.dependencies].sort((a, b) => canonicalJson(a).localeCompare(canonicalJson(b))), deliveries: [...bundle.deliveries ?? []].sort((a, b) => a.pluginId.localeCompare(b.pluginId)),
+    }))
+  }
+
+  private async managementRecords(): Promise<readonly { path: string; record: ManagementRecord }[]> {
+    const files = this.deps.coordinationFiles
+    if (files === undefined) return []
+    const result: { path: string; record: ManagementRecord }[] = []
+    for (const path of await files.list('management/')) {
+      if (!path.endsWith('.json')) continue
+      const bytes = await files.read(path)
+      if (bytes === undefined) throw new MarketCoreError('management/missing', '管理记录在读取时消失')
+      const record = decodeJson(bytes) as ManagementRecord
+      if (record.schemaVersion !== 1 || !record.request?.environmentId || !['dispatched', 'settled', 'unknown'].includes(record.stage))
+        throw new MarketCoreError('management/corrupt', '管理记录损坏，需核对后才可继续')
+      result.push({ path, record })
+    }
+    return result
+  }
+
+  private async assertNoUncertainWriter(environmentId: string, exceptTask?: string, exceptManagement?: string): Promise<void> {
+    const unresolved = (await this.deps.store.list(environmentId)).find(record => record.task.taskId !== exceptTask && hasUncertainWrite(record))
+    if (unresolved !== undefined) throw new MarketCoreError('task/write-unresolved', '旧任务写入尚未核对：' + unresolved.task.taskId)
+    const management = (await this.managementRecords()).find(({ path, record }) => path !== exceptManagement && record.request.environmentId === environmentId && record.stage !== 'settled')
+    if (management !== undefined) throw new MarketCoreError('management/write-unresolved', '旧管理操作的结果尚未核对')
+  }
+
+  private managementVerified(record: ManagementRecord, state: HostReadState, receipt: HostInstallOutcome): boolean {
+    if (!this.stateStable(state) || state.inventory.environmentId !== record.request.environmentId
+      || receipt.kind === 'unknown' || receipt.kind === 'awaiting-approval'
+      || (receipt.kind === 'failed' && receipt.unknownSharedImpact)) return false
+    const target = packageItem(state.inventory, record.request.packageName)
+    const desired = record.request.action === 'remove' ? target?.installed !== true
+      : target !== undefined && target.version === record.request.expectedVersion
+        && target.bundleEnabled === (record.request.action === 'enable')
+        && (record.before === undefined || target.installed === record.before.installed)
+    if (receipt.kind === 'applied') return desired
+    const before = record.before
+    const unchanged = before !== undefined && target !== undefined && before.installed === target.installed
+      && before.version === target.version && before.bundleEnabled === target.bundleEnabled && before.source === target.source
+    return unchanged || (receipt.changed && desired)
+  }
+
+  /** A saved real receipt can be rechecked after an inventory outage. A missing
+   * or unknown receipt never grants permission to run the management callback again. */
+  private async reconcileManagement(environmentId: string): Promise<void> {
+    const files = this.deps.coordinationFiles
+    if (files === undefined) return
+    for (const { path, record } of await this.managementRecords()) {
+      if (record.request.environmentId !== environmentId || record.stage === 'settled') continue
+      const receipt = record.receipt ?? record.outcome
+      if (receipt === undefined) continue
+      const state = await this.deps.host.readState()
+      if (this.managementVerified(record, state, receipt)) await files.writeAtomic(path, encodeJson({ ...record, stage: 'settled', outcome: receipt }))
+    }
+  }
+
+  /** Host supplies the single confirmed official action. Every caller shares the
+   * same execution lock and persistent unknown-write barrier with install tasks.
+   * Risk/impact confirmation is the Host's responsibility; this method still
+   * verifies object protection, expectedVersion, idempotency and post-write facts.
+   */
+  async manage(request: CoordinatedManagementRequest, write: () => Promise<HostInstallOutcome>): Promise<HostInstallOutcome> {
+    const files = this.deps.coordinationFiles
+    if (files === undefined) throw new MarketCoreError('management/persistence-unavailable', '管理写入需要持久去重记录')
+    if (!request.idempotencyKey || !request.expectedVersion || !['enable', 'disable', 'remove'].includes(request.action))
+      throw new MarketCoreError('management/invalid-request', '管理请求缺少目标版本、动作或幂等键')
+    const path = 'management/' + await sha256Hex(request.environmentId + ':' + request.idempotencyKey) + '.json'
+    const fingerprint = await sha256Hex(canonicalJson(request))
+    const handle = await this.deps.locks.acquire('execution:' + request.environmentId, this.owner)
+    try {
+      const bytes = await files.read(path)
+      if (bytes !== undefined) {
+        const prior = decodeJson(bytes) as ManagementRecord
+        if (prior.fingerprint !== fingerprint) throw new MarketCoreError('task/idempotency-conflict', '管理幂等键已用于其他内容')
+        if (prior.stage === 'settled' && prior.outcome !== undefined) return prior.outcome
+        throw new MarketCoreError('management/write-unresolved', '同一操作已有未知或执行中的回执，禁止重放')
+      }
+      await this.assertNoUncertainWriter(request.environmentId)
+      const active = (await this.deps.store.list(request.environmentId)).find(record => !isTerminal(record.task.status) && !['needs-attention', 'unknown'].includes(record.task.status))
+      if (active !== undefined) throw new MarketCoreError('task/environment-busy', '安装任务仍占用当前环境：' + active.task.taskId)
+      const before = await this.deps.host.readState()
+      if (!this.stateStable(before) || before.inventory.environmentId !== request.environmentId) throw new MarketCoreError('management/state-unknown', '库存或活动写入状态无法核实')
+      const item = packageItem(before.inventory, request.packageName)
+      if (request.packageName === '@dsh-eac/market' || item === undefined || item.readOnlyReason !== undefined)
+        throw new MarketCoreError('management/protected-target', '目标不存在、受保护或需使用官方管理入口')
+      if (item.version !== request.expectedVersion) throw new MarketCoreError('management/version-drift', '目标版本已变化，请重新确认')
+      // Installation-supplied optional bundles legitimately have installed:false.
+      // Their activation is supported; only removal requires profile ownership.
+      if (request.action === 'remove' && (!item.installed || !item.removable)) throw new MarketCoreError('management/not-removable', '官方库存未允许卸载此目标')
+      const dispatched: ManagementRecord = { schemaVersion: 1, request, fingerprint, stage: 'dispatched', before: item }
+      await files.writeAtomic(path, encodeJson(dispatched))
+      let outcome: HostInstallOutcome
+      try { outcome = await write() }
+      catch (error) { outcome = { kind: 'unknown', error: error instanceof Error ? error.message : '管理调用没有可靠回执', permissionChanges: [] } }
+      // Persist the receipt before inventory reads, which can themselves fail.
+      const receipt = outcome
+      await files.writeAtomic(path, encodeJson({ ...dispatched, stage: 'unknown', outcome, receipt }))
+      const after = await this.deps.host.readState()
+      const known = this.managementVerified(dispatched, after, receipt)
+      if (!known && outcome.kind !== 'unknown') outcome = { kind: 'unknown', error: '官方回执后状态未核实，禁止重复写入', permissionChanges: outcome.permissionChanges }
+      await files.writeAtomic(path, encodeJson({ ...dispatched, stage: known ? 'settled' : 'unknown', outcome, receipt }))
+      return outcome
+    } finally { await handle.release() }
+  }
+
+  private stateStable(state: HostReadState): boolean {
+    return state.activity.stable && !state.activity.unknownSharedImpact && state.activeRequests.length === 0 && state.inventory.unknownItems.length === 0
   }
 
   async get(taskId: string): Promise<TaskState | undefined> {
@@ -353,8 +519,14 @@ export class InstallTaskManager {
   }
 
   async events(taskId: string, afterSequence = 0, limit = 100): Promise<EventLogPage> {
-    if (this.deps.events !== undefined) return this.deps.events.read(taskId, afterSequence, limit)
     const record = await this.deps.store.get(taskId)
+    if (this.deps.events !== undefined) {
+      const page = await this.deps.events.read(taskId, afterSequence, limit)
+      const events = new Map(page.events.map(event => [event.sequence, event]))
+      for (const event of record?.task.events ?? []) if (event.sequence > afterSequence) events.set(event.sequence, event)
+      return { events: [...events.values()].sort((a, b) => a.sequence - b.sequence).slice(0, limit),
+        nextSequence: Math.max(page.nextSequence, record?.nextSequence ?? 0), truncated: page.truncated || record?.eventLogTruncated === true }
+    }
     return {
       events: record?.task.events.filter((event) => event.sequence > afterSequence).slice(0, limit) ?? [],
       nextSequence: record?.nextSequence ?? 0,
@@ -364,42 +536,31 @@ export class InstallTaskManager {
 
   async cancel(request: TaskCancelRequest): Promise<TaskState> {
     const initial = await this.deps.store.get(request.taskId)
-    if (initial === undefined) throw new MarketCoreError('task/not-found', '任务不存在', { nextAction: 'refresh-tasks' })
+    if (initial === undefined) throw new MarketCoreError('task/not-found', '任务不存在')
     if (isTerminal(initial.task.status)) return cloneState(initial.task)
-    const prior = initial.idempotency[request.idempotencyKey]
-    if (prior !== undefined && prior !== 'cancel') {
-      throw new MarketCoreError('task/idempotency-conflict', '幂等键已用于其他任务操作', { nextAction: 'use-a-new-key' })
-    }
-    // Cancellation must reach the official installer before waiting for the
-    // market writer lock. A late install result cannot overwrite a terminal
-    // cancellation because save/appendEvent re-read the persisted record.
-    const cancellation = prior === undefined && initial.activeRequestId !== undefined
-      ? await this.deps.host.cancel(initial.activeRequestId)
-      : undefined
-    return this.withLock(initial.task.environmentId, async () => {
-      const record = await this.deps.store.get(request.taskId)
-      if (record === undefined) throw new MarketCoreError('task/not-found', '任务不存在', { nextAction: 'refresh-tasks' })
-      if (isTerminal(record.task.status)) return cloneState(record.task)
-      let next = cloneRecord(record)
-      if (prior === undefined) {
-        next = {
-          ...next,
-          cancellationRequested: true,
-          idempotency: { ...next.idempotency, [request.idempotencyKey]: 'cancel' },
-        }
-        next = await this.appendEvent(next, next.task.status, '收到取消申请，等待 Host 确认取消结论', 'warning')
-        if (cancellation !== undefined) {
-          next = await this.appendEvent(next, next.task.status, `取消结论：${cancellation.kind}`, cancellation.kind === 'unknown' ? 'error' : 'warning')
-          if (cancellation.kind === 'cancelled') next = this.applyCancelToActive(next, cancellation.changed ?? false)
-        } else if (next.activeRequestId === undefined) {
-          next = this.applyCancelToActive(next, false)
-        }
-      }
-      if (next.task.items.some((item) => item.status === 'cancelled') || (next.cancellationRequested && next.activeRequestId === undefined)) {
-        next = this.finalize(next)
-      }
-      return cloneState((await this.save(next)).task)
+    const used = initial.idempotency[request.idempotencyKey]
+    if (!request.idempotencyKey || (used !== undefined && used !== 'cancel')) throw new MarketCoreError('task/idempotency-conflict', '取消幂等键无效或已用于其他操作')
+    // Signal immediately; the runner also reloads the durable flag before each write.
+    this.downloads.get(request.taskId)?.abort()
+    const next = await this.withLock(initial.task.environmentId, async () => {
+      const record = (await this.deps.store.get(request.taskId))!
+      if (isTerminal(record.task.status)) return record
+      const prior = record.idempotency[request.idempotencyKey]
+      if (prior !== undefined && prior !== 'cancel') throw new MarketCoreError('task/idempotency-conflict', '幂等键已用于其他操作')
+      let cancelled = { ...cloneRecord(record), cancellationRequested: true,
+        idempotency: { ...record.idempotency, [request.idempotencyKey]: 'cancel' },
+        task: { ...cloneState(record.task), status: 'cancelling' as const, nextAction: 'waiting-for-cancellation-result' } }
+      const saved = await this.save(await this.appendEvent(cancelled, 'cancelling', '已登记取消；正在执行的官方写入仍需等待真实回执', 'warning'), true)
+      return saved
     })
+    if (next.activeRequestId !== undefined) {
+      // A cancellation acknowledgement is not the install receipt. Never settle
+      // or release the execution barrier based on cancel/not-running alone.
+      await this.deps.host.cancel(next.activeRequestId)
+    } else {
+      void this.queue(next.task.environmentId).enqueue(() => this.runTaskLockedId(request.taskId))
+    }
+    return cloneState((await this.deps.store.get(request.taskId))!.task)
   }
   async approveBuilds(request: TaskApprovalRequest): Promise<TaskState> {
     return this.withLockFromTask(request.taskId, async (record) => {
@@ -408,6 +569,7 @@ export class InstallTaskManager {
         if (replay !== request.challengeId) throw new MarketCoreError('task/idempotency-conflict', '幂等键已用于其他批准操作', { nextAction: 'use-a-new-key' })
         return cloneState(record.task)
       }
+      if (record.cancellationRequested || record.task.status !== 'awaiting-approval') throw new MarketCoreError('task/stale-approval', '当前任务不再等待脚本批准')
       const attempt = record.attempts.find((candidate) => candidate.id === request.attemptId && candidate.phase === 'awaiting-approval')
       const challenge = record.task.approval
       if (attempt === undefined || challenge === undefined || challenge.id !== request.challengeId || challenge.attemptId !== request.attemptId) {
@@ -438,50 +600,36 @@ export class InstallTaskManager {
   }
 
   async prepareResume(taskId: string): Promise<TaskState> {
-    return this.withLockFromTask(taskId, (record) => this.prepareResumeLocked(record))
+    const stored = await this.deps.store.get(taskId)
+    if (stored === undefined) throw new MarketCoreError('task/not-found', '任务不存在')
+    if (hasUncertainWrite(stored) || stored.task.status === 'needs-attention') await this.reconcileInterrupted(stored.task.environmentId)
+    return this.withLockFromTask(taskId, record => this.prepareResumeLocked(record))
   }
 
   private async prepareResumeLocked(record: TaskRecord): Promise<TaskState> {
-    const taskId = record.task.taskId
-    if (record.task.status !== 'awaiting-resume' && record.task.status !== 'interrupted') return cloneState(record.task)
+    if (!['awaiting-resume', 'interrupted'].includes(record.task.status)) return cloneState(record.task)
     const state = await this.deps.host.readState()
-    record = this.refreshFacts(record, state.inventory)
-      const remaining = record.task.items.filter((item) => !SUCCESS_ITEM_STATUS.has(item.status) && item.status !== 'cancelled' && item.status !== 'failed')
-      const unresolvedDependency = remaining.some((item) => {
-        const edge = record.bundle.dependencies.find((candidate) => candidate.consumerId === item.pluginId)
-        return edge !== undefined && !this.edgeSatisfied(edge.prerequisiteId, edge.milestone, record)
-      })
-      if (!state.activity.stable || state.activity.unknownSharedImpact || unresolvedDependency) {
-        const warned = await this.appendEvent(record, 'needs-attention', '重启后前置状态或活动写入尚不能证明安全', 'warning')
-        const attention: TaskRecord = {
-          ...warned,
-          task: {
-            ...cloneState(warned.task),
-            status: 'needs-attention',
-            nextAction: nextActionFor('needs-attention', warned.task.items),
-          },
-        }
-        return cloneState((await this.save(attention)).task)
-      }
-      const remainingPluginIds = remaining.map((item) => item.pluginId)
-      const digest = await sha256Hex(canonicalJson({
-        taskId,
-        environmentId: record.task.environmentId,
-        remainingPluginIds: [...remainingPluginIds].sort(),
-        sessionRevision: state.sessionRevision,
-      }))
-      const resume: ResumeChallenge = {
-        id: `resume-${digest.slice(0, 24)}`,
-        digest,
-        remainingPluginIds,
-        createdAt: this.now().toISOString(),
-      }
-      let next: TaskRecord = {
-        ...cloneRecord(record),
-        task: { ...cloneState(record.task), status: 'awaiting-resume', resume, nextAction: 'review-restart-and-resume' },
-      }
-      next = await this.appendEvent(next, 'awaiting-resume', '已核对重启后的剩余清单，等待用户确认继续', 'info')
-      return cloneState((await this.save(next)).task)
+    if (!this.stateStable(state) || hasUncertainWrite(record)) {
+      await this.pause(record, '旧写入停止或库存状态仍未核实', true)
+      return (await this.deps.store.get(record.task.taskId))!.task
+    }
+    record = this.refreshFacts(record, state)
+    const remaining = record.task.items.filter(item => !SUCCESS_ITEM_STATUS.has(item.status) && !['cancelled', 'failed'].includes(item.status))
+    const waiting = record.task.items.some(item => item.status === 'restart-required') || remaining.some(item =>
+      record.bundle.dependencies.some(edge => edge.consumerId === item.pluginId && !this.edgeSatisfied(edge.prerequisiteId, edge.milestone, record)))
+    if (waiting) {
+      record = { ...record, task: this.withoutResume({ ...cloneState(record.task), status: 'awaiting-resume', nextAction: 'review-restart-and-resume' }) }
+      return cloneState((await this.save(record)).task)
+    }
+    const drift = this.findDrift(record, state)
+    if (drift.length > 0) { await this.pause(record, '恢复前状态漂移：' + drift.join(', ')); return (await this.deps.store.get(record.task.taskId))!.task }
+    if (remaining.length === 0) return cloneState((await this.save(this.finalize(record))).task)
+    const remainingPluginIds = remaining.map(item => item.pluginId)
+    const digest = await sha256Hex(canonicalJson({ taskId: record.task.taskId, environmentId: record.task.environmentId,
+      remainingPluginIds: [...remainingPluginIds].sort(), sessionRevision: state.sessionRevision, inventory: state.inventory }))
+    const resume: ResumeChallenge = { id: 'resume-' + digest.slice(0, 24), digest, remainingPluginIds, createdAt: this.now().toISOString() }
+    const next = { ...record, task: { ...cloneState(record.task), status: 'awaiting-resume' as const, resume, nextAction: 'review-restart-and-resume' } }
+    return cloneState((await this.save(await this.appendEvent(next, 'awaiting-resume', '已核对剩余清单，等待用户确认继续', 'info'))).task)
   }
 
   async resume(request: TaskResumeRequest): Promise<TaskState> {
@@ -495,6 +643,9 @@ export class InstallTaskManager {
       if (record.task.status !== 'awaiting-resume' || challenge === undefined || challenge.id !== request.challengeId || challenge.digest !== request.resumeDigest) {
         throw new MarketCoreError('task/stale-resume', '重启挑战已失效或状态已变化', { nextAction: 'reconcile-task' })
       }
+      const refreshed = await this.prepareResumeLocked(record)
+      if (refreshed.resume?.digest !== request.resumeDigest) throw new MarketCoreError('task/stale-resume', '恢复前提已变化，请重新确认')
+      record = await this.deps.store.get(request.taskId) ?? record
       let next: TaskRecord = {
         ...cloneRecord(record),
         resumeIdempotency: { ...record.resumeIdempotency, [request.idempotencyKey]: challenge.id },
@@ -512,7 +663,14 @@ export class InstallTaskManager {
     const initial = await this.deps.store.get(taskId)
     if (initial === undefined || isTerminal(initial.task.status)) return
     try {
-      await this.withLock(initial.task.environmentId, () => this.runTaskLocked(initial))
+      const execution = await this.deps.locks.acquire('execution:' + initial.task.environmentId, this.owner)
+      try {
+        const current = await this.deps.store.get(taskId)
+        if (current !== undefined && !isTerminal(current.task.status)) {
+          await this.assertNoUncertainWriter(current.task.environmentId, taskId)
+          await this.runTaskLocked(current)
+        }
+      } finally { await execution.release() }
     } catch (error) {
       const current = await this.deps.store.get(taskId)
       if (current === undefined || isTerminal(current.task.status)) return
@@ -525,127 +683,150 @@ export class InstallTaskManager {
       await this.save(failed)
     }
   }
+  private async pause(record: TaskRecord, message: string, uncertain = hasUncertainWrite(record)): Promise<void> {
+    record = withExecution(record, { writeUncertain: uncertain })
+    record = await this.appendEvent(record, 'needs-attention', message, 'warning')
+    await this.save({ ...record, task: { ...cloneState(record.task), status: 'needs-attention', nextAction: 'reconcile-before-retrying' } })
+  }
+
   private async runTaskLocked(startRecord: TaskRecord): Promise<void> {
     let record = cloneRecord(startRecord)
+    if (['needs-attention', 'unknown', 'awaiting-approval', 'awaiting-resume'].includes(record.task.status) && !record.cancellationRequested) return
     const hostState = await this.deps.host.readState()
-    if (!hostState.activity.stable || hostState.activity.unknownSharedImpact) {
-      record = await this.appendEvent(record, 'needs-attention', hostState.activity.reason ?? 'Host 无法证明旧写入已停止', 'error')
-      record = { ...record, task: { ...cloneState(record.task), status: 'needs-attention', nextAction: nextActionFor('needs-attention', record.task.items) } }
-      await this.save(record)
-      return
+    if (!this.stateStable(hostState)) {
+      await this.pause(record, hostState.activity.reason ?? 'Host 库存或旧写入状态未知', true); return
     }
-    const drift = this.findDrift(record, hostState.inventory)
-    if (drift.length > 0) {
-      record = await this.appendEvent(record, 'needs-attention', `计划前置状态已变化：${drift.join(', ')}`, 'warning')
-      record = { ...record, task: { ...cloneState(record.task), status: 'needs-attention', nextAction: nextActionFor('needs-attention', record.task.items) } }
-      await this.save(record)
-      return
-    }
-    record = this.refreshFacts(record, hostState.inventory)
-    record = this.applyKeepItems(record, hostState.inventory)
+    if (hasUncertainWrite(record)) { await this.pause(record, '旧尝试尚未核对，不能重放'); return }
+    const drift = this.findDrift(record, hostState)
+    if (drift.length > 0) { await this.pause(record, '计划前置状态已变化：' + drift.join(', ')); return }
+    record = this.refreshFacts(record, hostState)
+    record = await this.save(this.applyKeepItems(record, hostState.inventory))
 
     for (const step of record.bundle.steps) {
-      const itemIndex = record.task.items.findIndex((item) => item.pluginId === step.pluginId)
+      record = await this.deps.store.get(record.task.taskId) ?? record
+      const itemIndex = record.task.items.findIndex(item => item.pluginId === step.pluginId)
       const item = record.task.items[itemIndex]
-      const planItem = record.bundle.plan.items.find((candidate) => candidate.pluginId === step.pluginId)
-      if (item === undefined || planItem === undefined || SUCCESS_ITEM_STATUS.has(item.status) || item.status === 'failed' || item.status === 'cancelled' || item.status === 'blocked-by-dependency') continue
+      const planItem = record.bundle.plan.items.find(candidate => candidate.pluginId === step.pluginId)
+      if (item === undefined || planItem === undefined || SUCCESS_ITEM_STATUS.has(item.status) || ['failed', 'cancelled', 'blocked-by-dependency'].includes(item.status)) continue
+      if (record.cancellationRequested) {
+        record = await this.save(this.updateItem(record, itemIndex, { status: 'cancelled', installOutcome: 'cancelled' })); continue
+      }
+      if (this.deps.host.requiresFrozenDelivery === true && !record.bundle.deliveries?.some(delivery =>
+        delivery.pluginId === step.pluginId && delivery.packageName === step.packageName
+        && delivery.version === item.targetVersion && delivery.artifactDigest === planItem.targetDigest)) {
+        await this.pause(record, '旧计划缺少冻结来源，即使已有缓存或脚本批准也必须重新预检'); return
+      }
       const dependencyBlock = this.dependencyBlock(step.pluginId, record)
       if (dependencyBlock !== undefined) {
         record = this.updateItem(record, itemIndex, { status: dependencyBlock.status, error: dependencyBlock.error, installOutcome: 'failed' })
-        record = await this.appendEvent(record, record.task.status, dependencyBlock.error, 'warning', step.pluginId)
-        continue
+        record = await this.save(await this.appendEvent(record, record.task.status, dependencyBlock.error, 'warning', step.pluginId)); continue
       }
-      if (record.cancellationRequested) {
-        record = this.updateItem(record, itemIndex, { status: 'cancelled', installOutcome: 'cancelled' })
-        continue
+      let attempt = record.attempts.find(candidate => candidate.pluginId === step.pluginId && candidate.phase !== 'finished')
+      if (attempt !== undefined && attempt.phase !== 'approved' && executionOf(record)?.attempts[attempt.id]?.stage !== 'prepared') {
+        await this.pause(record, '安装尝试没有已核定回执，禁止自动重放', true); return
       }
-      const beforeWrite = await this.deps.host.readState()
-      if (!beforeWrite.activity.stable || beforeWrite.activity.unknownSharedImpact) {
-        record = await this.appendEvent(record, 'needs-attention', beforeWrite.activity.reason ?? '写入前复查发现不明共享影响', 'error', step.pluginId)
-        record = { ...record, task: { ...cloneState(record.task), status: 'needs-attention', nextAction: nextActionFor('needs-attention', record.task.items) } }
-        await this.save(record)
-        return
-      }
-      const beforeDrift = this.findDrift(record, beforeWrite.inventory)
-      if (beforeDrift.length > 0) {
-        record = await this.appendEvent(record, 'needs-attention', `写入前状态漂移：${beforeDrift.join(', ')}`, 'warning', step.pluginId)
-        record = { ...record, task: { ...cloneState(record.task), status: 'needs-attention', nextAction: nextActionFor('needs-attention', record.task.items) } }
-        await this.save(record)
-        return
-      }
-
-      let attempt = record.attempts.find((candidate) => candidate.pluginId === step.pluginId && candidate.phase !== 'finished')
       let artifact: ArtifactAcquisition
       if (attempt?.artifact === undefined) {
         record = this.updateItem(record, itemIndex, { status: 'downloading', installOutcome: 'unknown' })
-        record = await this.appendEvent(record, 'downloading', '开始获取并校验精确制品', 'info', step.pluginId)
-        await this.save(record)
+        record = await this.save(await this.appendEvent(record, 'downloading', '开始获取并校验已确认的精确制品', 'info', step.pluginId))
+        const abort = new AbortController()
+        this.downloads.set(record.task.taskId, abort)
         try {
+          if ((await this.deps.store.get(record.task.taskId))?.cancellationRequested) abort.abort()
+          abort.signal.throwIfAborted()
+          const delivery = record.bundle.deliveries?.find(entry => entry.pluginId === step.pluginId)
           artifact = await this.deps.artifacts.acquire({
-            requestId: `${record.task.taskId}:${record.attemptCounter + 1}`,
-            pluginId: step.pluginId,
-            packageName: step.packageName,
-            version: item.targetVersion,
-            artifactDigest: planItem.targetDigest,
-            sourceRef: `catalog:${record.bundle.plan.catalogRevision}:${step.pluginId}`,
-          })
+            requestId: record.task.taskId + ':' + (record.attemptCounter + 1), pluginId: step.pluginId,
+            packageName: step.packageName, version: item.targetVersion, artifactDigest: planItem.targetDigest,
+            sourceRef: 'catalog:' + record.bundle.plan.catalogRevision + ':' + step.pluginId,
+            ...(delivery === undefined ? {} : { delivery }),
+          }, abort.signal)
+          abort.signal.throwIfAborted()
+          if (artifact.packageName !== step.packageName || artifact.pluginId !== step.pluginId || artifact.version !== item.targetVersion || artifact.artifactDigest !== planItem.targetDigest)
+            throw new MarketCoreError('artifact/identity-mismatch', '获取到的制品与确认的身份、版本或摘要不同')
         } catch (error) {
-          const message = error instanceof Error ? error.message : '制品获取失败'
-          record = this.updateItem(record, itemIndex, { status: 'failed', error: message, installOutcome: 'failed' })
-          record = await this.appendEvent(record, 'failed', `制品获取/校验失败：${message}`, 'error', step.pluginId)
+          const cancelled = abort.signal.aborted || (await this.deps.store.get(record.task.taskId))?.cancellationRequested === true
+          record = this.updateItem(record, itemIndex, { status: cancelled ? 'cancelled' : 'failed',
+            error: error instanceof Error ? error.message : '制品获取失败', installOutcome: cancelled ? 'cancelled' : 'failed' })
+          record = await this.save(await this.appendEvent(record, cancelled ? 'cancelling' : 'failed', cancelled ? '下载已取消，未进入官方写入' : '制品获取或校验失败', cancelled ? 'warning' : 'error', step.pluginId))
           continue
-        }
-        const attemptId = `attempt-${record.attemptCounter + 1}`
-        attempt = {
-          id: attemptId,
-          requestId: `${record.task.taskId}:${step.pluginId}:${record.attemptCounter + 1}`,
-          pluginId: step.pluginId,
-          phase: 'installing',
-          artifact,
-        }
-        record = {
-          ...cloneRecord(record),
-          attempts: [...record.attempts, attempt],
-          attemptCounter: record.attemptCounter + 1,
-          activeRequestId: attempt.requestId,
-        }
-        record = this.updateItem(record, itemIndex, { status: 'verifying', installOutcome: 'unknown' })
-        record = await this.appendEvent(record, 'verifying', '摘要、身份和大小已由 ArtifactPort 核验', 'info', step.pluginId)
-        await this.save(record)
+        } finally { this.downloads.delete(record.task.taskId) }
+        const attemptId = 'attempt-' + (record.attemptCounter + 1)
+        attempt = { id: attemptId, requestId: record.task.taskId + ':' + step.pluginId + ':' + (record.attemptCounter + 1),
+          pluginId: step.pluginId, phase: 'installing', artifact }
+        record = { ...record, attempts: [...record.attempts, attempt], attemptCounter: record.attemptCounter + 1 }
       } else {
         artifact = attempt.artifact
-        record = { ...cloneRecord(record), activeRequestId: attempt.requestId }
+        if (attempt.phase === 'approved') {
+          // Approval authorizes a new call after a known ended script-gate receipt.
+          attempt = { ...attempt, requestId: attempt.requestId + ':approved', phase: 'installing' }
+          record = { ...record, attempts: record.attempts.map(candidate => candidate.id === attempt!.id ? attempt! : candidate) }
+        }
       }
-
-      record = this.updateItem(record, itemIndex, { status: 'installing', installOutcome: 'unknown' })
-      record = await this.appendEvent(record, 'installing', '调用 HostPort 安装同一份已核验制品', 'info', step.pluginId)
-      await this.save(record)
-      let outcome: HostInstallOutcome
+      record = withExecution(record, { attempts: { ...executionOf(record)?.attempts,
+        [attempt.id]: { stage: 'prepared', sessionRevision: hostState.sessionRevision } } })
+      record = await this.save(record)
       try {
-        outcome = await this.deps.host.install({
-          requestId: attempt.requestId,
-          artifact,
-          enabled: planItem.requestedEnabled,
-          ...(attempt.approvedBuilds === undefined ? {} : { approvedBuilds: attempt.approvedBuilds }),
-        })
+        await this.deps.validateWrite?.(record.bundle, step.pluginId)
       } catch (error) {
-        outcome = { kind: 'unknown', error: error instanceof Error ? error.message : 'Host install threw', permissionChanges: [] }
-      }
-      const after = await this.deps.host.readState()
-      record = this.applyOutcome(record, itemIndex, attempt, outcome, after.inventory)
-      record = this.clearActiveRequest(cloneRecord(record))
-      record = await this.appendEvent(record, record.task.status, `Host结果：${outcome.kind}`, outcome.kind === 'failed' || outcome.kind === 'unknown' ? 'error' : 'info', step.pluginId)
-      await this.save(record)
-      if (outcome.kind === 'unknown' || (outcome.kind === 'failed' && outcome.unknownSharedImpact === true)) {
-        record = { ...record, task: { ...cloneState(record.task), status: 'needs-attention', nextAction: nextActionFor('needs-attention', record.task.items) } }
-        await this.save(record)
+        const reason = error instanceof Error ? error.message : String(error)
+        const code = typeof (error as { code?: unknown } | null)?.code === 'string'
+          ? (error as { code: string }).code : 'release/write-rejected'
+        record = this.updateItem(record, itemIndex, { status: 'failed', installOutcome: 'failed', error: reason, errorCode: code })
+        await this.pause(record, '写入前发行状态校验拒绝：' + reason, false)
         return
       }
-      if (outcome.kind === 'awaiting-approval') return
+      // Acquisition and approval can take minutes. This is the actual write-point check.
+      const beforeWrite = await this.deps.host.readState()
+      if (!this.stateStable(beforeWrite)) { await this.pause(record, '写入前关键库存或旧写入状态无法核实', true); return }
+      const beforeDrift = this.findDrift(record, beforeWrite)
+      if (beforeDrift.length > 0) { await this.pause(record, '写入前状态漂移：' + beforeDrift.join(', ')); return }
+      record = await this.deps.store.get(record.task.taskId) ?? record
+      if (record.cancellationRequested) {
+        record = await this.save(this.updateItem(record, itemIndex, { status: 'cancelled', installOutcome: 'cancelled' })); continue
+      }
+      record = withExecution({ ...record, activeRequestId: attempt.requestId }, { writeUncertain: true,
+        attempts: { ...executionOf(record)?.attempts, [attempt.id]: { stage: 'dispatched', sessionRevision: beforeWrite.sessionRevision } } })
+      record = this.updateItem(record, itemIndex, { status: 'installing', installOutcome: 'unknown' })
+      record = await this.save(await this.appendEvent(record, 'installing', '已保存发起记录，调用官方安装器', 'info', step.pluginId))
+      // The control lock is never held while official code runs. Cancel may persist meanwhile.
+      if ((await this.deps.store.get(record.task.taskId))?.cancellationRequested) {
+        record = withExecution(this.clearActiveRequest(record), { writeUncertain: false,
+          attempts: { ...executionOf(record)?.attempts, [attempt.id]: { stage: 'prepared', sessionRevision: beforeWrite.sessionRevision } } })
+        record = await this.save(this.updateItem(record, itemIndex, { status: 'cancelled', installOutcome: 'cancelled' })); continue
+      }
+      let outcome: HostInstallOutcome
+      try { outcome = await this.deps.host.install({ requestId: attempt.requestId, artifact,
+        enabled: planItem.requestedEnabled, ...(attempt.approvedBuilds === undefined ? {} : { approvedBuilds: attempt.approvedBuilds }) }) }
+      catch (error) { outcome = { kind: 'unknown', error: error instanceof Error ? error.message : 'Host install threw', permissionChanges: [] } }
+      record = withExecution(record, { attempts: { ...executionOf(record)?.attempts,
+        [attempt.id]: { stage: 'received', sessionRevision: beforeWrite.sessionRevision, outcome } } })
+      record = await this.save(record)
+      const after = await this.deps.host.readState()
+      record = this.applyOutcome(record, itemIndex, attempt, outcome, after.inventory)
+      const uncertain = !this.stateStable(after) || outcome.kind === 'unknown'
+        || (outcome.kind === 'failed' && outcome.unknownSharedImpact === true) || record.task.items[itemIndex]?.status === 'unknown'
+      const observed = packageItem(after.inventory, item.packageName)
+      const barriers = { ...executionOf(record)?.restartBarriers }
+      if (outcome.kind === 'applied' && outcome.restartRequired) barriers[step.pluginId] = beforeWrite.sessionRevision
+      record = withExecution(record, { writeUncertain: uncertain, restartBarriers: barriers,
+        observed: { ...executionOf(record)?.observed, ...(observed === undefined ? {} : { [step.pluginId]: observed }) },
+        attempts: { ...executionOf(record)?.attempts, [attempt.id]: { stage: uncertain ? 'received' : 'verified', sessionRevision: beforeWrite.sessionRevision, outcome } } })
+      if (!uncertain) record = this.clearActiveRequest(record)
+      record = this.refreshFacts(record, after)
+      record = await this.save(await this.appendEvent(record, record.task.status, 'Host结果：' + outcome.kind, uncertain ? 'error' : 'info', step.pluginId))
+      if (uncertain) { await this.pause(record, '写入回执或写后库存尚未核定', true); return }
+      if (outcome.kind === 'awaiting-approval') {
+        if (record.cancellationRequested) { record = await this.save(this.finalize(this.cancelPending(record))); }
+        return
+      }
     }
+    await this.save(this.finalize(record))
+  }
 
-    record = this.finalize(record)
-    await this.save(record)
+  private cancelPending(record: TaskRecord): TaskRecord {
+    return { ...record, task: this.withoutApproval({ ...cloneState(record.task), items: record.task.items.map(item =>
+      SUCCESS_ITEM_STATUS.has(item.status) || item.status === 'failed' ? item : { ...item, status: 'cancelled', installOutcome: 'cancelled' }) }) }
   }
   private applyKeepItems(record: TaskRecord, inventory: InventorySnapshot): TaskRecord {
     let next = cloneRecord(record)
@@ -684,7 +865,7 @@ export class InstallTaskManager {
     const permissionChanges = outcome.permissionChanges.map((change) => ({ ...change }))
     if (outcome.kind === 'applied') {
       const current = packageItem(inventory, item.packageName)
-      if (current?.installed !== true || current.version !== item.targetVersion) {
+      if (inventory.unknownItems.length > 0 || current?.installed !== true || current.source !== 'market-cache-file' || current.version !== item.targetVersion || current.bundleEnabled !== record.bundle.plan.items.find(target => target.pluginId === item.pluginId)?.requestedEnabled) {
         return this.updateItem(record, itemIndex, {
           status: 'unknown',
           changed: outcome.changed,
@@ -715,8 +896,9 @@ export class InstallTaskManager {
         packages,
         createdAt: this.now().toISOString(),
       }
+      const next = this.updateItem(record, itemIndex, { status: 'installing', installOutcome: 'unknown', permissionChanges })
       return {
-        ...this.updateItem(record, itemIndex, { status: 'installing', installOutcome: 'unknown', permissionChanges }),
+        ...next,
         attempts: record.attempts.map((candidate) => candidate.id === attempt.id ? {
           ...candidate,
           phase: 'awaiting-approval',
@@ -724,7 +906,7 @@ export class InstallTaskManager {
           pendingBuildsDigest: outcome.pendingBuildsDigest,
         } : candidate),
         task: {
-          ...cloneState(record.task),
+          ...cloneState(next.task),
           status: 'awaiting-approval',
           approval: challenge,
           nextAction: nextActionFor('awaiting-approval', record.task.items),
@@ -781,41 +963,35 @@ export class InstallTaskManager {
     return { ...cloneRecord(record), task: { ...cloneState(record.task), status: phase, items } }
   }
 
-  private refreshFacts(record: TaskRecord, inventory: InventorySnapshot): TaskRecord {
-    const itemFacts = Object.fromEntries(record.bundle.expected.map((expected) => [
-      expected.pluginId,
-      this.factFromInventory(inventory, expected.packageName),
-    ]))
-    return {
-      ...cloneRecord(record),
-      itemFacts,
-      task: {
-        ...cloneState(record.task),
-        items: record.task.items.map((item) => {
-          const fact = itemFacts[item.pluginId]
-          if (item.status !== 'restart-required' || fact?.installed !== true) return item
-          if (fact.active) return { ...item, status: 'enabled' }
-          const planItem = record.bundle.plan.items.find((candidate) => candidate.pluginId === item.pluginId)
-          // A requested-on bundle that is installed but not loaded in this
-          // session still needs restart; it is not proven disabled.
-          return { ...item, status: planItem?.requestedEnabled === false ? 'disabled' : 'restart-required' }
-        }),
-      },
-    }
+  private refreshFacts(record: TaskRecord, state: HostReadState): TaskRecord {
+    const itemFacts = Object.fromEntries(record.bundle.plan.items.map(target => {
+      const barrier = executionOf(record)?.restartBarriers[target.pluginId]
+      const blocked = barrier !== undefined && (barrier === '' || barrier === state.sessionRevision)
+      return [target.pluginId, this.factFromInventory(state.inventory, target.packageName, target.targetVersion, blocked)]
+    }))
+    return { ...cloneRecord(record), itemFacts, task: { ...cloneState(record.task), items: record.task.items.map(item => {
+      if (item.status !== 'restart-required') return item
+      const fact = itemFacts[item.pluginId]
+      const barrier = executionOf(record)?.restartBarriers[item.pluginId]
+      if (barrier === undefined || barrier === '' || barrier === state.sessionRevision || fact?.installed !== true) return item
+      const target = record.bundle.plan.items.find(target => target.pluginId === item.pluginId)
+      if (target?.requestedEnabled === false) return { ...item, status: 'disabled' }
+      return fact.active ? { ...item, status: 'enabled' } : item
+    }) } }
   }
-  private factFromInventory(inventory: InventorySnapshot, packageName: string): TaskItemFact {
+
+  private factFromInventory(inventory: InventorySnapshot, packageName: string, version?: string, barrier = false): TaskItemFact {
     const item = packageItem(inventory, packageName)
-    return {
-      installed: item?.installed === true,
-      active: item?.installed === true && item.bundleEnabled && !item.restartRequired,
-    }
+    const installed = item?.installed === true && (version === undefined || item.version === version)
+    return { installed, active: installed && item !== undefined && !barrier && item.bundleEnabled && !item.restartRequired
+      && item.rows.length > 0 && item.rows.every(row => row.fiberPhase === 'active' && row.state === 'enabled' && row.error === undefined) }
   }
 
   private edgeSatisfied(prerequisiteId: string, milestone: 'installed' | 'active', record: TaskRecord): boolean {
     const fact = record.itemFacts[prerequisiteId]
     const expected = record.bundle.expected.find((candidate) => candidate.pluginId === prerequisiteId)
     const installed = fact?.installed ?? expected?.version !== undefined
-    const active = fact?.active ?? (expected !== undefined && expected.enabled)
+    const active = fact?.active === true
     return milestone === 'installed' ? installed : active
   }
 
@@ -840,29 +1016,33 @@ export class InstallTaskManager {
     return undefined
   }
 
-  private findDrift(record: TaskRecord, inventory: InventorySnapshot): readonly string[] {
+  private findDrift(record: TaskRecord, state: HostReadState): readonly string[] {
     const drift: string[] = []
+    const inventory = state.inventory
+    if (inventory.environmentId !== record.task.environmentId) drift.push('environment:changed')
+    const fingerprint = (state as HostReadState & { hostFingerprint?: string }).hostFingerprint
+    if (fingerprint !== undefined && fingerprint !== record.bundle.plan.hostFingerprint) drift.push('host:changed')
     for (const expected of record.bundle.expected) {
       const item = packageItem(inventory, expected.packageName)
-      const fact = record.itemFacts[expected.pluginId]
-      const taskItem = record.task.items.find((candidate) => candidate.pluginId === expected.pluginId)
-      const installed = fact?.installed ?? expected.version !== undefined
-      // Before a write, the baseline is the old version from the plan. Only a
-      // completed item whose Host result was verified advances the expectation.
-      const verifiedChange = taskItem !== undefined && SUCCESS_ITEM_STATUS.has(taskItem.status) && taskItem.installOutcome !== 'unknown'
-      const expectedVersion = verifiedChange ? taskItem.targetVersion : expected.version
-      if (installed && item?.installed !== true) drift.push(`${expected.packageName}:missing`)
-      if (!installed && item?.installed === true) drift.push(`${expected.packageName}:unexpected-install`)
-      if (expectedVersion !== undefined && item?.version !== undefined && item.version !== expectedVersion) {
-        drift.push(`${expected.packageName}:version`)
-      }
+      const result = record.task.items.find(candidate => candidate.pluginId === expected.pluginId)
+      const verified = result !== undefined && SUCCESS_ITEM_STATUS.has(result.status)
+      const ownWrite = verified && result.changed
+      const observed = executionOf(record)?.observed[expected.pluginId]
+      const version = ownWrite ? result.targetVersion : expected.version
+      const enabled = ownWrite ? record.bundle.plan.items.find(target => target.pluginId === expected.pluginId)?.requestedEnabled : expected.enabled
+      const source = ownWrite ? observed?.source : expected.source
+      const identity = ownWrite ? (observed as InventoryItem & { localIdentity?: string } | undefined)?.localIdentity : expected.localIdentity
+      const present = version !== undefined
+      if (present !== (item?.installed === true)) drift.push(expected.packageName + ':presence')
+      if (!present) continue
+      if (item?.version !== version) drift.push(expected.packageName + ':version')
+      if (item?.bundleEnabled !== enabled) drift.push(expected.packageName + ':enabled')
+      if (source !== undefined && item?.source !== source) drift.push(expected.packageName + ':source')
+      const actualIdentity = (item as InventoryItem & { localIdentity?: string } | undefined)?.localIdentity
+      if (identity !== undefined && actualIdentity !== undefined && identity !== actualIdentity) drift.push(expected.packageName + ':local-identity')
+      if (item?.readOnlyReason !== undefined) drift.push(expected.packageName + ':protected')
     }
     return drift
-  }
-
-  private applyCancelToActive(record: TaskRecord, changed: boolean): TaskRecord {
-    const index = record.task.items.findIndex((item) => item.status === 'installing' || item.status === 'downloading' || item.status === 'verifying')
-    return index < 0 ? record : this.updateItem(record, index, { status: 'cancelled', changed, installOutcome: 'cancelled' })
   }
 
   private finalize(record: TaskRecord): TaskRecord {

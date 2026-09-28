@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { blocksFromBytes, encodeBase64, uploadBytes } from '../../packages/market/src/client/transfer.ts'
+import { blocksFromBytes, encodeBase64, uploadBytes, readTransfer } from '../../packages/market/src/client/transfer.ts'
 import type { MarketRemote } from '../../packages/market/src/client/model.ts'
 
 describe('TransferChunkRequest base64 file blocks', () => {
@@ -40,5 +40,33 @@ describe('TransferChunkRequest base64 file blocks', () => {
     const blocks = blocksFromBytes(new Uint8Array(64 * 1024 + 1))
     expect(blocks).toHaveLength(2)
     expect(blocks[0]?.byteLength).toBe(64 * 1024)
+  })
+})
+
+describe('真实ZIP出站读取', () => {
+  it('合并实际字节并清理传输，不用JSON冒充ZIP', async () => {
+    const data = new Uint8Array([80, 75, 3, 4, 6, 7])
+    const dispose = vi.fn(async () => true)
+    const remote = { transferRead: async ({ transferId, sequence }: { transferId: string; sequence: number }) => ({ transferId, sequence, data: encodeBase64(data.subarray(sequence * 3, (sequence + 1) * 3)), last: sequence === 1 }), transferDispose: dispose } as unknown as MarketRemote
+    expect(await readTransfer(remote, { transferId: 'export', complete: true, receivedBytes: 6 })).toEqual(data)
+    expect(dispose).toHaveBeenCalledWith({ transferId: 'export' })
+  })
+  it('上传成功释放有界传输槽，拒绝其他上传的回包', async () => {
+    const dispose = vi.fn(async () => true)
+    const remote = {
+      transferBegin: async () => ({ transferId: 'upload-one', complete: false, receivedBytes: 0 }),
+      transferChunk: async () => ({ transferId: 'upload-one', complete: true, receivedBytes: 3, resultId: 'img-test' }),
+      transferDispose: dispose,
+    } as unknown as MarketRemote
+    await uploadBytes(remote, new Uint8Array([1, 2, 3]), { purpose: 'draft-media', filename: 'test.png', mediaType: 'image/png' })
+    expect(dispose).toHaveBeenCalledWith({ transferId: 'upload-one' })
+    const wrong = { ...remote, transferChunk: async () => ({ transferId: 'other-upload', complete: true, receivedBytes: 3 }) }
+    await expect(uploadBytes(wrong, new Uint8Array([1, 2, 3]), { purpose: 'draft-media', filename: 'test.png', mediaType: 'image/png' })).rejects.toThrow('当前分块不一致')
+  })
+  it('拒绝截断与错任务回包，失败也释放临时传输', async () => {
+    const dispose = vi.fn(async () => true)
+    const remote = { transferRead: async () => ({ transferId: 'wrong', sequence: 0, data: 'UEsDBA==', last: true }), transferDispose: dispose } as unknown as MarketRemote
+    await expect(readTransfer(remote, { transferId: 'export', complete: true, receivedBytes: 4 })).rejects.toThrow('身份')
+    expect(dispose).toHaveBeenCalledOnce()
   })
 })

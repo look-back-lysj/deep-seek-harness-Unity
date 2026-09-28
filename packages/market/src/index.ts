@@ -3,6 +3,8 @@
  * market runtime; this class exposes the stable Remote surface only.
  */
 import { createHash } from 'node:crypto'
+import { readFileSync } from 'node:fs'
+import { createRequire } from 'node:module'
 import { join } from 'node:path'
 import { Context, Service } from '@deepseek-ai/cordis'
 import type {} from '@deepseek-ai/dsh-app-boot'
@@ -19,6 +21,8 @@ import {
   type AuthorDraftDeleteRequest,
   type AuthorDraftInput,
   type AuthorExportRequest,
+  type AuthorMediaReadRequest,
+  type AuthorMediaReadResult,
   type CatalogRefreshRequest,
   type CatalogRefreshView,
   type CatalogSnapshot,
@@ -31,6 +35,8 @@ import {
   type PluginActionRequest,
   type ReadmeImportRequest,
   type ReadmeImportResult,
+  type ReadmePreviewView,
+  type ReadmeApplyPreviewRequest,
   type RemovePluginRequest,
   type TaskApprovalRequest,
   type TaskCancelRequest,
@@ -51,18 +57,45 @@ import { MarketRuntime } from './host/market-runtime.ts'
 
 export interface Config {
   readonly dataDirectory?: string
+  /** Maintainer configuration, not writable by catalogRefresh or author content. */
+  readonly catalogSources?: {
+    readonly id: string
+    readonly indexUrl: string
+    readonly maintainer: string
+    readonly fallbackId?: string
+  }[]
 }
 
-const ConfigSchema = z.object({ dataDirectory: z.string().default('') })
+const ConfigSchema: z<Config> = z.object({
+  dataDirectory: z.string().default(''),
+  catalogSources: z.array(z.object({
+    id: z.string().required(),
+    indexUrl: z.string().required(),
+    maintainer: z.string().required(),
+    fallbackId: z.string().default(''),
+  })).default([]),
+})
+
+const marketVersion = (JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8')) as { version: string }).version
+
+function officialHostVersion(): string {
+  try {
+    const metadata = createRequire(import.meta.url)('@deepseek-ai/dsh-app-boot/package.json') as { version?: unknown }
+    return typeof metadata.version === 'string' ? metadata.version : 'unknown'
+  } catch {
+    return 'unknown'
+  }
+}
 
 /** @typert service eacMarket */
 export class MarketService extends Service {
   static inject = ['profileContext']
-  static Config = ConfigSchema
+  static Config: z<Config> = ConfigSchema
 
   private readonly context: Context
   private readonly profileDir: string
   private readonly marketDataDir: string
+  private readonly hostVersion: string
   readonly typertRemote: unknown = bindTypertRemote(this, 'eacMarket')
   private readonly runtime: MarketRuntime
 
@@ -71,12 +104,34 @@ export class MarketService extends Service {
     this.context = ctx
     this.profileDir = ctx.profileContext.dir
     this.marketDataDir = config.dataDirectory || join(this.profileDir, 'eac-market')
+    this.hostVersion = officialHostVersion()
     const identity = {
       environmentId: createHash('sha256').update(`eac-market:${this.profileDir}`).digest('hex').slice(0, 24),
       profileName: ctx.profileContext.name,
-      hostVersion: '0.1.7-rc.2',
+      hostVersion: this.hostVersion,
     }
-    this.runtime = new MarketRuntime(ctx, identity, this.marketDataDir)
+    this.runtime = new MarketRuntime(ctx, identity, this.marketDataDir, {
+      marketVersion,
+      catalogSources: (config.catalogSources ?? []).map((source) => ({
+        id: source.id,
+        indexUrl: source.indexUrl,
+        maintainer: source.maintainer,
+        trust: 'team-registered',
+        ...(source.fallbackId ? { fallbackId: source.fallbackId } : {}),
+      })),
+    })
+  }
+
+  private remoteCaller(): { readonly id: string; readonly signal: AbortSignal } {
+    // Official RemoteInvocation (typert/protocol/src/types.ts) is attached to
+    // the call-scoped receiver. Our minimal generator ambient shim does not
+    // redeclare Cordis; consume only these verified fields structurally.
+    const invocation = (this.ctx as Context & { readonly invocation?: {
+      readonly peer: { readonly id: string }
+      readonly signal: AbortSignal
+    } }).invocation
+    if (!invocation?.peer.id || !invocation.signal) throw new Error('当前调用缺少官方连接身份，无法确认写入')
+    return { id: String(invocation.peer.id), signal: invocation.signal }
   }
 
   @Remote
@@ -84,17 +139,17 @@ export class MarketService extends Service {
     return {
       protocolVersion: PROTOCOL_VERSION,
       schemaVersion: MARKET_SCHEMA_VERSION,
-      marketVersion: '0.1.0-mvp.0',
+      marketVersion,
       environmentId: createHash('sha256').update(`eac-market:${this.profileDir}`).digest('hex').slice(0, 24),
       profileName: this.context.profileContext.name,
-      hostVersion: '0.1.7-rc.2',
+      hostVersion: this.hostVersion,
       capabilities: this.runtime.host.capabilities(),
     }
   }
 
   @Remote
   catalog(): CatalogSnapshot {
-    return this.runtime.catalog.load().snapshot
+    return { ...this.runtime.catalog.load().snapshot, collections: this.runtime.catalog.collectionViews() }
   }
 
   @Remote
@@ -109,12 +164,12 @@ export class MarketService extends Service {
 
   @Remote
   planCreate(request: PlanCreateRequest): Promise<PlanResult> {
-    return this.runtime.planCreate(request)
+    return this.runtime.planCreate(request, this.remoteCaller().id)
   }
 
   @Remote
   taskStart(request: TaskStartRequest): Promise<TaskState> {
-    return this.runtime.taskStart(request)
+    return this.runtime.taskStart(request, this.remoteCaller().id)
   }
 
   @Remote
@@ -183,6 +238,16 @@ export class MarketService extends Service {
   }
 
   @Remote
+  authorReadmePreview(request: ReadmeImportRequest): Promise<ReadmePreviewView> {
+    return this.runtime.authorReadmePreview(request)
+  }
+
+  @Remote
+  authorReadmeApplyPreview(request: ReadmeApplyPreviewRequest): ReadmeImportResult {
+    return this.runtime.authorReadmeApplyPreview(request)
+  }
+
+  @Remote
   authorTransferBegin(request: TransferBeginRequest): TransferResult {
     return this.runtime.authorTransferBegin(request)
   }
@@ -208,18 +273,24 @@ export class MarketService extends Service {
   }
 
   @Remote
+  authorMediaRead(request: AuthorMediaReadRequest): AuthorMediaReadResult {
+    return this.runtime.authorMediaRead(request)
+  }
+
+  @Remote
   diagnosticsExport(): Promise<DiagnosticExport> {
     return this.runtime.diagnosticsExport()
   }
 
   @Remote
   aiAnalyze(request: AiAnalyzeRequest): Promise<AiAnalysisResult> {
-    return this.runtime.aiAnalyze(request)
+    const caller = this.remoteCaller()
+    return this.runtime.aiAnalyze(request, caller.id, caller.signal)
   }
 
   @Remote
   aiConfirm(request: AiConfirmRequest): Promise<AiApplyResult> {
-    return this.runtime.aiConfirm(request)
+    return this.runtime.aiConfirm(request, this.remoteCaller().id)
   }
 
 }

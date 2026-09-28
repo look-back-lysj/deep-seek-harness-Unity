@@ -6,13 +6,16 @@
  */
 import type {
   CatalogDelivery,
+  CatalogListing,
   CatalogPack,
   CatalogPlugin,
   CatalogPresentation,
+  CatalogRecommendation,
   CatalogSnapshot,
 } from '../contracts/types.ts'
 
 export const MARKET_INDEX_SCHEMA_VERSION = '1'
+export const MARKET_INDEX_V2 = '2'
 
 export interface RawDocumentRecord {
   readonly contentBase64: string
@@ -20,9 +23,80 @@ export interface RawDocumentRecord {
 }
 
 export interface MarketPluginRecord extends CatalogPlugin {
-  readonly manifestDigest: string
-  readonly manifest: RawDocumentRecord
+  /** 旧 v1 字段仍只读接受；v2 用判别联合，官方包不会被制造 Manifest。 */
+  readonly manifestDigest?: string
+  readonly manifest?: RawDocumentRecord
+  readonly metadata?: MarketPluginMetadata
+  readonly releaseId?: string
   readonly evidence?: readonly RawDocumentRecord[]
+}
+
+export type MarketPluginMetadata =
+  | { readonly kind: 'dsh-std'; readonly manifest: RawDocumentRecord }
+  | { readonly kind: 'official-bundle'; readonly packageJson: RawDocumentRecord; readonly files: readonly string[] }
+
+export interface ReleaseAuthorization {
+  readonly basis: 'license' | 'permission'
+  readonly reference: string
+  readonly redistribution: true
+}
+
+export interface ReleaseOrigin {
+  readonly repositoryUrl: string
+  readonly commit: string
+  readonly license: string
+  readonly authorization: ReleaseAuthorization
+}
+
+export type ReleaseProvenance = ReleaseOrigin & (
+  | { readonly kind: 'author-release'; readonly releaseUrl: string }
+  | { readonly kind: 'team-build'; readonly sourceSubdir: string; readonly lockDigest: string; readonly recipeDigest: string; readonly toolchain: readonly { readonly name: string; readonly version: string }[]; readonly target: { readonly os: string; readonly arch: string }; readonly buildRun: string; readonly derivedFrom?: string }
+)
+
+export interface ReleaseRecord {
+  readonly schemaVersion: '1'
+  readonly releaseId: string
+  readonly pluginId: string
+  readonly packageName: string
+  readonly version: string
+  readonly artifactDigest: string
+  readonly metadataDigest: string
+  readonly size: number
+  readonly publishedAt?: string
+  readonly provenance: ReleaseProvenance
+}
+
+export interface ReleaseStatusRecord {
+  readonly releaseId: string
+  readonly sequence: number
+  readonly status: 'active' | 'withdrawn'
+  readonly reason: string
+  readonly effectiveAt: string
+}
+
+export interface CatalogPublication {
+  readonly sourceId: string
+  readonly sequence: number
+}
+
+export interface MarketCollection {
+  readonly kind: 'MarketCollection'
+  readonly schemaVersion: '1'
+  readonly id: string
+  readonly version: string
+  readonly name: string
+  readonly summary: string
+  readonly components: readonly { readonly pluginId: string; readonly version: string; readonly releaseId: string; readonly artifactDigest: string; readonly required: boolean; readonly enabled: boolean }[]
+  readonly execution: { readonly coverage: 'complete' | 'partial' | 'unknown'; readonly edges: readonly import('../contracts/types.ts').PackExecutionEdge[]; readonly provenance: string }
+}
+
+export interface RecommendationRecord extends CatalogRecommendation {
+  readonly id: string
+  readonly version: string
+  readonly curator: string
+  readonly effectiveAt: string
+  readonly expiresAt?: string
+  readonly withdrawn: boolean
 }
 
 export interface MarketPackRecord extends CatalogPack {
@@ -32,13 +106,19 @@ export interface MarketPackRecord extends CatalogPack {
 }
 
 export interface MarketIndexDocument {
-  readonly schemaVersion: typeof MARKET_INDEX_SCHEMA_VERSION
+  readonly schemaVersion: typeof MARKET_INDEX_SCHEMA_VERSION | typeof MARKET_INDEX_V2
   readonly revision: string
   readonly generatedAt: string
   readonly plugins: readonly MarketPluginRecord[]
+  readonly listings?: readonly CatalogListing[] | undefined
   readonly packs: readonly MarketPackRecord[]
   readonly presentations: readonly CatalogPresentation[]
   readonly deliveries: readonly CatalogDelivery[]
+  readonly recommendations?: readonly CatalogRecommendation[]
+  readonly publication?: CatalogPublication
+  readonly releases?: readonly ReleaseRecord[]
+  readonly releaseStatuses?: readonly ReleaseStatusRecord[]
+  readonly collections?: readonly MarketCollection[]
 }
 
 export interface ValidatedCatalog {
@@ -47,6 +127,11 @@ export interface ValidatedCatalog {
   readonly packBytes: ReadonlyMap<string, Uint8Array>
   readonly lockBytes: ReadonlyMap<string, Uint8Array>
   readonly evidenceBytes: ReadonlyMap<string, readonly Uint8Array[]>
+  readonly metadataBytes: ReadonlyMap<string, Uint8Array>
+  readonly releases: readonly ReleaseRecord[]
+  readonly releaseStatuses: readonly ReleaseStatusRecord[]
+  readonly collections: readonly MarketCollection[]
+  readonly publication?: CatalogPublication
 }
 
 export interface CatalogHostEvidenceContext {

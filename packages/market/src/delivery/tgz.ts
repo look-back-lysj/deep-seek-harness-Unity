@@ -41,6 +41,9 @@ export interface VerifiedTgz {
   readonly entryCount: number
   readonly expandedBytes: number
   readonly bundlePatch?: string
+  /** 原始 package.json 字节的文本和普通文件表只供 Host 内容检查，不作运行证明。 */
+  readonly packageJson: string
+  readonly files: readonly string[]
 }
 
 export class TgzVerificationError extends Error {
@@ -114,13 +117,16 @@ class TarVerifier {
   private paxPath: string | undefined
   private readonly paths = new Set<string>()
   private readonly pathsFolded = new Set<string>()
+  private readonly files = new Set<string>()
   readonly entries: string[] = []
   private packageJson: string | undefined
   private packageJsonPath: string | undefined
   private expandedBytes = 0
   private root: string | undefined
 
-  constructor(private readonly limits: Required<TgzLimits>) {}
+  private readonly limits: Required<TgzLimits>
+
+  constructor(limits: Required<TgzLimits>) { this.limits = limits }
 
   push(chunk: Uint8Array): void {
     if ((this.mode as string) === 'done') {
@@ -191,6 +197,7 @@ class TarVerifier {
     this.paths.add(path)
     this.pathsFolded.add(folded)
     this.entries.push(path)
+    if (type !== '5') this.files.add(path)
     const root = path.split('/')[0]
     if (this.root === undefined) this.root = root
     if (root !== this.root) throw new TgzVerificationError('tgz/multiple-roots', '归档必须只有一个顶层目录')
@@ -251,7 +258,7 @@ class TarVerifier {
     }
   }
 
-  result(): { packageName: string; version: string; bundlePatch?: string; entryCount: number; expandedBytes: number } {
+  result(): { packageName: string; version: string; bundlePatch?: string; entryCount: number; expandedBytes: number; packageJson: string; files: readonly string[] } {
     if ((this.mode as string) !== 'done') throw new TgzVerificationError('tgz/incomplete', 'Tar 数据不完整')
     if (!this.packageJson || !this.packageJsonPath) throw new TgzVerificationError('tgz/missing-package-json', '归档缺少顶层 package.json')
     let metadata: unknown
@@ -269,7 +276,13 @@ class TarVerifier {
     if (bundlePatch !== undefined && typeof bundlePatch !== 'string') {
       throw new TgzVerificationError('tgz/invalid-bundle-patch', 'dsh.bundle.patch 必须是字符串')
     }
+    if (typeof bundlePatch === 'string') {
+      const patchPath = safeEntryPath(bundlePatch)
+      if (!this.files.has(`${this.root}/${patchPath}`)) throw new TgzVerificationError('tgz/missing-bundle-patch', 'dsh.bundle.patch 引用的普通文件不存在')
+    }
     return {
+      packageJson: this.packageJson,
+      files: [...this.files].map(path => path.slice((this.root?.length ?? 0) + 1)),
       packageName: record.name,
       version: record.version,
       ...(bundlePatch === undefined ? {} : { bundlePatch }),
@@ -279,7 +292,8 @@ class TarVerifier {
   }
 }
 
-export async function verifyTgzFile(path: string, expected: ExpectedTgzIdentity, options: TgzLimits = {}): Promise<VerifiedTgz> {
+export async function verifyTgzFile(path: string, expected: ExpectedTgzIdentity, options: TgzLimits & { readonly signal?: AbortSignal | undefined } = {}): Promise<VerifiedTgz> {
+  options.signal?.throwIfAborted()
   const limits = { ...DEFAULT_TGZ_LIMITS, ...options }
   const stat = statSync(path)
   if (!stat.isFile()) throw new TgzVerificationError('tgz/not-file', '制品不是普通文件')
@@ -289,7 +303,7 @@ export async function verifyTgzFile(path: string, expected: ExpectedTgzIdentity,
   source.on('data', (chunk) => hash.update(chunk))
   const gunzip = createGunzip()
   const tar = new TarVerifier(limits)
-  const transport = pipeline(source, gunzip)
+  const transport = pipeline(source, gunzip, { signal: options.signal })
   let parseError: unknown
   try {
     for await (const chunk of gunzip) tar.push(chunk)
@@ -304,10 +318,12 @@ export async function verifyTgzFile(path: string, expected: ExpectedTgzIdentity,
     parseError ??= error
   }
   if (parseError) {
+    options.signal?.throwIfAborted()
     if (parseError instanceof TgzVerificationError) throw parseError
     throw new TgzVerificationError('tgz/decompress-failed', parseError instanceof Error ? parseError.message : 'tgz 解压失败')
   }
   const actualDigest = `sha256:${hash.digest('hex')}`
+  options.signal?.throwIfAborted()
   const expectedDigest = normalizeDigest(expected.artifactDigest)
   if (actualDigest !== expectedDigest) {
     throw new TgzVerificationError('tgz/digest-mismatch', `制品摘要不符：expected ${expectedDigest}, actual ${actualDigest}`)
@@ -327,6 +343,8 @@ export async function verifyTgzFile(path: string, expected: ExpectedTgzIdentity,
     version: identity.version,
     entryCount: identity.entryCount,
     expandedBytes: identity.expandedBytes,
+    packageJson: identity.packageJson,
+    files: identity.files,
     ...(identity.bundlePatch === undefined ? {} : { bundlePatch: identity.bundlePatch }),
   }
 }

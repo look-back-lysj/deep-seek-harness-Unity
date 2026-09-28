@@ -1,0 +1,111 @@
+{
+  "kind": "EacInventoryFrozenHandoff",
+  "revision": "inventory-v3",
+  "frozenAt": "2026-09-28T10:11:28+00:00",
+  "evidenceRoot": "D:/eac-market-verify/distribution-20260928/inventory-v3",
+  "recommendedInput": "catalog-fragment.json",
+  "knownPackages": 82,
+  "sourceBlobsVerified": 6,
+  "missingBlobCount": 0,
+  "supersedes": "inventory-v2",
+  "doNotPublishDerivativeVersions": [
+    "1.1.0-eac.dc22280.1",
+    "1.1.1-eac.dc22280.1"
+  ],
+  "runtimeVerification": "not-tested",
+  "packageCodeExecuted": false,
+  "uiGateChanged": false,
+  "files": [
+    {
+      "path": "inventory.json",
+      "bytes": 451729,
+      "sha256": "sha256:9dc1f0c0f5d529822f883e02cfb76ca0edf5055a3b72e0cf8dcf83a76f6d3cbc"
+    },
+    {
+      "path": "summary.json",
+      "bytes": 704,
+      "sha256": "sha256:ee9505a118e3684a57a63f31217e11703b8a8951369b5b86488b38c07c2a6878"
+    },
+    {
+      "path": "generator-input.json",
+      "bytes": 925,
+      "sha256": "sha256:77fd592adfc3b46bc7d3762ddccd147403015e7e3eb4e55e16862e209f9f67c0"
+    },
+    {
+      "path": "catalog-fragment.json",
+      "bytes": 206297,
+      "sha256": "sha256:073396bec019e856240bd2acfaec8a753c9ab71ae3be409126aba74a955dd493"
+    },
+    {
+      "path": "market-index.candidate.json",
+      "bytes": 306739,
+      "sha256": "sha256:f6d5ade64fa26c2420fcad31477f21e6a4b9ba991601a97ff5ea13f693962145"
+    },
+    {
+      "path": "listing-only.json",
+      "bytes": 143023,
+      "sha256": "sha256:11e850b1a916b6de33d55c0cbee0f382abcf2725945c0fa7be8a2b371a7d9388"
+    },
+    {
+      "path": "artifacts.json",
+      "bytes": 104125,
+      "sha256": "sha256:6a3b46687aedc1849353c70964bf81842c8d234f4ad0d74a0a8431af9ed92e4b"
+    },
+    {
+      "path": "official-inventory.json",
+      "bytes": 190253,
+      "sha256": "sha256:476d3bebe6bc645cebbdfabb2980284e0cc9fc1ee3b0ce24b2980000d09f3516"
+    },
+    {
+      "path": "validation.json",
+      "bytes": 6338,
+      "sha256": "sha256:7a4bc76893c27cb70d94a1504dbc69370e8bb8ce50d9cccae4a32203acc1860c"
+    },
+    {
+      "path": "targeted-validation.json",
+      "bytes": 1766,
+      "sha256": "sha256:09ca241de78198c2b9a460fc66b2f198d7ff197b0051438f29f29e46ef86ef0e"
+    },
+    {
+      "path": "fragment-validation.json",
+      "bytes": 994,
+      "sha256": "sha256:a119f556ad31e66421a5e8e2c8adcaa37586f84836b9d708c425e14690a43c1a"
+    },
+    {
+      "path": "missing-blobs.json",
+      "bytes": 3,
+      "sha256": "sha256:37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+    },
+    {
+      "path": "blob-cache-used.json",
+      "bytes": 903,
+      "sha256": "sha256:b68aa36770eea9a06dc38cf5a39ae34d1205d97a8c7964ad880a8e6ca7f8dfea"
+    },
+    {
+      "path": "artifacts/dsh-eac-skin-miku-1.1.1-eac.dc22280.2.tgz",
+      "bytes": 1725894,
+      "sha256": "sha256:b0ee8cb34ba52f0edacb3f36153d2a0e1bb5e2b4a16c39e3d52a50f278f087fc"
+    },
+    {
+      "path": "artifacts/dsh-eac-skin-trading-1.1.1-eac.dc22280.2.tgz",
+      "bytes": 23708,
+      "sha256": "sha256:e873a0f8e2475d2ccdc273e451ee253790a1aa4bcf405849a4b590a73ef80e1d"
+    }
+  ],
+  "newDerivedArtifacts": [
+    {
+      "packageName": "@dsh-eac/skin-miku",
+      "version": "1.1.1-eac.dc22280.2",
+      "path": "artifacts/dsh-eac-skin-miku-1.1.1-eac.dc22280.2.tgz",
+      "bytes": 1725894,
+      "sha256": "sha256:b0ee8cb34ba52f0edacb3f36153d2a0e1bb5e2b4a16c39e3d52a50f278f087fc"
+    },
+    {
+      "packageName": "@dsh-eac/skin-trading",
+      "version": "1.1.1-eac.dc22280.2",
+      "path": "artifacts/dsh-eac-skin-trading-1.1.1-eac.dc22280.2.tgz",
+      "bytes": 23708,
+      "sha256": "sha256:e873a0f8e2475d2ccdc273e451ee253790a1aa4bcf405849a4b590a73ef80e1d"
+    }
+  ]
+}

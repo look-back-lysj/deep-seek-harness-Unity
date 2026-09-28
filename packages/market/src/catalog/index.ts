@@ -6,12 +6,20 @@ export {
   CatalogValidationError,
   DEFAULT_CATALOG_LIMITS,
   MARKET_INDEX_SCHEMA_VERSION,
+  MARKET_INDEX_V2,
   type CatalogHostEvidenceContext,
   type CatalogLimitOptions,
   type MarketIndexDocument,
   type MarketPackRecord,
   type MarketPluginRecord,
   type ValidatedCatalog,
+  type MarketPluginMetadata,
+  type MarketCollection,
+  type ReleaseRecord,
+  type ReleaseProvenance,
+  type ReleaseStatusRecord,
+  type RecommendationRecord,
+  type CatalogPublication,
 } from './model.ts'
 export { isCompletePackExecution, validateMarketIndex } from './validate.ts'
 export {
@@ -39,3 +47,6 @@ export {
   type CatalogSourceReader,
   type CatalogSourceRefreshInput,
 } from './store.ts'
+export { parseCollection, parseRelease, parseReleaseStatus, releaseIdFor } from './releases.ts'
+export { validateBuildRecipe, validateAuthorSubmission, validateProductionCatalog, type BuildRecipe, type SubmissionValidation } from './submission.ts'
+export { collectionPlanInput, collectionView, type CollectionPlanInput, type CatalogCollectionView } from './collections.ts'

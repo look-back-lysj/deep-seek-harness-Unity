@@ -1,0 +1,7 @@
+{
+  "recommendedInput": "inventory-v3/catalog-fragment.json",
+  "inventory": "inventory-v3/inventory.json",
+  "freeze": "inventory-v3/FREEZE.json",
+  "evidenceRoot": "D:/eac-market-verify/distribution-20260928/inventory-v3",
+  "supersedesRootSnapshots": true
+}

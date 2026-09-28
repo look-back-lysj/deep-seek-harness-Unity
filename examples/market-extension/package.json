@@ -1,0 +1,31 @@
+{
+  "name": "@dsh-eac/market-extension-example",
+  "version": "0.1.0-test.1",
+  "description": "Local test fixture for all five EAC market extension positions; not a production catalogue entry",
+  "private": true,
+  "type": "module",
+  "main": "./lib/index.js",
+  "exports": {
+    ".": "./lib/index.js",
+    "./client": "./lib/client.js",
+    "./package.json": "./package.json"
+  },
+  "files": ["lib/index.js", "lib/client.js", "cordis.patch.yml", "README.md", "LICENSE"],
+  "license": "MIT",
+  "engines": { "node": ">=24", "dsh": "0.1.7-rc.2" },
+  "peerDependencies": {
+    "@deepseek-ai/cordis": "~4.0.4",
+    "@dsh-eac/market": ">=0.1.0-mvp.1 <0.2.0",
+    "react": ">=18 <19"
+  },
+  "peerDependenciesMeta": {
+    "@dsh-eac/market": { "optional": true },
+    "@deepseek-ai/cordis": { "optional": true },
+    "react": { "optional": true }
+  },
+  "dsh": {
+    "manifestVersion": 1,
+    "bundle": { "patch": "./cordis.patch.yml" },
+    "client": { "platform": "web", "inject": [], "immediately": false }
+  }
+}

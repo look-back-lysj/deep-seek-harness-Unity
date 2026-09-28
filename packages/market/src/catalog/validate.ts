@@ -7,6 +7,7 @@
 import { createHash } from 'node:crypto'
 import type {
   CatalogDelivery,
+  CatalogListing,
   DeliverySource,
   CatalogMedia,
   CatalogPack,
@@ -35,9 +36,13 @@ import {
   validatePublicPackLock,
   type EvidenceSummary,
 } from './public-format.ts'
+import { parseMetadata } from './metadata.ts'
+import { parseRecommendations } from './recommendations.ts'
+import { parseCollection, parseRelease, parseReleaseStatus } from './releases.ts'
+import { exactVersion, integer, string, timestamp } from './input.ts'
+import { parseManagementEvidence } from './management-evidence.ts'
 
 const ID_RE = /^[a-z][a-z0-9]*(?:[.-][a-z0-9][a-z0-9-]*)+$/
-const SEMVER_RE = /^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$/
 const DIGEST_RE = /^sha256:[a-f0-9]{64}$/
 const BASE64_RE = /^[A-Za-z0-9+/]*={0,2}$/
 
@@ -91,16 +96,11 @@ function parseId(value: unknown, field: string): string {
 }
 
 function parseVersion(value: unknown, field: string): string {
-  const version = requiredString(value, field, 100)
-  if (!SEMVER_RE.test(version)) fail('catalog/invalid-version', `${field} 必须是精确 semver`)
-  return version
+  return exactVersion(value, field)
 }
 
 function parseDate(value: unknown, field: string): string {
-  const text = requiredString(value, field, 64)
-  const at = Date.parse(text)
-  if (!Number.isFinite(at)) fail('catalog/invalid-field', `${field} 不是可解析时间`)
-  return new Date(at).toISOString()
+  return timestamp(value, field)
 }
 
 function decodeRaw(value: unknown, field: string, maxBytes: number): { record: RawDocumentRecord; bytes: Uint8Array } {
@@ -130,7 +130,7 @@ function parseMedia(value: unknown, field: string, maxTextBytes: number): Catalo
   }
 }
 
-function parsePlugin(value: unknown, field: string, maxTextBytes: number): MarketPluginRecord {
+function parsePlugin(value: unknown, field: string, maxTextBytes: number, now: Date): MarketPluginRecord {
   if (!isRecord(value)) fail('catalog/invalid-field', `${field} 必须是对象`)
   const authorUrl = optionalString(value.authorUrl, `${field}.authorUrl`, 4_096)
   const sourceUrl = optionalString(value.sourceUrl, `${field}.sourceUrl`, 4_096)
@@ -157,6 +157,25 @@ function parsePlugin(value: unknown, field: string, maxTextBytes: number): Marke
     requiresRestart: bool(value.requiresRestart, `${field}.requiresRestart`),
     requiresSetup: bool(value.requiresSetup, `${field}.requiresSetup`),
     largeExternalResource: bool(value.largeExternalResource, `${field}.largeExternalResource`),
+    ...(value.releasedAt === undefined ? {} : { releasedAt: parseDate(value.releasedAt, `${field}.releasedAt`) }),
+    ...(value.managementEvidence === undefined ? {} : { managementEvidence: parseManagementEvidence(value.managementEvidence, value.artifactDigest === undefined ? undefined : parseDigest(value.artifactDigest, `${field}.artifactDigest`), now) }),
+  }
+  if (value.metadata !== undefined) {
+    if (value.manifest !== undefined || value.manifestDigest !== undefined) fail('catalog/ambiguous-metadata', 'metadata 联合与旧 Manifest 字段不能同时提供')
+    const metadata = parseMetadata(value.metadata, plugin)
+    let skinView: { kind?: 'skin'; skinId?: string } = {}
+    if (metadata.kind === 'official-bundle') {
+      const packageJson = JSON.parse(Buffer.from(metadata.packageJson.contentBase64, 'base64').toString('utf8')) as { dsh?: { skin?: { id?: unknown; apiVersion?: unknown } } }
+      const skin = packageJson.dsh?.skin
+      if (skin !== undefined) {
+        if (typeof skin !== 'object' || skin === null || skin.apiVersion !== 'dsh.ecosystem.ui-skin-loader/v1'
+          || typeof skin.id !== 'string' || skin.id.length > 200 || !/^[a-z0-9]+(?:[.-][a-z0-9]+)*$/.test(skin.id)) fail('catalog/skin-metadata', '皮肤声明缺少受支持的公约版本或稳定ID')
+        skinView = { kind: 'skin', skinId: skin.id }
+      }
+    }
+    const evidence = value.evidence === undefined ? [] : array(value.evidence, `${field}.evidence`, 32).map((item, index) => decodeRaw(item, `${field}.evidence[${index}]`, maxTextBytes).record)
+    if (metadata.kind === 'official-bundle' && evidence.length) fail('catalog/official-evidence', '官方包不能冒用需要 Manifest 的公共 Evidence')
+    return { ...plugin, ...skinView, metadata, ...(value.releaseId === undefined ? {} : { releaseId: string(value.releaseId, 'releaseId', 100) }), ...(metadata.kind === 'dsh-std' ? { manifest: metadata.manifest, manifestDigest: metadata.manifest.sha256 } : {}), ...(evidence.length ? { evidence } : {}) }
   }
   const manifestDigest = parseDigest(value.manifestDigest, `${field}.manifestDigest`)
   const manifest = decodeRaw(value.manifest, `${field}.manifest`, maxTextBytes)
@@ -165,7 +184,24 @@ function parsePlugin(value: unknown, field: string, maxTextBytes: number): Marke
   }
   validatePublicManifest(manifest.bytes, plugin)
   const evidence = value.evidence === undefined ? [] : array(value.evidence, `${field}.evidence`, 32).map((item, index) => decodeRaw(item, `${field}.evidence[${index}]`, maxTextBytes))
-  return { ...plugin, manifestDigest, manifest: manifest.record, ...(evidence.length === 0 ? {} : { evidence: evidence.map((item) => item.record) }) }
+  return { ...plugin, manifestDigest, manifest: manifest.record, ...(value.releaseId === undefined ? {} : { releaseId: string(value.releaseId, 'releaseId', 100) }), ...(evidence.length === 0 ? {} : { evidence: evidence.map((item) => item.record) }) }
+}
+
+function parseListing(value: unknown, field: string): CatalogListing {
+  if (!isRecord(value)) fail('catalog/invalid-field', `${field} 必须是对象`)
+  const sourceUrl = requiredString(value.sourceUrl, `${field}.sourceUrl`, 4096)
+  let url: URL
+  try { url = new URL(sourceUrl) } catch { fail('catalog/listing-source', '清点记录缺少有效来源链接') }
+  if (url.protocol !== 'https:' || url.username || url.password) fail('catalog/listing-source', '清点来源只允许无凭据 HTTPS')
+  return {
+    id: parseId(value.id, `${field}.id`),
+    name: requiredString(value.name, `${field}.name`, 200),
+    packageName: requiredString(value.packageName, `${field}.packageName`, 214),
+    summary: requiredString(value.summary, `${field}.summary`, 4096),
+    reason: requiredString(value.reason, `${field}.reason`, 8192),
+    sourceUrl,
+    ...(value.requestedVersion === undefined ? {} : { requestedVersion: requiredString(value.requestedVersion, `${field}.requestedVersion`, 100) }),
+  }
 }
 
 function parseDistribution(value: unknown, field: string): CatalogPlugin['distribution'] {
@@ -332,37 +368,70 @@ export function validateMarketIndex(
 ): ValidatedCatalog {
   const limits = { ...DEFAULT_CATALOG_LIMITS, ...options }
   if (!isRecord(input)) fail('catalog/invalid-root', '目录根必须是对象')
-  if (input.schemaVersion !== MARKET_INDEX_SCHEMA_VERSION) fail('catalog/schema-mismatch', '不支持的 MarketIndex schemaVersion')
+  if (input.schemaVersion !== MARKET_INDEX_SCHEMA_VERSION && input.schemaVersion !== '2') fail('catalog/schema-mismatch', '不支持的 MarketIndex schemaVersion')
+  const isV2 = input.schemaVersion === '2'
+  const publication = !isV2 ? undefined : (() => {
+    if (!isRecord(input.publication)) fail('catalog/publication-required', 'v2 目录必须有来源身份和发布序号')
+    return { sourceId: string(input.publication.sourceId, 'publication.sourceId', 100), sequence: integer(input.publication.sequence, 'publication.sequence', 1) }
+  })()
   const revision = requiredString(input.revision, 'revision', 200)
   const generatedAt = parseDate(input.generatedAt, 'generatedAt')
-  const plugins = array(input.plugins, 'plugins', limits.maxPlugins).map((item, index) => parsePlugin(item, `plugins[${index}]`, limits.maxTextBytes))
+  const plugins = array(input.plugins, 'plugins', limits.maxPlugins).map((item, index) => parsePlugin(item, `plugins[${index}]`, limits.maxTextBytes, options.now ?? new Date()))
   const packs = array(input.packs, 'packs', limits.maxPacks).map((item, index) => parsePack(item, `packs[${index}]`, limits.maxTextBytes))
   const presentations = array(input.presentations, 'presentations', limits.maxPresentations).map((item, index) => parsePresentation(item, `presentations[${index}]`, limits.maxTextBytes))
   const deliveries = array(input.deliveries, 'deliveries', limits.maxDeliveries).map((item, index) => parseDelivery(item, `deliveries[${index}]`))
+  const releases = input.releases === undefined ? [] : array(input.releases, 'releases', limits.maxPlugins).map(parseRelease)
+  const releasesById = new Map(releases.map(release => [release.releaseId, release]))
+  if (releasesById.size !== releases.length) fail('catalog/duplicate-release', '发行记录重复')
+  const releaseStatuses = input.releaseStatuses === undefined ? [] : array(input.releaseStatuses, 'releaseStatuses', limits.maxPlugins * 10).map(parseReleaseStatus)
+  const statusKeys = new Set<string>()
+  for (const status of releaseStatuses) {
+    const key = `${status.releaseId}:${status.sequence}`
+    if (statusKeys.has(key) || !releasesById.has(status.releaseId)) fail('catalog/release-status-binding', '发行状态重复或没有对应记录')
+    if (Date.parse(status.effectiveAt) > (options.now ?? new Date()).getTime()) fail('catalog/future-status', '未来生效状态应到生效时再发布')
+    statusKeys.add(key)
+  }
+  const latestStatuses = new Map(releaseStatuses.slice().sort((a, b) => a.sequence - b.sequence).map(status => [status.releaseId, status]))
 
   const pluginKeys = new Set<string>()
   const pluginByIdVersion = new Map<string, MarketPluginRecord>()
   const presentationIds = new Set(presentations.map((item) => item.id))
   const manifestBytes = new Map<string, Uint8Array>()
+  const metadataBytes = new Map<string, Uint8Array>()
+  const verificationByKey = new Map<string, CatalogPlugin['verification']>()
   const evidenceBytes = new Map<string, readonly Uint8Array[]>()
   for (const plugin of plugins) {
     const key = `${plugin.id}@${plugin.version}`
+    if (isV2 && !plugin.metadata) fail('catalog/metadata-required', 'v2 插件必须明确区分 official-bundle 和 dsh-std 元数据')
     if (pluginKeys.has(key)) fail('catalog/duplicate-plugin', `重复插件版本 ${key}`)
     pluginKeys.add(key)
     pluginByIdVersion.set(key, plugin)
-    const bytes = Buffer.from(plugin.manifest.contentBase64, 'base64')
-    manifestBytes.set(`${key}:manifest`, bytes)
+    const metadataRecord = plugin.metadata?.kind === 'official-bundle' ? plugin.metadata.packageJson : plugin.manifest
+    if (!metadataRecord) fail('catalog/missing-metadata', `${key} 缺少元数据`)
+    const bytes = Buffer.from(metadataRecord.contentBase64, 'base64')
+    metadataBytes.set(key, bytes)
+    if (plugin.manifest) manifestBytes.set(`${key}:manifest`, bytes)
     const evidence = (plugin.evidence ?? []).map((item) => Buffer.from(item.contentBase64, 'base64'))
     evidenceBytes.set(`${key}:evidence`, evidence)
-    const summaries: EvidenceSummary[] = evidence.map((item) => validatePublicEvidence(item, plugin, plugin.manifestDigest))
+    const summaries: EvidenceSummary[] = evidence.map((item) => validatePublicEvidence(item, plugin, plugin.manifestDigest as string))
+    const currentEvidence = options.host !== undefined && summaries.some(item => evidenceSupportsVerification(item, options.host!, options.now ?? new Date()))
+    verificationByKey.set(key, plugin.verification)
     if (plugin.verification === 'verified') {
-      if (!options.host) fail('catalog/evidence-host-context-missing', `${key} 标记 verified 但没有当前宿主证据上下文`)
-      const now = options.now ?? new Date()
-      if (!summaries.some((item) => evidenceSupportsVerification(item, options.host as never, now))) {
+      // v2 把远端声明与当前宿主投影分开：别的宿主证据仍可浏览，但绝不展示成 verified。
+      if (isV2 && !currentEvidence) verificationByKey.set(key, 'unverified')
+      else if (!options.host) fail('catalog/evidence-host-context-missing', `${key} 标记 verified 但没有当前宿主证据上下文`)
+      else if (!currentEvidence) {
         fail('catalog/evidence-not-current', `${key} 的 verified 未绑定当前宿主、版本和有效运行 Evidence`)
       }
     }
     if (!presentationIds.has(plugin.presentationId)) fail('catalog/missing-presentation', `${key} 引用不存在的 Presentation`)
+    if (isV2 && plugin.releasedAt !== undefined && !plugin.releaseId) fail('catalog/release-date-binding', '没有发行记录不能声明可核验的发布时间')
+    if (isV2 && plugin.artifactDigest !== undefined) {
+      const release = releasesById.get(plugin.releaseId ?? '')
+      if (!release || release.pluginId !== plugin.id || release.packageName !== plugin.packageName || release.version !== plugin.version || release.artifactDigest !== plugin.artifactDigest || release.metadataDigest !== metadataRecord.sha256) fail('catalog/release-binding', `${key} 未绑定精确发行、制品与元数据`)
+      if (plugin.releasedAt !== undefined && plugin.releasedAt !== release.publishedAt) fail('catalog/release-date-binding', '显示发布时间与发行记录不符')
+      if (!latestStatuses.has(release.releaseId)) fail('catalog/release-status-missing', '发行缺少生命周期状态')
+    }
   }
 
   const packBytes = new Map<string, Uint8Array>()
@@ -389,6 +458,7 @@ export function validateMarketIndex(
       if (plugin.artifactDigest !== locked.artifactDigest || plugin.manifestDigest !== locked.manifestDigest) {
         fail('catalog/lock-plugin-digest-mismatch', `${key} 的 ${id} 摘要与目录对象不一致`)
       }
+      if (locked.source !== `npm:${plugin.packageName}@${plugin.version}`) fail('catalog/lock-package-mismatch', '公共 Lock npm 身份与实际目录包名不符')
     }
     validateExecutionGraph(pack.execution, new Set(packComponents.keys()))
     lockBytes.set(`${key}:lock`, bytes)
@@ -399,23 +469,37 @@ export function validateMarketIndex(
     const plugin = pluginByIdVersion.get(key)
     if (!plugin) fail('catalog/missing-plugin', `Delivery 引用不存在的 ${key}`)
     if (plugin.artifactDigest !== delivery.artifactDigest) fail('catalog/delivery-digest-mismatch', `${key} 的 Delivery 不是同制品`)
+    if (plugin.packageName !== delivery.packageName) fail('catalog/delivery-package-mismatch', `${key} 的 Delivery 包名不一致`)
+    const release = releasesById.get(plugin.releaseId ?? '')
+    if (release && delivery.sources.some(source => source.size !== release.size)) fail('catalog/delivery-size-mismatch', 'v2 来源必须带发行记录的精确大小')
     if (delivery.sources.length === 0) fail('catalog/missing-delivery-source', `${key} 没有候选来源`)
     const priorities = new Set(delivery.sources.map((source) => source.priority))
     if (priorities.size !== delivery.sources.length) fail('catalog/duplicate-priority', `${key} 的 Delivery priority 必须唯一`)
   }
+  if (new Set(deliveries.map(item => `${item.pluginId}@${item.version}`)).size !== deliveries.length || presentationIds.size !== presentations.length || new Set(packs.map(item => `${item.id}@${item.version}`)).size !== packs.length) fail('catalog/duplicate-record', '目录引用对象重复')
+  const collections = input.collections === undefined ? [] : array(input.collections, 'collections', limits.maxPacks).map(item => parseCollection(item, releasesById))
+  for (const collection of collections) {
+    for (const component of collection.components) if (!pluginByIdVersion.has(`${component.pluginId}@${component.version}`)) fail('catalog/collection-plugin', '私有组合组件没有可浏览插件记录')
+    validateExecutionGraph({ ...collection.execution, schemaVersion: '1', packId: collection.id, packVersion: collection.version, lockDigest: '' }, new Set(collection.components.map(item => item.pluginId)))
+  }
+  if (new Set(collections.map(item => `${item.id}@${item.version}`)).size !== collections.length) fail('catalog/duplicate-collection', '私有组合重复')
+  const projectedPlugins = plugins.map(({ manifest: _manifest, manifestDigest: _manifestDigest, metadata: _metadata, releaseId, evidence: _evidence, ...plugin }) => ({ ...plugin, verification: verificationByKey.get(`${plugin.id}@${plugin.version}`) ?? plugin.verification, ...(isV2 && releaseId ? { releasedAt: releasesById.get(releaseId)?.publishedAt } : {}), ...(releaseId && latestStatuses.get(releaseId)?.status === 'withdrawn' ? { installability: 'hard-blocked' as const } : {}) }))
 
   const snapshot: CatalogSnapshot = {
-    schemaVersion: MARKET_INDEX_SCHEMA_VERSION,
+    schemaVersion: input.schemaVersion,
     revision,
     generatedAt,
     origin: options.origin ?? 'embedded',
     stale: false,
-    plugins: plugins.map(({ manifest: _manifest, manifestDigest: _manifestDigest, evidence: _evidence, ...plugin }) => plugin),
+    plugins: projectedPlugins,
+    ...(input.listings === undefined ? {} : { listings: array(input.listings, 'listings', limits.maxPlugins).map((value, i) => parseListing(value, `listings[${i}]`)) }),
     packs: packs.map(({ pack: _pack, packDigest: _packDigest, lock: _lock, ...pack }) => pack),
     presentations,
     deliveries,
+    recommendations: parseRecommendations(input.recommendations, projectedPlugins, options.now ?? new Date(), isV2),
   }
-  return { snapshot, manifestBytes, packBytes, lockBytes, evidenceBytes }
+  if (snapshot.listings && (new Set(snapshot.listings.map(item => item.id)).size !== snapshot.listings.length || snapshot.listings.some(item => projectedPlugins.some(plugin => plugin.id === item.id)))) fail('catalog/duplicate-listing', '清点记录ID重复或与插件记录冲突')
+  return { snapshot, manifestBytes, packBytes, lockBytes, evidenceBytes, metadataBytes, releases, releaseStatuses, collections, ...(publication === undefined ? {} : { publication }) }
 }
 
 /** 只允许 complete 且关系无环的 PackExecution 被当作完整执行资料。 */

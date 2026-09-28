@@ -8,10 +8,27 @@ import {
   readOnlyLabel,
   taskStatusLabel,
   verificationLabel,
+  summarizeInventory,
+  compareVersions,
+  taskNextStep,
 } from '../../packages/market/src/client/model.ts'
 import { catalogFixture, inventoryFixture, pluginFixtures, taskFixture } from './fixtures.ts'
 
 describe('market UI model', () => {
+  it('停用且没有运行成员并非未知；配置启用与实际运行分开', () => {
+    const item = { ...inventoryFixture.items[0]!, rows: [], bundleEnabled: false, restartRequired: false }
+    expect(summarizeInventory(item)).toBe('已停用')
+    expect(summarizeInventory({ ...item, bundleEnabled: true })).toBe('运行状态未知')
+    expect(summarizeInventory({ ...item, bundleEnabled: true, rows: [{ id: 'a', name: 'a', state: 'enabled' }] })).toContain('运行待核对')
+    expect(summarizeInventory({ ...item, bundleEnabled: true, rows: [{ id: 'a', name: 'a', state: 'enabled', fiberPhase: 'active' }] })).toBe('运行中')
+  })
+  it('预发行版本和无效版本不会误导更新入口，未知结果优先核对', () => {
+    expect(compareVersions('1.0.0-rc.1', '1.0.0')).toBe(-1)
+    expect(compareVersions('1.0.0-rc.10', '1.0.0-rc.2')).toBe(1)
+    expect(compareVersions(undefined, '1.0.0')).toBe(0)
+    expect(compareVersions('invalid', '1.0.0')).toBe(0)
+    expect(taskNextStep(taskFixture({ status: 'unknown', nextAction: 'restart' }))).toContain('先到官方插件页核对')
+  })
   it('stops polling terminal partial and needs-attention tasks', () => {
     expect(activeTasks([
       taskFixture({ status: 'partial' }),

@@ -1,0 +1,4 @@
+# Test only: one real Host entry lets the official client-modules scanner find ./client.
+- insert:
+    - id: dsh-eac-market-extension-example
+      name: "@dsh-eac/market-extension-example"

@@ -1,0 +1,14 @@
+{
+  "schemaVersion": "1",
+  "kind": "AuthorSubmission",
+  "testOnly": false,
+  "route": "author-release",
+  "author": { "name": null, "contact": null },
+  "release": "release.json",
+  "artifact": "plugin.tgz",
+  "metadata": "metadata.json",
+  "presentation": "presentation.json",
+  "licenseFile": "LICENSE",
+  "buildRecipe": "build-recipe.json",
+  "lockFile": "pnpm-lock.yaml"
+}

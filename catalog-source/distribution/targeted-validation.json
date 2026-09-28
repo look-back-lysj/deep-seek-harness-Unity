@@ -1,0 +1,42 @@
+{
+  "status": "passed-targeted-static-checks",
+  "packages": [
+    {
+      "packageName": "@dsh-eac/skin-miku",
+      "version": "1.1.1-eac.dc22280.2",
+      "upstreamClientGitBlob": "6dd87158537496e5c073a4f6e6587da870613799",
+      "derivedClientGitBlob": "6e1a76bf12e1e8f67c1c9ea1bf36a706a9a29000",
+      "derivedClientSha256": "sha256:4609cf67999fbaed7b96b8f40cc5645a3a0ab4dbeee4ec89e4a8f557f968728d",
+      "actualRegisterSkinVersion": "1.1.1-eac.dc22280.2",
+      "reverseOnlyRuntimeVersionEqualsLatestBeta": true,
+      "allOtherFilesAndLicensesUnchanged": true,
+      "invalidPatchContextsRejected": 3,
+      "upstreamMetadataPreserved": true,
+      "deterministicRepack": true,
+      "specificKnownFixMarkers": "pass",
+      "runtimeExecuted": false
+    },
+    {
+      "packageName": "@dsh-eac/skin-trading",
+      "version": "1.1.1-eac.dc22280.2",
+      "upstreamClientGitBlob": "0fa2ff0a45a48a5cdf7c72e023652317a3132ee9",
+      "derivedClientGitBlob": "51285edd6fafe0322682b222aa4a66aa0f353c93",
+      "derivedClientSha256": "sha256:6660d5c3df9d3d4f8e81774b85fd83a4e46250741421235147bb382e976e40c5",
+      "actualRegisterSkinVersion": "1.1.1-eac.dc22280.2",
+      "reverseOnlyRuntimeVersionEqualsLatestBeta": true,
+      "allOtherFilesAndLicensesUnchanged": true,
+      "invalidPatchContextsRejected": 3,
+      "upstreamMetadataPreserved": true,
+      "deterministicRepack": true,
+      "specificKnownFixMarkers": "pass",
+      "runtimeExecuted": false
+    }
+  ],
+  "limits": "Static byte/structure/fix-marker checks only. No third-party code was imported or executed; no Desktop runtime claim.",
+  "blobCache": {
+    "verifiedExactBytes": true,
+    "rejectedDifferentBytesAtSameSha": true,
+    "fixtureOnly": true,
+    "gitRepositoryWritten": false
+  }
+}

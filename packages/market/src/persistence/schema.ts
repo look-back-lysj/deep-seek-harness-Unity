@@ -7,10 +7,12 @@
 import type { TaskRecord } from '../core/ports.ts'
 import { PersistenceError } from './files.ts'
 
-export const TASK_SCHEMA_VERSION = 2
+// v3 adds dispatch/receipt and persistent write-occupation semantics. Older
+// binaries must refuse the format rather than ignore those safety records.
+export const TASK_SCHEMA_VERSION = 3
 
-export interface TaskDocumentV2 {
-  readonly schemaVersion: 2
+export interface TaskDocumentV3 {
+  readonly schemaVersion: 3
   readonly record: TaskRecord
 }
 
@@ -44,12 +46,28 @@ function recordAt(value: unknown): TaskRecord {
   stringAt(task.planDigest, 'task.planDigest')
   stringAt(task.environmentId, 'task.environmentId')
   stringAt(task.status, 'task.status')
+  if (!['queued', 'downloading', 'verifying', 'installing', 'applying', 'checking', 'awaiting-approval', 'awaiting-resume', 'cancelling', 'interrupted', 'completed', 'partial', 'failed', 'cancelled', 'needs-attention', 'unknown'].includes(task.status as string)) {
+    throw new PersistenceError('schema/invalid', '任务状态未知，不能作为可执行记录读取')
+  }
   numberAt(raw.attemptCounter, 'attemptCounter')
   numberAt(raw.nextSequence, 'nextSequence')
   const bundle = objectAt(raw.bundle)
   const plan = objectAt(bundle.plan)
   stringAt(plan.planId, 'bundle.plan.planId')
   stringAt(bundle.bundleDigest, 'bundle.bundleDigest')
+  if (!Array.isArray(bundle.steps) || !Array.isArray(bundle.expected) || !Array.isArray(bundle.dependencies)) throw new PersistenceError('schema/invalid', '计划执行资料缺失')
+  const baseline = objectAt(raw.baseline)
+  if (!Array.isArray(baseline.items) || !Array.isArray(baseline.unknownItems)) throw new PersistenceError('schema/invalid', '库存基线缺失')
+  if (raw.execution !== undefined) {
+    const execution = objectAt(raw.execution)
+    if (typeof execution.writeUncertain !== 'boolean' || typeof execution.sessionRevision !== 'string'
+      || execution.attempts === undefined || execution.restartBarriers === undefined || execution.observed === undefined) {
+      throw new PersistenceError('schema/invalid', '执行屏障或回执记录不完整')
+    }
+    for (const attempt of Object.values(objectAt(execution.attempts))) {
+      if (!['prepared', 'dispatched', 'received', 'verified'].includes(String(objectAt(attempt).stage))) throw new PersistenceError('schema/invalid', '安装提交阶段未知')
+    }
+  }
   return {
     ...(raw as unknown as TaskRecord),
     task: {
@@ -66,16 +84,16 @@ function recordAt(value: unknown): TaskRecord {
 }
 
 /**
- * Accepts the known v1 shape and adds v2 idempotency/cleanup fields. Unknown
+ * Accepts known v1/v2 records without inventing dispatch evidence. Unknown
  * future versions fail closed so a downgrade cannot erase new data.
  */
-export function migrateTaskDocument(raw: unknown): TaskDocumentV2 {
+export function migrateTaskDocument(raw: unknown): TaskDocumentV3 {
   const document = objectAt(raw)
   const version = document.schemaVersion
   if (version === TASK_SCHEMA_VERSION) {
-    return { schemaVersion: 2, record: recordAt(document.record) }
+    return { schemaVersion: 3, record: recordAt(document.record) }
   }
-  if (version === 1) {
+  if (version === 1 || version === 2) {
     const record = objectAt(document.record)
     const migrated = {
       ...record,
@@ -83,8 +101,9 @@ export function migrateTaskDocument(raw: unknown): TaskDocumentV2 {
       approvalIdempotency: objectAt(record.approvalIdempotency),
       resumeIdempotency: objectAt(record.resumeIdempotency),
       eventLogTruncated: record.eventLogTruncated === true,
+      cancellationRequested: record.cancellationRequested === true,
     }
-    return { schemaVersion: 2, record: recordAt(migrated) }
+    return { schemaVersion: 3, record: recordAt(migrated) }
   }
   throw new PersistenceError('schema/unsupported', `不支持的任务 schemaVersion：${String(version)}`)
 }

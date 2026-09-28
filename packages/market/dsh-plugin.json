@@ -3,7 +3,7 @@
   "manifestVersion": "0.15",
   "id": "dev.dsh-eac.market",
   "name": "@dsh-eac/market",
-  "version": "0.1.0-mvp.0",
+  "version": "0.1.0-mvp.4",
   "facets": {
     "host": { "entry": "lib/index.js", "apiVersion": "v1alpha1" },
     "client": { "entry": "lib/client.js", "apiVersion": "v1alpha1" }
@@ -13,7 +13,7 @@
   "contributes": { "commands": [] },
   "subscriptions": [],
   "license": "MIT",
-  "source": { "repository": "local-private-pending-remote" },
+  "source": { "repository": "https://github.com/look-back-lysj/deep-seek-harness-Unity" },
   "overrides": [],
   "x-eac": {
     "role": "community-plugin-market",

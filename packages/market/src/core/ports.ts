@@ -8,6 +8,7 @@ import type {
   TaskState,
   VerificationState,
   InventoryItem,
+  CatalogDelivery,
 } from '../contracts/types.ts'
 
 export interface HostWriteActivity {
@@ -21,6 +22,7 @@ export interface HostReadState {
   readonly sessionRevision: string
   readonly activeRequests: readonly string[]
   readonly activity: HostWriteActivity
+  readonly hostFingerprint?: string | undefined
 }
 
 export interface ArtifactAcquisition {
@@ -39,6 +41,8 @@ export interface ArtifactAcquireRequest {
   readonly version: string
   readonly artifactDigest: string
   readonly sourceRef: string
+  /** Host-private copy of the delivery approved with the plan; never re-resolve a live catalog. */
+  readonly delivery?: CatalogDelivery | undefined
 }
 
 export interface ArtifactPort {
@@ -121,6 +125,7 @@ export interface PlanFacts {
   readonly verification: VerificationState
   readonly requiresRestart: boolean
   readonly installable: boolean
+  readonly delivery?: CatalogDelivery | undefined
 }
 
 export interface PlanCatalogContext {
@@ -138,11 +143,33 @@ export interface PlanCatalogContext {
 }
 
 export interface PackExecutionContext {
+  readonly kind?: 'mojobox-pack'
   readonly packId: string
   readonly packVersion: string
   readonly components: readonly { readonly pluginId: string; readonly required: boolean }[]
   readonly execution: import('../contracts/types.ts').PackExecution
   readonly lockBytes: Uint8Array
+}
+
+/** Private collection bytes are not a public PackLock. */
+export interface CollectionExecutionContext {
+  readonly kind: 'market-collection'
+  readonly collectionId: string
+  readonly collectionVersion: string
+  readonly collectionDigest: string
+  readonly documentBytes: Uint8Array
+  readonly components: readonly {
+    readonly pluginId: string
+    readonly version: string
+    readonly artifactDigest: string
+    readonly required: boolean
+    readonly enabled: boolean
+  }[]
+  readonly execution: {
+    readonly coverage: 'complete' | 'partial' | 'unknown'
+    readonly edges: readonly PackExecutionEdge[]
+    readonly provenance: string
+  }
 }
 
 export interface PlanStep {
@@ -166,6 +193,8 @@ export interface PlanBundle {
   readonly steps: readonly PlanStep[]
   readonly dependencies: readonly PackExecutionEdge[]
   readonly expected: readonly ExpectedItemState[]
+  /** Frozen source descriptions may contain test-local paths and stay off the wire. */
+  readonly deliveries?: readonly CatalogDelivery[]
   readonly bundleDigest: string
 }
 

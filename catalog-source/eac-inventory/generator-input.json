@@ -1,0 +1,22 @@
+{
+  "schemaVersion": "1",
+  "kind": "EacInventoryGeneratorInput",
+  "inventory": "inventory.json",
+  "v2Candidate": "market-index.candidate.json",
+  "recommendedFragment": "catalog-fragment.json",
+  "evidenceRoot": "D:/eac-market-verify/distribution-20260928/inventory-v3",
+  "listingOnly": "listing-only.json",
+  "artifactLedger": "artifacts.json",
+  "officialInventory": "official-inventory.json",
+  "recommendedPolicy": {
+    "showAllInventoryItems": true,
+    "neverInventVersionOrMetadata": true,
+    "installOnlySelectedArtifacts": true,
+    "allowUnverifiedOnlyAfterExplicitUserChoice": true,
+    "noncommercialPackagesNeedLicenseConditionsShown": true,
+    "retainKnownBadOriginalsAsEvidenceOnly": true
+  },
+  "listingContract": "主控新增 v2 listings 表承接缺元数据条目；requestedVersion 仅为登记要求，不是已安装/已发行证明。",
+  "localOnly": true,
+  "productionPublishReady": false
+}

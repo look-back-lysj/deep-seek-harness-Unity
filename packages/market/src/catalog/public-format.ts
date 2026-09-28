@@ -7,6 +7,7 @@
 import { createHash } from 'node:crypto'
 import type { CatalogPlugin, PackComponent } from '../contracts/types.ts'
 import { CatalogValidationError, type CatalogHostEvidenceContext, type RawDocumentRecord } from './model.ts'
+import { timestamp } from './input.ts'
 
 const DIGEST_RE = /^sha256:[a-f0-9]{64}$/
 const ID_RE = /^[a-z][a-z0-9]*(?:[.-][a-z0-9][a-z0-9-]*)+$/
@@ -60,10 +61,11 @@ function semver(value: unknown, field: string): string {
 }
 
 function date(value: unknown, field: string): string {
-  const result = text(value, field, 64)
-  const at = Date.parse(result)
-  if (!Number.isFinite(at)) fail('catalog/invalid-public-format', `${field} 不是可解析时间`)
-  return new Date(at).toISOString()
+  return timestamp(value, field)
+}
+
+function contractType(value: Record<string, unknown>, field: string): void {
+  if (!/^[a-z][a-z0-9.-]*\/v[1-9][0-9]*(?:(?:alpha|beta)[1-9][0-9]*)?$/.test(text(value.apiVersion, `${field}.apiVersion`)) || !/^[A-Z][A-Za-z0-9]*$/.test(text(value.kind, `${field}.kind`))) fail('catalog/invalid-public-format', `${field} 契约标识无效`)
 }
 
 function rawJson(bytes: Uint8Array, field: string): unknown {
@@ -84,8 +86,9 @@ function assertUri(value: unknown, field: string): string {
   return result
 }
 
-function validatePackageMetadata(value: unknown, field: string): void {
+export function validatePackageMetadata(value: unknown, field: string): void {
   const object = exact(value, field, [], ['dependencies', 'peerDependencies', 'engines', 'dsh'])
+  if (!Object.keys(object).length) fail('catalog/invalid-public-format', `${field} 不允许空投影`)
   for (const key of ['dependencies', 'peerDependencies'] as const) {
     if (object[key] !== undefined) {
       const deps = record(object[key], `${field}.${key}`)
@@ -157,6 +160,7 @@ export function validatePublicManifest(bytes: Uint8Array, plugin: Pick<CatalogPl
         const contract = exact(item, `Manifest.requires.contracts[${index}]`, ['apiVersion', 'kind'], ['optional', 'fallback'])
         text(contract.apiVersion, `Manifest.requires.contracts[${index}].apiVersion`)
         text(contract.kind, `Manifest.requires.contracts[${index}].kind`)
+        contractType(contract, `Manifest.requires.contracts[${index}]`)
         if (contract.optional !== undefined && typeof contract.optional !== 'boolean') fail('catalog/invalid-public-format', `Manifest.requires.contracts[${index}].optional 必须是布尔值`)
         optionalText(contract.fallback, `Manifest.requires.contracts[${index}].fallback`)
       }
@@ -174,6 +178,7 @@ export function validatePublicManifest(bytes: Uint8Array, plugin: Pick<CatalogPl
   if (value.contributes !== undefined) {
     const contributes = record(value.contributes, 'Manifest.contributes')
     for (const key of Object.keys(contributes)) if (!['commands', 'panels'].includes(key) && !key.startsWith('x-')) fail('catalog/invalid-public-format', `Manifest.contributes.${key} 不属于固定公共格式`)
+    for (const key of Object.keys(contributes)) if (key.startsWith('x-') && !Array.isArray(contributes[key])) fail('catalog/invalid-public-format', `Manifest.contributes.${key} 必须是数组`)
     if (contributes.commands !== undefined) {
       if (!Array.isArray(contributes.commands)) fail('catalog/invalid-public-format', 'Manifest.contributes.commands 必须是数组')
       for (const [index, item] of contributes.commands.entries()) {
@@ -194,6 +199,7 @@ export function validatePublicManifest(bytes: Uint8Array, plugin: Pick<CatalogPl
         const subscription = exact(item, `Manifest.subscriptions[${index}]`, ['apiVersion', 'kind'], ['scope'])
         text(subscription.apiVersion, `Manifest.subscriptions[${index}].apiVersion`)
         text(subscription.kind, `Manifest.subscriptions[${index}].kind`)
+        contractType(subscription, `Manifest.subscriptions[${index}]`)
         optionalText(subscription.scope, `Manifest.subscriptions[${index}].scope`)
       }
     }
@@ -277,9 +283,13 @@ export function validatePublicPack(bytes: Uint8Array, packId: string, packVersio
   if (metadata.category !== undefined && !['function', 'appearance', 'workflow'].includes(metadata.category as string)) fail('catalog/invalid-public-format', 'Pack.metadata.category 无效')
   if (!Array.isArray(value.components) || value.components.length !== components.length) fail('catalog/invalid-public-format', 'Pack.components 与目录组件数量不一致')
   const expectedById = new Map(components.map((item) => [item.pluginId, item]))
+  const seenIds = new Set<string>()
+  if (!components.length || components.length > 64 || expectedById.size !== components.length) fail('catalog/invalid-public-format', 'Pack.components 为空、过多或重复')
   for (const [index, item] of value.components.entries()) {
     const object = exact(item, `Pack.components[${index}]`, ['id', 'version', 'required'])
     const componentId = id(object.id, `Pack.components[${index}].id`)
+    if (seenIds.has(componentId)) fail('catalog/invalid-public-format', 'Pack.components 有重复 id')
+    seenIds.add(componentId)
     const expected = expectedById.get(componentId)
     if (!expected || semver(object.version, `Pack.components[${index}].version`) !== expected.version || object.required !== expected.required) {
       fail('catalog/invalid-public-format', `Pack.components[${index}] 与目录组件不一致`)
@@ -288,6 +298,10 @@ export function validatePublicPack(bytes: Uint8Array, packId: string, packVersio
   if (value.requires !== undefined) {
     const requires = exact(value.requires, 'Pack.requires', [], ['hostCapabilities', 'platforms'])
     if (requires.hostCapabilities !== undefined && !Array.isArray(requires.hostCapabilities)) fail('catalog/invalid-public-format', 'Pack.requires.hostCapabilities 必须是数组')
+    if (Array.isArray(requires.hostCapabilities)) {
+      const capabilities = requires.hostCapabilities.map(value => id(value, 'Pack.requires.hostCapabilities[]'))
+      if (new Set(capabilities).size !== capabilities.length) fail('catalog/invalid-public-format', 'Pack.requires.hostCapabilities 重复')
+    }
     if (requires.platforms !== undefined) {
       if (!Array.isArray(requires.platforms) || requires.platforms.length === 0) fail('catalog/invalid-public-format', 'Pack.requires.platforms 必须是非空数组')
       for (const [index, item] of requires.platforms.entries()) {
@@ -310,6 +324,8 @@ export interface EvidenceSummary {
   readonly hostId?: string
   readonly hostDshVersion?: string
   readonly hostRuntime?: string
+  readonly testedAt: string
+  readonly checksPassed: boolean
 }
 
 export function validatePublicEvidence(bytes: Uint8Array, plugin: Pick<CatalogPlugin, 'id' | 'version' | 'artifactDigest'>, manifestDigest: string): EvidenceSummary {
@@ -339,7 +355,8 @@ export function validatePublicEvidence(bytes: Uint8Array, plugin: Pick<CatalogPl
     if (!['pass', 'fail', 'skip'].includes(check.result as string)) fail('catalog/invalid-public-format', `Evidence.checks[${index}].result 无效`)
     optionalText(check.message, `Evidence.checks[${index}].message`)
   }
-  date(value.testedAt, 'Evidence.testedAt')
+  const testedAt = date(value.testedAt, 'Evidence.testedAt')
+  const checksPassed = value.checks.every(check => (check as { result: string }).result === 'pass')
   const expiresAt = value.expiresAt === undefined ? undefined : date(value.expiresAt, 'Evidence.expiresAt')
   const revoked = value.revoked
   if (typeof revoked !== 'boolean') fail('catalog/invalid-public-format', 'Evidence.revoked 必须是布尔值')
@@ -352,13 +369,14 @@ export function validatePublicEvidence(bytes: Uint8Array, plugin: Pick<CatalogPl
     digest(value.hostDescriptorDigest, 'Evidence.hostDescriptorDigest')
     const host = exact(value.host, 'Evidence.host', ['id', 'name', 'version', 'adapterVersion', 'dshVersion', 'runtime'])
     for (const key of ['id', 'name', 'version', 'adapterVersion', 'dshVersion', 'runtime'] as const) text(host[key], `Evidence.host.${key}`)
-    return { level, result, revoked, ...(expiresAt === undefined ? {} : { expiresAt }), hostId: host.id as string, hostDshVersion: host.dshVersion as string, hostRuntime: host.runtime as string }
+    return { level, result, revoked, testedAt, checksPassed, ...(expiresAt === undefined ? {} : { expiresAt }), hostId: host.id as string, hostDshVersion: host.dshVersion as string, hostRuntime: host.runtime as string }
   }
-  return { level, result, revoked, ...(expiresAt === undefined ? {} : { expiresAt }) }
+  return { level, result, revoked, testedAt, checksPassed, ...(expiresAt === undefined ? {} : { expiresAt }) }
 }
 
 export function evidenceSupportsVerification(summary: EvidenceSummary, context: CatalogHostEvidenceContext, now: Date): boolean {
   return summary.result === 'pass' &&
+    summary.checksPassed && Date.parse(summary.testedAt) <= now.getTime() &&
     !summary.revoked &&
     ['Tested', 'Observed', 'Attested'].includes(summary.level) &&
     (summary.expiresAt === undefined || Date.parse(summary.expiresAt) > now.getTime()) &&

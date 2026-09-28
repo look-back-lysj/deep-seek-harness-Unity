@@ -1,0 +1,203 @@
+{
+  "kind": "EacInventoryStaticValidation",
+  "network": false,
+  "packageCodeExecuted": false,
+  "runtimeVerification": "not-tested",
+  "checks": [
+    {
+      "check": "market-index-v2",
+      "status": "pass",
+      "plugins": 55,
+      "listings": 27
+    },
+    {
+      "check": "coverage-and-gates",
+      "status": "pass",
+      "namedPackages": 82,
+      "missingMetadataListings": 27,
+      "nameCollisionsBlocked": 2,
+      "oldSkinsWithdrawn": 2,
+      "buildRecipes": 5
+    }
+  ],
+  "artifacts": [
+    {
+      "packageName": "@dsh-eac/skin-aurora",
+      "version": "1.1.0",
+      "sha256": "sha256:3abf546ccbea8fa106290ed0a96c77661a9620e88fadb57b76afa12aa503cd35",
+      "files": 8,
+      "bundlePatch": "./cordis.patch.yml",
+      "status": "pass"
+    },
+    {
+      "packageName": "@dsh-eac/skin-blue-fantasy",
+      "version": "1.1.0",
+      "sha256": "sha256:b89297f957c93ce76cc9984ebfdf73d49889c89d568200ac4e06a8b90dc94a44",
+      "files": 10,
+      "bundlePatch": "./cordis.patch.yml",
+      "status": "pass"
+    },
+    {
+      "packageName": "@dsh-eac/skin-deep-whale-day-night",
+      "version": "1.1.0",
+      "sha256": "sha256:8d1f42ed937e1ac84e1726e0cae5b2fc20fc2735671d2268e4f9f31c13aec7d6",
+      "files": 10,
+      "bundlePatch": "./cordis.patch.yml",
+      "status": "pass"
+    },
+    {
+      "packageName": "@dsh-eac/skin-dragon-heir",
+      "version": "1.1.0",
+      "sha256": "sha256:c315837b67597107612a0c663ec8e8168e6f90622017bb6735614b4a3a322ba3",
+      "files": 8,
+      "bundlePatch": "./cordis.patch.yml",
+      "status": "pass"
+    },
+    {
+      "packageName": "@dsh-eac/skin-inkwash",
+      "version": "1.1.0",
+      "sha256": "sha256:775754b4354043965b19888aaee238854e7fd4d4cc9096b7bbc0826e8e2adcf3",
+      "files": 8,
+      "bundlePatch": "./cordis.patch.yml",
+      "status": "pass"
+    },
+    {
+      "packageName": "@dsh-eac/skin-maid-atelier",
+      "version": "1.1.0",
+      "sha256": "sha256:e1cc9c348d6f3d2ab34f7d31ca5cb89f3c9820d92086b136d2b64137a8376971",
+      "files": 10,
+      "bundlePatch": "./cordis.patch.yml",
+      "status": "pass"
+    },
+    {
+      "packageName": "@dsh-eac/skin-miku",
+      "version": "1.1.0",
+      "sha256": "sha256:565544e5073adf34920c8be2560546339a9cbe43b283b7eaf35e8766e59f104f",
+      "files": 10,
+      "bundlePatch": "./cordis.patch.yml",
+      "status": "pass"
+    },
+    {
+      "packageName": "@dsh-eac/skin-minecraft",
+      "version": "1.1.0",
+      "sha256": "sha256:738d98d107514a68d31ee2890ae948c0086cc168c3a8c83ac4e90bfd8feb1c1b",
+      "files": 10,
+      "bundlePatch": "./cordis.patch.yml",
+      "status": "pass"
+    },
+    {
+      "packageName": "@dsh-eac/skin-qq98",
+      "version": "1.1.0",
+      "sha256": "sha256:a9c803781c7640e54e5fe3d9b6d4f7c6158e51376d69b6b3805ca61bccc650e4",
+      "files": 10,
+      "bundlePatch": "./cordis.patch.yml",
+      "status": "pass"
+    },
+    {
+      "packageName": "@dsh-eac/skin-ths",
+      "version": "1.1.0",
+      "sha256": "sha256:6538ec4533f12ae4201894c043ecf9b32c5d60b05f18714859f4083c2b8a585d",
+      "files": 10,
+      "bundlePatch": "./cordis.patch.yml",
+      "status": "pass"
+    },
+    {
+      "packageName": "@dsh-eac/skin-trading",
+      "version": "1.1.0",
+      "sha256": "sha256:f77b0a06dccf595d02208e290875381a97705cea434eb05936aab6fe0120fb0e",
+      "files": 8,
+      "bundlePatch": "./cordis.patch.yml",
+      "status": "pass"
+    },
+    {
+      "packageName": "@dsh-eac/skin-whale-song",
+      "version": "1.1.0",
+      "sha256": "sha256:7becbd60588e67b0974e7524c3adbbdc3f986b4b2c6ccef0c54bf0741a70f5ce",
+      "files": 8,
+      "bundlePatch": "./cordis.patch.yml",
+      "status": "pass"
+    },
+    {
+      "packageName": "@dsh-eac/skin-xp",
+      "version": "1.1.0",
+      "sha256": "sha256:aeee9bf1e0b520e1faadd232db1b8c440766592581907256410ad97d0bf5b4ac",
+      "files": 10,
+      "bundlePatch": "./cordis.patch.yml",
+      "status": "pass"
+    },
+    {
+      "packageName": "@dsh-eac/ui-skin-loader",
+      "version": "1.1.0",
+      "sha256": "sha256:b926aad7d312c9573226414867049a48b6825e2bb15d8ba76a3d707095ef1ba6",
+      "files": 8,
+      "bundlePatch": "./cordis.patch.yml",
+      "status": "pass"
+    },
+    {
+      "packageName": "@dsh-eac/skin-miku",
+      "version": "1.1.1-eac.dc22280.2",
+      "sha256": "sha256:b0ee8cb34ba52f0edacb3f36153d2a0e1bb5e2b4a16c39e3d52a50f278f087fc",
+      "files": 12,
+      "bundlePatch": "./cordis.patch.yml",
+      "status": "pass"
+    },
+    {
+      "packageName": "@dsh-eac/skin-trading",
+      "version": "1.1.1-eac.dc22280.2",
+      "sha256": "sha256:e873a0f8e2475d2ccdc273e451ee253790a1aa4bcf405849a4b590a73ef80e1d",
+      "files": 10,
+      "bundlePatch": "./cordis.patch.yml",
+      "status": "pass"
+    },
+    {
+      "packageName": "dsh-compact",
+      "version": "1.0.0",
+      "sha256": "sha256:671611232dcf089a8a6b21939baf8212bfbee258b13d11792104c7887cd0a5c7",
+      "files": 10,
+      "bundlePatch": "cordis.patch.yml",
+      "status": "pass"
+    },
+    {
+      "packageName": "dsh-settings-scroll-fix",
+      "version": "2.0.2",
+      "sha256": "sha256:e160298f49cc9064212fcedb6eea808a436bbaf585f38872dbcc20fb06b23204",
+      "files": 12,
+      "bundlePatch": "./cordis.patch.yml",
+      "status": "pass"
+    },
+    {
+      "packageName": "dsh-unified-market",
+      "version": "0.4.0",
+      "sha256": "sha256:c4e428d209bfef7dc1fac18466408a035207514a340c0b451f0d635f5b14c6b2",
+      "files": 16,
+      "bundlePatch": "./cordis.patch.yml",
+      "status": "pass"
+    },
+    {
+      "packageName": "@dsh-eac/desktop-pack",
+      "version": "1.0.0",
+      "sha256": "sha256:7a328030e4ba8472bc5f53e439bd969f8212f6affe73f339865cc9c95023d187",
+      "files": 95,
+      "bundlePatch": "./cordis.patch.yml",
+      "status": "pass"
+    },
+    {
+      "packageName": "@dsh-eac/pack-installer",
+      "version": "1.0.0",
+      "sha256": "sha256:49c0b05296f91606ba0f2045beb38866c44a2cfc3ad95311040e509b1f15ab4c",
+      "files": 7,
+      "bundlePatch": "./cordis.patch.yml",
+      "status": "pass"
+    },
+    {
+      "packageName": "@dsh-eac/ui-skin-manager",
+      "version": "0.1.0-preview.1",
+      "sha256": "sha256:13a4c5dbd1a31c9512f535a9c14f5072f933f284634f6763e569e65614a63378",
+      "files": 28,
+      "bundlePatch": null,
+      "status": "pass"
+    }
+  ],
+  "errors": [],
+  "status": "passed-static-materials-only"
+}

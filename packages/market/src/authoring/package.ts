@@ -5,10 +5,10 @@
  * 不包含可执行入口，也不会调用任何包内脚本。
  */
 import { createHash } from 'node:crypto'
-import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import type { AuthorDraft, AuthorDraftInput } from '../contracts/types.ts'
-import { AuthorDraftStore, type DraftStoreOptions } from './drafts.ts'
+import { AuthorDraftConflictError, AuthorDraftStore, type DraftStoreOptions } from './drafts.ts'
 import { MediaStore, type MediaLimits, type StoredMedia } from './media.ts'
 import { createZip, readZip, safeZipPath, type ZipEntry, type ZipLimits } from './zip.ts'
 
@@ -28,6 +28,12 @@ export interface AuthorPackageResult {
   readonly draft: AuthorDraft
   readonly provenance: AuthorProvenance
   readonly warnings: readonly string[]
+}
+
+/** 有界预览；只返回当前草稿引用的图片，无本机路径。 */
+export interface AuthorMediaView extends StoredMedia {
+  readonly draftId: string
+  readonly data: string
 }
 
 export class AuthorPackageError extends Error {
@@ -136,22 +142,22 @@ export class AuthorPackageService {
   }
 
   readProvenance(draftId: string): AuthorProvenance {
+    const inline = this.drafts.provenance(draftId)
+    if (inline !== undefined) return validateProvenance(inline)
     const path = this.provenancePath(draftId)
     if (!existsSync(path)) return {}
     return validateProvenance(JSON.parse(readFileSync(path, 'utf8')))
   }
 
   private writeProvenance(draftId: string, provenance: AuthorProvenance): void {
-    const path = this.provenancePath(draftId)
-    const temporary = `${path}.${process.pid}.${Date.now()}.tmp`
-    writeFileSync(temporary, JSON.stringify(validateProvenance(provenance), null, 2), { encoding: 'utf8', flag: 'wx' })
-    renameSync(temporary, path)
+    this.drafts.setProvenance(draftId, validateProvenance(provenance))
   }
 
   export(draftId: string, provenance?: AuthorProvenance): Uint8Array {
     const draft = this.drafts.get(draftId)
-    const validatedProvenance = validateProvenance(provenance ?? this.readProvenance(draftId))
-    this.writeProvenance(draftId, validatedProvenance)
+    // {} 表示未修改，不能删除历史署名许可；部分覆盖也必须保留未提及的字段。
+    const existing = this.readProvenance(draftId)
+    const validatedProvenance = validateProvenance({ ...existing, ...validateProvenance(provenance) })
     const presentation: PresentationDocument = {
       schemaVersion: '1',
       id: draft.id,
@@ -180,7 +186,24 @@ export class AuthorPackageService {
       files: Object.fromEntries(entries.map((entry) => [entry.path, sha256(entry.data)])),
     }
     entries.push({ path: 'checksums.json', data: Buffer.from(JSON.stringify(checksums, null, 2), 'utf8') })
-    return createZip(entries, this.zipLimits)
+    const archive = createZip(entries, this.zipLimits)
+    if (JSON.stringify(existing) !== JSON.stringify(validatedProvenance)) this.writeProvenance(draftId, validatedProvenance)
+    return archive
+  }
+
+  readMedia(draftId: string, mediaId: string): AuthorMediaView {
+    const draft = this.drafts.get(draftId)
+    if (!draft.mediaIds.includes(mediaId)) throw new AuthorPackageError('author-package/media-not-owned', '草稿没有引用该媒体')
+    const stored = this.media.get(mediaId)
+    return { draftId, ...stored.metadata, data: Buffer.from(stored.bytes).toString('base64') }
+  }
+
+  attachMedia(draftId: string, expectedRevision: string, bytes: Uint8Array, filename: string): { readonly draft: AuthorDraft; readonly media: StoredMedia } {
+    const draft = this.drafts.get(draftId)
+    if (draft.revision !== expectedRevision) throw new AuthorDraftConflictError(expectedRevision, draft.revision)
+    const media = this.media.save(bytes, filename)
+    const next = this.drafts.update({ ...draft, expectedRevision, mediaIds: [...new Set([...draft.mediaIds, media.id])] })
+    return { draft: next, media }
   }
 
   /**
@@ -195,6 +218,10 @@ export class AuthorPackageService {
       readonly defaultProvenance?: AuthorProvenance
     } = {},
   ): AuthorPackageResult {
+    if (options.targetDraftId !== undefined && options.expectedRevision !== undefined) {
+      const current = this.drafts.get(options.targetDraftId)
+      if (current.revision !== options.expectedRevision) throw new AuthorDraftConflictError(options.expectedRevision, current.revision)
+    }
     const entries = readZip(archive, this.zipLimits)
     const map = new Map(entries.map((entry) => [entry.path, entry.data]))
     const required = ['presentation.json', 'README.md', 'provenance.json', 'checksums.json']
@@ -206,7 +233,7 @@ export class AuthorPackageService {
       }
     }
     const checksumValue = parseJson(map.get('checksums.json') ?? Buffer.alloc(0), 'checksums.json') as ChecksumDocument
-    if (checksumValue.schemaVersion !== '1' || checksumValue.algorithm !== 'sha256' || typeof checksumValue.files !== 'object') {
+    if (!checksumValue || checksumValue.schemaVersion !== '1' || checksumValue.algorithm !== 'sha256' || typeof checksumValue.files !== 'object' || checksumValue.files === null || Array.isArray(checksumValue.files)) {
       throw new AuthorPackageError('author-package/invalid-checksums', 'checksums.json 结构无效')
     }
     for (const [path, expected] of Object.entries(checksumValue.files)) {
@@ -220,7 +247,7 @@ export class AuthorPackageService {
     }
 
     const presentationValue = parseJson(map.get('presentation.json') ?? Buffer.alloc(0), 'presentation.json') as Partial<PresentationDocument>
-    if (presentationValue.schemaVersion !== '1') throw new AuthorPackageError('author-package/schema-mismatch', '不支持的 presentation schemaVersion')
+    if (!presentationValue || presentationValue.schemaVersion !== '1') throw new AuthorPackageError('author-package/schema-mismatch', '不支持的 presentation schemaVersion')
     const markdown = text(presentationValue.markdown, 'presentation.markdown', 512 * 1024, true)
     const readme = Buffer.from(map.get('README.md') ?? Buffer.alloc(0)).toString('utf8')
     if (readme !== markdown) throw new AuthorPackageError('author-package/readme-mismatch', 'README.md 与 presentation.markdown 不一致')
@@ -231,12 +258,14 @@ export class AuthorPackageService {
       const url = new URL(sourceUrl)
       if (url.protocol !== 'https:' || url.username || url.password) throw new AuthorPackageError('author-package/invalid-source', 'sourceUrl 必须是无凭据 HTTPS')
     }
-    const mediaIds = Array.isArray(presentationValue.mediaIds) ? presentationValue.mediaIds : []
+    if (!Array.isArray(presentationValue.mediaIds)) throw new AuthorPackageError('author-package/invalid-media', 'mediaIds 必须是数组')
+    const mediaIds = presentationValue.mediaIds
     if (mediaIds.length > 128 || mediaIds.some((item) => typeof item !== 'string' || !/^[a-zA-Z0-9_-]+$/.test(item))) {
       throw new AuthorPackageError('author-package/invalid-media', 'mediaIds 无效')
     }
     const mediaFiles = entries.filter((entry) => entry.path.startsWith('media/'))
     if (mediaFiles.length !== mediaIds.length) throw new AuthorPackageError('author-package/media-mismatch', 'mediaIds 与媒体文件数量不一致')
+    if (new Set(mediaIds).size !== mediaIds.length) throw new AuthorPackageError('author-package/media-mismatch', 'mediaIds 重复')
     const savedMedia: StoredMedia[] = []
     for (const entry of mediaFiles) {
       const id = entry.path.slice('media/'.length, -'.bin'.length)
@@ -262,9 +291,8 @@ export class AuthorPackageService {
       ...(sourceUrl === undefined ? {} : { sourceUrl: new URL(sourceUrl).href }),
     }
     const draft = options.targetDraftId !== undefined && options.expectedRevision !== undefined
-      ? this.drafts.update({ ...input, id: options.targetDraftId })
-      : this.drafts.create(input)
-    this.writeProvenance(draft.id, provenance)
+      ? this.drafts.update({ ...input, id: options.targetDraftId }, provenance)
+      : this.drafts.create(input, provenance)
     return { draft, provenance, warnings: [] }
   }
 }

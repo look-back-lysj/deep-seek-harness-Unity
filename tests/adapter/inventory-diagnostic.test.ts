@@ -1,22 +1,12 @@
 import { describe, expect, it, vi } from 'vitest'
 import { DshManagerAdapter } from '../../packages/market/src/adapters/dsh/manager.ts'
-import { OfficialHostPort, redactDiagnostic } from '../../packages/market/src/adapters/dsh/host-port.ts'
-import type { ArtifactAcquisition } from '../../packages/market/src/core/ports.ts'
+import { mapOfficialChange, redactDiagnostic } from '../../packages/market/src/adapters/dsh/host-port.ts'
 
 function context(manager: unknown) {
   return {
     profileContext: { dir: 'D:/isolated/profile', name: 'desktop' },
     get: (key: string) => key === 'pluginManager' ? manager : undefined,
   } as never
-}
-
-const artifact: ArtifactAcquisition = {
-  pluginId: 'plugin',
-  packageName: '@test/plugin',
-  version: '1.0.0',
-  artifactDigest: 'sha256:0',
-  localRef: 'D:/isolated/cache/plugin.tgz',
-  size: 1,
 }
 
 describe('AUD-F10/F11/F21 adapter evidence', () => {
@@ -93,11 +83,11 @@ describe('AUD-F10/F11/F21 adapter evidence', () => {
     const unproven = await new DshManagerAdapter(context(bundle)).inventory('env-test')
     expect(unproven.items[0]).toMatchObject({ source: 'unknown', localIdentity: 'unknown' })
     const market = await new DshManagerAdapter(context(bundle), 'env-test', [
-      { packageName: 'pkg-local', kind: 'market-cache-file', proven: true },
+      { packageName: 'pkg-local', version: '1.0.0', kind: 'market-cache-file', receiptId: 'test-receipt', digest: 'test-digest', dependencyRef: 'file:cache.tgz', cacheRef: 'cache.tgz' },
     ]).inventory('env-test')
     expect(market.items[0]).toMatchObject({ source: 'market-cache-file', localIdentity: 'file' })
     const local = await new DshManagerAdapter(context(bundle), 'env-test', [
-      { packageName: 'pkg-local', kind: 'fork', proven: true },
+      { packageName: 'pkg-local', version: '1.0.0', kind: 'fork' },
     ]).inventory('env-test')
     expect(local.items[0]).toMatchObject({ source: 'unknown', localIdentity: 'fork' })
   })
@@ -120,8 +110,7 @@ describe('AUD-F10/F11/F21 adapter evidence', () => {
         kind: 'network',
       },
     }))
-    const port = new OfficialHostPort(context({ installBundle }))
-    const result = await port.install({ requestId: 'request-diag', artifact, enabled: true })
+    const result = await mapOfficialChange(await installBundle() as never)
     expect(result.kind).toBe('failed')
     if (result.kind !== 'failed') throw new Error('unreachable')
     expect(result.errorCode).toBe('operation-error')

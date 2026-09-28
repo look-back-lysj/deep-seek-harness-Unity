@@ -2,10 +2,16 @@ import type {
   ApprovalChallenge,
   AuthorDraft,
   AuthorDraftInput,
+  AuthorExportRequest,
+  AuthorMediaReadRequest,
+  AuthorMediaReadResult,
   CatalogPack,
+  CatalogCollectionView,
   CatalogPlugin,
   CatalogPresentation,
   CatalogSnapshot,
+  CatalogRefreshView,
+  CatalogRecommendation,
   AiAnalyzeRequest,
   AiAnalysisResult,
   AiApplyResult,
@@ -20,6 +26,8 @@ import type {
   PluginActionResult,
   ReadmeImportRequest,
   ReadmeImportResult,
+  ReadmePreviewView,
+  ReadmeApplyPreviewRequest,
   RemovePluginRequest,
   ResumeChallenge,
   TaskApprovalRequest,
@@ -33,8 +41,12 @@ import type {
   TransferBeginRequest,
   TransferChunkRequest,
   TransferResult,
+  TransferChunkReadRequest,
+  TransferChunkReadResult,
+  TransferDisposeRequest,
   VerificationState,
 } from '../types.ts'
+import { compareVersions as compareSemVer, validVersion } from '../core/semver.ts'
 
 export interface MarketRemote {
   hello(): Promise<EnvironmentHello>
@@ -50,19 +62,26 @@ export interface MarketRemote {
   setPluginEnabled?(request: PluginActionRequest): Promise<PluginActionResult>
   removePlugin?(request: RemovePluginRequest): Promise<PluginActionResult>
   listDrafts?(): Promise<readonly AuthorDraft[]>
+  getDraft?(id: string): Promise<AuthorDraft>
   saveDraft?(request: AuthorDraftInput): Promise<AuthorDraft>
+  exportDraft?(request: AuthorExportRequest): Promise<TransferResult>
+  readMedia?(request: AuthorMediaReadRequest): Promise<AuthorMediaReadResult>
   importReadme?(request: ReadmeImportRequest): Promise<ReadmeImportResult>
+  previewReadme?(request: ReadmeImportRequest): Promise<ReadmePreviewView>
+  applyReadmePreview?(request: ReadmeApplyPreviewRequest): Promise<ReadmeImportResult>
   transferBegin?(request: TransferBeginRequest): Promise<TransferResult>
   transferChunk?(request: TransferChunkRequest): Promise<TransferResult>
-  refreshCatalog?(): Promise<CatalogSnapshot>
+  transferRead?(request: TransferChunkReadRequest): Promise<TransferChunkReadResult>
+  transferDispose?(request: TransferDisposeRequest): Promise<boolean>
+  refreshCatalog?(): Promise<CatalogRefreshView>
   exportDiagnostic?(): Promise<DiagnosticExport>
   aiAnalyze?(request: AiAnalyzeRequest): Promise<AiAnalysisResult>
   aiConfirm?(request: AiConfirmRequest): Promise<AiApplyResult>
 }
 
 export type PrimaryView = 'discover' | 'all' | 'mine'
-export type SecondaryView = 'help' | 'settings' | 'author'
-export type MarketView = PrimaryView | SecondaryView | 'detail'
+export type SecondaryView = 'help' | 'settings' | 'author' | 'skins'
+export type MarketView = PrimaryView | SecondaryView | 'detail' | 'extension'
 export type LoadState =
   | { readonly status: 'loading' }
   | {
@@ -204,8 +223,33 @@ export function packPluginIds(pack: CatalogPack): readonly string[] {
 export function findPlugin(
   catalog: CatalogSnapshot,
   pluginId: string | undefined,
+  version?: string,
 ): CatalogPlugin | undefined {
-  return pluginId === undefined ? undefined : catalog.plugins.find((plugin) => plugin.id === pluginId)
+  if (pluginId === undefined) return undefined
+  const matches = catalog.plugins.filter((plugin) => plugin.id === pluginId && (version === undefined || plugin.version === version))
+  return matches.sort(catalogVersionOrder)[0]
+}
+
+/** Deterministic ordering only; an explicit detail selection never falls back to a
+ * different version. Invalid version labels may be browsed but cannot win updates. */
+function catalogVersionOrder(left: CatalogPlugin, right: CatalogPlugin): number {
+  const leftValid = validVersion(left.version)
+  const rightValid = validVersion(right.version)
+  if (leftValid !== rightValid) return leftValid ? -1 : 1
+  const order = leftValid && rightValid ? compareSemVer(right.version, left.version) : 0
+  return order || left.version.localeCompare(right.version) || left.id.localeCompare(right.id) || (left.artifactDigest ?? '').localeCompare(right.artifactDigest ?? '')
+}
+
+/** Default update suggestions require known compatibility and the registered
+ * delivery of the same package/version/digest. Unknown compatibility is not a
+ * default update recommendation; it remains available in explicit detail flows. */
+export function latestCompatiblePlugin(catalog: CatalogSnapshot, packageName: string): CatalogPlugin | undefined {
+  return catalog.plugins.filter((plugin) => plugin.packageName === packageName
+    && validVersion(plugin.version) && plugin.verification === 'verified' && plugin.installability === 'bundle-installable'
+    && plugin.artifactDigest !== undefined && catalog.deliveries.some((delivery) => delivery.pluginId === plugin.id
+      && delivery.packageName === plugin.packageName && delivery.version === plugin.version
+      && delivery.artifactDigest === plugin.artifactDigest && delivery.sources.length > 0))
+    .sort(catalogVersionOrder)[0]
 }
 
 export function presentationForPlugin(
@@ -219,10 +263,10 @@ export function summarizeInventory(item: InventoryItem): string {
   const state = item.rows.some((row) => row.state === 'load-error')
     ? '加载失败'
     : item.rows.some((row) => row.state === 'enabled')
-      ? '已启用'
+      ? item.rows.some((row) => row.fiberPhase === 'active') ? '运行中' : '已配置启用（运行待核对）'
       : item.rows.some((row) => row.state === 'disabled')
         ? '已停用'
-        : '状态未知'
+        : item.installed && !item.bundleEnabled ? '已停用' : '运行状态未知'
   return item.restartRequired ? `${state} · 需要重启` : state
 }
 
@@ -263,21 +307,10 @@ export function createIdempotencyKey(prefix: string): string {
 export type BrowseSortMode = 'rules' | 'compatibility' | 'recommended'
 
 export function compareVersions(left: string | undefined, right: string): number {
-  if (left === undefined) return -1
-  const normalizeParts = (value: string): readonly (string | number)[] => value
-    .split(/[-+]/, 1)[0]!
-    .split('.')
-    .map((part) => /^\d+$/.test(part) ? Number(part) : part)
-  const a = normalizeParts(left)
-  const b = normalizeParts(right)
-  for (let index = 0; index < Math.max(a.length, b.length); index += 1) {
-    const av = a[index] ?? 0
-    const bv = b[index] ?? 0
-    if (av === bv) continue
-    if (typeof av === 'number' && typeof bv === 'number') return av < bv ? -1 : 1
-    return String(av).localeCompare(String(bv), 'zh-CN')
-  }
-  return 0
+  // Share the installer's pure SemVer rules, including prereleases. Missing or
+  // invalid installed versions cannot justify advertising an update button.
+  if (left === undefined || !validVersion(left) || !validVersion(right)) return 0
+  return compareSemVer(left, right)
 }
 
 export function hasCatalogUpdate(installed: InventoryItem | undefined, plugin: CatalogPlugin): boolean {
@@ -310,14 +343,17 @@ export function pluginActionFeedback(action: Pick<PluginActionResult, 'status' |
   readonly message: string
 } {
   if (action.status === 'failed') return { tone: 'danger', message: action.error ? `操作失败：${action.error}` : '操作失败，未把请求返回当成成功。' }
-  if (action.status === 'unknown') return { tone: 'warning', message: '操作结果未知，已重新读取库存；请核对实际状态后再继续。' }
+  if (action.status === 'unknown') return { tone: 'warning', message: '操作结果未知；请重新读取并核对实际状态后再继续。' }
   if (action.status === 'restart-required') return { tone: 'warning', message: '状态已保存，需要重启 DSH 后才会使用新状态。' }
   if (!action.changed) return { tone: 'neutral', message: enabled ? '插件已经是启用状态。' : '插件已经是停用状态。' }
-  return { tone: 'success', message: enabled ? '插件已启用。' : '插件已停用。' }
+  return { tone: 'success', message: enabled ? '启用设置已保存，请在插件列表核对运行状态。' : '停用设置已保存，请在插件列表核对运行状态。' }
 }
 
 export function isSystemInventoryItem(item: InventoryItem, plugin: CatalogPlugin | undefined): boolean {
-  return plugin?.distribution === 'builtin' || (plugin === undefined && item.readOnlyReason === 'management-required')
+  // The official inventory distinguishes installation-supplied bundles from
+  // profile packages. Package-name prefixes alone do not establish ownership.
+  return item.source === 'installation' || plugin?.distribution === 'builtin'
+    || item.readOnlyReason === 'management-required' || item.readOnlyReason === 'unaddressable'
 }
 
 export function partitionInventory(
@@ -327,6 +363,7 @@ export function partitionInventory(
   readonly userItems: readonly InventoryItem[]
   readonly systemItems: readonly InventoryItem[]
   readonly systemNeedsAttention: boolean
+  readonly systemAttentionCount: number
 } {
   const byPackage = new Map(plugins.map((plugin) => [plugin.packageName, plugin]))
   const userItems: InventoryItem[] = []
@@ -334,10 +371,13 @@ export function partitionInventory(
   for (const item of items) {
     (isSystemInventoryItem(item, byPackage.get(item.packageName)) ? systemItems : userItems).push(item)
   }
+  const systemAttentionCount = systemItems.filter(item => item.restartRequired || item.rows.some(row =>
+    row.state === 'load-error' || (item.bundleEnabled && row.state === 'unknown'))).length
   return {
     userItems,
     systemItems,
-    systemNeedsAttention: systemItems.some((item) => item.rows.some((row) => row.state === 'load-error' || row.state === 'unknown') || item.restartRequired),
+    systemNeedsAttention: systemAttentionCount > 0,
+    systemAttentionCount,
   }
 }
 
@@ -345,19 +385,30 @@ function browseRank(plugin: CatalogPlugin): number {
   return plugin.verification === 'verified' ? 0 : plugin.verification === 'unknown' ? 1 : plugin.verification === 'unverified' ? 2 : 3
 }
 
+export function recommendationMatches(record: CatalogRecommendation, plugin: CatalogPlugin): boolean {
+  return record.reason.trim() !== '' && record.pluginId === plugin.id && (record.version === undefined || record.version === plugin.version)
+}
+
 export function browseSortPlugins(
   plugins: readonly CatalogPlugin[],
   mode: BrowseSortMode = 'rules',
+  recommendations: readonly CatalogRecommendation[] = [],
 ): readonly CatalogPlugin[] {
+  const ranks = new Map(plugins.map((plugin) => [plugin, recommendations.filter((record) => recommendationMatches(record, plugin)).reduce((rank, record) => Math.min(rank, record.order), Number.MAX_SAFE_INTEGER)]))
   return [...plugins].sort((left, right) => {
     if (mode === 'recommended') {
-      const recommended = Number(right.distribution === 'recommended') - Number(left.distribution === 'recommended')
+      const recommended = (ranks.get(left) ?? Number.MAX_SAFE_INTEGER) - (ranks.get(right) ?? Number.MAX_SAFE_INTEGER)
       if (recommended !== 0) return recommended
     }
-    const compatibility = (mode === 'compatibility' ? 0 : 1) * (browseRank(left) - browseRank(right))
+    const available = Number(left.installability !== 'bundle-installable') - Number(right.installability !== 'bundle-installable')
+    if (available !== 0) return available
+    const compatibility = browseRank(left) - browseRank(right)
     if (compatibility !== 0) return compatibility
     const category = (left.categories[0] ?? '').localeCompare(right.categories[0] ?? '', 'zh-CN')
-    return category !== 0 ? category : left.name.localeCompare(right.name, 'zh-CN')
+    if (category !== 0 && mode !== 'compatibility') return category
+    // Only release dates participate. Presentation edits are not new releases.
+    const released = (Date.parse(right.releasedAt ?? '') || 0) - (Date.parse(left.releasedAt ?? '') || 0)
+    return released || left.name.localeCompare(right.name, 'zh-CN') || left.id.localeCompare(right.id)
   })
 }
 
@@ -367,14 +418,16 @@ export interface PlanRequestTicket {
 }
 
 export function planTargetSignature(target: {
-  readonly plugin?: Pick<CatalogPlugin, 'id' | 'version' | 'artifactDigest'>
+  readonly plugin?: Pick<CatalogPlugin, 'id' | 'version' | 'artifactDigest' | 'verification'>
   readonly pack?: Pick<CatalogPack, 'id' | 'version'>
-  readonly plugins: readonly Pick<CatalogPlugin, 'id' | 'version' | 'artifactDigest'>[]
+  readonly collection?: Pick<CatalogCollectionView, 'kind' | 'id' | 'version' | 'collectionDigest'>
+  readonly plugins: readonly Pick<CatalogPlugin, 'id' | 'version' | 'artifactDigest' | 'verification'>[]
 }): string {
   return JSON.stringify({
     plugin: target.plugin === undefined ? null : [target.plugin.id, target.plugin.version, target.plugin.artifactDigest ?? null],
     pack: target.pack === undefined ? null : [target.pack.id, target.pack.version],
-    plugins: target.plugins.map((plugin) => [plugin.id, plugin.version, plugin.artifactDigest ?? null]),
+    collection: target.collection === undefined ? null : [target.collection.kind, target.collection.id, target.collection.version, target.collection.collectionDigest],
+    plugins: target.plugins.map((plugin) => [plugin.id, plugin.version, plugin.artifactDigest ?? null, plugin.verification]),
   })
 }
 
@@ -383,10 +436,8 @@ export class PlanRequestGuard {
   private targetKey = ''
 
   begin(targetKey: string): PlanRequestTicket {
-    if (targetKey !== this.targetKey) {
-      this.targetKey = targetKey
-      this.generation += 1
-    }
+    this.targetKey = targetKey
+    this.generation += 1
     return { generation: this.generation, targetKey }
   }
 
@@ -397,4 +448,20 @@ export class PlanRequestGuard {
   accept<T>(ticket: PlanRequestTicket, value: T): T | undefined {
     return ticket.generation === this.generation && ticket.targetKey === this.targetKey ? value : undefined
   }
+}
+
+/** Next steps stay understandable even when an older Host returns a machine enum. */
+export function taskNextStep(task: TaskState): string {
+  if (task.status === 'awaiting-approval') return '查看脚本清单，授权后继续；未授权不会运行这些脚本。'
+  if (task.status === 'unknown' || task.status === 'needs-attention' || task.status === 'interrupted') return '结果尚未核定。先到官方插件页核对，不要重复安装。'
+  if (task.status === 'awaiting-resume' || task.items.some((item) => item.status === 'restart-required' || item.status === 'blocked-on-restart')) return '保存正在进行的工作并重启 DSH，再回来核对状态。'
+  if (task.status === 'completed') return '安装处理已完成。查看我的插件，按作者说明开始使用。'
+  if (task.status === 'partial') return '成功项已保留；查看失败或暂停项后再处理。'
+  if (task.status === 'failed') return '查看下方失败原因，或使用 AI 辅助分析。'
+  if (task.status === 'cancelled') return '任务已停止；已经完成的更改会保留。'
+  return '正在处理。关闭面板不会取消已经发起的任务。'
+}
+
+export function isTaskSettled(task: TaskState): boolean {
+  return !['queued', 'downloading', 'verifying', 'installing', 'applying', 'checking'].includes(task.status)
 }

@@ -4,6 +4,8 @@
 
 | 文档 | 用途 |
 |---|---|
+| [滚动修复与皮肤目录交付](handoff/SCROLL-AND-SKINS-2026-09-28.md) | mvp.2日常更新、官方分组、326项测试、本机皮肤原包及未验边界 |
+| [本机皮肤目录操作](contributing/LOCAL-EAC-SKINS.md) | 管理器与皮肤的用户安装顺序、固定来源、许可证及复现脚本 |
 | [下一模型接力入口](handoff/START-HERE.md) | 最新状态、阅读顺序、路径、执行默认、环境与可复制启动提示词 |
 | [第二轮独立复查](reviews/2026-09-28-independent-review.md) | 当前最新：亲自操作官方 Desktop、15组问题、证据及旧结论纠正 |
 | [下一阶段实施计划](NEXT-STAGE-PLAN.md) | 两部分方案、G0–G6、技术备选、逐项验收 |
@@ -32,3 +34,10 @@
 | [AGENT-PROMPTS.md](AGENT-PROMPTS.md) | 多智能体分工提示词 |
 
 `PRODUCT.md` 是需求事实源；`ACCEPTANCE.md` 是实际验证记录。两者不可互相替代。
+
+## 发行与后续维护
+
+- [六项交付/验收](handoff/DISTRIBUTION-2026-09-28.md)
+- [镜像/目录维护](contributing/DISTRIBUTION.md)
+- [EAC和官方插件差异](contributing/EAC-PLUGIN-INVENTORY.md)
+- [皮肤中心接线](UI-SKIN-CENTER-2026-09-28.md)

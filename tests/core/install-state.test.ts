@@ -1,7 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import { createPlanBundle } from '../../packages/market/src/core/planner.ts'
 import { InstallTaskManager } from '../../packages/market/src/core/task-manager.ts'
-import type { ProfileLockHandle, ProfileLockPort, TaskRecord } from '../../packages/market/src/core/ports.ts'
 import {
   FakeArtifactPort,
   FakeHost,
@@ -13,24 +12,7 @@ import {
   waitForTask,
 } from './helpers.ts'
 
-class NonReentrantLocks implements ProfileLockPort {
-  private held = false
-  private tail: Promise<void> = Promise.resolve()
-  async acquire(): Promise<ProfileLockHandle> {
-    let releasePrior = (): void => {}
-    const turn = new Promise<void>((resolve) => { releasePrior = resolve })
-    const prior = this.tail
-    this.tail = prior.then(() => turn)
-    await prior
-    this.held = true
-    return {
-      release: async () => {
-        this.held = false
-        releasePrior()
-      },
-    }
-  }
-}
+import { TestLocks as NonReentrantLocks } from '../persistence/helpers.ts'
 
 describe('AUD install state fixes', () => {
   it('AUD-F02 creates a new immutable plan identity for a later retry', async () => {
@@ -96,7 +78,7 @@ describe('AUD install state fixes', () => {
     await cancelPromise
   })
 
-  it('AUD-F08 preserves a terminal cancellation from a late install result', async () => {
+  it('AUD-F08 does not invent cancellation before the actual install receipt', async () => {
     const bundle = await makeBundle({ plugins: [{ packageName: 'late', version: '1.0.0' }] })
     const host = new FakeHost()
     host.cancelOutcome = { kind: 'cancelled', changed: false }
@@ -106,10 +88,10 @@ describe('AUD install state fixes', () => {
     const { manager, taskId } = await makeManager(bundle, host)
     await waitForTask(manager, taskId, (state) => state.status === 'installing')
     const cancelling = manager.cancel({ taskId, idempotencyKey: 'cancel-late' })
-    await vi.waitFor(async () => expect((await manager.get(taskId))?.status).toBe('cancelled'))
+    await vi.waitFor(async () => expect((await manager.get(taskId))?.status).toBe('cancelling'))
     gate.resolve()
     await cancelling
-    const task = await waitForTask(manager, taskId, (state) => state.status === 'cancelled')
-    expect(task.items[0]?.status).toBe('cancelled')
+    const task = await waitForTask(manager, taskId, (state) => state.status === 'completed')
+    expect(task.items[0]?.status).toBe('enabled')
   })
 })

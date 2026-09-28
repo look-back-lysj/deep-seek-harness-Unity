@@ -1,0 +1,31 @@
+{
+  "status": "passed-v2-merge",
+  "fragmentPlugins": 43,
+  "fragmentReleases": 6,
+  "fragmentPresentations": 43,
+  "fragmentReleaseStatuses": 6,
+  "fragmentDeliveries": 3,
+  "fragmentListings": 27,
+  "mergedPlugins": 57,
+  "oldSkinsRemainWithdrawn": 2,
+  "unchangedOriginalSkinRecordsExcludedFromFragment": 14,
+  "installableAdditions": [
+    {
+      "packageName": "dsh-settings-scroll-fix",
+      "version": "2.0.2",
+      "artifactDigest": "sha256:e160298f49cc9064212fcedb6eea808a436bbaf585f38872dbcc20fb06b23204"
+    },
+    {
+      "packageName": "@dsh-eac/skin-miku",
+      "version": "1.1.1-eac.dc22280.2",
+      "artifactDigest": "sha256:b0ee8cb34ba52f0edacb3f36153d2a0e1bb5e2b4a16c39e3d52a50f278f087fc"
+    },
+    {
+      "packageName": "@dsh-eac/skin-trading",
+      "version": "1.1.1-eac.dc22280.2",
+      "artifactDigest": "sha256:e873a0f8e2475d2ccdc273e451ee253790a1aa4bcf405849a4b590a73ef80e1d"
+    }
+  ],
+  "runtimeVerification": "not-tested",
+  "publication": "not-published"
+}

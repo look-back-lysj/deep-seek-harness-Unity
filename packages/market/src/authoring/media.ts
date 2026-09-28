@@ -104,7 +104,7 @@ export class MediaStore {
     const metadata = JSON.parse(readFileSync(join(this.root, `${id}.json`), 'utf8')) as StoredMedia
     const bytes = readFileSync(join(this.root, `${id}.bin`))
     const actual = `sha256:${createHash('sha256').update(bytes).digest('hex')}`
-    if (metadata.id !== id || metadata.sha256 !== actual || metadata.size !== bytes.byteLength) {
+    if (metadata.id !== id || metadata.sha256 !== actual || metadata.size !== bytes.byteLength || bytes.byteLength > this.maxFileBytes || detectImage(bytes) !== metadata.mediaType) {
       throw new MediaValidationError('media/digest-mismatch', '媒体文件与摘要不符')
     }
     return { metadata, bytes }

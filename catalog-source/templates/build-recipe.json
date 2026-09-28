@@ -1,0 +1,17 @@
+{
+  "schemaVersion": "1",
+  "kind": "TeamBuildRecipe",
+  "repositoryUrl": null,
+  "commit": null,
+  "sourceSubdir": ".",
+  "lockFile": "pnpm-lock.yaml",
+  "lockDigest": null,
+  "authorization": { "basis": "permission", "reference": null, "redistribution": false },
+  "toolchain": [{ "name": "node", "version": null }],
+  "target": { "os": "linux", "arch": "x64" },
+  "steps": [{ "executable": "node", "args": ["build.mjs"] }],
+  "allowedLifecycleScripts": [],
+  "output": "dist/plugin.tgz",
+  "limits": { "timeoutSeconds": 1800, "memoryMiB": 4096, "diskMiB": 8192 },
+  "credentials": "none"
+}

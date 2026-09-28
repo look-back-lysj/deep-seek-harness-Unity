@@ -8,6 +8,7 @@ import { createHash, randomUUID } from 'node:crypto'
 import { existsSync, mkdirSync, readFileSync, readdirSync, renameSync, rmSync, writeFileSync } from 'node:fs'
 import { isAbsolute, join, relative, resolve, sep } from 'node:path'
 import type { AuthorDraft, AuthorDraftInput } from '../contracts/types.ts'
+import type { AuthorProvenance } from './package.ts'
 
 export interface DraftStoreOptions {
   readonly maxTextBytes?: number
@@ -81,6 +82,7 @@ function validateInput<T extends AuthorDraftInput>(input: T, maxTextBytes: numbe
   if (!Array.isArray(input.mediaIds) || input.mediaIds.length > 128 || input.mediaIds.some((item) => typeof item !== 'string' || !/^[a-zA-Z0-9_-]{1,128}$/.test(item))) {
     throw new AuthorDraftValidationError('draft/invalid-media', 'mediaIds 无效')
   }
+  if (new Set(input.mediaIds).size !== input.mediaIds.length) throw new AuthorDraftValidationError('draft/duplicate-media', 'mediaIds 不允许重复')
   return input
 }
 
@@ -96,6 +98,7 @@ function revisionFor(input: AuthorDraftInput, updatedAt: string): string {
       sourceCommit: input.sourceCommit,
       sourceUrl: input.sourceUrl,
       updatedAt,
+      previousRevision: input.expectedRevision,
     }))
     .digest('hex')
     .slice(0, 16)}`
@@ -143,6 +146,7 @@ export class AuthorDraftStore {
   list(): readonly AuthorDraft[] {
     return readdirSync(this.root, { withFileTypes: true })
       .filter((entry) => entry.isDirectory() && DRAFT_ID_RE.test(entry.name))
+      .filter((entry) => existsSync(join(this.root, entry.name, 'draft.json')))
       .map((entry) => this.get(entry.name))
       .sort((left, right) => right.updatedAt.localeCompare(left.updatedAt))
   }
@@ -150,13 +154,26 @@ export class AuthorDraftStore {
   get(id: string): AuthorDraft {
     const path = join(this.draftDir(id), 'draft.json')
     const raw = readFileSync(path)
-    if (raw.byteLength > this.maxTextBytes + 64 * 1024) throw new AuthorDraftValidationError('draft/too-large', '草稿文件超限')
-    const value = JSON.parse(raw.toString('utf8')) as AuthorDraft
+    if (raw.byteLength > 2 * this.maxTextBytes + 64 * 1024) throw new AuthorDraftValidationError('draft/too-large', '草稿文件超限')
+    const value = JSON.parse(raw.toString('utf8')) as AuthorDraft & { provenance?: AuthorProvenance }
     if (value.id !== id || typeof value.revision !== 'string') throw new AuthorDraftValidationError('draft/corrupt', '草稿文件结构无效')
-    return value
+    validateInput(value, this.maxTextBytes)
+    const { provenance: _provenance, ...draft } = value
+    return draft
   }
 
-  create(input: AuthorDraftInput): AuthorDraft {
+  /** provenance 与正文放进同一个原子文件，导入失败不能留下新正文配旧署名。 */
+  provenance(id: string): AuthorProvenance | undefined {
+    const value = JSON.parse(readFileSync(join(this.draftDir(id), 'draft.json'), 'utf8')) as { provenance?: AuthorProvenance }
+    return value.provenance
+  }
+
+  /** 导出参数只改署名材料，不改正文 revision；同一原子文件保留当前正文。 */
+  setProvenance(id: string, provenance: AuthorProvenance): void {
+    this.writeAtomic(this.draftDir(id), this.get(id), provenance)
+  }
+
+  create(input: AuthorDraftInput, provenance?: AuthorProvenance): AuthorDraft {
     const validated = validateInput(input, this.maxTextBytes)
     const id = validated.id ?? this.idFactory()
     const dir = this.draftDir(id)
@@ -166,21 +183,24 @@ export class AuthorDraftStore {
     if (this.list().length >= this.maxDrafts) throw new AuthorDraftValidationError('draft/too-many', '草稿数量超限')
     mkdirSync(join(dir, 'media'), { recursive: true })
     const draft = draftFromInput({ ...validated, id }, id, this.now().toISOString())
-    this.writeAtomic(dir, draft)
+    this.writeAtomic(dir, draft, provenance)
     return draft
   }
 
-  update(input: AuthorDraftInput & { readonly id: string }): AuthorDraft {
+  update(input: AuthorDraftInput & { readonly id: string }, provenance?: AuthorProvenance): AuthorDraft {
     const validated = validateInput(input, this.maxTextBytes)
     const dir = this.draftDir(validated.id)
     const currentPath = join(dir, 'draft.json')
-    if (!existsSync(currentPath)) return this.create({ ...validated, id: validated.id })
+    if (!existsSync(currentPath)) {
+      if (validated.expectedRevision !== undefined) throw new AuthorDraftValidationError('draft/not-found', '草稿已不存在，不能用旧 revision 重新创建')
+      return this.create({ ...validated, id: validated.id }, provenance)
+    }
     const current = this.get(validated.id)
     if (validated.expectedRevision !== current.revision) {
       throw new AuthorDraftConflictError(validated.expectedRevision, current.revision)
     }
     const draft = draftFromInput({ ...validated, id: validated.id }, validated.id, this.now().toISOString())
-    this.writeAtomic(dir, draft)
+    this.writeAtomic(dir, draft, provenance ?? this.provenance(validated.id))
     return draft
   }
 
@@ -195,10 +215,10 @@ export class AuthorDraftStore {
     return join(this.draftDir(id), 'media')
   }
 
-  private writeAtomic(dir: string, draft: AuthorDraft): void {
+  private writeAtomic(dir: string, draft: AuthorDraft, provenance?: AuthorProvenance): void {
     const path = join(dir, 'draft.json')
-    const temporary = `${path}.${process.pid}.${Date.now()}.tmp`
-    writeFileSync(temporary, JSON.stringify(draft, null, 2), { encoding: 'utf8', flag: 'wx' })
+    const temporary = `${path}.${randomUUID()}.tmp`
+    writeFileSync(temporary, JSON.stringify({ ...draft, ...(provenance === undefined ? {} : { provenance }) }, null, 2), { encoding: 'utf8', flag: 'wx' })
     renameSync(temporary, path)
   }
 }

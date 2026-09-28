@@ -1,0 +1,122 @@
+{
+  "source": "https://github.com/DSH-EAC/dsh-ui-skin-loader",
+  "commit": {
+    "commit": "afa947215a862a9c3304f6fff7a812efe5a42fdc",
+    "date": "2026-09-27T13:28:05+08:00"
+  },
+  "artifacts": [
+    {
+      "filename": "dsh-eac-ui-skin-loader-1.1.0.tgz",
+      "name": "@dsh-eac/ui-skin-loader",
+      "version": "1.1.0",
+      "bytes": 22667,
+      "sha256": "b926aad7d312c9573226414867049a48b6825e2bb15d8ba76a3d707095ef1ba6",
+      "sourceCommit": "afa947215a862a9c3304f6fff7a812efe5a42fdc"
+    },
+    {
+      "filename": "dsh-eac-skin-aurora-1.1.0.tgz",
+      "name": "@dsh-eac/skin-aurora",
+      "version": "1.1.0",
+      "bytes": 13706,
+      "sha256": "3abf546ccbea8fa106290ed0a96c77661a9620e88fadb57b76afa12aa503cd35",
+      "sourceCommit": "afa947215a862a9c3304f6fff7a812efe5a42fdc"
+    },
+    {
+      "filename": "dsh-eac-skin-blue-fantasy-1.1.0.tgz",
+      "name": "@dsh-eac/skin-blue-fantasy",
+      "version": "1.1.0",
+      "bytes": 5086165,
+      "sha256": "b89297f957c93ce76cc9984ebfdf73d49889c89d568200ac4e06a8b90dc94a44",
+      "sourceCommit": "afa947215a862a9c3304f6fff7a812efe5a42fdc"
+    },
+    {
+      "filename": "dsh-eac-skin-deep-whale-day-night-1.1.0.tgz",
+      "name": "@dsh-eac/skin-deep-whale-day-night",
+      "version": "1.1.0",
+      "bytes": 7531975,
+      "sha256": "8d1f42ed937e1ac84e1726e0cae5b2fc20fc2735671d2268e4f9f31c13aec7d6",
+      "sourceCommit": "afa947215a862a9c3304f6fff7a812efe5a42fdc"
+    },
+    {
+      "filename": "dsh-eac-skin-dragon-heir-1.1.0.tgz",
+      "name": "@dsh-eac/skin-dragon-heir",
+      "version": "1.1.0",
+      "bytes": 179728,
+      "sha256": "c315837b67597107612a0c663ec8e8168e6f90622017bb6735614b4a3a322ba3",
+      "sourceCommit": "afa947215a862a9c3304f6fff7a812efe5a42fdc"
+    },
+    {
+      "filename": "dsh-eac-skin-inkwash-1.1.0.tgz",
+      "name": "@dsh-eac/skin-inkwash",
+      "version": "1.1.0",
+      "bytes": 8669,
+      "sha256": "775754b4354043965b19888aaee238854e7fd4d4cc9096b7bbc0826e8e2adcf3",
+      "sourceCommit": "afa947215a862a9c3304f6fff7a812efe5a42fdc"
+    },
+    {
+      "filename": "dsh-eac-skin-maid-atelier-1.1.0.tgz",
+      "name": "@dsh-eac/skin-maid-atelier",
+      "version": "1.1.0",
+      "bytes": 2518380,
+      "sha256": "e1cc9c348d6f3d2ab34f7d31ca5cb89f3c9820d92086b136d2b64137a8376971",
+      "sourceCommit": "afa947215a862a9c3304f6fff7a812efe5a42fdc"
+    },
+    {
+      "filename": "dsh-eac-skin-miku-1.1.0.tgz",
+      "name": "@dsh-eac/skin-miku",
+      "version": "1.1.0",
+      "bytes": 1725128,
+      "sha256": "565544e5073adf34920c8be2560546339a9cbe43b283b7eaf35e8766e59f104f",
+      "sourceCommit": "afa947215a862a9c3304f6fff7a812efe5a42fdc"
+    },
+    {
+      "filename": "dsh-eac-skin-minecraft-1.1.0.tgz",
+      "name": "@dsh-eac/skin-minecraft",
+      "version": "1.1.0",
+      "bytes": 641033,
+      "sha256": "738d98d107514a68d31ee2890ae948c0086cc168c3a8c83ac4e90bfd8feb1c1b",
+      "sourceCommit": "afa947215a862a9c3304f6fff7a812efe5a42fdc"
+    },
+    {
+      "filename": "dsh-eac-skin-qq98-1.1.0.tgz",
+      "name": "@dsh-eac/skin-qq98",
+      "version": "1.1.0",
+      "bytes": 860517,
+      "sha256": "a9c803781c7640e54e5fe3d9b6d4f7c6158e51376d69b6b3805ca61bccc650e4",
+      "sourceCommit": "afa947215a862a9c3304f6fff7a812efe5a42fdc"
+    },
+    {
+      "filename": "dsh-eac-skin-ths-1.1.0.tgz",
+      "name": "@dsh-eac/skin-ths",
+      "version": "1.1.0",
+      "bytes": 708867,
+      "sha256": "6538ec4533f12ae4201894c043ecf9b32c5d60b05f18714859f4083c2b8a585d",
+      "sourceCommit": "afa947215a862a9c3304f6fff7a812efe5a42fdc"
+    },
+    {
+      "filename": "dsh-eac-skin-trading-1.1.0.tgz",
+      "name": "@dsh-eac/skin-trading",
+      "version": "1.1.0",
+      "bytes": 21874,
+      "sha256": "f77b0a06dccf595d02208e290875381a97705cea434eb05936aab6fe0120fb0e",
+      "sourceCommit": "afa947215a862a9c3304f6fff7a812efe5a42fdc"
+    },
+    {
+      "filename": "dsh-eac-skin-whale-song-1.1.0.tgz",
+      "name": "@dsh-eac/skin-whale-song",
+      "version": "1.1.0",
+      "bytes": 26332,
+      "sha256": "7becbd60588e67b0974e7524c3adbbdc3f986b4b2c6ccef0c54bf0741a70f5ce",
+      "sourceCommit": "afa947215a862a9c3304f6fff7a812efe5a42fdc"
+    },
+    {
+      "filename": "dsh-eac-skin-xp-1.1.0.tgz",
+      "name": "@dsh-eac/skin-xp",
+      "version": "1.1.0",
+      "bytes": 596237,
+      "sha256": "aeee9bf1e0b520e1faadd232db1b8c440766592581907256410ad97d0bf5b4ac",
+      "sourceCommit": "afa947215a862a9c3304f6fff7a812efe5a42fdc"
+    }
+  ],
+  "localOnly": true
+}

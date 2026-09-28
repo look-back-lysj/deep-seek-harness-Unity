@@ -83,7 +83,7 @@ describe('AUD-F17 真实 ZIP 往返与 provenance/许可持久化', () => {
         })
         const archivePath = join(rootA, 'roundtrip.zip')
         writeFileSync(archivePath, archive)
-        execFileSync('C:\\Users\\刘沛伦\\7-Zip\\7z.exe', ['t', archivePath], { stdio: 'pipe' })
+        if (process.env.EAC_7ZIP) execFileSync(process.env.EAC_7ZIP, ['t', archivePath], { stdio: 'pipe' })
         const target = new AuthorPackageService(rootB)
         const imported = target.import(archive, { targetDraftId: 'zip-roundtrip' })
         target.drafts.update({ ...imported.draft, expectedRevision: imported.draft.revision, markdown: '# 修改后' })
