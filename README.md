@@ -90,6 +90,8 @@ D:\Downloads\dsh-eac-market-0.1.0-mvp.6.tgz
 
 ## 合作作者：怎样进入目录
 
+**让你的 Agent 代你投稿：**阅读 [Agent 投稿指南](docs/contributing/AGENT-SUBMISSION.md)，复制其中的启动提示词即可。指南包含允许修改的目录、完整材料清单、真实安装包信息生成、两项校验和 Fork → PR 步骤；没有成品可先提团队构建草稿。作者只交自己的材料，维护者审核并发布目录后才会上架。
+
 优先提供已构建的官方标准 bundle：`package.json` 的 `dsh.bundle.patch` 指向包内真实加载声明。另一条路线是团队取得许可后，从固定源码构建，不让新手电脑运行作者的构建命令。
 
 1. 准备精确版本 `.tgz`、完整源码提交、许可证/署名、README 和可选截图。

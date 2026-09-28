@@ -3,3 +3,12 @@ packages/market/data/index.json text eol=lf
 catalog-source/distribution/*.json text eol=lf
 # Preserve vendored license bytes, including upstream final blank lines.
 releases/eac-skins-1.1.0/licenses/** -text whitespace=cr-at-eol,-blank-at-eof
+# Submission fingerprints bind raw recipe/lock/notice bytes on every OS.
+catalog-source/submissions/**/build-recipe.json -text
+catalog-source/submissions/**/pnpm-lock.yaml -text
+catalog-source/submissions/**/package-lock.json -text
+catalog-source/submissions/**/yarn.lock -text
+catalog-source/submissions/**/bun.lock -text
+catalog-source/submissions/**/LICENSE -text whitespace=cr-at-eol,-blank-at-eof
+catalog-source/submissions/**/NOTICE -text whitespace=cr-at-eol,-blank-at-eof
+catalog-source/submissions/**/media/** -text

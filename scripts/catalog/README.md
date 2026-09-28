@@ -4,6 +4,8 @@
 
 | 文件 | 用法与作用 |
 | --- | --- |
+| `describe-artifact.ts` | `node scripts/catalog/describe-artifact.ts <tgz> <pluginId> <packageName> <版本> <新输出目录>`，只读核验实际bundle并生成元数据/发行计算字段，不填写许可或运行结论 |
+| `check-submission-pr.mjs` | `node scripts/catalog/check-submission-pr.mjs --base <可信main引用> [--head <PR提交>]`，默认检查暂存区，仅允许新增一个投稿版本，检查必需文件与引用；不联网、不下载tgz，不替代完整制品校验；目前需作者和审核人主动运行 |
 | `create-sample.ts` | `node scripts/catalog/create-sample.ts <新输出目录>`，生成 author-release/team-build 两套无害 testOnly 文件 |
 | `validate.ts` | `node scripts/catalog/validate.ts submission\|recipe\|catalog <文件>`；默认正式模式，fixture 必须显式加 `--allow-test-fixture`，但 `catalog` 正式校验始终拒绝 fixture |
 | `assemble.ts` | `node scripts/catalog/assemble.ts <assembly.json> <新输出文件>`，逐层校验后写不可覆盖目录；测试输入需显式开关，仍保留 testOnly |
