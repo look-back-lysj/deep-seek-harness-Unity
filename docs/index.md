@@ -21,7 +21,7 @@
 | [architecture.md](architecture.md) | 代码层次、依赖方向、目录与生命周期 |
 | [protocol.md](protocol.md) | Host/Client 契约、状态、错误、持久化 |
 | [host-capabilities.md](host-capabilities.md) | 当前官方接口及降级能力 |
-| [upgrade-guide.md](upgrade-guide.md) | 收录、升级、协议和后续功能 |
+| [UPGRADE-GUIDE.md](UPGRADE-GUIDE.md) | 收录、升级、协议和后续功能 |
 | [troubleshooting.md](troubleshooting.md) | 可执行排错与限制 |
 | [testing.md](testing.md) | 测试层次、脚本和证据规则 |
 | [ACCEPTANCE-MATRIX.md](ACCEPTANCE-MATRIX.md) | 场景到测试映射 |
