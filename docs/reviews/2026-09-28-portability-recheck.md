@@ -6,7 +6,7 @@
 
 | 环节 | 本轮证据与结果 |
 |---|---|
-| 源码权限与身份 | GitHub main=f4cd896，仓库仍private。取得真实远端Git tree，349个原始文件逐个Git blob摘要一致；协作者必须先有源码仓访问权 |
+| 源码权限与身份 | GitHub main 已公开并核对到最新提交。取得真实远端Git tree，349个原始文件逐个Git blob摘要一致；协作者可直接克隆或 Fork |
 | 新目录依赖 | 在带中文和空格的新目录重建，不带旧lib/node_modules/shim；屏蔽个人npm配置，按冻结锁文件从共享pnpm store离线安装144个依赖 |
 | 构建检查 | 修正测试路径后，README的pnpm check通过：343项通过，2项外部源码测试跳过；包清单174文件、30个Remote描述符通过 |
 | 打包 | 按README命令打包成功；Host、Client、Typert入口、package.json、bundle patch和随包目录8项全部与公开发行包原字节一致 |

@@ -5,7 +5,7 @@
 目标宿主：**官方 Desktop 0.1.7-rc.2 / Windows x64 / Node 24**。其他版本或平台不能仅凭编译通过就认为兼容。
 
 - [公开发行镜像（Gitee，无需登录）](https://gitee.com/flowing-shadows-like-scenes/deep-seek-harness-unity-mirror)：市场包、插件制品、目录、校验值及原许可。
-- [私人源码协作仓（GitHub）](https://github.com/look-back-lysj/deep-seek-harness-Unity)：获得访问权的成员可克隆；公开镜像不要求此权限。
+- [公开源码仓（GitHub）](https://github.com/look-back-lysj/deep-seek-harness-Unity)：任何人都可以下载、克隆或 Fork；向 `main` 合并必须通过 Pull Request 和代码所有者审核。
 - [本次六项交付与实际验证](docs/handoff/DISTRIBUTION-2026-09-28.md)：通过项、未验证项及最终摘要以此为准。
 - [下一位维护者从这里开始](docs/handoff/START-HERE.md)。历史审查报告保留，不代表最新实现仍未修复。
 

@@ -12,7 +12,7 @@
 
 - 工程 `D:/eac-market`；真实插件 `packages/market`，运行包名仍 `@dsh-eac/market`。
 - 当前交付提交 `3872b7f11cefd3920a1e336f3772835a426c7421`；GitHub 私仓远端 `main` 与本地提交、树摘要一致。
-- 私人源码仓：[look-back-lysj/deep-seek-harness-Unity](https://github.com/look-back-lysj/deep-seek-harness-Unity)，本轮通过用户已登录账号创建并核实 private；上传的实际提交以远端 main 为准。
+- 公开源码仓：[look-back-lysj/deep-seek-harness-Unity](https://github.com/look-back-lysj/deep-seek-harness-Unity)；协作者可直接克隆或 Fork，`main` 受代码所有者审核保护，上传的实际提交以远端 main 为准。
 - 本轮亲自操作官方 Desktop `0.1.7-rc.2`：通过官方添加插件页安装并启用市场；市场内无害 fixture 安装和启用确实有磁盘事实。
 - 同时复现：未勾试装仍安装、我的插件安装后未刷新、目录刷新失败报成功。源码/合成探针有取消、恢复、更新来源、AI确认等缺口。
 - 本轮重新跑12文件49项通过；旧110项是上轮结果。测试通过没有覆盖掉本轮缺陷。
