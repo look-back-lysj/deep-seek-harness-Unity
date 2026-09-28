@@ -101,6 +101,7 @@ export function MarketPage({ remote, skinService, onOpenOfficialPlugins, homeSup
   const [detailSelection, setDetailSelection] = useState<{ readonly id: string; readonly version: string }>()
   const [filters, setFilters] = useState<PluginFilters>(EMPTY_FILTERS)
   const [advanced, setAdvanced] = useState(false)
+  const [availableOnly, setAvailableOnly] = useState(true)
   const [page, setPage] = useState(1)
   const [taskDrawer, setTaskDrawer] = useState(false)
   const [moreMenu, setMoreMenu] = useState(false)
@@ -314,7 +315,8 @@ export function MarketPage({ remote, skinService, onOpenOfficialPlugins, homeSup
 
   const functionalPlugins = state.catalog.plugins.filter((plugin) => !isSkinPlugin(plugin))
   const marketPlugins = functionalPlugins.filter((plugin) => plugin.packageName !== SKIN_LOADER_PACKAGE)
-  const filtered = browseSortPlugins(filterPlugins(marketPlugins, state.inventory.items, filters), browseSort, state.catalog.recommendations)
+  const browseable = availableOnly ? marketPlugins.filter(plugin => plugin.installability === 'bundle-installable' && plugin.verification !== 'hard-incompatible') : marketPlugins
+  const filtered = browseSortPlugins(filterPlugins(browseable, state.inventory.items, filters), browseSort, state.catalog.recommendations)
   const inventoryPartition = partitionInventory(state.inventory.items.filter((item) => !item.installed || !skinCatalogForInventory(item, state.catalog.plugins)), state.catalog.plugins)
   const loaderPlugin = latestCompatiblePlugin(state.catalog, SKIN_LOADER_PACKAGE) ?? functionalPlugins.find((plugin) => plugin.packageName === SKIN_LOADER_PACKAGE)
   const openSkins = () => {
@@ -378,10 +380,14 @@ export function MarketPage({ remote, skinService, onOpenOfficialPlugins, homeSup
         {view === 'all' && (
           <>
             <header className="eac-market__page-head">
-              <div><h1>全部插件</h1><p>按用途、作者或包名查找。未验证、已知不兼容和缺少安装包会明确区分。</p></div>
+              <div><h1>全部插件</h1><p>默认展示有安装包的功能。待适配、缺少文件的条目可在“全部记录”查看。</p></div>
               <Button variant="outline" onClick={() => setAdvanced((value) => !value)} aria-expanded={advanced}>高级筛选</Button>
             </header>
             {skinEntry}
+            <div className="eac-market__filters" aria-label="安装包范围">
+              <Pill active={availableOnly} onClick={() => { setAvailableOnly(true); setPage(1) }}>可安装</Pill>
+              <Pill active={!availableOnly} onClick={() => { setAvailableOnly(false); setPage(1) }}>全部记录</Pill>
+            </div>
             <div className="eac-market__toolbar">
               <SearchField value={filters.query} onChange={(query) => { setFilters({ ...filters, query }); setPage(1) }} />
               <div className="eac-market__filters">
@@ -432,7 +438,7 @@ export function MarketPage({ remote, skinService, onOpenOfficialPlugins, homeSup
                 <Button variant="outline" disabled={page >= pageCount} onClick={() => setPage((value) => value + 1)}>下一页</Button>
               </nav>
             )}
-            <PendingListings listings={state.catalog.listings ?? []} query={filters.query} />
+            {!availableOnly && <PendingListings listings={state.catalog.listings ?? []} query={filters.query} />}
           </>
         )}
 

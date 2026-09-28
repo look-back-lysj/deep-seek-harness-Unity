@@ -6,6 +6,7 @@
  */
 import { lookup } from 'node:dns/promises'
 import { isIP } from 'node:net'
+import { desktopHttpsFetch } from './https-reader.ts'
 
 export interface RemoteSecurityOptions {
   readonly allowPrivateHosts?: boolean
@@ -156,7 +157,7 @@ export async function safeFetch(input: string | URL, options: SafeFetchOptions =
   let current = await withAbort(assertSafeRemoteUrl(input, options), signal)
   for (let redirects = 0; redirects <= maxRedirects; redirects += 1) {
     signal.throwIfAborted()
-    const response = await withAbort((options.fetch ?? fetch)(current, {
+    const response = await withAbort((options.fetch ?? desktopHttpsFetch)(current, {
       method: 'GET',
       redirect: 'manual',
       signal,

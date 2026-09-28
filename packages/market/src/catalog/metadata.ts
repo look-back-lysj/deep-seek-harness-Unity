@@ -23,7 +23,10 @@ export function parseMetadata(value: unknown, plugin: CatalogPlugin): MarketPlug
     // and never pass extra metadata through the strict public Manifest schema.
     projection.dsh = Object.fromEntries(['manifestVersion', 'bundle', 'profile', 'client'].filter(key => dsh[key] !== undefined).map(key => [key, dsh[key]]))
   }
-  if (Object.keys(projection).length) validatePackageMetadata(projection, 'package.json')
+  // npm peer/engine ranges may enumerate many official prerelease versions.
+  // Keep the public dsh-std limit unchanged; official raw package metadata has
+  // its own bounded range budget and is never truncated or rewritten.
+  if (Object.keys(projection).length) validatePackageMetadata(projection, 'package.json', 4096)
   const files = v.array(item.files, 'metadata.files', 20000).map(path => v.relativeFile(path, 'metadata.file'))
   if (new Set(files.map(path => path.toLowerCase())).size !== files.length || !files.includes('package.json')) v.invalid('metadata-files', '官方文件表存在碰撞或缺少 package.json')
   const bundle = metadata.dsh === undefined ? undefined : v.object(metadata.dsh, 'dsh').bundle

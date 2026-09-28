@@ -4,6 +4,7 @@
 
 | 文档 | 用途 |
 |---|---|
+| [真实下载修复交付](handoff/PULLABILITY-2026-09-28.md) | 当前mvp.6：从作者实际发布补回14安装入口、22可用镜像及官方业务验证 |
 | [发行与皮肤中心交付](handoff/DISTRIBUTION-2026-09-28.md) | mvp.4发行包、82项清点、公开镜像、真实Desktop与未验边界 |
 | [首次使用链路复检](reviews/2026-09-28-portability-recheck.md) | 远端源码、干净构建、安装链、制品下载及Gitee 451限制 |
 | [本机皮肤目录操作](contributing/LOCAL-EAC-SKINS.md) | 管理器与皮肤的用户安装顺序、固定来源、许可证及复现脚本 |

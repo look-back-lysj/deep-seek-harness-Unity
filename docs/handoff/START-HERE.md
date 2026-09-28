@@ -1,5 +1,7 @@
 # Deep Seek Harness Unity / EAC 市场：当前接力入口
 
+> **当前优先入口**：[真实下载修复交付](PULLABILITY-2026-09-28.md)。版本0.1.0-mvp.6；已查作者实际发行，新增14个安装入口、22个匿名可用镜像；可安装合计29项。目录序号6，Gitee实际读取200。用户日常Desktop有运行任务，本轮使用独立官方Web实例验收，日常实例未被强退。下文为此前阶段历史，不能据其重复宣布“多数作者没有合法制品”。
+
 > **最新定向复检**：[首次使用链路报告](../reviews/2026-09-28-portability-recheck.md)。源码/安装基本链可用；在线目录出现Gitee451，不能沿用上一轮“全部在线入口可用”的状态。
 
 > **本批优先入口**：[发行与皮肤中心交付](DISTRIBUTION-2026-09-28.md)，含公开 Gitee 镜像、完整 EAC 清点、新环境构建及实际验收。先查这份，再读下面历史状态。
@@ -12,7 +14,7 @@
 
 - 工程 `D:/eac-market`；真实插件 `packages/market`，运行包名仍 `@dsh-eac/market`。
 - 当前交付提交 `3872b7f11cefd3920a1e336f3772835a426c7421`；GitHub 私仓远端 `main` 与本地提交、树摘要一致。
-- 私人源码仓：[look-back-lysj/deep-seek-harness-Unity](https://github.com/look-back-lysj/deep-seek-harness-Unity)，本轮通过用户已登录账号创建并核实 private；上传的实际提交以远端 main 为准。
+- 公开源码仓：[look-back-lysj/deep-seek-harness-Unity](https://github.com/look-back-lysj/deep-seek-harness-Unity)；协作者可直接克隆或 Fork，`main` 受代码所有者审核保护，上传的实际提交以远端 main 为准。
 - 本轮亲自操作官方 Desktop `0.1.7-rc.2`：通过官方添加插件页安装并启用市场；市场内无害 fixture 安装和启用确实有磁盘事实。
 - 同时复现：未勾试装仍安装、我的插件安装后未刷新、目录刷新失败报成功。源码/合成探针有取消、恢复、更新来源、AI确认等缺口。
 - 本轮重新跑12文件49项通过；旧110项是上轮结果。测试通过没有覆盖掉本轮缺陷。

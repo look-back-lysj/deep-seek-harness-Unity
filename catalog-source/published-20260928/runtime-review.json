@@ -1,0 +1,8 @@
+{
+  "computer-user": [
+    "已确认的静态硬阻断，适用作者原包 computer-user@0.3.6、官方 DSH 0.1.7-rc.2：包内 src/index.js 顶层执行 import { settingsNamespace } from '@deepseek-ai/dsh-settings'，当前官方 packages/settings/settings/src/index.ts 已不导出 settingsNamespace，模块加载阶段即失败，后续 apply 内的容错不能捕获此导入错误。未运行第三方代码；本结论不自动适用于其他版本。"
+  ],
+  "picturereader": [
+    "已确认的静态硬阻断，适用作者原包 picturereader@3.3.3、官方 DSH 0.1.7-rc.2：包内 src/index.js 在 ctx.inject(['settings', 'llm'], ...) 回调中直接调用 sctx.settings.register(NS, Config, { base: config })，当前官方 SettingsForms 已无 register 方法，此初始化路径会失败；client.js 还强制注入旧 settingsScope，未迁移到当前 configForms。未运行第三方代码；本结论不自动适用于其他版本。"
+  ]
+}

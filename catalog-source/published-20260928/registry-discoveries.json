@@ -1,0 +1,2973 @@
+[
+  {
+    "dsh": {
+      "bundle": {
+        "patch": "./cordis.patch.yml"
+      }
+    },
+    "bugs": {
+      "url": "https://github.com/tt-a1i/archify/issues"
+    },
+    "dist": {
+      "shasum": "1840447f80d0f06eef92bebbefa646bede5336a9",
+      "tarball": "https://registry.npmjs.org/@tt-a1i/archify-dsh/-/archify-dsh-0.1.0.tgz",
+      "fileCount": 67,
+      "integrity": "sha512-D8fDqV6DV/vo80Gj/3rgidd+hwBbhTVncaVoD5Uhh+DbgYlEoQQOmBVbhU5HW33wE5OqJP/2HkTRPJ0hf7W0tA==",
+      "signatures": [
+        {
+          "sig": "MEUCIQCooBTLETDUOWgMvj6ecE9TavNe6xK5KN87UgsefawHjQIgX87HnS2kRqkWAq69TvN6itMN6Ftbfxcythq6dqZ7jIU=",
+          "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+        }
+      ],
+      "unpackedSize": 4852827
+    },
+    "main": "./lib/index.js",
+    "name": "@tt-a1i/archify-dsh",
+    "type": "module",
+    "_from": "file:/tmp/archify-dsh-release.3Ljq2n/tt-a1i-archify-dsh-0.1.0.tgz",
+    "engines": {
+      "node": "^22.19.0 || >=24.0.0"
+    },
+    "exports": {
+      ".": "./lib/index.js",
+      "./package.json": "./package.json"
+    },
+    "license": "MIT",
+    "_npmUser": {
+      "name": "tt-a1i",
+      "email": "2801884530@qq.com"
+    },
+    "homepage": "https://github.com/tt-a1i/archify/tree/main/integrations/deepseek-harness",
+    "keywords": [
+      "dsh-plugin",
+      "deepseek-harness",
+      "agent-skill",
+      "architecture-diagram"
+    ],
+    "_resolved": "/tmp/archify-dsh-release.3Ljq2n/tt-a1i-archify-dsh-0.1.0.tgz",
+    "_integrity": "sha512-D8fDqV6DV/vo80Gj/3rgidd+hwBbhTVncaVoD5Uhh+DbgYlEoQQOmBVbhU5HW33wE5OqJP/2HkTRPJ0hf7W0tA==",
+    "repository": {
+      "url": "git+https://github.com/tt-a1i/archify.git",
+      "type": "git",
+      "directory": "integrations/deepseek-harness"
+    },
+    "_npmVersion": "12.0.2",
+    "description": "Opt-in DeepSeek Harness Skill-only bundle for the Archify architecture-diagram skill.",
+    "directories": {},
+    "maintainers": [
+      {
+        "name": "tt-a1i",
+        "email": "2801884530@qq.com"
+      }
+    ],
+    "_nodeVersion": "26.3.0",
+    "publishConfig": {
+      "access": "public"
+    },
+    "_hasShrinkwrap": false,
+    "_npmOperationalInternal": {
+      "tmp": "tmp/archify-dsh_0.1.0_1786698748534_0.8795195254063708",
+      "host": "s3://npm-registry-packages-npm-production"
+    },
+    "_id": "@tt-a1i/archify-dsh@0.1.0",
+    "version": "0.1.0",
+    "packageName": "@tt-a1i/archify-dsh",
+    "status": 200,
+    "requestedVersion": "0.1.0"
+  },
+  {
+    "dsh": {
+      "bundle": {
+        "patch": "./cordis.patch.yml"
+      },
+      "client": {
+        "inject": [
+          "@deepseek-ai/dsh-client-runtime",
+          "@deepseek-ai/dsh-client-ui-primitives"
+        ],
+        "platform": "web"
+      }
+    },
+    "bugs": {
+      "url": "https://github.com/vlln/dsh-navbar/issues"
+    },
+    "dist": {
+      "shasum": "48eb0592ba6bb94e7c55813c2ff388ca661a1496",
+      "tarball": "https://registry.npmjs.org/@vlln/dsh-navbar/-/dsh-navbar-0.4.0.tgz",
+      "fileCount": 7,
+      "integrity": "sha512-XCkyXxRUbBaOIghvFjKdi3y0BHC9UADpO5H4+e0oQdcG87CUjPLbmPRsCRs8qDwviKd100oyjDcskgI6/wdN1g==",
+      "signatures": [
+        {
+          "sig": "MEUCIFIBWBvUwPo8r1yaPnbOJBz+yGoYIbym9er8wuvS74HyAiEAl/01nJaMskDL/nA0jbimqhfg0nef3vkKMhSA6GxH0HU=",
+          "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+        }
+      ],
+      "unpackedSize": 40472
+    },
+    "main": "lib/index.mjs",
+    "name": "@vlln/dsh-navbar",
+    "type": "module",
+    "engines": {
+      "dsh": ">=0.1.0-rc.5",
+      "node": ">=22.19.0"
+    },
+    "exports": {
+      ".": {
+        "default": "./lib/index.mjs"
+      },
+      "./client": "./lib/client.js",
+      "./package.json": "./package.json",
+      "./cordis.patch.yml": "./cordis.patch.yml"
+    },
+    "gitHead": "502253836f49bf73d55f1d525bd191b1b1c27c38",
+    "license": "MIT",
+    "scripts": {
+      "build": "tsdown --config ./tsdown.config.ts"
+    },
+    "_npmUser": {
+      "name": "vlln",
+      "email": "vlln@qq.com"
+    },
+    "homepage": "https://github.com/vlln/dsh-navbar#readme",
+    "repository": {
+      "url": "git+https://github.com/vlln/dsh-navbar.git",
+      "type": "git"
+    },
+    "_npmVersion": "12.0.2",
+    "description": "对话节点导航条——user 消息快速跳转（自渲染 DOM，官方 client 通道）",
+    "directories": {},
+    "maintainers": [
+      {
+        "name": "vlln",
+        "email": "vlln@qq.com"
+      }
+    ],
+    "_nodeVersion": "22.23.1",
+    "publishConfig": {
+      "access": "public"
+    },
+    "_hasShrinkwrap": false,
+    "devDependencies": {
+      "tsdown": "0.22.2",
+      "typescript": "^5.9.3"
+    },
+    "peerDependencies": {
+      "@deepseek-ai/cordis": "^4.0.1"
+    },
+    "_npmOperationalInternal": {
+      "tmp": "tmp/dsh-navbar_0.4.0_1787797799318_0.10242218166770489",
+      "host": "s3://npm-registry-packages-npm-production"
+    },
+    "_id": "@vlln/dsh-navbar@0.4.0",
+    "version": "0.4.0",
+    "packageName": "@vlln/dsh-navbar",
+    "status": 200,
+    "requestedVersion": "0.4.0"
+  },
+  {
+    "os": [
+      "win32"
+    ],
+    "dsh": {
+      "bundle": {
+        "patch": "./cordis.patch.yml"
+      },
+      "client": {
+        "platform": "web"
+      }
+    },
+    "bugs": {
+      "url": "https://github.com/jing-hy/computer-user/issues"
+    },
+    "dist": {
+      "shasum": "4a31ac3612fb81df5771fcada1072d7cd876d730",
+      "tarball": "https://registry.npmjs.org/computer-user/-/computer-user-0.3.6.tgz",
+      "fileCount": 22,
+      "integrity": "sha512-q8BG1tSnExbVGeHX2n+RTT4pyRAgqlGjSqP7afwHsIc09C+uvRXYiVHpHlwRQCp3ABvNhYZx5hBgwjpMYSjBcQ==",
+      "signatures": [
+        {
+          "sig": "MEQCIH2aEUs7l2JuUFLKCJyNiKuB13FHPDEfLV0jbXoJYtq9AiBfGPL0XuV3VdruVDykRhwC95ULn96eMSpGKJ5Dk5MQlA==",
+          "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+        }
+      ],
+      "unpackedSize": 135093
+    },
+    "main": "src/index.js",
+    "name": "computer-user",
+    "type": "module",
+    "author": {
+      "name": "jing-hy"
+    },
+    "engines": {
+      "node": "^22.19 || >=24"
+    },
+    "exports": {
+      ".": "./src/index.js",
+      "./client": "./client.js",
+      "./package.json": "./package.json",
+      "./cordis.patch.yml": "./cordis.patch.yml"
+    },
+    "gitHead": "2fbf383b49fe08e466d4d1caba659fb42b61de6b",
+    "license": "MIT",
+    "scripts": {
+      "test": "node --test"
+    },
+    "_npmUser": {
+      "name": "jing_hy",
+      "email": "3509987530@qq.com"
+    },
+    "homepage": "https://github.com/jing-hy/computer-user#readme",
+    "keywords": [
+      "dsh",
+      "dsh-plugin",
+      "deepseek-harness",
+      "computer-use",
+      "computeruse",
+      "automation",
+      "screenshot",
+      "mouse",
+      "keyboard",
+      "SendInput",
+      "screen",
+      "gui",
+      "codex"
+    ],
+    "repository": {
+      "url": "git+https://github.com/jing-hy/computer-user.git",
+      "type": "git"
+    },
+    "_npmVersion": "11.16.0",
+    "description": "Codex-style computer use for DeepSeek Harness (DSH): read the screen and drive the mouse & keyboard. Pairs with picturereader (image_scan/image_ocr) to close the look-act-verify loop. Windows.",
+    "directories": {},
+    "maintainers": [
+      {
+        "name": "jing_hy",
+        "email": "3509987530@qq.com"
+      }
+    ],
+    "_nodeVersion": "24.18.0",
+    "_hasShrinkwrap": false,
+    "peerDependencies": {
+      "@deepseek-ai/schemastery": "^3.18.1",
+      "@deepseek-ai/dsh-settings": "^0.1.0-rc.6 || ^0.1.1-rc.2"
+    },
+    "_npmOperationalInternal": {
+      "tmp": "tmp/computer-user_0.3.6_1787834941894_0.7773394692614617",
+      "host": "s3://npm-registry-packages-npm-production"
+    },
+    "_id": "computer-user@0.3.6",
+    "version": "0.3.6",
+    "packageName": "computer-user",
+    "status": 200,
+    "requestedVersion": "0.3.6"
+  },
+  {
+    "dsh": {
+      "bundle": {
+        "patch": "./cordis.patch.yml"
+      },
+      "client": {
+        "inject": [
+          "@deepseek-ai/dsh-client-locale",
+          "@deepseek-ai/dsh-client-ui-slots",
+          "@deepseek-ai/dsh-client-ui-conversation",
+          "@deepseek-ai/dsh-client-ui-sidebar-right",
+          "@deepseek-ai/dsh-client-modules"
+        ],
+        "platform": "web"
+      },
+      "manifestVersion": 1
+    },
+    "dist": {
+      "shasum": "139c3b38d01f8a6249732567902c9d25ea244683",
+      "tarball": "https://registry.npmjs.org/dsh-better-sidebar/-/dsh-better-sidebar-0.22.1.tgz",
+      "fileCount": 369,
+      "integrity": "sha512-5Gr2LFu8aay74osaDEQ4IZNRGMRDhs5XMyHc6a7q1BF6xGFfuz1s2+XW3hEdDknO9rgi/7Ax2XQ1MvwEBthNEQ==",
+      "signatures": [
+        {
+          "sig": "MEUCIQDv6xkO9ogEHnY7dUqz3BiVI3BUNAjjmt5dskH30V9XQQIgG+/qDaJbJ3sZjnYik7yUuxcpM42Q1ks2qRJslYNO+lw=",
+          "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+        },
+        {
+          "sig": "MEYCIQDYRaGBHZ1dULlLTdx+BnWGFKMiN14Wi5rFM/+gewezKwIhAL6Ou0lwXpORF8X/2YRzXDHN4fVe15UVivx0+QDnYe7z",
+          "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+        }
+      ],
+      "attestations": {
+        "url": "https://registry.npmjs.org/-/npm/v1/attestations/dsh-better-sidebar@0.22.1",
+        "provenance": {
+          "predicateType": "https://slsa.dev/provenance/v1"
+        }
+      },
+      "unpackedSize": 15070750
+    },
+    "icon": "./icon.svg",
+    "main": "lib/index.js",
+    "name": "dsh-better-sidebar",
+    "type": "module",
+    "types": "lib/types/index.d.ts",
+    "engines": {
+      "node": ">=20"
+    },
+    "exports": {
+      ".": {
+        "types": "./lib/types/index.d.ts",
+        "default": "./lib/index.js"
+      },
+      "./src/*": "./src/*",
+      "./client": {
+        "types": "./lib/types/client/index.d.ts",
+        "default": "./lib/client.js"
+      },
+      "./invariant": {
+        "types": "./lib/types/invariant.d.ts",
+        "default": "./lib/invariant.js"
+      },
+      "./client/api": {
+        "types": "./lib/types/client/service.d.ts",
+        "default": "./lib/client.js"
+      },
+      "./package.json": "./package.json",
+      "./locale/*.json": "./locale/*.json",
+      "./client/service": {
+        "types": "./lib/types/client/service.d.ts",
+        "default": "./lib/client.js"
+      }
+    },
+    "license": "MIT",
+    "scripts": {
+      "lint": "eslint .",
+      "test": "vitest run",
+      "build": "node -e \"require('node:fs').rmSync('lib',{recursive:true,force:true})\" && tsc -p tsconfig.build.json && tsdown",
+      "clean": "node -e \"require('node:fs').rmSync('lib',{recursive:true,force:true})\"",
+      "watch": "tsdown --watch",
+      "bundle": "tsdown",
+      "typecheck": "tsc --noEmit",
+      "test:mount": "bash scripts/e2e-mount.sh",
+      "test:windows": "vitest run --maxWorkers=1",
+      "check:consumer-types": "bash scripts/check-consumer-types.sh",
+      "test:mount:aggregate": "bash scripts/e2e-aggregate-mount.sh"
+    },
+    "_npmUser": {
+      "name": "GitHub Actions",
+      "email": "npm-oidc-no-reply@github.com",
+      "trustedPublisher": {
+        "id": "github",
+        "oidcConfigId": "oidc:dc9fa969-9c76-4523-93da-66b012390e38"
+      }
+    },
+    "repository": {
+      "url": "https://github.com/omdsh-dev/DSH-better-sidebar",
+      "type": "git"
+    },
+    "description": "Better Sidebar for DSH — file tree, editor, changes, tasks and side chat in one column, separate for every conversation. Also exposes a service other plugins use to register sidebar tabs and file viewers.",
+    "directories": {},
+    "maintainers": [
+      {
+        "name": "huanlin",
+        "email": "linsmc@126.com"
+      },
+      {
+        "name": "menghuan1918",
+        "email": "menghuan2003@outlook.com"
+      }
+    ],
+    "_nodeVersion": "22.23.2",
+    "dependencies": {
+      "ws": "^8.18.0",
+      "clsx": "^2.1.1",
+      "rxjs": "^7.8.2",
+      "yaml": "^2.9.1",
+      "mermaid": "^11.16.1",
+      "dompurify": "^3.4.14",
+      "react-icons": "5.7.0",
+      "@codemirror/view": "^6.43.8",
+      "@lezer/highlight": "^1.2.3",
+      "@codemirror/state": "^6.7.1",
+      "@codemirror/search": "^6.7.1",
+      "@codemirror/lang-go": "^6.0.1",
+      "@codemirror/commands": "^6.10.4",
+      "@codemirror/lang-cpp": "^6.0.3",
+      "@codemirror/lang-css": "^6.3.1",
+      "@codemirror/lang-php": "^6.0.2",
+      "@codemirror/lang-sql": "^6.10.0",
+      "@codemirror/lang-vue": "^0.1.3",
+      "@codemirror/lang-xml": "^6.1.0",
+      "@codemirror/language": "^6.12.4",
+      "@codemirror/lang-html": "^6.4.12",
+      "@codemirror/lang-java": "^6.0.2",
+      "@codemirror/lang-json": "^6.0.2",
+      "@codemirror/lang-rust": "^6.0.2",
+      "@codemirror/lang-yaml": "^6.1.3",
+      "@codemirror/lang-python": "^6.2.1",
+      "@codemirror/legacy-modes": "^6.5.3",
+      "@deepseek-ai/schemastery": "^3.18.4",
+      "@codemirror/lang-markdown": "^6.5.2",
+      "@codemirror/lang-javascript": "^6.2.5"
+    },
+    "publishConfig": {
+      "access": "public"
+    },
+    "_hasShrinkwrap": false,
+    "devDependencies": {
+      "diff": "^9.0.0",
+      "anser": "^2.3.5",
+      "immer": "^10.1.1",
+      "jsdom": "^29.1.1",
+      "katex": "^0.16.47",
+      "react": "^18.2.0",
+      "shiki": "^4.3.1",
+      "unrun": "^0.2.39",
+      "cordis": "^4.0.0-rc.8",
+      "eslint": "^10.9.1",
+      "tsdown": "^0.22.2",
+      "vitest": "^4.1.8",
+      "globals": "^17.12.0",
+      "zustand": "~4.4.7",
+      "@types/ws": "^8.5.10",
+      "react-dom": "18.2.0",
+      "@eslint/js": "^10.0.1",
+      "typescript": "^5.6.0",
+      "@types/node": "^24.0.0",
+      "@types/mdast": "^4.0.4",
+      "@types/react": "~18.3.1",
+      "lightningcss": "^1.32.0",
+      "simple-icons": "^16.32.0",
+      "@shikijs/langs": "^4.3.1",
+      "mdast-util-gfm": "^3.1.0",
+      "mdast-util-math": "^3.0.0",
+      "@playwright/test": "^1.62.1",
+      "@types/react-dom": "~18.3.1",
+      "typescript-eslint": "^8.69.0",
+      "@deepseek-ai/cordis": "4.0.4",
+      "@deepseek-ai/dsh-llm": "0.1.7-rc.1",
+      "micromark-util-types": "^2.0.2",
+      "micromark-util-symbol": "^2.0.1",
+      "@deepseek-ai/dsh-agent": "0.1.7-rc.1",
+      "@deepseek-ai/dsh-scope": "0.1.7-rc.1",
+      "@deepseek-ai/dsh-tools": "0.1.7-rc.1",
+      "@cordisjs/plugin-loader": "^1.0.0-rc.5",
+      "micromark-extension-gfm": "^3.0.0",
+      "micromark-factory-space": "^2.0.1",
+      "@deepseek-ai/dsh-sandbox": "0.1.7-rc.1",
+      "@deepseek-ai/dsh-session": "0.1.7-rc.1",
+      "mdast-util-from-markdown": "^2.0.3",
+      "micromark-extension-math": "^3.1.0",
+      "micromark-util-character": "^2.1.1",
+      "@deepseek-ai/dsh-settings": "0.1.7-rc.1",
+      "@deepseek-ai/dsh-subagent": "0.1.7-rc.1",
+      "eslint-plugin-react-hooks": "^7.1.1",
+      "micromark-core-commonmark": "^2.0.3",
+      "@deepseek-ai/dsh-util-time": "0.1.7-rc.1",
+      "@deepseek-ai/dsh-agent-loop": "0.1.7-rc.1",
+      "@deepseek-ai/dsh-attachment": "0.1.7-rc.1",
+      "@deepseek-ai/dsh-invariants": "0.1.7-rc.1",
+      "micromark-util-sanitize-uri": "^2.0.1",
+      "@deepseek-ai/dsh-ptc-runtime": "0.1.7-rc.1",
+      "@deepseek-ai/dsh-client-store": "0.1.7-rc.1",
+      "@deepseek-ai/dsh-client-locale": "0.1.7-rc.1",
+      "@deepseek-ai/dsh-system-prompt": "0.1.7-rc.1",
+      "@deepseek-ai/dsh-user-approval": "0.1.7-rc.1",
+      "@deepseek-ai/dsh-host-webserver": "0.1.7-rc.1",
+      "@deepseek-ai/dsh-sandbox-policy": "0.1.7-rc.1",
+      "@deepseek-ai/cordis-plugin-group": "1.0.4",
+      "@deepseek-ai/dsh-client-ui-slots": "0.1.7-rc.1",
+      "@huanlin/dsh-plugin-better-locale": "^0.1.0",
+      "micromark-util-classify-character": "^2.0.1",
+      "@deepseek-ai/cordis-plugin-include": "1.0.9",
+      "@deepseek-ai/dsh-client-ui-settings": "0.1.7-rc.1",
+      "@deepseek-ai/dsh-session-projection": "0.1.7-rc.1",
+      "@deepseek-ai/dsh-session-persistence": "0.1.7-rc.1",
+      "@deepseek-ai/dsh-util-workspace-path": "0.1.7-rc.1",
+      "@deepseek-ai/dsh-client-ui-primitives": "0.1.7-rc.1",
+      "@deepseek-ai/dsh-client-ui-conversation": "0.1.7-rc.1",
+      "@deepseek-ai/dsh-client-ui-sidebar-right": "0.1.7-rc.1"
+    },
+    "peerDependencies": {
+      "react": "^18.2.0",
+      "react-dom": "^18.2.0",
+      "@deepseek-ai/cordis": "^4.0.4",
+      "@deepseek-ai/dsh-llm": "^0.1.7-rc.1",
+      "@deepseek-ai/dsh-agent": "^0.1.7-rc.1",
+      "@deepseek-ai/dsh-tools": "^0.1.7-rc.1",
+      "@deepseek-ai/dsh-session": "^0.1.7-rc.1",
+      "@deepseek-ai/dsh-settings": "^0.1.7-rc.1",
+      "@deepseek-ai/dsh-subagent": "^0.1.7-rc.1",
+      "@deepseek-ai/dsh-invariants": "^0.1.7-rc.1",
+      "@deepseek-ai/dsh-client-locale": "^0.1.7-rc.1",
+      "@deepseek-ai/dsh-host-webserver": "^0.1.7-rc.1",
+      "@deepseek-ai/dsh-client-ui-slots": "^0.1.7-rc.1",
+      "@huanlin/dsh-plugin-better-locale": "^0.1.0",
+      "@deepseek-ai/dsh-client-ui-settings": "^0.1.7-rc.1",
+      "@deepseek-ai/dsh-client-ui-primitives": "^0.1.7-rc.1",
+      "@deepseek-ai/dsh-client-ui-conversation": "^0.1.7-rc.1",
+      "@deepseek-ai/dsh-client-ui-sidebar-right": "^0.1.7-rc.1"
+    },
+    "peerDependenciesMeta": {
+      "@huanlin/dsh-plugin-better-locale": {
+        "optional": true
+      },
+      "@deepseek-ai/dsh-client-ui-sidebar-right": {
+        "optional": true
+      }
+    },
+    "_npmOperationalInternal": {
+      "tmp": "tmp/dsh-better-sidebar_0.22.1_1790567286129_0.051506955386886766",
+      "host": "s3://npm-registry-packages-npm-production"
+    },
+    "_id": "dsh-better-sidebar@0.22.1",
+    "version": "0.22.1",
+    "packageName": "dsh-better-sidebar",
+    "status": 200,
+    "requestedVersion": "0.12.2"
+  },
+  {
+    "dsh": {
+      "bundle": {
+        "patch": "./cordis.patch.yml"
+      },
+      "client": {
+        "inject": [
+          "@deepseek-ai/dsh-client-runtime",
+          "@deepseek-ai/dsh-client-connection",
+          "@deepseek-ai/dsh-client-locale",
+          "@deepseek-ai/dsh-client-ui-primitives",
+          "@deepseek-ai/dsh-client-ui-slots",
+          "@deepseek-ai/dsh-client-ui-conversation",
+          "@deepseek-ai/dsh-client-ui-layout"
+        ],
+        "platform": "web"
+      }
+    },
+    "bugs": {
+      "url": "https://github.com/liliuCourier/dsh-chat-outline/issues"
+    },
+    "dist": {
+      "shasum": "38d2db4ae306cd92320a725b1a67b86c81902412",
+      "tarball": "https://registry.npmjs.org/dsh-chat-outline/-/dsh-chat-outline-0.1.10.tgz",
+      "fileCount": 6,
+      "integrity": "sha512-D+OaWvbVjXud5/B4lI+6L6Z9r/VuTTsbhHsPDxXSVJX5U6CGFNrqiLFPT7RycnXX94m+GrLnHha5trS9phpNrw==",
+      "signatures": [
+        {
+          "sig": "MEYCIQCLmW9CIaneVAqlwBwPazfRZjQU1DqzvsjTie07zcQyGgIhALM3UXBvDfXWIVj/ZA+vx3eBr/4Z/++/okXtoHWrms8H",
+          "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+        }
+      ],
+      "unpackedSize": 80365
+    },
+    "main": "lib/index.js",
+    "name": "dsh-chat-outline",
+    "type": "module",
+    "exports": {
+      ".": "./lib/index.js",
+      "./client": "./lib/client.js",
+      "./package.json": "./package.json"
+    },
+    "gitHead": "be56f36e4d51b7da3a618dbe5abc47c010a444ed",
+    "license": "MIT",
+    "_npmUser": {
+      "name": "peterlicourier",
+      "email": "2011299706@qq.com"
+    },
+    "homepage": "https://github.com/liliuCourier/dsh-chat-outline#readme",
+    "keywords": [
+      "deepseek",
+      "deepseek-harness",
+      "dsh",
+      "dsh-plugin",
+      "plugin",
+      "chat-outline"
+    ],
+    "repository": {
+      "url": "git+https://github.com/liliuCourier/dsh-chat-outline.git",
+      "type": "git"
+    },
+    "_npmVersion": "11.17.0",
+    "description": "对话栏左侧常驻大纲：快速定位每次 user 提问与最后一条 assistant 回复（DeepSeek Harness 插件）。",
+    "directories": {},
+    "maintainers": [
+      {
+        "name": "peterlicourier",
+        "email": "2011299706@qq.com"
+      }
+    ],
+    "_nodeVersion": "24.19.0",
+    "publishConfig": {
+      "access": "public"
+    },
+    "_hasShrinkwrap": false,
+    "peerDependencies": {
+      "react": "^18.2.0",
+      "@deepseek-ai/cordis": "^4.0.1",
+      "@deepseek-ai/dsh-client-locale": "^0.1.0-rc.6",
+      "@deepseek-ai/dsh-client-runtime": "^0.1.0-rc.6",
+      "@deepseek-ai/dsh-client-ui-slots": "^0.1.0-rc.6",
+      "@deepseek-ai/dsh-client-ui-layout": "^0.1.0-rc.6",
+      "@deepseek-ai/dsh-client-ui-primitives": "^0.1.0-rc.6",
+      "@deepseek-ai/dsh-client-ui-conversation": "^0.1.0-rc.6"
+    },
+    "_npmOperationalInternal": {
+      "tmp": "tmp/dsh-chat-outline_0.1.10_1786888093139_0.9913143726495366",
+      "host": "s3://npm-registry-packages-npm-production"
+    },
+    "_id": "dsh-chat-outline@0.1.10",
+    "version": "0.1.10",
+    "packageName": "dsh-chat-outline",
+    "status": 200,
+    "requestedVersion": "0.1.10"
+  },
+  {
+    "dsh": {
+      "bundle": {
+        "patch": "./cordis.patch.yml"
+      },
+      "client": {
+        "inject": [
+          "@deepseek-ai/dsh-client-ui-settings-plugins"
+        ],
+        "platform": "web"
+      }
+    },
+    "bugs": {
+      "url": "https://github.com/QCYTSN/dsh-dafeiyu/issues"
+    },
+    "dist": {
+      "shasum": "a849973a4c99851a2aa5802db981250d15543ca7",
+      "tarball": "https://registry.npmjs.org/dsh-dafeiyu/-/dsh-dafeiyu-0.1.14.tgz",
+      "fileCount": 5305,
+      "integrity": "sha512-OUqstNNKVVy+Oz/fZv4x5Dm7TVuMfEFii0DKtC3/S9bkej7MDve7R6bJVBIX6FKdXNwn+c6P46z1IGNLAR6nGg==",
+      "signatures": [
+        {
+          "sig": "MEUCICVA9mQvHOr4gjzyVcIbVhAxMINXcugRlDAXD0AIOMUgAiEA7rownQnYVvmWRtXnG8k7cg2gFo+qCLLNq36jepAqH0c=",
+          "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+        },
+        {
+          "sig": "MEUCIQChFKlzCnbZk4owiOUphVoB38E/qYfDJOJyEplQJaNiFAIgCNG2G51J6W+RXjJnNZSVi1lw89iEPNTBE2dTUOw7a2s=",
+          "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+        }
+      ],
+      "attestations": {
+        "url": "https://registry.npmjs.org/-/npm/v1/attestations/dsh-dafeiyu@0.1.14",
+        "provenance": {
+          "predicateType": "https://slsa.dev/provenance/v1"
+        }
+      },
+      "unpackedSize": 215626487
+    },
+    "main": "src/index.js",
+    "name": "dsh-dafeiyu",
+    "type": "module",
+    "_from": "file:dist/dsh-dafeiyu-0.1.14.tgz",
+    "author": {
+      "name": "QCYTSN"
+    },
+    "engines": {
+      "node": ">=22.19"
+    },
+    "exports": {
+      ".": "./src/index.js",
+      "./client": "./lib/client.js",
+      "./reducer": "./src/companion-reducer.js",
+      "./protocol": "./src/protocol.js",
+      "./package.json": "./package.json"
+    },
+    "license": "SEE LICENSE IN ASSET_LICENSE.md",
+    "scripts": {
+      "test": "node --test --test-timeout=10000 test/assets.test.js test/config-endpoint.test.js test/asset-routes.test.js test/client-slot-key.test.js test/client-overlay.test.js test/entry-guard.test.js test/events-endpoint.test.js test/helper-command.test.js test/protocol.test.js test/status-copy.test.js test/reducer.test.js test/helper-lifecycle.test.js test/helper-restart.test.js test/plugin-integration.test.js test/package-files.test.js",
+      "test:helper": "node --test test/helper-lifecycle.test.js",
+      "test:python": "node scripts/run-python.mjs -m unittest discover -s runtime/tests -t .",
+      "build:helper": "node scripts/build-helper.mjs",
+      "helper:visual": "node scripts/run-python.mjs runtime/helper.py",
+      "helper:headless": "node scripts/run-python.mjs runtime/helper.py --headless",
+      "build:helper:linux": "bash scripts/build-helper.sh",
+      "build:helper:darwin": "bash native/macos/build.sh",
+      "build:helper:windows": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build-helper.ps1",
+      "test:helper:packaged": "node scripts/test-packaged-helper.mjs"
+    },
+    "_npmUser": {
+      "name": "GitHub Actions",
+      "email": "npm-oidc-no-reply@github.com",
+      "trustedPublisher": {
+        "id": "github",
+        "oidcConfigId": "oidc:a566d5ec-8615-4395-b97b-14a107b1cb3d"
+      }
+    },
+    "homepage": "https://github.com/QCYTSN/dsh-dafeiyu#readme",
+    "keywords": [
+      "deepseek-harness",
+      "dsh-plugin",
+      "desktop-pet",
+      "agent-companion"
+    ],
+    "_resolved": "/home/runner/work/dsh-dafeiyu/dsh-dafeiyu/dist/dsh-dafeiyu-0.1.14.tgz",
+    "_integrity": "sha512-OUqstNNKVVy+Oz/fZv4x5Dm7TVuMfEFii0DKtC3/S9bkej7MDve7R6bJVBIX6FKdXNwn+c6P46z1IGNLAR6nGg==",
+    "repository": {
+      "url": "git+https://github.com/QCYTSN/dsh-dafeiyu.git",
+      "type": "git"
+    },
+    "_npmVersion": "11.19.0",
+    "description": "A desktop-native BigFish companion driven by DeepSeek Harness session events.",
+    "directories": {},
+    "maintainers": [
+      {
+        "name": "peanut_gao",
+        "email": "2558348385@qq.com"
+      }
+    ],
+    "_nodeVersion": "24.20.0",
+    "dependencies": {
+      "@deepseek-ai/cosmokit": "1.8.2",
+      "@standard-schema/spec": "1.1.0",
+      "@deepseek-ai/schemastery": "3.18.1"
+    },
+    "publishConfig": {
+      "access": "public"
+    },
+    "_hasShrinkwrap": false,
+    "bundleDependencies": [
+      "@deepseek-ai/cosmokit",
+      "@deepseek-ai/schemastery",
+      "@standard-schema/spec"
+    ],
+    "_npmOperationalInternal": {
+      "tmp": "tmp/dsh-dafeiyu_0.1.14_1789488396266_0.6691014116630838",
+      "host": "s3://npm-registry-packages-npm-production"
+    },
+    "_id": "dsh-dafeiyu@0.1.14",
+    "version": "0.1.14",
+    "packageName": "dsh-dafeiyu",
+    "status": 200,
+    "requestedVersion": "0.1.0-alpha.6"
+  },
+  {
+    "dsh": {
+      "bundle": {
+        "patch": "./cordis.patch.yml"
+      },
+      "client": {
+        "inject": [
+          "@deepseek-ai/dsh-client-runtime",
+          "@deepseek-ai/dsh-client-ui-conversation"
+        ],
+        "platform": "web"
+      }
+    },
+    "bugs": {
+      "url": "https://github.com/omdsh-dev/dsh-drag-and-drop/issues"
+    },
+    "dist": {
+      "shasum": "9d3dfbf2c90056d5ba108d94a1ab852ed5fef91e",
+      "tarball": "https://registry.npmjs.org/dsh-drag-and-drop/-/dsh-drag-and-drop-0.1.6.tgz",
+      "fileCount": 78,
+      "integrity": "sha512-4R9JlB4SbEag0hjk98bM7F/vCH0R2lbEp//syHCzsCa8O9tX6TmZz2zt3jWXwft1zMuNDq5Yf+R7+VwIC8Lm+w==",
+      "signatures": [
+        {
+          "sig": "MEYCIQCMYR56WONdI900fnsM9aKiH67MzdupIs9Nb5BGOv1rPwIhAIOI3DLIWNtlabqGh2v4IppvYIocWei/5yZe3Uv8rLzz",
+          "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+        }
+      ],
+      "unpackedSize": 237504
+    },
+    "main": "./lib/index.js",
+    "name": "dsh-drag-and-drop",
+    "type": "module",
+    "types": "./lib/types/index.d.ts",
+    "engines": {
+      "node": "^20.0.0 || >=22.0.0"
+    },
+    "exports": {
+      ".": {
+        "types": "./lib/types/index.d.ts",
+        "default": "./lib/index.js"
+      },
+      "./client": "./lib/client.js",
+      "./invariant": {
+        "types": "./lib/types/invariant.d.ts",
+        "default": "./lib/invariant.js"
+      },
+      "./package.json": "./package.json",
+      "./cordis.patch.yml": "./cordis.patch.yml"
+    },
+    "gitHead": "84fd296306d3d8f1ef812db3d217e67773698890",
+    "license": "BSD-3-Clause",
+    "scripts": {
+      "test": "vitest run",
+      "build": "node scripts/build.mjs",
+      "check": "tsc -p tsconfig.json --noEmit --pretty false",
+      "verify:i18n": "node scripts/verify-i18n.mjs"
+    },
+    "_npmUser": {
+      "name": "billgsz",
+      "email": "bill9109@gmail.com"
+    },
+    "homepage": "https://github.com/omdsh-dev/dsh-drag-and-drop#readme",
+    "keywords": [
+      "deepseek",
+      "deepseek-harness",
+      "dsh-plugin",
+      "dsh-bundle",
+      "web-ui",
+      "drag-and-drop",
+      "file-path",
+      "filesystem"
+    ],
+    "repository": {
+      "url": "git+https://github.com/omdsh-dev/dsh-drag-and-drop.git",
+      "type": "git"
+    },
+    "_npmVersion": "11.18.0",
+    "description": "Drag local files into the DSH Web UI and insert their original filesystem paths without uploading or copying them",
+    "directories": {},
+    "maintainers": [
+      {
+        "name": "billgsz",
+        "email": "bill9109@gmail.com"
+      }
+    ],
+    "_nodeVersion": "26.6.0",
+    "_hasShrinkwrap": false,
+    "_npmOperationalInternal": {
+      "tmp": "tmp/dsh-drag-and-drop_0.1.6_1787736701204_0.42692225935050176",
+      "host": "s3://npm-registry-packages-npm-production"
+    },
+    "_id": "dsh-drag-and-drop@0.1.6",
+    "version": "0.1.6",
+    "packageName": "dsh-drag-and-drop",
+    "status": 200,
+    "requestedVersion": "0.1.6"
+  },
+  {
+    "dsh": {
+      "bundle": {
+        "patch": "./cordis.patch.yml"
+      }
+    },
+    "bugs": {
+      "url": "https://github.com/Nwflower/dsh-file-claim/issues"
+    },
+    "dist": {
+      "shasum": "345a58e7d02fe69961c7bf7b8876be07f34a0d99",
+      "tarball": "https://registry.npmjs.org/dsh-file-claim/-/dsh-file-claim-0.2.0.tgz",
+      "fileCount": 7,
+      "integrity": "sha512-bq+uFpVRT4yN/Wix5QCgv/wbPOtwirBfRyaUUcX6NpfVG45Fkl728sdu3eFy9SnsY9yep/Q7K5jY7yU51MIf4w==",
+      "signatures": [
+        {
+          "sig": "MEYCIQDnsClKtqs2l+Y9KGbBzrpt1s/ML4kd1matdInjzMzKZAIhAOBWSiImDbaqjPfMW3wBnPxPPrwueApqW/76ZWiFTpzE",
+          "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+        }
+      ],
+      "unpackedSize": 110626
+    },
+    "main": "./index.mjs",
+    "name": "dsh-file-claim",
+    "type": "module",
+    "author": {
+      "name": "Nwflower",
+      "email": "1679659@qq.com"
+    },
+    "engines": {
+      "node": ">=18"
+    },
+    "exports": {
+      ".": "./index.mjs",
+      "./claim.mjs": "./claim.mjs",
+      "./package.json": "./package.json",
+      "./cordis.patch.yml": "./cordis.patch.yml"
+    },
+    "gitHead": "42f07e2171d3781edd932732d243646635f4c1a0",
+    "license": "MIT",
+    "scripts": {
+      "test": "node --test \"test/*.test.mjs\"",
+      "prepublishOnly": "npm test && git diff --quiet && git diff --cached --quiet && npm pack --dry-run"
+    },
+    "_npmUser": {
+      "name": "nwflower",
+      "email": "1679659@qq.com"
+    },
+    "homepage": "https://github.com/Nwflower/dsh-file-claim#readme",
+    "keywords": [
+      "deepseek-harness",
+      "dsh",
+      "dsh-plugin",
+      "host-plugin",
+      "file-claim",
+      "file-lock",
+      "file-protection",
+      "concurrency",
+      "parallel-sessions",
+      "parallel-agents",
+      "coordination",
+      "session-coordination",
+      "merge",
+      "3-way-merge",
+      "pending-merge"
+    ],
+    "repository": {
+      "url": "git+https://github.com/Nwflower/dsh-file-claim.git",
+      "type": "git"
+    },
+    "_npmVersion": "11.16.0",
+    "description": "Write in parallel, never overwrite — file claim / protection for concurrent DeepSeek Harness (DSH) sessions working the same workspace: claim/release, heartbeat stale takeover, and an async pending merge area (git 3-way merge)",
+    "directories": {},
+    "maintainers": [
+      {
+        "name": "nwflower",
+        "email": "1679659@qq.com"
+      }
+    ],
+    "_nodeVersion": "24.18.0",
+    "_hasShrinkwrap": false,
+    "_npmOperationalInternal": {
+      "tmp": "tmp/dsh-file-claim_0.2.0_1788334885269_0.4045881744717701",
+      "host": "s3://npm-registry-packages-npm-production"
+    },
+    "_id": "dsh-file-claim@0.2.0",
+    "version": "0.2.0",
+    "packageName": "dsh-file-claim",
+    "status": 200,
+    "requestedVersion": "0.2.0"
+  },
+  {
+    "dsh": {
+      "bundle": {
+        "patch": "./cordis.patch.yml"
+      }
+    },
+    "bugs": {
+      "url": "https://github.com/awesome-dsh-plugin/dsh-find-plugin/issues"
+    },
+    "dist": {
+      "shasum": "d9cf5df9ec8bab0f756ce4b8a7528c6a4641b9c2",
+      "tarball": "https://registry.npmjs.org/dsh-find-plugin/-/dsh-find-plugin-0.4.0.tgz",
+      "fileCount": 15,
+      "integrity": "sha512-XO0zQb3iHxK7IGGygfiGDxI3t4HUEBNLK4knqYmh8KuT2cbCWzmH+4PViaIgVPsiytC7mXN5p94u5fJc3VNsBw==",
+      "signatures": [
+        {
+          "sig": "MEYCIQCXyij+GgqRoWlJlT4FKg1uobZ5c0gjD/CItXMFiC7aHAIhAPkiFqzUsEyc3tmO46B3M/6ns+OcuCacEzl3KGnG5b+H",
+          "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+        },
+        {
+          "sig": "MEUCIQDZ6aUAbOCMlaGo3+NyhO2BwxO5Ecdq3ooRc2TKU7Ij5AIgKORfiiJ1QmSZFy5y4tVnPfyu7U/LwDTtVa2mznIeTC4=",
+          "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+        }
+      ],
+      "attestations": {
+        "url": "https://registry.npmjs.org/-/npm/v1/attestations/dsh-find-plugin@0.4.0",
+        "provenance": {
+          "predicateType": "https://slsa.dev/provenance/v1"
+        }
+      },
+      "unpackedSize": 151561
+    },
+    "main": "lib/index.js",
+    "name": "dsh-find-plugin",
+    "type": "module",
+    "types": "lib/types/index.d.ts",
+    "exports": {
+      ".": {
+        "types": "./lib/types/index.d.ts",
+        "default": "./lib/index.js"
+      },
+      "./package.json": "./package.json",
+      "./cordis.patch.yml": "./cordis.patch.yml"
+    },
+    "gitHead": "afce1cd43f98b8a8b02e4a35cd6a65d6444de412",
+    "license": "MIT",
+    "scripts": {
+      "test": "node --test \"test/**/*.test.mjs\"",
+      "build": "tsc -p tsconfig.json",
+      "check": "npm run typecheck && npm run build",
+      "prepack": "npm run build",
+      "test:live": "node --test test/rate-limit.test.mjs",
+      "typecheck": "tsc -p tsconfig.json --noEmit",
+      "check:peers": "node scripts/check-peer-range.mjs"
+    },
+    "_npmUser": {
+      "name": "GitHub Actions",
+      "email": "npm-oidc-no-reply@github.com",
+      "trustedPublisher": {
+        "id": "github",
+        "oidcConfigId": "oidc:79fe1741-8c49-47f2-95c0-7d28e474bfb6"
+      }
+    },
+    "homepage": "https://github.com/awesome-dsh-plugin/dsh-find-plugin#readme",
+    "keywords": [
+      "deepseek",
+      "harness",
+      "dsh",
+      "dsh-plugin",
+      "search",
+      "discovery"
+    ],
+    "repository": {
+      "url": "git+https://github.com/awesome-dsh-plugin/dsh-find-plugin.git",
+      "type": "git"
+    },
+    "_npmVersion": "12.1.0",
+    "description": "Find DeepSeek Harness plugins inside the agent — live GitHub dsh-plugin topic search, ranked by stars.",
+    "directories": {},
+    "maintainers": [
+      {
+        "name": "fkysly",
+        "email": "fkysly@gmail.com"
+      }
+    ],
+    "_nodeVersion": "22.23.2",
+    "publishConfig": {
+      "registry": "https://registry.npmjs.org/"
+    },
+    "_hasShrinkwrap": false,
+    "devDependencies": {
+      "semver": "^7.8.5",
+      "typescript": "^7.0.2",
+      "@types/node": "^26.2.0",
+      "@deepseek-ai/cordis": "^4.0.1",
+      "@deepseek-ai/dsh-tools": "^0.1.0-rc.6"
+    },
+    "peerDependencies": {
+      "@deepseek-ai/cordis": "^4.0.1",
+      "@deepseek-ai/dsh-tools": "^0.1.0-rc.6 || ^0.1.1-rc.1 || ^0.1.2-alpha.2 || ^0.1.3-alpha.2 || ^0.1.5-alpha.1 || ^0.1.6-alpha.1 || ^0.1.7-alpha.1"
+    },
+    "_npmOperationalInternal": {
+      "tmp": "tmp/dsh-find-plugin_0.4.0_1790348384180_0.8760097514220158",
+      "host": "s3://npm-registry-packages-npm-production"
+    },
+    "_id": "dsh-find-plugin@0.4.0",
+    "version": "0.4.0",
+    "packageName": "dsh-find-plugin",
+    "status": 200,
+    "requestedVersion": "0.3.7"
+  },
+  {
+    "dsh": {
+      "bundle": {
+        "patch": "./cordis.patch.yml"
+      },
+      "client": {
+        "inject": [
+          "@deepseek-ai/dsh-client-runtime",
+          "@deepseek-ai/dsh-client-connection",
+          "@deepseek-ai/dsh-client-ui-settings"
+        ],
+        "platform": "web"
+      }
+    },
+    "bugs": {
+      "url": "https://github.com/yyh-001/dsh-meme/issues"
+    },
+    "dist": {
+      "shasum": "ef1ef5fbd1c2c599ca9b68ae24788d97e73a12f9",
+      "tarball": "https://registry.npmjs.org/dsh-meme/-/dsh-meme-0.1.44.tgz",
+      "fileCount": 57,
+      "integrity": "sha512-sC2Tm2uouG7/3iV7o6CaakUQ4Ek+cgPzeiiMCwl/dMai9AFCw+S/zshILUmNXRzfJiC/50sglBfJEE7KODnW5g==",
+      "signatures": [
+        {
+          "sig": "MEQCIENJ7fhwVUZ7zcHyq2kg6ZpuMAR9pabXDlSeaXoLPI5FAiAm04x1UY75JHyBHbXcdRvHslvgi8S8R1nms2HMiiqcEA==",
+          "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+        },
+        {
+          "sig": "MEUCIQCNe3gR0AuztHktnOs9uVQrt1Q0GF9wcxmrAYgf4tpi8gIgbtAtAX35QF9kE52nAUkv4Aa9AOxz2GYf+mtBVXCqFTo=",
+          "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+        }
+      ],
+      "unpackedSize": 4673710
+    },
+    "main": "index.js",
+    "name": "dsh-meme",
+    "type": "module",
+    "engines": {
+      "node": ">=22.13.0"
+    },
+    "exports": {
+      ".": "./index.js",
+      "./client": "./client.js",
+      "./package.json": "./package.json"
+    },
+    "gitHead": "7d27776e2d77b0a6eedc245061fbb6319bd97647",
+    "license": "MIT",
+    "scripts": {
+      "test": "node --test test/*.test.mjs"
+    },
+    "_npmUser": {
+      "name": "yyh001",
+      "email": "1807875605@qq.com"
+    },
+    "homepage": "https://yyh-001.github.io/dsh-meme/",
+    "keywords": [
+      "dsh-plugin",
+      "dsh-meme",
+      "deepseek-harness",
+      "meme",
+      "emoticon",
+      "sticker"
+    ],
+    "repository": {
+      "url": "git+https://github.com/yyh-001/dsh-meme.git",
+      "type": "git"
+    },
+    "_npmVersion": "10.9.3",
+    "description": "DeepSeek Harness 表情包插件:图库市场一键安装、多图库开关、情绪与关键词搜图、AI 学图,Web 与 QQ 双通道发图。",
+    "directories": {},
+    "maintainers": [
+      {
+        "name": "yyh001",
+        "email": "1807875605@qq.com"
+      }
+    ],
+    "_nodeVersion": "22.18.0",
+    "_hasShrinkwrap": false,
+    "peerDependencies": {
+      "@deepseek-ai/dsh-tools": "*"
+    },
+    "_npmOperationalInternal": {
+      "tmp": "tmp/dsh-meme_0.1.44_1790578062755_0.5954508943549925",
+      "host": "s3://npm-registry-packages-npm-production"
+    },
+    "_id": "dsh-meme@0.1.44",
+    "version": "0.1.44",
+    "packageName": "dsh-meme",
+    "status": 200,
+    "requestedVersion": "0.1.40"
+  },
+  {
+    "dsh": {
+      "bundle": {
+        "patch": "./cordis.patch.yml"
+      },
+      "client": {
+        "inject": [
+          "@deepseek-ai/dsh-client-runtime",
+          "@deepseek-ai/dsh-client-connection"
+        ],
+        "platform": "web"
+      }
+    },
+    "bugs": {
+      "url": "https://github.com/PC2005-cloud/dsh-pet/issues"
+    },
+    "dist": {
+      "shasum": "5e7c5713f7eeac4bd5457c560811d441b03368b1",
+      "tarball": "https://registry.npmjs.org/dsh-pet/-/dsh-pet-0.2.12.tgz",
+      "fileCount": 243,
+      "integrity": "sha512-PrdP71NrDiNUyYtv2cTKC2kqdmOHzNLVXfmkCosnqXicsmH9aK7EjMGIdK7JGFwUc79ypMX/iDc85f+WESufSw==",
+      "signatures": [
+        {
+          "sig": "MEYCIQCoVjMX7QxkzWYEM+pZdJFBFtMyDGV7vmbdcBXHwIumcAIhAIgU2g86Iw+5q8lLXwuco/bJSuNxBkjehafCsFd7lkLJ",
+          "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+        },
+        {
+          "sig": "MEQCIBiN96mNMNEQVhdZDQS9gRlqF5v9rx9+6dYzj8lM3RNkAiBRHIREN4I63NFV/zisji/TQMN6MURQpfya+OhwSJaxoA==",
+          "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+        }
+      ],
+      "unpackedSize": 64743008
+    },
+    "main": "lib/index.js",
+    "name": "dsh-pet",
+    "type": "module",
+    "exports": {
+      ".": {
+        "types": "./lib/types/index.d.ts",
+        "default": "./lib/index.js"
+      },
+      "./src/*": "./src/*",
+      "./client": {
+        "types": "./lib/types/client/index.d.ts",
+        "default": "./lib/client.js"
+      },
+      "./package.json": "./package.json",
+      "./cordis.patch.yml": "./cordis.patch.yml"
+    },
+    "gitHead": "631c5310b047931404978152fdc7865413c153ec",
+    "license": "MIT",
+    "scripts": {
+      "lint": "eslint .",
+      "test": "node --experimental-strip-types --import ./scripts/test-register.mjs --test src/**/*.test.ts",
+      "types": "node scripts/gen-types.mjs",
+      "watch": "tsdown --watch",
+      "bundle": "tsdown",
+      "format": "prettier --write .",
+      "prepack": "npm run types && npm run typecheck && npm run lint && npm run format:check && node scripts/prepack-check.js",
+      "prepare": "node scripts/prepare.js",
+      "dev:mock": "node scripts/dev/mock-server.mjs",
+      "typecheck": "tsc --noEmit && tsc -p tsconfig.test.json",
+      "format:check": "prettier --check .",
+      "start:desktop": "node scripts/start-desktop.mjs",
+      "ensure:electron": "node scripts/ensure-electron.mjs",
+      "build:desktop-core": "node scripts/build-desktop-core.mjs"
+    },
+    "_npmUser": {
+      "name": "pc2005-cloud",
+      "email": "secure@lxpavilion.top"
+    },
+    "homepage": "https://github.com/PC2005-cloud/dsh-pet#readme",
+    "keywords": [
+      "dsh",
+      "dsh-plugin",
+      "deepseek-harness",
+      "desktop-pet",
+      "pet",
+      "floating-widget",
+      "web-ui",
+      "cordis",
+      "react"
+    ],
+    "repository": {
+      "url": "git+https://github.com/PC2005-cloud/dsh-pet.git",
+      "type": "git"
+    },
+    "_npmVersion": "11.17.0",
+    "description": "A floating desktop pet for the DeepSeek Harness Web UI: idle breathing, occasional direction turns, random actions, and screen wandering.",
+    "directories": {},
+    "maintainers": [
+      {
+        "name": "pc2005-cloud",
+        "email": "secure@lxpavilion.top"
+      }
+    ],
+    "_nodeVersion": "24.19.0",
+    "dependencies": {
+      "@electron/get": "^5.1.0",
+      "@electron-internal/extract-zip": "^1.0.5"
+    },
+    "_hasShrinkwrap": false,
+    "readmeFilename": "README.md",
+    "devDependencies": {
+      "eslint": "^10.9.0",
+      "tsdown": "^0.8.0",
+      "prettier": "^3.9.6",
+      "rolldown": "1.0.0-beta.7",
+      "@eslint/js": "^10.0.1",
+      "typescript": "^5.5.0",
+      "@types/node": "^26.2.0",
+      "@types/react": "^18.2.0",
+      "@types/react-dom": "^18.2.0",
+      "typescript-eslint": "^8.67.0",
+      "eslint-plugin-react-hooks": "^7.1.1"
+    },
+    "peerDependencies": {
+      "react": "^18.2.0",
+      "@deepseek-ai/cordis": "^4.0.1",
+      "@deepseek-ai/dsh-llm": "^0.1.1-rc.2",
+      "@deepseek-ai/dsh-commands": "^0.1.1-rc.2",
+      "@deepseek-ai/dsh-home-paths": "^0.1.1-rc.2",
+      "@deepseek-ai/dsh-credentials": "^0.1.1-rc.2",
+      "@deepseek-ai/dsh-client-runtime": "^0.1.1-rc.2",
+      "@deepseek-ai/dsh-host-webserver": "^0.1.1-rc.2",
+      "@deepseek-ai/dsh-client-ui-slots": "^0.1.1-rc.2",
+      "@deepseek-ai/dsh-client-connection": "^0.1.1-rc.2",
+      "@deepseek-ai/dsh-agent-default-model": "^0.1.1-rc.2"
+    },
+    "_npmOperationalInternal": {
+      "tmp": "tmp/dsh-pet_0.2.12_1790222694324_0.8495238035428079",
+      "host": "s3://npm-registry-packages-npm-production"
+    },
+    "_id": "dsh-pet@0.2.12",
+    "version": "0.2.12",
+    "packageName": "dsh-pet",
+    "status": 200,
+    "requestedVersion": "0.1.3"
+  },
+  {
+    "dsh": {
+      "bundle": {
+        "patch": "./cordis.patch.yml"
+      },
+      "client": {
+        "inject": [
+          "@deepseek-ai/dsh-client-runtime"
+        ],
+        "platform": "web",
+        "immediately": true
+      }
+    },
+    "bugs": {
+      "url": "https://github.com/elysia395/dsh-wallpaper-engine/issues"
+    },
+    "dist": {
+      "shasum": "edce3f5036e89b373c57730e47224719ac96e21e",
+      "tarball": "https://registry.npmjs.org/dsh-plugin-wallpaper-engine/-/dsh-plugin-wallpaper-engine-1.0.1.tgz",
+      "fileCount": 79,
+      "integrity": "sha512-d3xbC02SRF1X29yUr6HLpwpu6wrG4V7/MfSm5KuYdvU01pscbYNMLQpfy5OZCdVsQ5UWM5NI4UMmyCaYYz5UIQ==",
+      "signatures": [
+        {
+          "sig": "MEQCIFhELnzCLK7qeh8lvDY+IoD80VzZMtamGxWxQyEfq+PCAiAjU2IIy3pK1wjOAm5NnTlFoaA8o8UNFFymQH0LTyT5ow==",
+          "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+        },
+        {
+          "sig": "MEQCIBL0wLmFAbwBZyxsig5Eb3VdtM4D+1wLWLdp1u9dYtW9AiBZYes1ukuvs3Ck6/oE4tdiDobqaOzVahKs9atKaVmmXg==",
+          "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+        }
+      ],
+      "unpackedSize": 3411544
+    },
+    "main": "lib/index.js",
+    "name": "dsh-plugin-wallpaper-engine",
+    "type": "module",
+    "types": "lib/types/index.d.ts",
+    "exports": {
+      ".": {
+        "types": "./lib/types/index.d.ts",
+        "default": "./lib/index.js"
+      },
+      "./client": {
+        "types": "./lib/types/client.d.ts",
+        "default": "./lib/client.js"
+      },
+      "./package.json": "./package.json",
+      "./cordis.patch.yml": "./cordis.patch.yml"
+    },
+    "gitHead": "6ba2faea16dae512694a5b63039f76aac7239db0",
+    "license": "MIT",
+    "scripts": {
+      "build": "node scripts/build-client.mjs",
+      "smoke": "node test/rotation-smoke.mjs && node test/rotation-live-smoke.mjs && node test/rotation-prepared-leak-smoke.mjs && node test/live-frame-backfill-smoke.mjs && node test/live-frame-async-identity-smoke.mjs",
+      "verify": "node scripts/verify-client.mjs && node scripts/verify-transcode-state.mjs && node scripts/verify-playback-controls.mjs && node scripts/verify-scene.mjs && node scripts/verify-scene-live.mjs && node scripts/verify-media-bridge.mjs",
+      "prepare": "node scripts/prepare.mjs",
+      "verify:all": "npm run build && npm run verify && npm run smoke",
+      "verify:e2e": "node scripts/e2e-web-media-origin.mjs",
+      "verify:bridge": "node scripts/verify-media-bridge.mjs --provision"
+    },
+    "_npmUser": {
+      "name": "chensyovo",
+      "email": "chenshengyu395@gmail.com"
+    },
+    "homepage": "https://github.com/elysia395/dsh-wallpaper-engine#readme",
+    "keywords": [
+      "dsh",
+      "dsh-plugin",
+      "deepseek-harness",
+      "wallpaper",
+      "wallpaper-engine",
+      "theme",
+      "background"
+    ],
+    "repository": {
+      "url": "git+https://github.com/elysia395/dsh-wallpaper-engine.git",
+      "type": "git"
+    },
+    "_npmVersion": "11.6.2",
+    "description": "Wallpaper Engine backgrounds for the DSH web GUI: render your local Wallpaper Engine Video/Web wallpapers behind the chat, Scene wallpapers as extracted static frames, with iOS-style liquid glass, adjustable scrim/border/blur, and a customizable accent co",
+    "directories": {},
+    "maintainers": [
+      {
+        "name": "chensyovo",
+        "email": "chenshengyu395@gmail.com"
+      }
+    ],
+    "_nodeVersion": "24.13.0",
+    "dependencies": {
+      "jpeg-js": "^0.4.4",
+      "@shaderfrog/glsl-parser": "^7.0.1"
+    },
+    "publishConfig": {
+      "access": "public"
+    },
+    "_hasShrinkwrap": false,
+    "peerDependencies": {
+      "react": "^18.2.0",
+      "@deepseek-ai/cordis": "^4.0.1",
+      "@deepseek-ai/dsh-client-runtime": ">=0.1.0-rc.6",
+      "@deepseek-ai/dsh-host-webserver": ">=0.1.0-rc.6",
+      "@deepseek-ai/dsh-client-ui-slots": ">=0.1.0-rc.6"
+    },
+    "peerDependenciesMeta": {
+      "@deepseek-ai/dsh-host-webserver": {
+        "optional": true
+      }
+    },
+    "_npmOperationalInternal": {
+      "tmp": "tmp/dsh-plugin-wallpaper-engine_1.0.1_1790343394508_0.3047863167367093",
+      "host": "s3://npm-registry-packages-npm-production"
+    },
+    "_id": "dsh-plugin-wallpaper-engine@1.0.1",
+    "version": "1.0.1",
+    "packageName": "dsh-plugin-wallpaper-engine",
+    "status": 200,
+    "requestedVersion": "0.6.8"
+  },
+  {
+    "dsh": {
+      "bundle": {
+        "patch": "./cordis.patch.yml"
+      },
+      "client": {
+        "inject": [
+          "@deepseek-ai/dsh-api-remotes",
+          "@deepseek-ai/dsh-client-locale",
+          "@deepseek-ai/dsh-client-ui-slots",
+          "@deepseek-ai/dsh-client-ui-conversation",
+          "@deepseek-ai/dsh-client-ui-settings",
+          "@deepseek-ai/dsh-client-ui-settings-plugins",
+          "@deepseek-ai/dsh-client-ui-renderer",
+          "@deepseek-ai/dsh-client-ui-session"
+        ],
+        "platform": "web"
+      }
+    },
+    "bugs": {
+      "url": "https://github.com/Wine-Red/dsh-prompt-stash/issues"
+    },
+    "dist": {
+      "shasum": "708bbbc0e2a2974a1d26470a3b181637eb89101f",
+      "tarball": "https://registry.npmjs.org/dsh-prompt-stash/-/dsh-prompt-stash-0.3.1.tgz",
+      "fileCount": 21,
+      "integrity": "sha512-v/G3aPjsdEooi1Lby0WKp6aiC648dZfp5OgveyhBr8pkyYfwTNlkVh44rRoSlXOK92esMJkOAXQCXeRpyH4Kag==",
+      "signatures": [
+        {
+          "sig": "MEUCIClXmN1xSEL9VAQgrLUAwXlrn8ixjsFmqABNYCfyGZP6AiEA/KAd+oOY3t0fv1awTk1R3P+dE6TW8lOvv2lMjP6fANI=",
+          "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+        },
+        {
+          "sig": "MEQCIBbIW6USDA5SSeTrbmcd95HkyL9OiZn6vdmqZwbUfUWUAiBMjTC9Mucu7mzaA12Wx9/pWvlGgxp3rrVWtFtdPqawnw==",
+          "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+        }
+      ],
+      "attestations": {
+        "url": "https://registry.npmjs.org/-/npm/v1/attestations/dsh-prompt-stash@0.3.1",
+        "provenance": {
+          "predicateType": "https://slsa.dev/provenance/v1"
+        }
+      },
+      "unpackedSize": 91484
+    },
+    "main": "lib/index.js",
+    "name": "dsh-prompt-stash",
+    "type": "module",
+    "types": "lib/types/index.d.ts",
+    "engines": {
+      "node": ">=20"
+    },
+    "exports": {
+      ".": {
+        "types": "./lib/types/index.d.ts",
+        "default": "./lib/index.js"
+      },
+      "./client": {
+        "types": "./lib/types/client/index.d.ts",
+        "default": "./lib/client.js"
+      },
+      "./package.json": "./package.json"
+    },
+    "license": "MIT",
+    "scripts": {
+      "test": "vitest run",
+      "build": "tsdown && tsc -p tsconfig.build.json",
+      "check": "pnpm run format && pnpm run typecheck && pnpm run test && pnpm run build",
+      "format": "prettier --check . --end-of-line auto",
+      "typecheck": "tsc --noEmit",
+      "format:write": "prettier --write . --end-of-line auto"
+    },
+    "_npmUser": {
+      "name": "winered0v0",
+      "email": "2418831584@qq.com"
+    },
+    "homepage": "https://github.com/Wine-Red/dsh-prompt-stash#readme",
+    "keywords": [
+      "deepseek",
+      "harness",
+      "dsh",
+      "dsh-plugin",
+      "deepseek-harness",
+      "web-ui",
+      "local-first",
+      "prompt",
+      "stash"
+    ],
+    "repository": {
+      "url": "git+https://github.com/Wine-Red/dsh-prompt-stash.git",
+      "type": "git"
+    },
+    "description": "Local, per-session prompt stash for DeepSeek Harness Web",
+    "directories": {},
+    "maintainers": [
+      {
+        "name": "winered0v0",
+        "email": "2418831584@qq.com"
+      }
+    ],
+    "_nodeVersion": "24.21.0",
+    "publishConfig": {
+      "access": "public",
+      "registry": "https://registry.npmjs.org/"
+    },
+    "_hasShrinkwrap": false,
+    "devDependencies": {
+      "jsdom": "26.1.0",
+      "react": "18.3.1",
+      "tsdown": "0.22.2",
+      "vitest": "3.2.4",
+      "prettier": "3.6.2",
+      "react-dom": "18.3.1",
+      "typescript": "5.9.2",
+      "@types/node": "24.2.1",
+      "@types/react": "18.3.23",
+      "@playwright/test": "1.62.1",
+      "@types/react-dom": "18.3.7",
+      "@deepseek-ai/cordis": "4.0.4",
+      "@testing-library/dom": "10.4.1",
+      "@testing-library/react": "16.3.0",
+      "@deepseek-ai/schemastery": "3.18.4",
+      "@deepseek-ai/dsh-settings": "0.1.7-rc.1",
+      "@testing-library/jest-dom": "6.8.0",
+      "@testing-library/user-event": "14.6.1",
+      "@deepseek-ai/dsh-api-remotes": "0.1.7-rc.1",
+      "@deepseek-ai/dsh-client-locale": "0.1.7-rc.1",
+      "@deepseek-ai/dsh-client-ui-slots": "0.1.7-rc.1",
+      "@deepseek-ai/dsh-client-ui-session": "0.1.7-rc.1",
+      "@deepseek-ai/dsh-client-ui-renderer": "0.1.7-rc.1",
+      "@deepseek-ai/dsh-client-ui-settings": "0.1.7-rc.1",
+      "@deepseek-ai/dsh-client-ui-primitives": "0.1.7-rc.1",
+      "@deepseek-ai/dsh-client-ui-conversation": "0.1.7-rc.1",
+      "@deepseek-ai/dsh-client-ui-settings-plugins": "0.1.7-rc.1"
+    },
+    "peerDependencies": {
+      "react": "^18.2.0",
+      "react-dom": "^18.2.0",
+      "@deepseek-ai/cordis": "~4.0.4",
+      "@deepseek-ai/schemastery": "~3.18.4",
+      "@deepseek-ai/dsh-settings": "0.1.7-rc.1 || 0.1.7-rc.2",
+      "@deepseek-ai/dsh-api-remotes": "0.1.7-rc.1 || 0.1.7-rc.2",
+      "@deepseek-ai/dsh-client-locale": "0.1.7-rc.1 || 0.1.7-rc.2",
+      "@deepseek-ai/dsh-client-ui-slots": "0.1.7-rc.1 || 0.1.7-rc.2",
+      "@deepseek-ai/dsh-client-ui-session": "0.1.7-rc.1 || 0.1.7-rc.2",
+      "@deepseek-ai/dsh-client-ui-renderer": "0.1.7-rc.1 || 0.1.7-rc.2",
+      "@deepseek-ai/dsh-client-ui-settings": "0.1.7-rc.1 || 0.1.7-rc.2",
+      "@deepseek-ai/dsh-client-ui-primitives": "0.1.7-rc.1 || 0.1.7-rc.2",
+      "@deepseek-ai/dsh-client-ui-conversation": "0.1.7-rc.1 || 0.1.7-rc.2",
+      "@deepseek-ai/dsh-client-ui-settings-plugins": "0.1.7-rc.1 || 0.1.7-rc.2"
+    },
+    "peerDependenciesMeta": {
+      "react": {
+        "optional": true
+      },
+      "react-dom": {
+        "optional": true
+      },
+      "@deepseek-ai/cordis": {
+        "optional": true
+      },
+      "@deepseek-ai/schemastery": {
+        "optional": true
+      },
+      "@deepseek-ai/dsh-settings": {
+        "optional": true
+      },
+      "@deepseek-ai/dsh-api-remotes": {
+        "optional": true
+      },
+      "@deepseek-ai/dsh-client-locale": {
+        "optional": true
+      },
+      "@deepseek-ai/dsh-client-ui-slots": {
+        "optional": true
+      },
+      "@deepseek-ai/dsh-client-ui-session": {
+        "optional": true
+      },
+      "@deepseek-ai/dsh-client-ui-renderer": {
+        "optional": true
+      },
+      "@deepseek-ai/dsh-client-ui-settings": {
+        "optional": true
+      },
+      "@deepseek-ai/dsh-client-ui-primitives": {
+        "optional": true
+      },
+      "@deepseek-ai/dsh-client-ui-conversation": {
+        "optional": true
+      },
+      "@deepseek-ai/dsh-client-ui-settings-plugins": {
+        "optional": true
+      }
+    },
+    "_npmOperationalInternal": {
+      "tmp": "tmp/dsh-prompt-stash_0.3.1_1790267993804_0.48132512666339355",
+      "host": "s3://npm-registry-packages-npm-production"
+    },
+    "_id": "dsh-prompt-stash@0.3.1",
+    "version": "0.3.1",
+    "packageName": "dsh-prompt-stash",
+    "status": 200,
+    "requestedVersion": "0.2.5"
+  },
+  {
+    "dsh": {
+      "bundle": {
+        "patch": "./cordis.patch.yml"
+      },
+      "client": {
+        "inject": [
+          "@deepseek-ai/dsh-client-ui-slots"
+        ],
+        "platform": "web"
+      }
+    },
+    "bugs": {
+      "url": "https://github.com/hkkz9522/dsh-session-manager/issues"
+    },
+    "dist": {
+      "shasum": "80ae75ba93b02b79f846e56ddde475431371381a",
+      "tarball": "https://registry.npmjs.org/dsh-session-manager/-/dsh-session-manager-0.5.3.tgz",
+      "fileCount": 14,
+      "integrity": "sha512-6ZBvww9Qjq6jyG+oZ+vleXOSJT0e1Vm4G2PNGkI2XosFTQdowAhkFaPPorzqlSiMM69y//ZptrRco3co+jGdlQ==",
+      "signatures": [
+        {
+          "sig": "MEUCIFD6W1xlgNysooosKV//kByqGhLvuyEo7kHe+8E2tN+5AiEAlQRejDJM5DMlqC6vJhLQyC/HyQBNYl6fDuWigFdFuXw=",
+          "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+        },
+        {
+          "sig": "MEYCIQCzONw5aPLeGPi+4V4OXQ8Z5r/H2UBPeMnwM9CyiOUALAIhAPOL+OowydD3FllMKess26W15Re6NFh+8TjXlokWaFX0",
+          "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+        }
+      ],
+      "unpackedSize": 357017
+    },
+    "main": "./lib/index.js",
+    "name": "dsh-session-manager",
+    "type": "module",
+    "engines": {
+      "node": "^22.15.0 || >=24.0.0"
+    },
+    "exports": {
+      ".": "./lib/index.js",
+      "./client": "./lib/client.js",
+      "./package.json": "./package.json"
+    },
+    "gitHead": "68729775dcd75a79bef9d2a1db9e27707e6f46cb",
+    "license": "MIT",
+    "scripts": {
+      "test": "node scripts/run-tests.mjs",
+      "check": "node --check lib/index.js && node --check lib/client.js && node --check lib/session-files.js && node --check lib/annotation-store.js && node --check lib/clipboard-parser.js && node -e \"import('./lib/index.js')\"",
+      "check:package": "node scripts/check-package.mjs"
+    },
+    "_npmUser": {
+      "name": "lesterq",
+      "email": "hkkz9522@gmail.com"
+    },
+    "homepage": "https://github.com/hkkz9522/dsh-session-manager",
+    "keywords": [
+      "dsh",
+      "deepseek-harness",
+      "plugin",
+      "session",
+      "archive",
+      "move",
+      "workspace",
+      "preset",
+      "migration"
+    ],
+    "repository": {
+      "url": "git+https://github.com/hkkz9522/dsh-session-manager.git",
+      "type": "git"
+    },
+    "_npmVersion": "11.16.0",
+    "description": "DSH Web 会话管理：删除、归档、跨工作区移动、迁移预设；收藏、待看、搜索、排序、设置优先级，添加标签和备注；批量处理。欢迎至 GitHub 提意见。",
+    "directories": {},
+    "maintainers": [
+      {
+        "name": "lesterq",
+        "email": "hkkz9522@gmail.com"
+      }
+    ],
+    "_nodeVersion": "24.18.0",
+    "_hasShrinkwrap": false,
+    "peerDependencies": {
+      "cordis": ">=4.0.0-rc <5"
+    },
+    "_npmOperationalInternal": {
+      "tmp": "tmp/dsh-session-manager_0.5.3_1790430214444_0.7626625979643737",
+      "host": "s3://npm-registry-packages-npm-production"
+    },
+    "_id": "dsh-session-manager@0.5.3",
+    "version": "0.5.3",
+    "packageName": "dsh-session-manager",
+    "status": 200,
+    "requestedVersion": "0.1.0"
+  },
+  {
+    "dsh": {
+      "bundle": {
+        "patch": "./cordis.patch.yml"
+      },
+      "client": {
+        "inject": [
+          "@deepseek-ai/dsh-client-runtime",
+          "@deepseek-ai/dsh-client-ui-conversation",
+          "@deepseek-ai/dsh-client-locale",
+          "@deepseek-ai/dsh-client-connection",
+          "@deepseek-ai/dsh-client-ui-settings",
+          "@deepseek-ai/dsh-client-ui-settings-plugins"
+        ],
+        "platform": "web"
+      }
+    },
+    "bugs": {
+      "url": "https://github.com/Laplace-bit/dsh-smooth-stream/issues"
+    },
+    "dist": {
+      "shasum": "5d8f2fc2db97038be05678c0b855c85a243b1e0f",
+      "tarball": "https://registry.npmjs.org/dsh-smooth-stream/-/dsh-smooth-stream-0.6.1.tgz",
+      "fileCount": 41,
+      "integrity": "sha512-gikVy5Wo5O7wUMOnd6cLCP/NA1fy+XOrhAiWoucjTDoLrfwu/88mK6jltv7Uv1jD4hf68j80oUArS9KnPQztCw==",
+      "signatures": [
+        {
+          "sig": "MEUCIFbhi1aAQSMR8XffONVCQciiQLQALGhea1e+8BAPLti8AiEAqQZAI5x9oWf9ObgzD5DBXSJ4Z5336jY2guoZLSf+d1s=",
+          "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+        }
+      ],
+      "unpackedSize": 1091596
+    },
+    "main": "lib/index.js",
+    "name": "dsh-smooth-stream",
+    "type": "module",
+    "engines": {
+      "node": "^22.19.0 || >=24.0.0"
+    },
+    "exports": {
+      ".": {
+        "types": "./src/index.ts",
+        "default": "./lib/index.js"
+      },
+      "./src/*": "./src/*",
+      "./client": {
+        "types": "./src/client/index.ts",
+        "default": "./lib/client.js"
+      },
+      "./package.json": "./package.json"
+    },
+    "gitHead": "fa828cba3e36aa23f81435b1435f864c6e4d3271",
+    "license": "MIT",
+    "scripts": {
+      "test": "vitest run",
+      "build": "tsdown",
+      "prepare": "tsdown",
+      "benchmark": "node scripts/run-stream-benchmark.mjs",
+      "dev:watch": "tsdown --watch",
+      "host:sync": "pnpm build && node scripts/check-lib-fresh.mjs",
+      "typecheck": "tsc -p tsconfig.json --pretty false",
+      "build:repro": "esbuild repro/main.tsx --bundle --format=esm --platform=browser --loader:.css=local-css --alias:@deepseek-ai/dsh-client-runtime=./repro/shims/client-runtime.ts --alias:@deepseek-ai/dsh-client-runtime/client=./repro/shims/client-runtime.ts --alias:@deepseek-ai/dsh-client-ui-primitives=./repro/shims/primitives.tsx --outfile=repro/bundle.js",
+      "test:smooth": "node scripts/verify-y-rebound.mjs && node scripts/probe-tailbob.mjs 1200 20 && node scripts/verify-overflow.mjs --runs 3",
+      "build:stress": "esbuild repro/stress-120fps.tsx --bundle --format=esm --platform=browser --loader:.css=local-css --alias:@deepseek-ai/dsh-client-runtime=./repro/shims/client-runtime.ts --alias:@deepseek-ai/dsh-client-runtime/client=./repro/shims/client-runtime.ts --alias:@deepseek-ai/dsh-client-ui-primitives=./repro/shims/primitives.tsx --outfile=repro/stress-120fps.bundle.js",
+      "test:rebound": "node scripts/verify-y-rebound.mjs",
+      "probe:overlap": "node scripts/probe-overlap.mjs",
+      "stress:120fps": "node scripts/stress-test-120fps.mjs",
+      "probe:stability": "node scripts/verify-follow-stability.mjs"
+    },
+    "_npmUser": {
+      "name": "dzlin",
+      "email": "dzenglin@gmail.com"
+    },
+    "homepage": "https://laplace-bit.github.io/dsh-smooth-stream/",
+    "keywords": [
+      "dsh-plugin",
+      "deepseek-harness",
+      "deepseek",
+      "dsh",
+      "cordis",
+      "streaming",
+      "smooth-streaming",
+      "fluid-streaming",
+      "streaming-renderer",
+      "markdown-streaming",
+      "smooth-scrolling",
+      "smooth-scroll",
+      "smooth-stream",
+      "typewriter",
+      "typewriter-effect",
+      "markdown",
+      "chat-ui",
+      "web-ui",
+      "plugin",
+      "react"
+    ],
+    "repository": {
+      "url": "git+https://github.com/Laplace-bit/dsh-smooth-stream.git",
+      "type": "git"
+    },
+    "_npmVersion": "10.9.4",
+    "description": "Fluid streaming rendering and silky scrolling for DeepSeek Harness replies, including Markdown, code blocks, tables, and tool results.",
+    "directories": {},
+    "maintainers": [
+      {
+        "name": "dzlin",
+        "email": "dzenglin@gmail.com"
+      }
+    ],
+    "_nodeVersion": "22.22.1",
+    "_hasShrinkwrap": false,
+    "packageManager": "pnpm@11.23.0",
+    "devDependencies": {
+      "jsdom": "^26.1.0",
+      "react": "^18.3.1",
+      "tsdown": "^0.22.2",
+      "vitest": "^4.1.8",
+      "esbuild": "^0.28.2",
+      "react-dom": "^18.3.1",
+      "typescript": "^5.9.2",
+      "@types/node": "^22.20.0",
+      "@types/react": "~18.3.1",
+      "lightningcss": "^1.30.1",
+      "playwright-core": "^1.62.1",
+      "@types/react-dom": "~18.3.0",
+      "@deepseek-ai/cordis": "4.0.1",
+      "@testing-library/react": "^16.3.0",
+      "@deepseek-ai/schemastery": "3.18.1",
+      "@deepseek-ai/dsh-settings": "0.1.0-rc.6",
+      "@deepseek-ai/dsh-client-store": "0.1.2-alpha.3",
+      "@deepseek-ai/dsh-client-locale": "0.1.2-alpha.3",
+      "@deepseek-ai/dsh-client-runtime": "0.1.0-rc.6",
+      "@deepseek-ai/dsh-host-webserver": "0.1.0-rc.6",
+      "@deepseek-ai/dsh-client-ui-slots": "0.1.0-rc.6",
+      "@deepseek-ai/dsh-client-connection": "0.1.0-rc.6",
+      "@deepseek-ai/dsh-client-ui-settings": "0.1.0-rc.6",
+      "@deepseek-ai/dsh-client-ui-attachment": "0.1.0-rc.6",
+      "@deepseek-ai/dsh-client-ui-primitives": "0.1.2-alpha.3",
+      "@deepseek-ai/dsh-client-ui-conversation": "0.1.0-rc.6",
+      "@deepseek-ai/dsh-client-ui-settings-plugins": "0.1.0-rc.6"
+    },
+    "peerDependencies": {
+      "react": "^18.2.0",
+      "@deepseek-ai/cordis": "^4.0.1",
+      "@deepseek-ai/schemastery": "*",
+      "@deepseek-ai/dsh-settings": "*",
+      "@deepseek-ai/dsh-client-locale": "*",
+      "@deepseek-ai/dsh-client-runtime": "*",
+      "@deepseek-ai/dsh-host-webserver": "*",
+      "@deepseek-ai/dsh-client-ui-slots": "*",
+      "@deepseek-ai/dsh-client-connection": "*",
+      "@deepseek-ai/dsh-client-ui-settings": "*",
+      "@deepseek-ai/dsh-client-ui-attachment": "*",
+      "@deepseek-ai/dsh-client-ui-primitives": "*",
+      "@deepseek-ai/dsh-client-ui-conversation": "*",
+      "@deepseek-ai/dsh-client-ui-settings-plugins": "*"
+    },
+    "peerDependenciesMeta": {
+      "@deepseek-ai/dsh-client-locale": {
+        "optional": true
+      },
+      "@deepseek-ai/dsh-client-runtime": {
+        "optional": true
+      },
+      "@deepseek-ai/dsh-host-webserver": {
+        "optional": true
+      },
+      "@deepseek-ai/dsh-client-ui-slots": {
+        "optional": true
+      },
+      "@deepseek-ai/dsh-client-connection": {
+        "optional": true
+      },
+      "@deepseek-ai/dsh-client-ui-settings": {
+        "optional": true
+      },
+      "@deepseek-ai/dsh-client-ui-attachment": {
+        "optional": true
+      },
+      "@deepseek-ai/dsh-client-ui-primitives": {
+        "optional": true
+      },
+      "@deepseek-ai/dsh-client-ui-conversation": {
+        "optional": true
+      },
+      "@deepseek-ai/dsh-client-ui-settings-plugins": {
+        "optional": true
+      }
+    },
+    "_npmOperationalInternal": {
+      "tmp": "tmp/dsh-smooth-stream_0.6.1_1789102261022_0.3971186504731148",
+      "host": "s3://npm-registry-packages-npm-production"
+    },
+    "_id": "dsh-smooth-stream@0.6.1",
+    "version": "0.6.1",
+    "packageName": "dsh-smooth-stream",
+    "status": 200,
+    "requestedVersion": "0.4.3"
+  },
+  {
+    "dsh": {
+      "bundle": {
+        "patch": "./cordis.patch.yml"
+      },
+      "client": {
+        "platform": "web"
+      },
+      "compatibility": {
+        "dsh": ">=0.1.7-rc.1 <0.2.0",
+        "node": ">=20.18",
+        "profiles": [
+          "web"
+        ],
+        "dshReleases": {
+          "0.1.5-rc.2": "incompatible",
+          "0.1.5-rc.3": "incompatible",
+          "0.1.7-rc.1": "compatible",
+          "0.1.7-rc.2": "compatible",
+          "0.1.6-alpha.1": "unknown",
+          "0.1.6-alpha.2": "unknown",
+          "0.1.7-alpha.1": "unknown",
+          "0.1.7-alpha.2": "unknown"
+        }
+      }
+    },
+    "bugs": {
+      "url": "https://github.com/Scorp1o117/dsh-soul-md/issues"
+    },
+    "dist": {
+      "shasum": "3914146d953ec773094fe85851708e9695d2832f",
+      "tarball": "https://registry.npmjs.org/dsh-soul-md/-/dsh-soul-md-0.8.5.tgz",
+      "fileCount": 11,
+      "integrity": "sha512-YbJoKGjyqTdjw3L0OaHQf4+g7edzy3WmspQMUT/rFN/wxiuRrhQhnK4eThy0/DK6ImqJQka6+B8qnFO1GxWvvw==",
+      "signatures": [
+        {
+          "sig": "MEQCIDNus3MtN4hYJHmFKMfQo9OBEbpErBvLJpRP4dUunsUyAiAQEORY2v6EZI30asMR8piDccMokQ8Ts0oVNzen8HXu4Q==",
+          "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+        },
+        {
+          "sig": "MEUCIQDCxQ5WwGSc2+eCqKAdC4mTiUi5dXMY4XvqyIaTQ+yjggIgdzPVJPc5XtDfQejSpODgXdcRNcn/kZTyTKGHHrhAcJM=",
+          "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+        }
+      ],
+      "unpackedSize": 98052
+    },
+    "main": "index.js",
+    "name": "dsh-soul-md",
+    "type": "module",
+    "engines": {
+      "node": ">=20.18"
+    },
+    "exports": {
+      ".": "./index.js",
+      "./client": "./client.js",
+      "./package.json": "./package.json"
+    },
+    "gitHead": "8f2f96d8ee9be78d8483d8f9f0066d30732d5440",
+    "license": "MIT",
+    "scripts": {
+      "test": "node --test tests/settings-scope-compat.test.mjs tests/settings-atomic-write.test.mjs tests/client-write-flow.test.mjs tests/memory-layered.test.mjs tests/latest-compat.test.mjs tests/subagent-skip.test.mjs tests/section-render.test.mjs"
+    },
+    "_npmUser": {
+      "name": "scorp1o117",
+      "email": "1540390312@QQ.COM"
+    },
+    "homepage": "https://github.com/Scorp1o117/dsh-soul-md",
+    "keywords": [
+      "dsh",
+      "dsh-plugin",
+      "deepseek-harness",
+      "persona",
+      "soul",
+      "memory",
+      "roleplay",
+      "system-prompt"
+    ],
+    "repository": {
+      "url": "git+https://github.com/Scorp1o117/dsh-soul-md.git",
+      "type": "git"
+    },
+    "_npmVersion": "11.12.1",
+    "description": "DeepSeek Harness 的 soul.md 风格人设 + 长期记忆插件：设置页输入人设卡名称和内容即可，文件由插件自动管理；可按工作区指定人设、聊天框可给会话单独切人设；AI 可自行演化人设与记忆（soul_read/soul_update/memory_*）。",
+    "directories": {},
+    "maintainers": [
+      {
+        "name": "scorp1o117",
+        "email": "1540390312@QQ.COM"
+      }
+    ],
+    "_nodeVersion": "24.15.0",
+    "dependencies": {
+      "@deepseek-ai/schemastery": "^3.18.4"
+    },
+    "_hasShrinkwrap": false,
+    "devDependencies": {
+      "react": "18.3.1",
+      "@deepseek-ai/dsh": "0.1.7-rc.2",
+      "@deepseek-ai/dsh-tools": "0.1.7-rc.2",
+      "@deepseek-ai/dsh-settings": "0.1.7-rc.2",
+      "@deepseek-ai/dsh-home-paths": "0.1.7-rc.2",
+      "@deepseek-ai/dsh-system-prompt": "0.1.7-rc.2"
+    },
+    "peerDependencies": {
+      "react": "^18.2.0",
+      "@deepseek-ai/dsh-tools": "^0.1.7-rc.1",
+      "@deepseek-ai/dsh-settings": "^0.1.7-rc.1",
+      "@deepseek-ai/dsh-home-paths": "^0.1.7-rc.1"
+    },
+    "_npmOperationalInternal": {
+      "tmp": "tmp/dsh-soul-md_0.8.5_1790565970392_0.9884390804103107",
+      "host": "s3://npm-registry-packages-npm-production"
+    },
+    "_id": "dsh-soul-md@0.8.5",
+    "version": "0.8.5",
+    "packageName": "dsh-soul-md",
+    "status": 200,
+    "requestedVersion": "0.2.8"
+  },
+  {
+    "dsh": {
+      "bundle": {
+        "patch": "./cordis.patch.yml"
+      },
+      "client": {
+        "inject": [],
+        "platform": "web",
+        "immediately": true
+      }
+    },
+    "bugs": {
+      "url": "https://github.com/01Virex/dsh-status-rotator/issues"
+    },
+    "dist": {
+      "shasum": "75560ec2b9d20e39eba822771fc536abf9d94a1e",
+      "tarball": "https://registry.npmjs.org/dsh-status-rotator/-/dsh-status-rotator-0.27.5.tgz",
+      "fileCount": 13,
+      "integrity": "sha512-7u7t6A61fTN1mgbSpWcLpSjVVzMmImk45QdBwsjxrZ9QGIhLSg1XvpqnaKPYvgXjyaO78o7JIdwEB2LTP+k2pw==",
+      "signatures": [
+        {
+          "sig": "MEUCIFyh7topUUO9+3aDR/yMnKC3sRAuv3lIA5c86rknUr/HAiEAmu+lgTVX57spk9gTDshd0atKK+o7w2yGsed9BwJadXg=",
+          "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+        },
+        {
+          "sig": "MEYCIQDSGuXlMt8JNgZprZL5w5eijSbiX1sPlHbRG1jpyQVTtwIhAMHIfTpDBqhliGnVaLdYMwiMQdxdn8o9SiqcVRHaBVYu",
+          "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+        }
+      ],
+      "unpackedSize": 651021
+    },
+    "main": "lib/index.js",
+    "name": "dsh-status-rotator",
+    "type": "module",
+    "types": "./lib/index.d.ts",
+    "author": {
+      "url": "https://github.com/01Virex",
+      "name": "01Virex"
+    },
+    "exports": {
+      ".": {
+        "types": "./lib/index.d.ts",
+        "default": "./lib/index.js"
+      },
+      "./client": "./lib/client.js",
+      "./package.json": "./package.json"
+    },
+    "gitHead": "2aed92002e0fc7aeff29dc81501985e42c1b0d57",
+    "license": "MIT",
+    "scripts": {
+      "test": "node scripts/smoke-test.cjs",
+      "test:browser": "node scripts/run-danmaku-mount-test.cjs && node scripts/run-danmaku-mount-test.cjs --page=label && node scripts/run-danmaku-mount-test.cjs --page=settings && node scripts/run-danmaku-mount-test.cjs --page=pending && node scripts/run-danmaku-mount-test.cjs --page=title && node scripts/run-turn-process-test.cjs",
+      "fetch-qq-group": "node scripts/fetch-qq-group.cjs",
+      "test:browser:label": "node scripts/run-danmaku-mount-test.cjs --page=label",
+      "test:browser:title": "node scripts/run-danmaku-mount-test.cjs --page=title",
+      "test:browser:pending": "node scripts/run-danmaku-mount-test.cjs --page=pending",
+      "test:browser:settings": "node scripts/run-danmaku-mount-test.cjs --page=settings",
+      "verify:bank-ownership": "node scripts/verify-external-bank-ownership.cjs",
+      "verify:bank-hot-reload": "node scripts/verify-phrase-hot-reload.cjs",
+      "verify:bank-auto-update": "node scripts/verify-bank-auto-update.cjs",
+      "verify:settings-upgrade": "node scripts/verify-settings-survive-upgrade.cjs",
+      "test:browser:turn-process": "node scripts/run-turn-process-test.cjs"
+    },
+    "_npmUser": {
+      "name": "uent26",
+      "email": "2642244081@qq.com"
+    },
+    "homepage": "https://github.com/01Virex/dsh-status-rotator#readme",
+    "keywords": [
+      "dsh",
+      "deepseek-harness",
+      "dsh-plugin",
+      "plugin",
+      "ui",
+      "status",
+      "status-label",
+      "rotator",
+      "typewriter",
+      "rainbow",
+      "weighted-random",
+      "phrase-bank",
+      "danmaku",
+      "bilibili",
+      "bullet-comment",
+      "meme"
+    ],
+    "repository": {
+      "url": "git+https://github.com/01Virex/dsh-status-rotator.git",
+      "type": "git"
+    },
+    "_npmVersion": "11.19.0",
+    "description": "Turn the DSH Web status line into a 1159-phrase meme machine: phase-aware phrases, typewriter, rainbow gradient, danmaku and 12 theme packs, all editable from the settings page.",
+    "directories": {},
+    "maintainers": [
+      {
+        "name": "uent26",
+        "email": "2642244081@qq.com"
+      }
+    ],
+    "_nodeVersion": "24.21.0",
+    "_hasShrinkwrap": false,
+    "peerDependencies": {
+      "@deepseek-ai/cordis": "*"
+    },
+    "peerDependenciesMeta": {
+      "@deepseek-ai/cordis": {
+        "optional": true
+      }
+    },
+    "_npmOperationalInternal": {
+      "tmp": "tmp/dsh-status-rotator_0.27.5_1790571876745_0.37896153172420277",
+      "host": "s3://npm-registry-packages-npm-production"
+    },
+    "_id": "dsh-status-rotator@0.27.5",
+    "version": "0.27.5",
+    "packageName": "dsh-status-rotator",
+    "status": 200,
+    "requestedVersion": "0.9.1"
+  },
+  {
+    "dsh": {
+      "bundle": {
+        "patch": "./cordis.patch.yml"
+      },
+      "client": {
+        "inject": [
+          "@deepseek-ai/dsh-client-runtime"
+        ],
+        "platform": "web"
+      }
+    },
+    "bugs": {
+      "url": "https://github.com/Luaphes/dsh-web-attention-badge/issues"
+    },
+    "dist": {
+      "shasum": "485cd868ea083a6b8d5189f40f569f0df9a0b2f9",
+      "tarball": "https://registry.npmjs.org/dsh-web-attention-badge/-/dsh-web-attention-badge-0.3.2.tgz",
+      "fileCount": 9,
+      "integrity": "sha512-o8EoA7nLw2A7JWpLdg8KWazr57n2AJt526FG9AwrEi8KKoAYao4U/03Sq5gbn3EDUGt/yyAF1pblDbysco3bzw==",
+      "signatures": [
+        {
+          "sig": "MEQCIGG8Em/ur1qD8ieaPKrM1mgXDi8YKm9nnMsh9eTExBXWAiBA8TNunGCao+uuECfdtO5hetF5c3u7LXkPi6vXBifVrw==",
+          "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+        }
+      ],
+      "attestations": {
+        "url": "https://registry.npmjs.org/-/npm/v1/attestations/dsh-web-attention-badge@0.3.2",
+        "provenance": {
+          "predicateType": "https://slsa.dev/provenance/v1"
+        }
+      },
+      "unpackedSize": 18462
+    },
+    "main": "lib/index.js",
+    "name": "dsh-web-attention-badge",
+    "type": "module",
+    "types": "lib/types/index.d.ts",
+    "exports": {
+      ".": {
+        "types": "./lib/types/index.d.ts",
+        "default": "./lib/index.js"
+      },
+      "./client": {
+        "types": "./lib/types/client/index.d.ts",
+        "default": "./lib/client.js"
+      },
+      "./package.json": "./package.json"
+    },
+    "gitHead": "8b2ede6ccda65da20d57e5e1af995aa9e089dc04",
+    "license": "MIT",
+    "_npmUser": {
+      "name": "GitHub Actions",
+      "email": "npm-oidc-no-reply@github.com",
+      "trustedPublisher": {
+        "id": "github",
+        "oidcConfigId": "oidc:e4c7d83c-6ad6-4aed-bfbf-16a60f70d794"
+      }
+    },
+    "homepage": "https://github.com/Luaphes/dsh-web-attention-badge#readme",
+    "keywords": [
+      "dsh",
+      "deepseek-harness",
+      "plugin",
+      "web",
+      "attention",
+      "badge",
+      "notification",
+      "sessions"
+    ],
+    "repository": {
+      "url": "git+https://github.com/Luaphes/dsh-web-attention-badge.git",
+      "type": "git"
+    },
+    "_npmVersion": "12.0.2",
+    "description": "Web attention badge: a top-left corner indicator counting sessions waiting for user input or finished-but-unopened, plus a browser tab title prefix",
+    "directories": {},
+    "maintainers": [
+      {
+        "name": "luaphes",
+        "email": "luaphes1993@gmail.com"
+      }
+    ],
+    "_nodeVersion": "22.23.1",
+    "_hasShrinkwrap": false,
+    "_npmOperationalInternal": {
+      "tmp": "tmp/dsh-web-attention-badge_0.3.2_1786653988491_0.5631458201568194",
+      "host": "s3://npm-registry-packages-npm-production"
+    },
+    "_id": "dsh-web-attention-badge@0.3.2",
+    "version": "0.3.2",
+    "packageName": "dsh-web-attention-badge",
+    "status": 200,
+    "requestedVersion": "0.3.2"
+  },
+  {
+    "dsh": {
+      "bundle": {
+        "patch": "./cordis.patch.yml"
+      },
+      "client": {
+        "platform": "web"
+      },
+      "compatibility": {
+        "dsh": ">=0.1.0",
+        "dshReleases": {
+          "0.1.2-rc.1": "compatible",
+          "0.1.5-rc.1": "compatible",
+          "0.1.2-alpha.2": "compatible",
+          "0.1.2-alpha.3": "compatible",
+          "0.1.2-alpha.4": "compatible",
+          "0.1.2-alpha.5": "compatible",
+          "0.1.3-alpha.1": "compatible",
+          "0.1.3-alpha.2": "compatible",
+          "0.1.5-alpha.1": "compatible",
+          "0.1.5-alpha.2": "compatible"
+        }
+      }
+    },
+    "bugs": {
+      "url": "https://github.com/AcidGr/dsh-web-mobile-fix/issues"
+    },
+    "dist": {
+      "shasum": "23998ce394dc2797254b0471982c78403b95b2c1",
+      "tarball": "https://registry.npmjs.org/dsh-web-mobile-fix/-/dsh-web-mobile-fix-1.0.6.tgz",
+      "fileCount": 7,
+      "integrity": "sha512-Q+OAYAe268FhPe/915RDEWdVmln1H6QzJiJ+NN86/S4cC1q+7sAhFWblZUhhKVMbQEmSJDI+GQC0dQoMpXFJ2Q==",
+      "signatures": [
+        {
+          "sig": "MEYCIQD5DKuGz3QY3NmfIhHW4/FMjiOHXtheTXBGcxirnIwCtwIhANk1+ivYFn0WKsdkl1Q7nHTrU4i0o+tcUZcguMHSvUas",
+          "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+        },
+        {
+          "sig": "MEYCIQDJz8r9dcClC4HqSTz5lYY4X+hvIslqG68XToHHQ+9JBgIhAON3XcywLcdWBAbAFaUe7L6mWYNThE5J+I9Yw0aHsbZS",
+          "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+        }
+      ],
+      "unpackedSize": 18694
+    },
+    "main": "lib/index.js",
+    "name": "dsh-web-mobile-fix",
+    "type": "module",
+    "engines": {
+      "node": ">=20.0.0"
+    },
+    "exports": {
+      ".": "./lib/index.js",
+      "./client": "./lib/client.js",
+      "./package.json": "./package.json"
+    },
+    "gitHead": "2085cdfdc3967443ae01977d79446f8e403d8e94",
+    "license": "MIT",
+    "_npmUser": {
+      "name": "acidgr",
+      "email": "acid20140307@gmail.com"
+    },
+    "homepage": "https://github.com/AcidGr/dsh-web-mobile-fix",
+    "keywords": [
+      "deepseek-harness",
+      "dsh",
+      "dsh-plugin",
+      "mobile",
+      "web-ui",
+      "css"
+    ],
+    "repository": {
+      "url": "git+https://github.com/AcidGr/dsh-web-mobile-fix.git",
+      "type": "git"
+    },
+    "_npmVersion": "11.19.0",
+    "description": "Mobile layout fixes for the DeepSeek Harness Web UI: settings panel and sidebar on narrow (≤700px) screens. Pure client-side CSS overlay.",
+    "directories": {},
+    "maintainers": [
+      {
+        "name": "acidgr",
+        "email": "acid20140307@gmail.com"
+      }
+    ],
+    "_nodeVersion": "24.20.0",
+    "_hasShrinkwrap": false,
+    "_npmOperationalInternal": {
+      "tmp": "tmp/dsh-web-mobile-fix_1.0.6_1789115423454_0.7404703166857787",
+      "host": "s3://npm-registry-packages-npm-production"
+    },
+    "_id": "dsh-web-mobile-fix@1.0.6",
+    "version": "1.0.6",
+    "packageName": "dsh-web-mobile-fix",
+    "status": 200,
+    "requestedVersion": "1.0.1"
+  },
+  {
+    "dsh": {
+      "bundle": {
+        "patch": "./cordis.patch.yml"
+      }
+    },
+    "bugs": {
+      "url": "https://github.com/MeteorNOX/DeepSeek-Balance-Whale-Widget/issues"
+    },
+    "dist": {
+      "shasum": "45a623977b2cca5c0a8b329db71045ae89f77317",
+      "tarball": "https://registry.npmjs.org/dsh-whale-widget/-/dsh-whale-widget-0.3.16.tgz",
+      "fileCount": 20,
+      "integrity": "sha512-I6gHmH951u2dhDRn+BI6QZpbAyYkB2+OCgVC+QGR3L90op3Z826XsfdAg1FSLjBVGDk22rE1r4y940q32jOL5A==",
+      "signatures": [
+        {
+          "sig": "MEUCIE67J9IYC3JWvlp63pZ4fYeDMj3VF1OlY0QGJZLIFwIeAiEAhEVyq3qdpeedK4jK2UZ9V4WBZefh8M0b54hPUrfeegw=",
+          "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+        },
+        {
+          "sig": "MEYCIQDAm4P9nRX6ESChA7CrjGvG3lN+nZAqphm74KcnYcpLFgIhAIbRkf1eiA4902ZavjgqE4DAlaseD54deYqSzo7Tm/Fe",
+          "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+        }
+      ],
+      "unpackedSize": 5920832
+    },
+    "main": "lib/index.js",
+    "name": "dsh-whale-widget",
+    "type": "module",
+    "gitHead": "86af3f2d90870d14742d2083e532b98a16b7b25c",
+    "license": "MIT",
+    "_npmUser": {
+      "name": "GitHub Actions",
+      "email": "npm-oidc-no-reply@github.com",
+      "trustedPublisher": {
+        "id": "github",
+        "oidcConfigId": "oidc:ba5f85aa-0d92-4c83-8e57-6eb7b3a83643"
+      }
+    },
+    "homepage": "https://github.com/MeteorNOX/DeepSeek-Balance-Whale-Widget#readme",
+    "keywords": [
+      "dsh",
+      "dsh-plugin",
+      "deepseek-harness",
+      "balance",
+      "widget"
+    ],
+    "repository": {
+      "url": "git+https://github.com/MeteorNOX/DeepSeek-Balance-Whale-Widget.git",
+      "type": "git"
+    },
+    "_npmVersion": "12.1.0",
+    "description": "DSH Web 界面右下角的 DeepSeek 余额小鲸鱼挂件:余额/今日已用/峰谷定价、自定义泡泡点击序列(文本/余额/今日/峰谷/图片/随机语句与并列加权选择)、逐行样式与字体、悬浮快捷编辑、音效与每轮消耗、自定义角色/动图/音效、吸附与翻转自定义",
+    "directories": {},
+    "maintainers": [
+      {
+        "name": "under_ocean",
+        "email": "k18880486223@outlook.com"
+      }
+    ],
+    "_nodeVersion": "22.23.2",
+    "_hasShrinkwrap": false,
+    "_npmOperationalInternal": {
+      "tmp": "tmp/dsh-whale-widget_0.3.16_1790432961742_0.30528712689768533",
+      "host": "s3://npm-registry-packages-npm-production"
+    },
+    "_id": "dsh-whale-widget@0.3.16",
+    "version": "0.3.16",
+    "packageName": "dsh-whale-widget",
+    "status": 200,
+    "requestedVersion": "0.2.10"
+  },
+  {
+    "dsh": {
+      "bundle": {
+        "patch": "./cordis.patch.yml"
+      },
+      "client": {
+        "platform": "web"
+      }
+    },
+    "bugs": {
+      "url": "https://github.com/Phant0Meow/dsh-meow-smooth/issues"
+    },
+    "dist": {
+      "shasum": "e3f21019973485a741c0ed3df18509f0b2da8f6b",
+      "tarball": "https://registry.npmjs.org/meow-smooth/-/meow-smooth-0.8.1.tgz",
+      "fileCount": 12,
+      "integrity": "sha512-6UOPllSoSlUHMEHyJ8PYPhkPyG6iVVah1SM+D77lNSop7uUFfhJyKalFoRXVq8jzupLlxNYV344JHAg/8YGoDQ==",
+      "signatures": [
+        {
+          "sig": "MEUCIQCKergPUKGlEDS3fZNivoAwZQ4bKRRyptH3TQ3sdfWbegIgFJAWt2yELEYgEQ0GUSwi9KE5SNLHxddsndaPbUJRquE=",
+          "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+        },
+        {
+          "sig": "MEQCIFE0Ewd3c9XpnqRVwqz3AqzWwwZrg/9An0inipPJkxnEAiBEH5M9fE84B1/W1hAJUPr2ET++zfAtRl/lLWKvfgT/hw==",
+          "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+        }
+      ],
+      "unpackedSize": 702950
+    },
+    "main": "lib/index.js",
+    "name": "meow-smooth",
+    "type": "module",
+    "exports": {
+      ".": "./lib/index.js",
+      "./client": "./lib/client.js",
+      "./package.json": "./package.json",
+      "./cordis.patch.yml": "./cordis.patch.yml"
+    },
+    "gitHead": "7a32ebd8e0976172a68b4845f69926600fd89783",
+    "license": "MIT",
+    "scripts": {
+      "build": "node build.mjs",
+      "watch": "node build.mjs --watch",
+      "prepare": "node build.mjs",
+      "typecheck": "tsc -p tsconfig.json",
+      "link-workspace": "powershell -ExecutionPolicy Bypass -File scripts/link-workspace.ps1"
+    },
+    "_npmUser": {
+      "name": "jovielher",
+      "email": "jovielher@163.com"
+    },
+    "homepage": "https://github.com/Phant0Meow/dsh-meow-smooth#readme",
+    "keywords": [
+      "deepseek-harness",
+      "dsh",
+      "dsh-plugin",
+      "fold",
+      "composer",
+      "sidebar",
+      "mobile"
+    ],
+    "repository": {
+      "url": "git+https://github.com/Phant0Meow/dsh-meow-smooth.git",
+      "type": "git"
+    },
+    "_npmVersion": "10.9.4",
+    "description": "喵丝滑：dsh 前端行为增强——输入框失焦折叠高度 + 窄屏选中 Session 自动收起侧边栏（纯 client 插件，零 dsh 本体改动）",
+    "directories": {},
+    "maintainers": [
+      {
+        "name": "jovielher",
+        "email": "jovielher@163.com"
+      }
+    ],
+    "_nodeVersion": "22.22.0",
+    "dependencies": {
+      "web-push": "^3.6.7"
+    },
+    "_hasShrinkwrap": false,
+    "devDependencies": {
+      "esbuild": "^0.25.0",
+      "typescript": "^7.0.2",
+      "@types/node": "^26.4.0",
+      "@types/react": "^19.2.18"
+    },
+    "_npmOperationalInternal": {
+      "tmp": "tmp/meow-smooth_0.8.1_1790128278852_0.6479440951514046",
+      "host": "s3://npm-registry-packages-npm-production"
+    },
+    "_id": "meow-smooth@0.8.1",
+    "version": "0.8.1",
+    "packageName": "meow-smooth",
+    "status": 200,
+    "requestedVersion": "0.5.0"
+  },
+  {
+    "dsh": {
+      "bundle": {
+        "patch": "./cordis.patch.yml"
+      },
+      "client": {
+        "platform": "web"
+      }
+    },
+    "bugs": {
+      "url": "https://github.com/jing-hy/picturereader/issues"
+    },
+    "dist": {
+      "shasum": "755d5accfef0078fa39ba254a8364d5eb7e5982a",
+      "tarball": "https://registry.npmjs.org/picturereader/-/picturereader-3.3.3.tgz",
+      "fileCount": 32,
+      "integrity": "sha512-DG8e+nYwdh4d3YaH55wf8pAgXtAaRBkrT3+1t6M7AdZmi+DGkBY4upm/v+YiuVzhyyabJAg5nlwAJjP1eTb1nw==",
+      "signatures": [
+        {
+          "sig": "MEYCIQCLJ2UpW9SwzXj0xDKDQgc4iUizgOMG+tH69i1MV8+4VgIhANcggOrFb9X/UjYrQME3K2vssRvORFW0+vmKg8rJi0yY",
+          "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+        },
+        {
+          "sig": "MEUCIQCh4icYVjY5YAF0ZOn8eQwIAzD33rIlzTgrb6nhNW7+EgIgPVo3AIIsvdkCGxJoP56VNUv0DWU8CSddV65yKZQRV8Q=",
+          "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+        }
+      ],
+      "unpackedSize": 427770
+    },
+    "main": "src/index.js",
+    "name": "picturereader",
+    "type": "module",
+    "author": {
+      "name": "picturereader"
+    },
+    "engines": {
+      "node": "^22.19 || >=24"
+    },
+    "exports": {
+      ".": "./src/index.js",
+      "./client": "./client.js",
+      "./package.json": "./package.json",
+      "./cordis.patch.yml": "./cordis.patch.yml"
+    },
+    "license": "MIT",
+    "scripts": {
+      "test": "node --test"
+    },
+    "_npmUser": {
+      "name": "jing_hy",
+      "email": "3509987530@qq.com"
+    },
+    "homepage": "https://github.com/jing-hy/picturereader#readme",
+    "keywords": [
+      "dsh",
+      "dsh-plugin",
+      "deepseek-harness",
+      "image",
+      "vision",
+      "pixels",
+      "ascii",
+      "ocr",
+      "paddleocr",
+      "rapidocr",
+      "hue",
+      "multimodal",
+      "vlm",
+      "vision-analyze",
+      "llm-vision",
+      "document-to-image",
+      "image-edit",
+      "photo-editing",
+      "resize",
+      "watermark",
+      "background-remove"
+    ],
+    "repository": {
+      "url": "git+https://github.com/jing-hy/picturereader.git",
+      "type": "git"
+    },
+    "_npmVersion": "11.16.0",
+    "description": "Unified image understanding plugin for DeepSeek Harness (DSH). Visual twin adapter for native thumbnails + auto-analysis on any text-only model (incl. pi-ai providers); privacy/smart/strict routing; local tools (scan/OCR×4 engines (windows/macos/paddle/ra",
+    "directories": {},
+    "maintainers": [
+      {
+        "name": "jing_hy",
+        "email": "3509987530@qq.com"
+      }
+    ],
+    "_nodeVersion": "24.18.0",
+    "dependencies": {
+      "pngjs": "^7.0.0",
+      "omggif": "^1.0.10",
+      "jpeg-js": "^0.4.4",
+      "webp-wasm": "^1.0.6"
+    },
+    "_hasShrinkwrap": false,
+    "peerDependencies": {
+      "@deepseek-ai/dsh-llm": "^0.1.0-rc.6 || ^0.1.1-rc.2 || ^0.1.2-rc.1 || ^0.1.3-alpha.1",
+      "@deepseek-ai/schemastery": "^3.18.1",
+      "@deepseek-ai/dsh-settings": "^0.1.0-rc.6 || ^0.1.1-rc.2 || ^0.1.2-rc.1 || ^0.1.3-alpha.1"
+    },
+    "_npmOperationalInternal": {
+      "tmp": "tmp/picturereader_3.3.3_1789127308751_0.3923417208673601",
+      "host": "s3://npm-registry-packages-npm-production"
+    },
+    "_id": "picturereader@3.3.3",
+    "version": "3.3.3",
+    "packageName": "picturereader",
+    "status": 200,
+    "requestedVersion": "3.3.1"
+  },
+  {
+    "bin": {
+      "dsh-agent-teams-doctor": "scripts/doctor.mjs"
+    },
+    "dsh": {
+      "bundle": {
+        "patch": "./cordis.patch.yml"
+      },
+      "client": {
+        "inject": [
+          "@deepseek-ai/dsh-client-locale",
+          "@deepseek-ai/dsh-client-ui-conversation",
+          "@deepseek-ai/dsh-client-ui-layout",
+          "@deepseek-ai/dsh-client-ui-sidebar-right",
+          "@deepseek-ai/dsh-client-ui-model-selection",
+          "@deepseek-ai/dsh-api-session-controller",
+          "@deepseek-ai/dsh-client-ui-session",
+          "@deepseek-ai/dsh-client-ui-chat"
+        ],
+        "platform": "web"
+      }
+    },
+    "bugs": {
+      "url": "https://github.com/NanmiCoder/dsh-agent-teams/issues"
+    },
+    "dist": {
+      "shasum": "a431b6ae9e15392f6f09758be68a4e3c9dffe275",
+      "tarball": "https://registry.npmjs.org/@nanmicoder/dsh-agent-teams/-/dsh-agent-teams-0.1.21.tgz",
+      "fileCount": 109,
+      "integrity": "sha512-M+d1mg5tas4yZBftRRlhCXQT6I0XD4zNYLqsQaIqui7ZeghyckLWqaG4PUfPmMW2Pbk4APe3YS/1UEwDL61ECg==",
+      "signatures": [
+        {
+          "sig": "MEUCIBqn5BGNzJnNjzK9850wckqbsA0TmiwUOW1AjFtcZTA1AiEAi1Cwa/QujqbkjMVIO7Imj5+gesBFRKfMVNvPJoaQM5I=",
+          "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+        },
+        {
+          "sig": "MEUCIF5qfMv7jez/XJ7vW0PEo3Pu5y26PbptkZ6gWpBkE5bGAiEAsmwpXaJmE84fxDoW4cVLp6gmKv5jKXqp2I94Wx14pAY=",
+          "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+        }
+      ],
+      "attestations": {
+        "url": "https://registry.npmjs.org/-/npm/v1/attestations/@nanmicoder%2fdsh-agent-teams@0.1.21",
+        "provenance": {
+          "predicateType": "https://slsa.dev/provenance/v1"
+        }
+      },
+      "unpackedSize": 3165012
+    },
+    "main": "lib/index.js",
+    "name": "@nanmicoder/dsh-agent-teams",
+    "type": "module",
+    "_from": "file:/home/runner/work/_temp/candidate/candidate.tgz",
+    "types": "lib/types/index.d.ts",
+    "author": {
+      "url": "Relakkes",
+      "name": "程序员阿江",
+      "email": "relakkes@gmail.com"
+    },
+    "engines": {
+      "node": "^22.19.0 || >=24"
+    },
+    "exports": {
+      ".": {
+        "types": "./lib/types/index.d.ts",
+        "default": "./lib/index.js"
+      },
+      "./client": {
+        "types": "./lib/types/client/index.d.ts",
+        "default": "./lib/client.js"
+      },
+      "./package.json": "./package.json",
+      "./cordis.patch.yml": "./cordis.patch.yml"
+    },
+    "license": "MIT",
+    "scripts": {
+      "build": "node scripts/clean-build.mjs && tsc -p tsconfig.json && tsc -p tsconfig.client.json && tsdown",
+      "doctor": "node scripts/doctor.mjs",
+      "verify": "node scripts/verify.mjs && node scripts/fallback-tdd.mjs && node scripts/member-failure-tdd.mjs && pnpm verify:quality-gates && node scripts/lifecycle-verify.mjs && node scripts/stress-verify.mjs && node --test scripts/issue-159.test.mjs && pnpm verify:web-routes && pnpm verify:release && pnpm verify:readme && pnpm verify:skill && pnpm verify:harness-contract && pnpm verify:http-body && pnpm verify:compatibility && pnpm verify:capabilities && pnpm verify:member-spawn-recovery",
+      "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.client.json --noEmit",
+      "sync:skill": "node scripts/sync-skill.mjs",
+      "verify:skill": "node scripts/sync-skill.mjs --check",
+      "update:skills": "node scripts/update-skills.mjs",
+      "verify:readme": "node scripts/readme-version.mjs && node --test scripts/readme-version.test.mjs",
+      "verify:release": "node --test scripts/release-metadata.test.mjs",
+      "verify:http-body": "node --test scripts/http-body.test.mjs",
+      "verify:web-routes": "node scripts/web-routes-verify.mjs",
+      "test:skills-updater": "node --test scripts/update-skills.test.mjs",
+      "verify:capabilities": "node --test scripts/capabilities.test.mjs",
+      "verify:compatibility": "node scripts/compatibility.mjs && node --test scripts/compatibility.test.mjs && node scripts/doctor.mjs",
+      "verify:quality-gates": "node scripts/quality-gates-tdd.mjs && node --test scripts/quality-gates-repair-scope.test.mjs scripts/quality-gates-amend.test.mjs",
+      "verify:harness-contract": "node scripts/harness-compat-tdd.mjs && node scripts/stability-tdd.mjs && node scripts/lifecycle-verify.mjs --modern-harness && node scripts/member-failure-tdd.mjs --modern-harness && node scripts/lifecycle-verify.mjs --delivery-harness && node scripts/member-failure-tdd.mjs --delivery-harness && node --test scripts/client-harness-migration.test.mjs scripts/workspace-activity.test.mjs",
+      "verify:member-spawn-recovery": "node --test scripts/member-spawn-recovery.test.mjs"
+    },
+    "_npmUser": {
+      "name": "GitHub Actions",
+      "email": "npm-oidc-no-reply@github.com",
+      "trustedPublisher": {
+        "id": "github",
+        "oidcConfigId": "oidc:fdb5ba18-1f75-40ce-8737-33a919568164"
+      }
+    },
+    "homepage": "https://github.com/NanmiCoder/dsh-agent-teams#readme",
+    "keywords": [
+      "dsh",
+      "dsh-plugin",
+      "deepseek-harness",
+      "agent-teams",
+      "multi-agent",
+      "subagent",
+      "ai-agent",
+      "llm"
+    ],
+    "_resolved": "/home/runner/work/_temp/candidate/candidate.tgz",
+    "_integrity": "sha512-M+d1mg5tas4yZBftRRlhCXQT6I0XD4zNYLqsQaIqui7ZeghyckLWqaG4PUfPmMW2Pbk4APe3YS/1UEwDL61ECg==",
+    "repository": {
+      "url": "git+https://github.com/NanmiCoder/dsh-agent-teams.git",
+      "type": "git"
+    },
+    "_npmVersion": "11.19.0",
+    "description": "AgentTeams for DeepSeek Harness: multi-agent team collaboration (captain, members, tasks with dependencies, messaging) driven by natural language, with a tree monitor in the web GUI",
+    "directories": {},
+    "maintainers": [
+      {
+        "name": "relakkes",
+        "email": "relakkes@gmail.com"
+      }
+    ],
+    "_nodeVersion": "24.21.0",
+    "publishConfig": {
+      "tag": "latest",
+      "access": "public",
+      "registry": "https://registry.npmjs.org/"
+    },
+    "_hasShrinkwrap": false,
+    "devDependencies": {
+      "react": "^18.2.0",
+      "tsdown": "0.22.2",
+      "react-dom": "^18.2.0",
+      "typescript": "^5.9.3",
+      "@types/node": "^24.13.3",
+      "@types/react": "~18.3.1",
+      "lightningcss": "^1.33.0",
+      "@deepseek-ai/dsh": "0.1.7-rc.2",
+      "@types/react-dom": "^18.3.7",
+      "@deepseek-ai/cordis": "4.0.4",
+      "@deepseek-ai/dsh-llm": "0.1.7-rc.2",
+      "@deepseek-ai/dsh-agent": "0.1.7-rc.2",
+      "@deepseek-ai/dsh-tools": "0.1.7-rc.2",
+      "@deepseek-ai/dsh-session": "0.1.7-rc.2",
+      "@deepseek-ai/schemastery": "3.18.4",
+      "@deepseek-ai/dsh-commands": "0.1.7-rc.2",
+      "@deepseek-ai/dsh-subagent": "0.1.7-rc.2",
+      "@deepseek-ai/dsh-llm-retry": "0.1.7-rc.2",
+      "@deepseek-ai/dsh-workspace": "0.1.7-rc.2",
+      "@deepseek-ai/dsh-util-values": "0.1.7-rc.2",
+      "@deepseek-ai/dsh-client-store": "0.1.7-rc.2",
+      "@deepseek-ai/dsh-client-locale": "0.1.7-rc.2",
+      "@deepseek-ai/dsh-system-prompt": "0.1.7-rc.2",
+      "@deepseek-ai/dsh-client-ui-chat": "0.1.7-rc.2",
+      "@deepseek-ai/dsh-client-ui-slots": "0.1.7-rc.2",
+      "@deepseek-ai/dsh-client-ui-layout": "0.1.7-rc.2",
+      "@deepseek-ai/dsh-client-connection": "0.1.7-rc.2",
+      "@deepseek-ai/dsh-client-ui-session": "0.1.7-rc.2",
+      "@deepseek-ai/dsh-client-ui-renderer": "0.1.7-rc.2",
+      "@deepseek-ai/dsh-session-projection": "0.1.7-rc.2",
+      "@deepseek-ai/dsh-client-ui-primitives": "0.1.7-rc.2",
+      "@deepseek-ai/dsh-api-session-controller": "0.1.7-rc.2",
+      "@deepseek-ai/dsh-client-ui-conversation": "0.1.7-rc.2",
+      "@deepseek-ai/dsh-client-ui-sidebar-right": "0.1.7-rc.2",
+      "@deepseek-ai/dsh-client-ui-model-selection": "0.1.7-rc.2"
+    },
+    "peerDependencies": {
+      "react": "^18.2.0",
+      "@deepseek-ai/cordis": "^4.0.2",
+      "@deepseek-ai/dsh-llm": "0.1.7-rc.2 || 0.1.5-rc.3 || 0.1.5-rc.2 || 0.1.5-rc.1 || 0.1.2-rc.1 || 0.1.2-alpha.5 || 0.1.2-alpha.2",
+      "@deepseek-ai/dsh-agent": "0.1.7-rc.2 || 0.1.5-rc.3 || 0.1.5-rc.2 || 0.1.5-rc.1 || 0.1.2-rc.1 || 0.1.2-alpha.5 || 0.1.2-alpha.2",
+      "@deepseek-ai/dsh-tools": "0.1.7-rc.2 || 0.1.5-rc.3 || 0.1.5-rc.2 || 0.1.5-rc.1 || 0.1.2-rc.1 || 0.1.2-alpha.5 || 0.1.2-alpha.2",
+      "@deepseek-ai/dsh-session": "0.1.7-rc.2 || 0.1.5-rc.3 || 0.1.5-rc.2 || 0.1.5-rc.1 || 0.1.2-rc.1 || 0.1.2-alpha.5 || 0.1.2-alpha.2",
+      "@deepseek-ai/schemastery": "^3.18.2",
+      "@deepseek-ai/dsh-commands": "0.1.7-rc.2 || 0.1.5-rc.3 || 0.1.5-rc.2 || 0.1.5-rc.1 || 0.1.2-rc.1 || 0.1.2-alpha.5 || 0.1.2-alpha.2",
+      "@deepseek-ai/dsh-subagent": "0.1.7-rc.2 || 0.1.5-rc.3 || 0.1.5-rc.2 || 0.1.5-rc.1 || 0.1.2-rc.1 || 0.1.2-alpha.5 || 0.1.2-alpha.2",
+      "@deepseek-ai/dsh-util-values": "0.1.7-rc.2 || 0.1.5-rc.3 || 0.1.5-rc.2 || 0.1.5-rc.1 || 0.1.2-rc.1 || 0.1.2-alpha.5 || 0.1.2-alpha.2",
+      "@deepseek-ai/dsh-client-store": "0.1.7-rc.2 || 0.1.5-rc.3 || 0.1.5-rc.2 || 0.1.5-rc.1 || 0.1.2-rc.1 || 0.1.2-alpha.5 || 0.1.2-alpha.2",
+      "@deepseek-ai/dsh-client-locale": "0.1.7-rc.2 || 0.1.5-rc.3 || 0.1.5-rc.2 || 0.1.5-rc.1 || 0.1.2-rc.1 || 0.1.2-alpha.5 || 0.1.2-alpha.2",
+      "@deepseek-ai/dsh-system-prompt": "0.1.7-rc.2 || 0.1.5-rc.3 || 0.1.5-rc.2 || 0.1.5-rc.1 || 0.1.2-rc.1 || 0.1.2-alpha.5 || 0.1.2-alpha.2",
+      "@deepseek-ai/dsh-client-ui-chat": "0.1.7-rc.2 || 0.1.5-rc.3 || 0.1.5-rc.2 || 0.1.5-rc.1 || 0.1.2-rc.1 || 0.1.2-alpha.5 || 0.1.2-alpha.2",
+      "@deepseek-ai/dsh-client-ui-slots": "0.1.7-rc.2 || 0.1.5-rc.3 || 0.1.5-rc.2 || 0.1.5-rc.1 || 0.1.2-rc.1 || 0.1.2-alpha.5 || 0.1.2-alpha.2",
+      "@deepseek-ai/dsh-client-ui-layout": "0.1.7-rc.2 || 0.1.5-rc.3 || 0.1.5-rc.2 || 0.1.5-rc.1 || 0.1.2-rc.1 || 0.1.2-alpha.5 || 0.1.2-alpha.2",
+      "@deepseek-ai/dsh-client-connection": "0.1.7-rc.2 || 0.1.5-rc.3 || 0.1.5-rc.2 || 0.1.5-rc.1 || 0.1.2-rc.1 || 0.1.2-alpha.5 || 0.1.2-alpha.2",
+      "@deepseek-ai/dsh-client-ui-session": "0.1.7-rc.2 || 0.1.5-rc.3 || 0.1.5-rc.2 || 0.1.5-rc.1 || 0.1.2-rc.1 || 0.1.2-alpha.5 || 0.1.2-alpha.2",
+      "@deepseek-ai/dsh-client-ui-renderer": "0.1.7-rc.2 || 0.1.5-rc.3 || 0.1.5-rc.2 || 0.1.5-rc.1 || 0.1.2-rc.1 || 0.1.2-alpha.5 || 0.1.2-alpha.2",
+      "@deepseek-ai/dsh-session-projection": "0.1.7-rc.2 || 0.1.5-rc.3 || 0.1.5-rc.2 || 0.1.5-rc.1 || 0.1.2-rc.1 || 0.1.2-alpha.5 || 0.1.2-alpha.2",
+      "@deepseek-ai/dsh-client-ui-primitives": "0.1.7-rc.2 || 0.1.5-rc.3 || 0.1.5-rc.2 || 0.1.5-rc.1 || 0.1.2-rc.1 || 0.1.2-alpha.5 || 0.1.2-alpha.2",
+      "@deepseek-ai/dsh-api-session-controller": "0.1.7-rc.2 || 0.1.5-rc.3 || 0.1.5-rc.2 || 0.1.5-rc.1 || 0.1.2-rc.1 || 0.1.2-alpha.5 || 0.1.2-alpha.2",
+      "@deepseek-ai/dsh-client-ui-conversation": "0.1.7-rc.2 || 0.1.5-rc.3 || 0.1.5-rc.2 || 0.1.5-rc.1 || 0.1.2-rc.1 || 0.1.2-alpha.5 || 0.1.2-alpha.2",
+      "@deepseek-ai/dsh-client-ui-model-selection": "0.1.7-rc.2 || 0.1.5-rc.3 || 0.1.5-rc.2 || 0.1.5-rc.1 || 0.1.2-rc.1 || 0.1.2-alpha.5 || 0.1.2-alpha.2"
+    },
+    "peerDependenciesMeta": {
+      "react": {
+        "optional": true
+      },
+      "@deepseek-ai/cordis": {
+        "optional": true
+      },
+      "@deepseek-ai/dsh-llm": {
+        "optional": true
+      },
+      "@deepseek-ai/dsh-agent": {
+        "optional": true
+      },
+      "@deepseek-ai/dsh-tools": {
+        "optional": true
+      },
+      "@deepseek-ai/dsh-session": {
+        "optional": true
+      },
+      "@deepseek-ai/schemastery": {
+        "optional": true
+      },
+      "@deepseek-ai/dsh-commands": {
+        "optional": true
+      },
+      "@deepseek-ai/dsh-subagent": {
+        "optional": true
+      },
+      "@deepseek-ai/dsh-util-values": {
+        "optional": true
+      },
+      "@deepseek-ai/dsh-client-store": {
+        "optional": true
+      },
+      "@deepseek-ai/dsh-client-locale": {
+        "optional": true
+      },
+      "@deepseek-ai/dsh-system-prompt": {
+        "optional": true
+      },
+      "@deepseek-ai/dsh-client-ui-chat": {
+        "optional": true
+      },
+      "@deepseek-ai/dsh-client-ui-slots": {
+        "optional": true
+      },
+      "@deepseek-ai/dsh-client-ui-layout": {
+        "optional": true
+      },
+      "@deepseek-ai/dsh-client-connection": {
+        "optional": true
+      },
+      "@deepseek-ai/dsh-client-ui-session": {
+        "optional": true
+      },
+      "@deepseek-ai/dsh-client-ui-renderer": {
+        "optional": true
+      },
+      "@deepseek-ai/dsh-session-projection": {
+        "optional": true
+      },
+      "@deepseek-ai/dsh-client-ui-primitives": {
+        "optional": true
+      },
+      "@deepseek-ai/dsh-api-session-controller": {
+        "optional": true
+      },
+      "@deepseek-ai/dsh-client-ui-conversation": {
+        "optional": true
+      },
+      "@deepseek-ai/dsh-client-ui-model-selection": {
+        "optional": true
+      }
+    },
+    "_npmOperationalInternal": {
+      "tmp": "tmp/dsh-agent-teams_0.1.21_1790278061368_0.08845623183799556",
+      "host": "s3://npm-registry-packages-npm-production"
+    },
+    "_id": "@nanmicoder/dsh-agent-teams@0.1.21",
+    "version": "0.1.21",
+    "packageName": "@nanmicoder/dsh-agent-teams",
+    "status": 200,
+    "requestedVersion": "0.1.21"
+  },
+  {
+    "dsh": {
+      "bundle": {
+        "patch": "./cordis.patch.yml"
+      },
+      "client": {
+        "inject": [
+          "@deepseek-ai/dsh-client-locale",
+          "@deepseek-ai/dsh-client-ui-conversation",
+          "@deepseek-ai/dsh-client-ui-settings"
+        ],
+        "platform": "web"
+      },
+      "runtime": "host"
+    },
+    "bugs": {
+      "url": "https://github.com/lire1131/dsh-undo-savepoint/issues"
+    },
+    "dist": {
+      "shasum": "ad43e905b2078a9774e7b764be9882a52e2064e2",
+      "tarball": "https://registry.npmjs.org/dsh-undo-savepoint/-/dsh-undo-savepoint-0.4.9.tgz",
+      "fileCount": 45,
+      "integrity": "sha512-K9Y5rqHkt7jiA7QlmjnGB9vVMllJK+oPov+amXViCiBtuRb8/kVknsbWG5Aw+uhWu53EZyn6FbAIRhVBjDdndQ==",
+      "signatures": [
+        {
+          "sig": "MEYCIQDBH5ny/3Y4AOu9t6uwvHb4vs5bMofrHpzyVUfOkemaVgIhAMAWs3dK1QwGjLtgGsbBcqajyw5fgTzXyyB6H4xF9/MX",
+          "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+        },
+        {
+          "sig": "MEYCIQDueIYNNsWUv3bMXiQRnzc7T9Qy1XIU2uVA7uCnUNeS7QIhAN2GLT0XBSMJplbVm0ZOERaOGmsyLIqIh0kVAhnSM+lp",
+          "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+        }
+      ],
+      "unpackedSize": 763245
+    },
+    "main": "lib/index.js",
+    "name": "dsh-undo-savepoint",
+    "type": "module",
+    "engines": {
+      "dsh": ">=0.0.1-0 || >=0.1.0-rc.2 || >=0.1.1-rc.1 || >=0.1.2-alpha.2 || >=0.1.2-rc.1 || >=0.1.5-rc.1 || >=0.1.5-rc.2",
+      "node": ">=20.0.0"
+    },
+    "exports": {
+      ".": "./lib/index.js",
+      "./client": "./lib/client.js",
+      "./package.json": "./package.json",
+      "./cordis.patch.yml": "./cordis.patch.yml"
+    },
+    "gitHead": "4013caea2759b390a47ec79636eb30d33bd6029f",
+    "license": "MIT",
+    "scripts": {
+      "test": "node tools/check-size.mjs && node tools/check-version.mjs && node tools/check-routes.mjs && node tools/smoke-test.mjs && node tools/undo-server-smoke.mjs && node tools/home-resolution-test.mjs && node tools/e2e-watch.mjs",
+      "prepublishOnly": "npm test"
+    },
+    "_npmUser": {
+      "name": "lire1131",
+      "email": "lire1131@qq.com"
+    },
+    "homepage": "https://github.com/lire1131/dsh-undo-savepoint",
+    "keywords": [
+      "deepseek-harness",
+      "dsh",
+      "plugin",
+      "undo",
+      "redo",
+      "rollback",
+      "snapshot",
+      "backup",
+      "crash-recovery",
+      "safe-mode",
+      "windows",
+      "powershell"
+    ],
+    "repository": {
+      "url": "git+https://github.com/lire1131/dsh-undo-savepoint.git",
+      "type": "git"
+    },
+    "_npmVersion": "12.0.2",
+    "description": "DSH undo/rollback system: snapshot config files on change, undo/redo the last action from the WebUI or by chat, and roll back broken plugin trees without reinstalling. Works even when DSH fails to boot (offline CLI + GUI).",
+    "directories": {},
+    "maintainers": [
+      {
+        "name": "lire1131",
+        "email": "lire1131@qq.com"
+      }
+    ],
+    "_nodeVersion": "24.19.0",
+    "_hasShrinkwrap": false,
+    "_npmOperationalInternal": {
+      "tmp": "tmp/dsh-undo-savepoint_0.4.9_1789565071146_0.0480360633257928",
+      "host": "s3://npm-registry-packages-npm-production"
+    },
+    "_id": "dsh-undo-savepoint@0.4.9",
+    "version": "0.4.9",
+    "packageName": "dsh-undo-savepoint",
+    "status": 200,
+    "requestedVersion": "0.4.9"
+  }
+]

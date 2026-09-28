@@ -1,0 +1,186 @@
+[
+  {
+    "packageName": "@tt-a1i/archify-dsh",
+    "version": "0.1.0",
+    "sha256": "3192afe54949da6494acea3bd2bf5113a58ea78651113b1289bcc7212130df38",
+    "path": "artifacts/sha256/3192afe54949da6494acea3bd2bf5113a58ea78651113b1289bcc7212130df38/tt-a1i-archify-dsh-0.1.0.tgz",
+    "commit": "5f9fa320f5bf545b240ea5c779d91512fadd542a",
+    "size": 875277
+  },
+  {
+    "packageName": "@vlln/dsh-navbar",
+    "version": "0.4.0",
+    "sha256": "72886a2376c09e202a830029beb5503ce4710a9b208bacca8759c2d41a61c908",
+    "path": "artifacts/sha256/72886a2376c09e202a830029beb5503ce4710a9b208bacca8759c2d41a61c908/vlln-dsh-navbar-0.4.0.tgz",
+    "commit": "a939040410c51369ad818dc0a24e447f671f9202",
+    "size": 14463
+  },
+  {
+    "packageName": "computer-user",
+    "version": "0.3.6",
+    "sha256": "cf6e505c7ff76fec961cea757796b07b79e524b4c8b4403aa1319f74526b655b",
+    "path": "artifacts/sha256/cf6e505c7ff76fec961cea757796b07b79e524b4c8b4403aa1319f74526b655b/computer-user-0.3.6.tgz",
+    "commit": "4b6ced0c77c9dda60fbf4bf7ce291efe6fd054b5",
+    "size": 40547
+  },
+  {
+    "packageName": "dsh-better-sidebar",
+    "version": "0.22.1",
+    "sha256": "adca0dff7bdf9ae9f4a329cf5d787db318e151b0168758733a88ceba1ee274e6",
+    "path": "artifacts/sha256/adca0dff7bdf9ae9f4a329cf5d787db318e151b0168758733a88ceba1ee274e6/dsh-better-sidebar-0.22.1.tgz",
+    "commit": "8cb646f8b4b76cde0ce32561388a17cfac3e4d31",
+    "size": 3631214
+  },
+  {
+    "packageName": "dsh-chat-outline",
+    "version": "0.1.10",
+    "sha256": "645d7cb30a84130019dc50f922d254aebf5f85002c1942a5d2174c0f8e0fe20a",
+    "path": "artifacts/sha256/645d7cb30a84130019dc50f922d254aebf5f85002c1942a5d2174c0f8e0fe20a/dsh-chat-outline-0.1.10.tgz",
+    "commit": "fcf16afb969bce1d9f6faec4bd8581da792c7067",
+    "size": 26279
+  },
+  {
+    "packageName": "dsh-drag-and-drop",
+    "version": "0.1.6",
+    "sha256": "d50d050373555a73d43bd0ff400028b4012b7375ec5b1134f76adaa48859b8f0",
+    "path": "artifacts/sha256/d50d050373555a73d43bd0ff400028b4012b7375ec5b1134f76adaa48859b8f0/dsh-drag-and-drop-0.1.6.tgz",
+    "commit": "a85e1de5df8c8a268189f0c94d28493bfb107137",
+    "size": 66118
+  },
+  {
+    "packageName": "dsh-file-claim",
+    "version": "0.2.0",
+    "sha256": "45bd87bc6cbb566278f3c8b1510ecd028817f8bb5365b1a8c8bd7e6b741a61db",
+    "path": "artifacts/sha256/45bd87bc6cbb566278f3c8b1510ecd028817f8bb5365b1a8c8bd7e6b741a61db/dsh-file-claim-0.2.0.tgz",
+    "commit": "a02aaace2a549caee730dc0627c478f9d4463129",
+    "size": 35922
+  },
+  {
+    "packageName": "dsh-find-plugin",
+    "version": "0.4.0",
+    "sha256": "39fc2dfd519b53bc71c9d4fb8cb7faa678d2c14ffb77c6df38daf0eedf0b56a0",
+    "path": "artifacts/sha256/39fc2dfd519b53bc71c9d4fb8cb7faa678d2c14ffb77c6df38daf0eedf0b56a0/dsh-find-plugin-0.4.0.tgz",
+    "commit": "b8a256604b39a8a32a7812214d23533ff5fd3a6b",
+    "size": 45308
+  },
+  {
+    "packageName": "dsh-meme",
+    "version": "0.1.44",
+    "sha256": "511ef7b213d3cc2b627bfb5d8cc1f02d7e590f1c49e91f56c733553cf9a00705",
+    "path": "artifacts/sha256/511ef7b213d3cc2b627bfb5d8cc1f02d7e590f1c49e91f56c733553cf9a00705/dsh-meme-0.1.44.tgz",
+    "commit": "039725265a182310d6f42306faba3afd6054641d",
+    "size": 4395433
+  },
+  {
+    "packageName": "dsh-pet",
+    "version": "0.2.12",
+    "sha256": "112a99c5ac94bf0c3b7110b0f630b4e4612e1299eb2b3f7f13f3b4829d06f09b",
+    "path": "artifacts/sha256/112a99c5ac94bf0c3b7110b0f630b4e4612e1299eb2b3f7f13f3b4829d06f09b/dsh-pet-0.2.12.tgz",
+    "commit": "59951aea26c6c790acdead8207741aecf4730f3c",
+    "size": 62225024
+  },
+  {
+    "packageName": "dsh-plugin-wallpaper-engine",
+    "version": "1.0.1",
+    "sha256": "8e37bd0de82afd9f1b13c2a61856626372b415431eb132169232904cce7c8205",
+    "path": "artifacts/sha256/8e37bd0de82afd9f1b13c2a61856626372b415431eb132169232904cce7c8205/dsh-plugin-wallpaper-engine-1.0.1.tgz",
+    "commit": "98c0bda9047f5dbfea46826e23dd2fee06ffacc2",
+    "size": 1319262
+  },
+  {
+    "packageName": "dsh-prompt-stash",
+    "version": "0.3.1",
+    "sha256": "6dffc379677ed5c7d161ee94d1b7fc55ee674af7e8fec02716c1b775d4818e05",
+    "path": "artifacts/sha256/6dffc379677ed5c7d161ee94d1b7fc55ee674af7e8fec02716c1b775d4818e05/dsh-prompt-stash-0.3.1.tgz",
+    "commit": "4b3a6de004d8325c8bd3ad5a6b74e0021bdcf217",
+    "size": 24917
+  },
+  {
+    "packageName": "dsh-session-manager",
+    "version": "0.5.3",
+    "sha256": "85e835213e298a337524b2c50a9674d077d923ac9da7190c48ff7320b7daf111",
+    "path": "artifacts/sha256/85e835213e298a337524b2c50a9674d077d923ac9da7190c48ff7320b7daf111/dsh-session-manager-0.5.3.tgz",
+    "commit": "d0292f372e0c6a202848bebdb3fad8740de6a2d6",
+    "size": 93109
+  },
+  {
+    "packageName": "dsh-smooth-stream",
+    "version": "0.6.1",
+    "sha256": "4b8e6474d6c87eba82229f1e8ded489725a9d167e227c46c060bfc2e793140ca",
+    "path": "artifacts/sha256/4b8e6474d6c87eba82229f1e8ded489725a9d167e227c46c060bfc2e793140ca/dsh-smooth-stream-0.6.1.tgz",
+    "commit": "ccb0d278f09d2af23ae88e30ed52fe04d31712f9",
+    "size": 284557
+  },
+  {
+    "packageName": "dsh-soul-md",
+    "version": "0.8.5",
+    "sha256": "78d8f701f920830fb7ab2fd70ba044ba5d9d98116fda17cbc2855533131acafb",
+    "path": "artifacts/sha256/78d8f701f920830fb7ab2fd70ba044ba5d9d98116fda17cbc2855533131acafb/dsh-soul-md-0.8.5.tgz",
+    "commit": "9535dc208c0b3fc519d7ee299e205124937c7bcb",
+    "size": 30228
+  },
+  {
+    "packageName": "dsh-status-rotator",
+    "version": "0.27.5",
+    "sha256": "dd28caffa1d847b6368aa9fdfa4ef80a1e8c815fe932eadfd7338d6346d57cf9",
+    "path": "artifacts/sha256/dd28caffa1d847b6368aa9fdfa4ef80a1e8c815fe932eadfd7338d6346d57cf9/dsh-status-rotator-0.27.5.tgz",
+    "commit": "6abb7356a3364165b40483c8311fcbcc0c9d9617",
+    "size": 216651
+  },
+  {
+    "packageName": "dsh-web-attention-badge",
+    "version": "0.3.2",
+    "sha256": "bdb93b1e49821725d075f8ce4af24e01fe50f4bf73d09c8805b8ed942b07aa21",
+    "path": "artifacts/sha256/bdb93b1e49821725d075f8ce4af24e01fe50f4bf73d09c8805b8ed942b07aa21/dsh-web-attention-badge-0.3.2.tgz",
+    "commit": "eac26269e2344ff881eec7d430e791ec580d9e3d",
+    "size": 7371
+  },
+  {
+    "packageName": "dsh-web-mobile-fix",
+    "version": "1.0.6",
+    "sha256": "1441efa3b4c814e2226ff5d947fad5e69aa36ed2bd46020b81a11513fb20c290",
+    "path": "artifacts/sha256/1441efa3b4c814e2226ff5d947fad5e69aa36ed2bd46020b81a11513fb20c290/dsh-web-mobile-fix-1.0.6.tgz",
+    "commit": "926f90684e50d00efc09b34b08e55eca00ccc5b5",
+    "size": 7201
+  },
+  {
+    "packageName": "dsh-whale-widget",
+    "version": "0.3.16",
+    "sha256": "b318410525b722dc30dc86b2f8d8d871c4fbb401bc918eb16f6e52b339a6aa81",
+    "path": "artifacts/sha256/b318410525b722dc30dc86b2f8d8d871c4fbb401bc918eb16f6e52b339a6aa81/dsh-whale-widget-0.3.16.tgz",
+    "commit": "ccbc17fe3d106ce802a7a6361b6ca8262640d947",
+    "size": 4879478
+  },
+  {
+    "packageName": "meow-smooth",
+    "version": "0.8.1",
+    "sha256": "42f38e0377971cbf777c7b8d211c1fc2124e43a2cbdd839c4e48fe2370204485",
+    "path": "artifacts/sha256/42f38e0377971cbf777c7b8d211c1fc2124e43a2cbdd839c4e48fe2370204485/meow-smooth-0.8.1.tgz",
+    "commit": "d1f3b37acd6e1dd2d8cb30aa4e741eda29b45fd2",
+    "size": 209108
+  },
+  {
+    "packageName": "picturereader",
+    "version": "3.3.3",
+    "sha256": "1b3e373ca1647a693053451d546013f368ddd25faab94dc9daa2ae9ca44cd9b7",
+    "path": "artifacts/sha256/1b3e373ca1647a693053451d546013f368ddd25faab94dc9daa2ae9ca44cd9b7/picturereader-3.3.3.tgz",
+    "commit": "57a6eeb09d37edd5c2a503ca44d343096c721d63",
+    "size": 137069
+  },
+  {
+    "packageName": "@nanmicoder/dsh-agent-teams",
+    "version": "0.1.21",
+    "sha256": "c4d4a2658b7f6a88fe0ea5dac30dee9e9204bcdea73b50f262adbbb86988da3d",
+    "path": "artifacts/sha256/c4d4a2658b7f6a88fe0ea5dac30dee9e9204bcdea73b50f262adbbb86988da3d/nanmicoder-dsh-agent-teams-0.1.21.tgz",
+    "commit": "b72039527efc6cc3ae7a762e7193be5dbc6333a7",
+    "size": 2093846
+  },
+  {
+    "packageName": "dsh-undo-savepoint",
+    "version": "0.4.9",
+    "sha256": "b993f64da90b6c7a0e7a65ac2a87273d9d8b512061cfee542aecbb3f46a9b668",
+    "path": "artifacts/sha256/b993f64da90b6c7a0e7a65ac2a87273d9d8b512061cfee542aecbb3f46a9b668/dsh-undo-savepoint-0.4.9.tgz",
+    "commit": "86e11a97908592bf5a2eb895dd5b9a34e56ba5e7",
+    "size": 222946
+  }
+]

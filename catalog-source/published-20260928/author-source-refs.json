@@ -1,0 +1,316 @@
+[
+  {
+    "packageName": "@tt-a1i/archify-dsh",
+    "repository": "tt-a1i/archify",
+    "tags": [
+      {
+        "name": "archify-dsh-v0.1.0",
+        "commit": "fc6e8aca1829a02af0f0efdc193a87c3754d373c"
+      }
+    ],
+    "allTagNames": [
+      "v3.0.0",
+      "v2.16.0",
+      "v2.15.0",
+      "v2.14.0",
+      "v2.13.0",
+      "v2.12.0",
+      "v2.11.0",
+      "v2.10.0",
+      "v2.9.0",
+      "v2.8.0",
+      "v2.7.0",
+      "v2.6.0",
+      "v2.4.0",
+      "v2.3.1",
+      "v2.3.0",
+      "v2.2.1",
+      "v2.2.0",
+      "v2.1.0",
+      "v2.0.0",
+      "archify-dsh-v0.1.0"
+    ],
+    "commit": "fc6e8aca1829a02af0f0efdc193a87c3754d373c",
+    "basis": "version-tag",
+    "tag": "archify-dsh-v0.1.0",
+    "tagPackage": {
+      "name": "@tt-a1i/archify-dsh",
+      "version": "0.1.0"
+    }
+  },
+  {
+    "packageName": "@vlln/dsh-navbar",
+    "repository": "vlln/dsh-navbar",
+    "commit": "502253836f49bf73d55f1d525bd191b1b1c27c38",
+    "basis": "npm-gitHead"
+  },
+  {
+    "packageName": "computer-user",
+    "repository": "jing-hy/computer-user",
+    "commit": "2fbf383b49fe08e466d4d1caba659fb42b61de6b",
+    "basis": "npm-gitHead"
+  },
+  {
+    "packageName": "dsh-better-sidebar",
+    "repository": "omdsh-dev/DSH-better-sidebar",
+    "tags": [
+      {
+        "name": "v0.22.1",
+        "commit": "9b5834f74ad197534c821c35b8357edac1ad3919"
+      }
+    ],
+    "allTagNames": [
+      "v0.22.1",
+      "v0.22.0",
+      "v0.21.1",
+      "v0.21.0-rc.1",
+      "v0.19.1",
+      "v0.19.0",
+      "v0.19.0-alpha.1",
+      "v0.18.1",
+      "v0.18.0",
+      "v0.18.0-alpha.0",
+      "v0.17.1",
+      "v0.16.1",
+      "v0.16.0",
+      "v0.15.2",
+      "v0.15.1",
+      "v0.15.0",
+      "v0.14.0",
+      "v0.13.1",
+      "v0.13.0",
+      "v0.12.3"
+    ],
+    "commit": "9b5834f74ad197534c821c35b8357edac1ad3919",
+    "basis": "version-tag",
+    "tag": "v0.22.1",
+    "tagPackage": {
+      "name": "dsh-better-sidebar",
+      "version": "0.22.1"
+    }
+  },
+  {
+    "packageName": "dsh-chat-outline",
+    "repository": "liliuCourier/dsh-chat-outline",
+    "commit": "be56f36e4d51b7da3a618dbe5abc47c010a444ed",
+    "basis": "npm-gitHead"
+  },
+  {
+    "packageName": "dsh-dafeiyu",
+    "repository": "QCYTSN/dsh-dafeiyu",
+    "tags": [
+      {
+        "name": "v0.1.14",
+        "commit": "9c0588cd7cc9fb9064c0a61e0da2713140158f4a"
+      }
+    ],
+    "allTagNames": [
+      "v0.1.14",
+      "v0.1.13",
+      "v0.1.12",
+      "v0.1.11",
+      "v0.1.10",
+      "v0.1.9",
+      "v0.1.8",
+      "v0.1.7",
+      "v0.1.6",
+      "v0.1.5",
+      "v0.1.4",
+      "v0.1.3",
+      "v0.1.2",
+      "v0.1.1",
+      "v0.1.0",
+      "v0.1.0-alpha.15",
+      "v0.1.0-alpha.14",
+      "v0.1.0-alpha.13",
+      "v0.1.0-alpha.12",
+      "v0.1.0-alpha.11"
+    ],
+    "commit": "9c0588cd7cc9fb9064c0a61e0da2713140158f4a",
+    "basis": "version-tag",
+    "tag": "v0.1.14",
+    "tagPackage": {
+      "name": "dsh-dafeiyu",
+      "version": "0.1.14"
+    }
+  },
+  {
+    "packageName": "dsh-drag-and-drop",
+    "repository": "omdsh-dev/dsh-drag-and-drop",
+    "commit": "84fd296306d3d8f1ef812db3d217e67773698890",
+    "basis": "npm-gitHead"
+  },
+  {
+    "packageName": "dsh-file-claim",
+    "repository": "Nwflower/dsh-file-claim",
+    "commit": "42f07e2171d3781edd932732d243646635f4c1a0",
+    "basis": "npm-gitHead"
+  },
+  {
+    "packageName": "dsh-find-plugin",
+    "repository": "awesome-dsh-plugin/dsh-find-plugin",
+    "commit": "afce1cd43f98b8a8b02e4a35cd6a65d6444de412",
+    "basis": "npm-gitHead"
+  },
+  {
+    "packageName": "dsh-meme",
+    "repository": "yyh-001/dsh-meme",
+    "commit": "7d27776e2d77b0a6eedc245061fbb6319bd97647",
+    "basis": "npm-gitHead"
+  },
+  {
+    "packageName": "dsh-pet",
+    "repository": "PC2005-cloud/dsh-pet",
+    "commit": "631c5310b047931404978152fdc7865413c153ec",
+    "basis": "npm-gitHead"
+  },
+  {
+    "packageName": "dsh-plugin-wallpaper-engine",
+    "repository": "elysia395/dsh-wallpaper-engine",
+    "commit": "6ba2faea16dae512694a5b63039f76aac7239db0",
+    "basis": "npm-gitHead"
+  },
+  {
+    "packageName": "dsh-prompt-stash",
+    "repository": "Wine-Red/dsh-prompt-stash",
+    "tags": [
+      {
+        "name": "v0.3.1",
+        "commit": "f27bcd1547a23250a514a03aac421a61a48a1e5e"
+      }
+    ],
+    "allTagNames": [
+      "v0.3.1",
+      "v0.2.5",
+      "v0.2.4",
+      "v0.2.3",
+      "v0.2.2",
+      "v0.2.1",
+      "v0.2.0",
+      "v0.1.0"
+    ],
+    "commit": "f27bcd1547a23250a514a03aac421a61a48a1e5e",
+    "basis": "version-tag",
+    "tag": "v0.3.1",
+    "tagPackage": {
+      "name": "dsh-prompt-stash",
+      "version": "0.3.1"
+    }
+  },
+  {
+    "packageName": "dsh-session-manager",
+    "repository": "hkkz9522/dsh-session-manager",
+    "commit": "68729775dcd75a79bef9d2a1db9e27707e6f46cb",
+    "basis": "npm-gitHead"
+  },
+  {
+    "packageName": "dsh-smooth-stream",
+    "repository": "Laplace-bit/dsh-smooth-stream",
+    "commit": "fa828cba3e36aa23f81435b1435f864c6e4d3271",
+    "basis": "npm-gitHead"
+  },
+  {
+    "packageName": "dsh-soul-md",
+    "repository": "Scorp1o117/dsh-soul-md",
+    "commit": "8f2f96d8ee9be78d8483d8f9f0066d30732d5440",
+    "basis": "npm-gitHead"
+  },
+  {
+    "packageName": "dsh-status-rotator",
+    "repository": "01Virex/dsh-status-rotator",
+    "commit": "2aed92002e0fc7aeff29dc81501985e42c1b0d57",
+    "basis": "npm-gitHead"
+  },
+  {
+    "packageName": "dsh-web-attention-badge",
+    "repository": "Luaphes/dsh-web-attention-badge",
+    "commit": "8b2ede6ccda65da20d57e5e1af995aa9e089dc04",
+    "basis": "npm-gitHead"
+  },
+  {
+    "packageName": "dsh-web-mobile-fix",
+    "repository": "AcidGr/dsh-web-mobile-fix",
+    "commit": "2085cdfdc3967443ae01977d79446f8e403d8e94",
+    "basis": "npm-gitHead"
+  },
+  {
+    "packageName": "dsh-whale-widget",
+    "repository": "MeteorNOX/DeepSeek-Balance-Whale-Widget",
+    "commit": "86af3f2d90870d14742d2083e532b98a16b7b25c",
+    "basis": "npm-gitHead"
+  },
+  {
+    "packageName": "meow-smooth",
+    "repository": "Phant0Meow/dsh-meow-smooth",
+    "commit": "7a32ebd8e0976172a68b4845f69926600fd89783",
+    "basis": "npm-gitHead"
+  },
+  {
+    "packageName": "picturereader",
+    "repository": "jing-hy/picturereader",
+    "tags": [
+      {
+        "name": "v3.3.3",
+        "commit": "bea02b1abe6ca8a41bd8436de07fce6b6b8b86d1"
+      }
+    ],
+    "allTagNames": [
+      "v3.3.3",
+      "v3.0.2",
+      "v3.0.1",
+      "v3.0.0"
+    ],
+    "commit": "bea02b1abe6ca8a41bd8436de07fce6b6b8b86d1",
+    "basis": "version-tag",
+    "tag": "v3.3.3",
+    "tagPackage": {
+      "name": "picturereader",
+      "version": "3.3.3"
+    }
+  },
+  {
+    "packageName": "@nanmicoder/dsh-agent-teams",
+    "repository": "NanmiCoder/dsh-agent-teams",
+    "tags": [
+      {
+        "name": "v0.1.21",
+        "commit": "f60d40d7dddbdd2283a2d79f823a9c9852e19d13"
+      }
+    ],
+    "allTagNames": [
+      "v0.1.22-rc.1",
+      "v0.1.21",
+      "v0.1.20",
+      "v0.1.19",
+      "v0.1.18",
+      "v0.1.17",
+      "v0.1.17-rc.1",
+      "v0.1.16-rc.3",
+      "v0.1.16-rc.2",
+      "v0.1.16-rc.1",
+      "v0.1.15",
+      "v0.1.15-alpha.1",
+      "v0.1.14",
+      "v0.1.13",
+      "v0.1.12",
+      "v0.1.11",
+      "v0.1.10",
+      "v0.1.9",
+      "v0.1.8",
+      "v0.1.7"
+    ],
+    "commit": "f60d40d7dddbdd2283a2d79f823a9c9852e19d13",
+    "basis": "version-tag",
+    "tag": "v0.1.21",
+    "tagPackage": {
+      "name": "@nanmicoder/dsh-agent-teams",
+      "version": "0.1.21"
+    }
+  },
+  {
+    "packageName": "dsh-undo-savepoint",
+    "repository": "lire1131/dsh-undo-savepoint",
+    "commit": "4013caea2759b390a47ec79636eb30d33bd6029f",
+    "basis": "npm-gitHead"
+  }
+]
