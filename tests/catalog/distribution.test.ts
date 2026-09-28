@@ -14,7 +14,7 @@ describe('公开目录来源', () => {
     const catalog = validateProductionCatalog(input).snapshot
     expect(new Set([...catalog.plugins, ...catalog.listings ?? []].map(p => p.packageName))).toEqual(new Set(inventory.plugins.map((p: any) => p.packageName)))
     expect(catalog.deliveries.length).toBeGreaterThan(0)
-    for (const delivery of catalog.deliveries) expect(delivery.sources.every(s => s.kind === 'https-artifact' && /\/raw\/[a-f0-9]{40}\//.test(s.ref) || /raw\.githubusercontent\.com\/[^/]+\/[^/]+\/[a-f0-9]{40}\//.test(s.ref))).toBe(true)
+    for (const delivery of catalog.deliveries) expect(delivery.sources.every(s => s.kind === 'registry-tarball' && s.ref.startsWith('https://registry.npmjs.org/') && s.ref.endsWith(`-${delivery.version}.tgz`) || s.kind === 'https-artifact' && /\/raw\/[a-f0-9]{40}\//.test(s.ref) || /raw\.githubusercontent\.com\/[^/]+\/[^/]+\/[a-f0-9]{40}\//.test(s.ref))).toBe(true)
     for (const name of ['@deepseek-ai/dsh-terminal', '@deepseek-ai/dsh-plugin-manager']) expect(catalog.plugins.find(p => p.packageName === name)?.installability).toBe('hard-blocked')
     expect(catalog.plugins.filter(p => p.kind === 'skin')).toHaveLength(13)
   })

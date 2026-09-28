@@ -16,6 +16,8 @@ export interface CatalogSourceIdentity {
   readonly fallbackId?: string
   /** 镜像共享的逻辑目录身份，由登记入口绑定，不由 UI 自行声明。 */
   readonly catalogId?: string
+  /** Registered GitHub API file endpoint, requesting original raw bytes. */
+  readonly format?: 'json' | 'github-raw'
 }
 
 export interface CatalogSourceReadResult {
@@ -80,6 +82,8 @@ function validateSource(input: CatalogSourceIdentity): CatalogSourceIdentity {
   if (url.protocol !== 'https:' || url.username || url.password || url.hash) {
     throw new CatalogSourceConfigurationError('catalog/source-invalid-url', '目录来源必须是无凭据 HTTPS 地址')
   }
+  if (input.format !== undefined && input.format !== 'json' && input.format !== 'github-raw') throw new CatalogSourceConfigurationError('catalog/source-format', '未知目录传输格式')
+  if (input.format === 'github-raw' && (url.origin !== 'https://api.github.com' || !/^\/repos\/[^/]+\/[^/]+\/contents\/.+/.test(url.pathname))) throw new CatalogSourceConfigurationError('catalog/source-format', 'GitHub内容源必须绑定官方API确切文件')
   return { ...input, indexUrl: url.href }
 }
 
@@ -140,6 +144,7 @@ export class CatalogSourceRegistry {
         ...this.options.security,
         ...(this.options.fetch === undefined ? {} : { fetch: this.options.fetch }),
         signal,
+        ...(candidate.format === 'github-raw' ? { headers: { accept: 'application/vnd.github.raw+json', 'user-agent': 'EAC-Market' } } : {}),
         validateRedirect: url => {
           if (!isRegisteredCatalogRedirect(candidate.indexUrl, url)) throw new CatalogSourceConfigurationError('catalog/source-redirect-not-registered', '目录重定向目标不在维护者登记列表中')
         },

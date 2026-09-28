@@ -194,6 +194,8 @@ try {
   if (listingsOnly) {
     await check('登记：27条默认折叠，位于主列表之后，不混入功能卡片', async () => {
       await render('skins-listings'); await click('全部插件')
+      await expect('!document.querySelector(".eac-market__pending-listings")', 'research-only records leaked into default installable view')
+      await click('全部记录')
       await expect('document.querySelector(".eac-market__pending-listings") && !document.querySelector(".eac-market__pending-listings").open && document.querySelectorAll(".eac-market__pending-list li").length === 27', 'registered catalog not collapsed or incomplete')
       await expect('document.querySelectorAll(".eac-market__plugin-card").length === 1 && document.querySelector(".eac-market__pending-listings").getBoundingClientRect().top > document.querySelector(".eac-market__plugin-card").getBoundingClientRect().top', 'listings displaced plugin grid')
       await evaluate('document.querySelector(".eac-market__pending-listings summary").click()')
@@ -212,7 +214,7 @@ try {
     for (const [width, dark] of [[1280, false], [480, true]]) {
       await check(`登记：${width}px展开收起、窄面板无横向溢出`, async () => {
         await send('Emulation.setDeviceMetricsOverride', { width, height: 760, deviceScaleFactor: 1, mobile: false }); await theme(dark)
-        await render('skins-listings'); await click('全部插件')
+        await render('skins-listings'); await click('全部插件'); await click('全部记录')
         await evaluate('document.querySelector(".eac-market__pending-listings summary").scrollIntoView({block:"center"})')
         let shot = await send('Page.captureScreenshot', { format: 'png', captureBeyondViewport: false }); writeFileSync(join(output, `pending-collapsed-${width}.png`), Buffer.from(shot.data, 'base64'))
         await evaluate('document.querySelector(".eac-market__pending-listings summary").click();document.querySelector(".eac-market__pending-listings summary").scrollIntoView({block:"start"});document.querySelector(".eac-market__scroll").scrollTop -= document.querySelector(".eac-market__topbar").getBoundingClientRect().height + 12')

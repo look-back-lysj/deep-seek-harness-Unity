@@ -1,0 +1,117 @@
+[
+  {
+    "packageName": "@tt-a1i/archify-dsh",
+    "status": 200,
+    "sha256": "3192afe54949da6494acea3bd2bf5113a58ea78651113b1289bcc7212130df38"
+  },
+  {
+    "packageName": "@vlln/dsh-navbar",
+    "status": 200,
+    "sha256": "72886a2376c09e202a830029beb5503ce4710a9b208bacca8759c2d41a61c908"
+  },
+  {
+    "packageName": "computer-user",
+    "status": 200,
+    "sha256": "cf6e505c7ff76fec961cea757796b07b79e524b4c8b4403aa1319f74526b655b"
+  },
+  {
+    "packageName": "dsh-better-sidebar",
+    "status": 200,
+    "sha256": "adca0dff7bdf9ae9f4a329cf5d787db318e151b0168758733a88ceba1ee274e6"
+  },
+  {
+    "packageName": "dsh-chat-outline",
+    "status": 200,
+    "sha256": "645d7cb30a84130019dc50f922d254aebf5f85002c1942a5d2174c0f8e0fe20a"
+  },
+  {
+    "packageName": "dsh-drag-and-drop",
+    "status": 200,
+    "sha256": "d50d050373555a73d43bd0ff400028b4012b7375ec5b1134f76adaa48859b8f0"
+  },
+  {
+    "packageName": "dsh-file-claim",
+    "status": 200,
+    "sha256": "45bd87bc6cbb566278f3c8b1510ecd028817f8bb5365b1a8c8bd7e6b741a61db"
+  },
+  {
+    "packageName": "dsh-find-plugin",
+    "status": 200,
+    "sha256": "39fc2dfd519b53bc71c9d4fb8cb7faa678d2c14ffb77c6df38daf0eedf0b56a0"
+  },
+  {
+    "packageName": "dsh-meme",
+    "status": 200,
+    "sha256": "511ef7b213d3cc2b627bfb5d8cc1f02d7e590f1c49e91f56c733553cf9a00705"
+  },
+  {
+    "packageName": "dsh-pet",
+    "status": 403,
+    "sha256": "112a99c5ac94bf0c3b7110b0f630b4e4612e1299eb2b3f7f13f3b4829d06f09b"
+  },
+  {
+    "packageName": "dsh-plugin-wallpaper-engine",
+    "status": 200,
+    "sha256": "8e37bd0de82afd9f1b13c2a61856626372b415431eb132169232904cce7c8205"
+  },
+  {
+    "packageName": "dsh-prompt-stash",
+    "status": 200,
+    "sha256": "6dffc379677ed5c7d161ee94d1b7fc55ee674af7e8fec02716c1b775d4818e05"
+  },
+  {
+    "packageName": "dsh-session-manager",
+    "status": 200,
+    "sha256": "85e835213e298a337524b2c50a9674d077d923ac9da7190c48ff7320b7daf111"
+  },
+  {
+    "packageName": "dsh-smooth-stream",
+    "status": 200,
+    "sha256": "4b8e6474d6c87eba82229f1e8ded489725a9d167e227c46c060bfc2e793140ca"
+  },
+  {
+    "packageName": "dsh-soul-md",
+    "status": 200,
+    "sha256": "78d8f701f920830fb7ab2fd70ba044ba5d9d98116fda17cbc2855533131acafb"
+  },
+  {
+    "packageName": "dsh-status-rotator",
+    "status": 200,
+    "sha256": "dd28caffa1d847b6368aa9fdfa4ef80a1e8c815fe932eadfd7338d6346d57cf9"
+  },
+  {
+    "packageName": "dsh-web-attention-badge",
+    "status": 200,
+    "sha256": "bdb93b1e49821725d075f8ce4af24e01fe50f4bf73d09c8805b8ed942b07aa21"
+  },
+  {
+    "packageName": "dsh-web-mobile-fix",
+    "status": 200,
+    "sha256": "1441efa3b4c814e2226ff5d947fad5e69aa36ed2bd46020b81a11513fb20c290"
+  },
+  {
+    "packageName": "dsh-whale-widget",
+    "status": 200,
+    "sha256": "b318410525b722dc30dc86b2f8d8d871c4fbb401bc918eb16f6e52b339a6aa81"
+  },
+  {
+    "packageName": "meow-smooth",
+    "status": 200,
+    "sha256": "42f38e0377971cbf777c7b8d211c1fc2124e43a2cbdd839c4e48fe2370204485"
+  },
+  {
+    "packageName": "picturereader",
+    "status": 200,
+    "sha256": "1b3e373ca1647a693053451d546013f368ddd25faab94dc9daa2ae9ca44cd9b7"
+  },
+  {
+    "packageName": "@nanmicoder/dsh-agent-teams",
+    "status": 200,
+    "sha256": "c4d4a2658b7f6a88fe0ea5dac30dee9e9204bcdea73b50f262adbbb86988da3d"
+  },
+  {
+    "packageName": "dsh-undo-savepoint",
+    "status": 200,
+    "sha256": "b993f64da90b6c7a0e7a65ac2a87273d9d8b512061cfee542aecbb3f46a9b668"
+  }
+]

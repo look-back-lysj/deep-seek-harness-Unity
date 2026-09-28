@@ -1,0 +1,1194 @@
+[
+  {
+    "packageName": "@deepseek-ai/dsh-balance",
+    "requestedVersion": "0.1.0",
+    "status": 404,
+    "repository": {
+      "kind": "internal",
+      "name": "@deepseek-ai/dsh-balance",
+      "reason": "maintained in this repository; no external source is declared"
+    }
+  },
+  {
+    "packageName": "@deepseek-ai/dsh-conversation-tweaks",
+    "requestedVersion": "0.1.0",
+    "status": 404,
+    "repository": {
+      "kind": "internal",
+      "name": "@deepseek-ai/dsh-conversation-tweaks",
+      "reason": "maintained in this repository; no external source is declared"
+    }
+  },
+  {
+    "packageName": "@deepseek-ai/dsh-float-window",
+    "requestedVersion": "0.1.0",
+    "status": 404,
+    "repository": {
+      "kind": "internal",
+      "name": "@deepseek-ai/dsh-float-window",
+      "reason": "maintained in this repository; no external source is declared"
+    }
+  },
+  {
+    "packageName": "@deepseek-ai/dsh-openclaw-bridge",
+    "requestedVersion": "0.7.0",
+    "status": 404,
+    "repository": {
+      "kind": "internal",
+      "name": "@deepseek-ai/dsh-openclaw-bridge",
+      "reason": "maintained in this repository; no external source is declared"
+    }
+  },
+  {
+    "packageName": "@deepseek-ai/dsh-prompt-custom",
+    "requestedVersion": "0.1.0",
+    "status": 404,
+    "repository": {
+      "kind": "internal",
+      "name": "@deepseek-ai/dsh-prompt-custom",
+      "reason": "maintained in this repository; no external source is declared"
+    }
+  },
+  {
+    "packageName": "@deepseek-ai/dsh-stt",
+    "requestedVersion": "0.3.0",
+    "status": 404,
+    "repository": {
+      "kind": "github",
+      "repository": "https://github.com/BAIKAI23333/dsh-stt"
+    }
+  },
+  {
+    "packageName": "@dsh-external/dsh-side-session",
+    "requestedVersion": "0.2.8",
+    "status": 404,
+    "repository": {
+      "kind": "internal",
+      "name": "@dsh-external/dsh-side-session",
+      "reason": "maintained in this repository; no external source is declared"
+    }
+  },
+  {
+    "packageName": "@nanmicoder/dsh-agent-teams",
+    "requestedVersion": "0.1.13-eac.3",
+    "status": 404,
+    "repository": {
+      "kind": "github",
+      "repository": "git+https://github.com/NanmiCoder/dsh-agent-teams.git"
+    }
+  },
+  {
+    "packageName": "@tt-a1i/archify-dsh",
+    "requestedVersion": "0.1.0",
+    "status": 200,
+    "version": "0.1.0",
+    "license": "MIT",
+    "dsh": {
+      "bundle": {
+        "patch": "./cordis.patch.yml"
+      }
+    },
+    "engines": {
+      "node": "^22.19.0 || >=24.0.0"
+    },
+    "repository": {
+      "url": "git+https://github.com/tt-a1i/archify.git",
+      "type": "git",
+      "directory": "integrations/deepseek-harness"
+    },
+    "dist": {
+      "shasum": "1840447f80d0f06eef92bebbefa646bede5336a9",
+      "tarball": "https://registry.npmjs.org/@tt-a1i/archify-dsh/-/archify-dsh-0.1.0.tgz",
+      "fileCount": 67,
+      "integrity": "sha512-D8fDqV6DV/vo80Gj/3rgidd+hwBbhTVncaVoD5Uhh+DbgYlEoQQOmBVbhU5HW33wE5OqJP/2HkTRPJ0hf7W0tA==",
+      "signatures": [
+        {
+          "sig": "MEUCIQCooBTLETDUOWgMvj6ecE9TavNe6xK5KN87UgsefawHjQIgX87HnS2kRqkWAq69TvN6itMN6Ftbfxcythq6dqZ7jIU=",
+          "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+        }
+      ],
+      "unpackedSize": 4852827
+    }
+  },
+  {
+    "packageName": "@vlln/dsh-navbar",
+    "requestedVersion": "0.4.0",
+    "status": 200,
+    "version": "0.4.0",
+    "license": "MIT",
+    "dsh": {
+      "bundle": {
+        "patch": "./cordis.patch.yml"
+      },
+      "client": {
+        "inject": [
+          "@deepseek-ai/dsh-client-runtime",
+          "@deepseek-ai/dsh-client-ui-primitives"
+        ],
+        "platform": "web"
+      }
+    },
+    "engines": {
+      "dsh": ">=0.1.0-rc.5",
+      "node": ">=22.19.0"
+    },
+    "repository": {
+      "url": "git+https://github.com/vlln/dsh-navbar.git",
+      "type": "git"
+    },
+    "dist": {
+      "shasum": "48eb0592ba6bb94e7c55813c2ff388ca661a1496",
+      "tarball": "https://registry.npmjs.org/@vlln/dsh-navbar/-/dsh-navbar-0.4.0.tgz",
+      "fileCount": 7,
+      "integrity": "sha512-XCkyXxRUbBaOIghvFjKdi3y0BHC9UADpO5H4+e0oQdcG87CUjPLbmPRsCRs8qDwviKd100oyjDcskgI6/wdN1g==",
+      "signatures": [
+        {
+          "sig": "MEUCIFIBWBvUwPo8r1yaPnbOJBz+yGoYIbym9er8wuvS74HyAiEAl/01nJaMskDL/nA0jbimqhfg0nef3vkKMhSA6GxH0HU=",
+          "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+        }
+      ],
+      "unpackedSize": 40472
+    },
+    "gitHead": "502253836f49bf73d55f1d525bd191b1b1c27c38",
+    "scripts": {
+      "build": "tsdown --config ./tsdown.config.ts"
+    }
+  },
+  {
+    "packageName": "computer-user",
+    "requestedVersion": "0.3.6",
+    "status": 200,
+    "version": "0.3.6",
+    "license": "MIT",
+    "dsh": {
+      "bundle": {
+        "patch": "./cordis.patch.yml"
+      },
+      "client": {
+        "platform": "web"
+      }
+    },
+    "engines": {
+      "node": "^22.19 || >=24"
+    },
+    "repository": {
+      "url": "git+https://github.com/jing-hy/computer-user.git",
+      "type": "git"
+    },
+    "dist": {
+      "shasum": "4a31ac3612fb81df5771fcada1072d7cd876d730",
+      "tarball": "https://registry.npmjs.org/computer-user/-/computer-user-0.3.6.tgz",
+      "fileCount": 22,
+      "integrity": "sha512-q8BG1tSnExbVGeHX2n+RTT4pyRAgqlGjSqP7afwHsIc09C+uvRXYiVHpHlwRQCp3ABvNhYZx5hBgwjpMYSjBcQ==",
+      "signatures": [
+        {
+          "sig": "MEQCIH2aEUs7l2JuUFLKCJyNiKuB13FHPDEfLV0jbXoJYtq9AiBfGPL0XuV3VdruVDykRhwC95ULn96eMSpGKJ5Dk5MQlA==",
+          "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+        }
+      ],
+      "unpackedSize": 135093
+    },
+    "gitHead": "2fbf383b49fe08e466d4d1caba659fb42b61de6b",
+    "scripts": {
+      "test": "node --test"
+    }
+  },
+  {
+    "packageName": "dsh-better-sidebar",
+    "requestedVersion": "0.12.2",
+    "status": 200,
+    "version": "0.12.2",
+    "license": "MIT",
+    "dsh": {
+      "bundle": {
+        "patch": "./cordis.patch.yml"
+      },
+      "client": {
+        "inject": [
+          "@deepseek-ai/dsh-client-runtime",
+          "@deepseek-ai/dsh-client-locale",
+          "@deepseek-ai/dsh-client-ui-slots",
+          "@deepseek-ai/dsh-client-ui-conversation"
+        ],
+        "platform": "web"
+      }
+    },
+    "engines": {
+      "node": ">=20"
+    },
+    "repository": {
+      "url": "git+https://github.com/omdsh-dev/DSH-better-sidebar.git",
+      "type": "git"
+    },
+    "dist": {
+      "shasum": "b7020b523afcadc1f2dd0b936aabeb5a17591b66",
+      "tarball": "https://registry.npmjs.org/dsh-better-sidebar/-/dsh-better-sidebar-0.12.2.tgz",
+      "fileCount": 164,
+      "integrity": "sha512-b9N/Ie9d8qz/ayyf6sa+8KAqRuM3i85QLpcyu5/zWGXfB440YOVIA0r2vEFG0HVmFBO8KfLLiIgG59yo0JkK9Q==",
+      "signatures": [
+        {
+          "sig": "MEUCIDqTd4b+yVfkuNloR8O1Kb2RoojCPPkP0UvtTeCPdh/YAiEAo2ryUDjPTZN9p5r9jMRXb2HKWvsVV5G+4AObmaC3SXs=",
+          "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+        }
+      ],
+      "unpackedSize": 3926964
+    },
+    "gitHead": "b6ef4d544a4d9286bad2b91f6203375fc02508ce",
+    "dependencies": {
+      "ws": "^8.18.0",
+      "clsx": "^2.1.1",
+      "rxjs": "^7.8.2",
+      "xterm": "^5.3.0",
+      "node-pty": "^1.1.0",
+      "schemastery": "^3.18.0",
+      "@codemirror/view": "^6.43.8",
+      "@lezer/highlight": "^1.2.3",
+      "@xterm/addon-fit": "^0.10.0",
+      "@codemirror/state": "^6.7.1",
+      "@codemirror/search": "^6.7.1",
+      "@codemirror/lang-go": "^6.0.1",
+      "@codemirror/commands": "^6.10.4",
+      "@codemirror/lang-cpp": "^6.0.3",
+      "@codemirror/lang-css": "^6.3.1",
+      "@codemirror/lang-php": "^6.0.2",
+      "@codemirror/lang-sql": "^6.10.0",
+      "@codemirror/lang-xml": "^6.1.0",
+      "@codemirror/language": "^6.12.4",
+      "@codemirror/lang-html": "^6.4.12",
+      "@codemirror/lang-java": "^6.0.2",
+      "@codemirror/lang-json": "^6.0.2",
+      "@codemirror/lang-rust": "^6.0.2",
+      "@codemirror/lang-yaml": "^6.1.3",
+      "@codemirror/lang-python": "^6.2.1",
+      "@codemirror/legacy-modes": "^6.5.3",
+      "@codemirror/lang-markdown": "^6.5.2",
+      "@codemirror/lang-javascript": "^6.2.5"
+    },
+    "scripts": {
+      "test": "vitest run",
+      "build": "rm -rf lib && tsc -p tsconfig.build.json && tsdown",
+      "watch": "tsdown --watch",
+      "bundle": "tsdown",
+      "prepare": "tsdown",
+      "typecheck": "tsc --noEmit",
+      "test:mount": "bash scripts/e2e-mount.sh",
+      "prepublishOnly": "pnpm build",
+      "check:consumer-types": "bash scripts/check-consumer-types.sh"
+    }
+  },
+  {
+    "packageName": "dsh-change-review",
+    "requestedVersion": "0.1.0",
+    "status": 404,
+    "repository": {
+      "kind": "unknown",
+      "reason": "package.json does not declare a source repository; do not infer one from the directory name"
+    }
+  },
+  {
+    "packageName": "dsh-chat-outline",
+    "requestedVersion": "0.1.10",
+    "status": 200,
+    "version": "0.1.10",
+    "license": "MIT",
+    "dsh": {
+      "bundle": {
+        "patch": "./cordis.patch.yml"
+      },
+      "client": {
+        "inject": [
+          "@deepseek-ai/dsh-client-runtime",
+          "@deepseek-ai/dsh-client-connection",
+          "@deepseek-ai/dsh-client-locale",
+          "@deepseek-ai/dsh-client-ui-primitives",
+          "@deepseek-ai/dsh-client-ui-slots",
+          "@deepseek-ai/dsh-client-ui-conversation",
+          "@deepseek-ai/dsh-client-ui-layout"
+        ],
+        "platform": "web"
+      }
+    },
+    "repository": {
+      "url": "git+https://github.com/liliuCourier/dsh-chat-outline.git",
+      "type": "git"
+    },
+    "dist": {
+      "shasum": "38d2db4ae306cd92320a725b1a67b86c81902412",
+      "tarball": "https://registry.npmjs.org/dsh-chat-outline/-/dsh-chat-outline-0.1.10.tgz",
+      "fileCount": 6,
+      "integrity": "sha512-D+OaWvbVjXud5/B4lI+6L6Z9r/VuTTsbhHsPDxXSVJX5U6CGFNrqiLFPT7RycnXX94m+GrLnHha5trS9phpNrw==",
+      "signatures": [
+        {
+          "sig": "MEYCIQCLmW9CIaneVAqlwBwPazfRZjQU1DqzvsjTie07zcQyGgIhALM3UXBvDfXWIVj/ZA+vx3eBr/4Z/++/okXtoHWrms8H",
+          "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+        }
+      ],
+      "unpackedSize": 80365
+    },
+    "gitHead": "be56f36e4d51b7da3a618dbe5abc47c010a444ed"
+  },
+  {
+    "packageName": "dsh-composer-dynamic-island",
+    "requestedVersion": "2.1.0",
+    "status": 404,
+    "repository": {
+      "kind": "github",
+      "repository": "git+https://github.com/says693/dsh-composer-dynamic-island.git"
+    }
+  },
+  {
+    "packageName": "dsh-dafeiyu",
+    "requestedVersion": "0.1.0-alpha.6",
+    "status": 200,
+    "version": "0.1.0-alpha.6",
+    "license": "SEE LICENSE IN ASSET_LICENSE.md",
+    "dsh": {
+      "bundle": {
+        "patch": "./cordis.patch.yml"
+      },
+      "client": {
+        "inject": [
+          "@deepseek-ai/dsh-client-ui-settings-plugins"
+        ],
+        "platform": "web"
+      }
+    },
+    "engines": {
+      "node": ">=22.19"
+    },
+    "repository": {
+      "url": "git+https://github.com/QCYTSN/dsh-dafeiyu.git",
+      "type": "git"
+    },
+    "dist": {
+      "shasum": "bc9db250b50894118e8b59b6fe9c4e4a5b4ad438",
+      "tarball": "https://registry.npmjs.org/dsh-dafeiyu/-/dsh-dafeiyu-0.1.0-alpha.6.tgz",
+      "fileCount": 83,
+      "integrity": "sha512-kmtIKbyzFEP8sm5q6RY96M+71SdURf3uM40WXpXq8TJAj0BYP9E56/iOFA+ESHtuorRhOCKZnfhih9BrChlYzQ==",
+      "signatures": [
+        {
+          "sig": "MEYCIQCJMUukUqLcalPaFuoSjvcsMpPTVEq2sFrY/deFu3O/4QIhAJs36uJlsZwVY6yHwfbOy7EsRtPgda5692oAlQ/RiuYX",
+          "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+        }
+      ],
+      "unpackedSize": 55902713
+    },
+    "dependencies": {
+      "@deepseek-ai/schemastery": "^3.18.1"
+    },
+    "scripts": {
+      "test": "node --test --test-timeout=10000 test/assets.test.js test/config-endpoint.test.js test/protocol.test.js test/status-copy.test.js test/reducer.test.js test/helper-lifecycle.test.js test/helper-restart.test.js test/plugin-integration.test.js",
+      "test:ui": "node test/fixtures/ui-acceptance.js",
+      "test:helper": "node --test test/helper-lifecycle.test.js",
+      "test:python": "py -3 -m unittest discover -s runtime/tests -t .",
+      "helper:visual": "py -3 runtime/helper.py",
+      "helper:headless": "py -3 runtime/helper.py --headless",
+      "build:helper:windows": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build-helper.ps1"
+    }
+  },
+  {
+    "packageName": "dsh-dock-settings",
+    "requestedVersion": "0.1.0",
+    "status": 404,
+    "repository": {
+      "kind": "unknown",
+      "reason": "package.json does not declare a source repository; do not infer one from the directory name"
+    }
+  },
+  {
+    "packageName": "dsh-drag-and-drop",
+    "requestedVersion": "0.1.6",
+    "status": 200,
+    "version": "0.1.6",
+    "license": "BSD-3-Clause",
+    "dsh": {
+      "bundle": {
+        "patch": "./cordis.patch.yml"
+      },
+      "client": {
+        "inject": [
+          "@deepseek-ai/dsh-client-runtime",
+          "@deepseek-ai/dsh-client-ui-conversation"
+        ],
+        "platform": "web"
+      }
+    },
+    "engines": {
+      "node": "^20.0.0 || >=22.0.0"
+    },
+    "repository": {
+      "url": "git+https://github.com/omdsh-dev/dsh-drag-and-drop.git",
+      "type": "git"
+    },
+    "dist": {
+      "shasum": "9d3dfbf2c90056d5ba108d94a1ab852ed5fef91e",
+      "tarball": "https://registry.npmjs.org/dsh-drag-and-drop/-/dsh-drag-and-drop-0.1.6.tgz",
+      "fileCount": 78,
+      "integrity": "sha512-4R9JlB4SbEag0hjk98bM7F/vCH0R2lbEp//syHCzsCa8O9tX6TmZz2zt3jWXwft1zMuNDq5Yf+R7+VwIC8Lm+w==",
+      "signatures": [
+        {
+          "sig": "MEYCIQCMYR56WONdI900fnsM9aKiH67MzdupIs9Nb5BGOv1rPwIhAIOI3DLIWNtlabqGh2v4IppvYIocWei/5yZe3Uv8rLzz",
+          "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+        }
+      ],
+      "unpackedSize": 237504
+    },
+    "gitHead": "84fd296306d3d8f1ef812db3d217e67773698890",
+    "scripts": {
+      "test": "vitest run",
+      "build": "node scripts/build.mjs",
+      "check": "tsc -p tsconfig.json --noEmit --pretty false",
+      "verify:i18n": "node scripts/verify-i18n.mjs"
+    }
+  },
+  {
+    "packageName": "dsh-feature-toggles",
+    "requestedVersion": "0.1.1",
+    "status": 404,
+    "repository": {
+      "kind": "unknown",
+      "reason": "package.json does not declare a source repository; do not infer one from the directory name"
+    }
+  },
+  {
+    "packageName": "dsh-file-claim",
+    "requestedVersion": "0.2.0",
+    "status": 200,
+    "version": "0.2.0",
+    "license": "MIT",
+    "dsh": {
+      "bundle": {
+        "patch": "./cordis.patch.yml"
+      }
+    },
+    "engines": {
+      "node": ">=18"
+    },
+    "repository": {
+      "url": "git+https://github.com/Nwflower/dsh-file-claim.git",
+      "type": "git"
+    },
+    "dist": {
+      "shasum": "345a58e7d02fe69961c7bf7b8876be07f34a0d99",
+      "tarball": "https://registry.npmjs.org/dsh-file-claim/-/dsh-file-claim-0.2.0.tgz",
+      "fileCount": 7,
+      "integrity": "sha512-bq+uFpVRT4yN/Wix5QCgv/wbPOtwirBfRyaUUcX6NpfVG45Fkl728sdu3eFy9SnsY9yep/Q7K5jY7yU51MIf4w==",
+      "signatures": [
+        {
+          "sig": "MEYCIQDnsClKtqs2l+Y9KGbBzrpt1s/ML4kd1matdInjzMzKZAIhAOBWSiImDbaqjPfMW3wBnPxPPrwueApqW/76ZWiFTpzE",
+          "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+        }
+      ],
+      "unpackedSize": 110626
+    },
+    "gitHead": "42f07e2171d3781edd932732d243646635f4c1a0",
+    "scripts": {
+      "test": "node --test \"test/*.test.mjs\"",
+      "prepublishOnly": "npm test && git diff --quiet && git diff --cached --quiet && npm pack --dry-run"
+    }
+  },
+  {
+    "packageName": "dsh-find-plugin",
+    "requestedVersion": "0.3.7",
+    "status": 200,
+    "version": "0.3.7",
+    "license": "MIT",
+    "dsh": {
+      "bundle": {
+        "patch": "./cordis.patch.yml"
+      }
+    },
+    "repository": {
+      "url": "git+https://github.com/awesome-dsh-plugin/dsh-find-plugin.git",
+      "type": "git"
+    },
+    "dist": {
+      "shasum": "c2793e3709e145cb6cae536176bc230ea7d75b7c",
+      "tarball": "https://registry.npmjs.org/dsh-find-plugin/-/dsh-find-plugin-0.3.7.tgz",
+      "fileCount": 15,
+      "integrity": "sha512-yqvG58ci3+c7DsNJ515TFyu8IK5Jc249DQma8wQ2DavUpmU9avzKAyZ8V41tHB5mZrC09xrEhNFcZzj3qgODtQ==",
+      "signatures": [
+        {
+          "sig": "MEUCIEJuY/JVTgBMQ7bIG65CxAktREDu7OHiSpe6dZ576knHAiEAv6Dg19CIeAcuSCe7W1pFukPupXtNK8+CUDCm6x6z1a0=",
+          "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+        }
+      ],
+      "attestations": {
+        "url": "https://registry.npmjs.org/-/npm/v1/attestations/dsh-find-plugin@0.3.7",
+        "provenance": {
+          "predicateType": "https://slsa.dev/provenance/v1"
+        }
+      },
+      "unpackedSize": 108832
+    },
+    "gitHead": "e7a27eb01606e6deccdaacccb8e0cfd992c0bcdc",
+    "scripts": {
+      "build": "tsc -p tsconfig.json",
+      "check": "npm run typecheck && npm run build",
+      "prepack": "npm run build",
+      "typecheck": "tsc -p tsconfig.json --noEmit"
+    }
+  },
+  {
+    "packageName": "dsh-font-custom",
+    "requestedVersion": "0.1.0",
+    "status": 404,
+    "repository": {
+      "kind": "unknown",
+      "reason": "package.json does not declare a source repository; do not infer one from the directory name"
+    }
+  },
+  {
+    "packageName": "dsh-image-paste",
+    "requestedVersion": "0.1.0",
+    "status": 404,
+    "repository": {
+      "kind": "unknown",
+      "reason": "package.json does not declare a source repository; do not infer one from the directory name"
+    }
+  },
+  {
+    "packageName": "dsh-meme",
+    "requestedVersion": "0.1.40",
+    "status": 200,
+    "version": "0.1.40",
+    "license": "MIT",
+    "dsh": {
+      "bundle": {
+        "patch": "./cordis.patch.yml"
+      },
+      "client": {
+        "inject": [
+          "@deepseek-ai/dsh-client-runtime",
+          "@deepseek-ai/dsh-client-connection",
+          "@deepseek-ai/dsh-client-ui-settings"
+        ],
+        "platform": "web"
+      }
+    },
+    "engines": {
+      "node": ">=22.13.0"
+    },
+    "repository": {
+      "url": "git+https://github.com/yyh-001/dsh-meme.git",
+      "type": "git"
+    },
+    "dist": {
+      "shasum": "312821115828083bd2e117647d9c17937ebdef29",
+      "tarball": "https://registry.npmjs.org/dsh-meme/-/dsh-meme-0.1.40.tgz",
+      "fileCount": 172,
+      "integrity": "sha512-CzmOXZIqfzhu9IfIcJgKmelSJePYd9KkmDAsKXPCcBGHvRv21AnIvTvgZsPa3EKiimQS2qIp7R4cG55CjiZu1Q==",
+      "signatures": [
+        {
+          "sig": "MEUCIQDmO45I3aW2mLrr9ilbBeiQWzRH6cz1jW6gZKnQFi4RzQIgNL+EffOruPYBNoVwzcuWMX+Z2yiQsV9ehal/w7Hg+d4=",
+          "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+        }
+      ],
+      "unpackedSize": 9303135
+    },
+    "gitHead": "16101e815097037c0ee78ae134e45176a31549e9",
+    "scripts": {
+      "test": "node --test test/*.test.mjs"
+    }
+  },
+  {
+    "packageName": "dsh-message-rewind",
+    "requestedVersion": "0.1.0",
+    "status": 404,
+    "repository": {
+      "kind": "unknown",
+      "reason": "package.json does not declare a source repository; do not infer one from the directory name"
+    }
+  },
+  {
+    "packageName": "dsh-offpeak",
+    "requestedVersion": "9.9.9",
+    "status": 404,
+    "repository": {
+      "kind": "npm",
+      "name": "dsh-offpeak",
+      "repository": "git+https://github.com/christophersmith2737-commits/OffPeak.git"
+    }
+  },
+  {
+    "packageName": "dsh-our-free-model",
+    "requestedVersion": "1.3.0",
+    "status": 404
+  },
+  {
+    "packageName": "dsh-pet",
+    "requestedVersion": "0.1.3",
+    "status": 200,
+    "version": "0.1.3",
+    "license": "MIT",
+    "dsh": {
+      "bundle": {
+        "patch": "./cordis.patch.yml"
+      },
+      "client": {
+        "inject": [
+          "@deepseek-ai/dsh-client-runtime"
+        ],
+        "platform": "web"
+      }
+    },
+    "repository": {
+      "url": "git+https://github.com/PC2005-cloud/dsh-pet.git",
+      "type": "git"
+    },
+    "dist": {
+      "shasum": "8da836a9b24b670fc7556435f9adefeec7804d97",
+      "tarball": "https://registry.npmjs.org/dsh-pet/-/dsh-pet-0.1.3.tgz",
+      "fileCount": 37,
+      "integrity": "sha512-JStqxnpxxtCV7Ns+QRp0fVnQoyS8qVnjM4XXEu3VPYAsW/Xu5xGc8WH9EqWwgU4ZFrrqwTe0P6MaXW0EiABCUQ==",
+      "signatures": [
+        {
+          "sig": "MEQCIGIvBl5tJSdiii4i6oUWC2PYWD3v5siw+Xkpwsn7lYPHAiA/UbY7NqiNDYAUgsn2P0gncj0bj/EyfEqH8iyX2qwUag==",
+          "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+        }
+      ],
+      "unpackedSize": 15629988
+    },
+    "gitHead": "21d031272fc6164143333db379f523176287cc5c",
+    "scripts": {
+      "prepack": "node scripts/prepack-check.js"
+    }
+  },
+  {
+    "packageName": "dsh-pet-settings",
+    "requestedVersion": "0.1.0",
+    "status": 404,
+    "repository": {
+      "kind": "unknown",
+      "reason": "package.json does not declare a source repository; do not infer one from the directory name"
+    }
+  },
+  {
+    "packageName": "dsh-phone",
+    "requestedVersion": "0.1.0",
+    "status": 404,
+    "repository": {
+      "kind": "internal",
+      "name": "dsh-phone",
+      "reason": "maintained in this repository; no external source is declared"
+    }
+  },
+  {
+    "packageName": "dsh-plugin-wallpaper-engine",
+    "requestedVersion": "0.6.8",
+    "status": 200,
+    "version": "0.6.8",
+    "license": "MIT",
+    "dsh": {
+      "bundle": {
+        "patch": "./cordis.patch.yml"
+      },
+      "client": {
+        "inject": [
+          "@deepseek-ai/dsh-client-runtime"
+        ],
+        "platform": "web",
+        "immediately": true
+      }
+    },
+    "repository": {
+      "url": "git+https://github.com/elysia395/dsh-wallpaper-engine.git",
+      "type": "git"
+    },
+    "dist": {
+      "shasum": "5a1c8716e9155df28153aa403a9b06ce724e6a0b",
+      "tarball": "https://registry.npmjs.org/dsh-plugin-wallpaper-engine/-/dsh-plugin-wallpaper-engine-0.6.8.tgz",
+      "fileCount": 60,
+      "integrity": "sha512-0Z57PE/tTRlq12qfUSP9h+/Eu+dr1kk7AMSz501bSATTi1P2YMigWNZC4yMFWqVwBynITzrC9AbuM5qn3T/Pog==",
+      "signatures": [
+        {
+          "sig": "MEQCIAc2W31DTbVAZZPhNXIELqromZFW/chGY6E3QIyo82RFAiBX80R3tSLqs4hguqbMCv/GGHyP41CRI4jUbTq33cf8vw==",
+          "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+        }
+      ],
+      "unpackedSize": 1823333
+    },
+    "gitHead": "633e56b33982b44fea7e6cb0fdeb9b24f80eb1f6",
+    "dependencies": {
+      "jpeg-js": "^0.4.4",
+      "@shaderfrog/glsl-parser": "^7.0.1"
+    },
+    "scripts": {
+      "build": "node scripts/build-client.mjs",
+      "verify": "node scripts/verify-client.mjs && node scripts/verify-transcode-state.mjs",
+      "prepare": "node scripts/prepare.mjs"
+    }
+  },
+  {
+    "packageName": "dsh-plugin-wizard",
+    "requestedVersion": "0.1.0",
+    "status": 404,
+    "repository": {
+      "kind": "unknown",
+      "reason": "package.json does not declare a source repository; do not infer one from the directory name"
+    }
+  },
+  {
+    "packageName": "dsh-prompt-stash",
+    "requestedVersion": "0.2.5",
+    "status": 200,
+    "version": "0.2.5",
+    "license": "MIT",
+    "dsh": {
+      "bundle": {
+        "patch": "./cordis.patch.yml"
+      },
+      "client": {
+        "inject": [
+          "@deepseek-ai/dsh-api-remotes",
+          "@deepseek-ai/dsh-client-connection",
+          "@deepseek-ai/dsh-client-runtime",
+          "@deepseek-ai/dsh-client-locale",
+          "@deepseek-ai/dsh-client-ui-slots",
+          "@deepseek-ai/dsh-client-ui-conversation",
+          "@deepseek-ai/dsh-client-ui-settings",
+          "@deepseek-ai/dsh-client-ui-settings-plugins"
+        ],
+        "platform": "web"
+      }
+    },
+    "engines": {
+      "node": ">=20"
+    },
+    "repository": {
+      "url": "git+https://github.com/Wine-Red/dsh-prompt-stash.git",
+      "type": "git"
+    },
+    "dist": {
+      "shasum": "0562def371626ffa3d1d78850bf6f47c4552ca90",
+      "tarball": "https://registry.npmjs.org/dsh-prompt-stash/-/dsh-prompt-stash-0.2.5.tgz",
+      "fileCount": 21,
+      "integrity": "sha512-pHIw+LHAvQsGW61dcN+S9qKDxczRK6g8H5+qx9XwqcNRRvcjcwK/yO55IGELFkVtpbov26V1J/fUakhWTUjtDA==",
+      "signatures": [
+        {
+          "sig": "MEUCIEYGJ+/YUuKn1fq2EMIkyfQp+VS804Nde2DwOTcnlql0AiEAphJMy3Xn0Hd1X5n1bY0+n3aDn3JJPDpznGrTLDuVxBs=",
+          "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+        }
+      ],
+      "attestations": {
+        "url": "https://registry.npmjs.org/-/npm/v1/attestations/dsh-prompt-stash@0.2.5",
+        "provenance": {
+          "predicateType": "https://slsa.dev/provenance/v1"
+        }
+      },
+      "unpackedSize": 91594
+    },
+    "scripts": {
+      "test": "vitest run",
+      "build": "tsdown && tsc -p tsconfig.build.json",
+      "check": "pnpm run format && pnpm run typecheck && pnpm run test && pnpm run build",
+      "format": "prettier --check . --end-of-line auto",
+      "typecheck": "tsc --noEmit",
+      "format:write": "prettier --write . --end-of-line auto"
+    }
+  },
+  {
+    "packageName": "dsh-raw-html",
+    "requestedVersion": "0.6.2",
+    "status": 404,
+    "repository": {
+      "kind": "internal",
+      "name": "dsh-raw-html",
+      "reason": "maintained in this repository; no external source is declared"
+    }
+  },
+  {
+    "packageName": "dsh-session-manager",
+    "requestedVersion": "0.1.0",
+    "status": 200,
+    "version": "0.1.0",
+    "license": "MIT",
+    "dsh": {
+      "bundle": {
+        "patch": "./cordis.patch.yml"
+      },
+      "client": {
+        "inject": [
+          "@deepseek-ai/dsh-client-runtime",
+          "@deepseek-ai/dsh-client-ui-slots"
+        ],
+        "platform": "web"
+      }
+    },
+    "repository": {
+      "url": "git+https://github.com/hkkz9522/dsh-session-manager.git",
+      "type": "git"
+    },
+    "dist": {
+      "shasum": "08f57e23741f26ce161c2f032331e6f71c03568b",
+      "tarball": "https://registry.npmjs.org/dsh-session-manager/-/dsh-session-manager-0.1.0.tgz",
+      "fileCount": 6,
+      "integrity": "sha512-RPer114W7Tx4l64uPUzzcgmqNp2uvEGWKrcqXw00ILsVajIL+JyaTxj25l/0twzyo/kLHtpfbWv6ixwoauoHFA==",
+      "signatures": [
+        {
+          "sig": "MEQCIA0SOIC/ldgiRhOnDtuYb7FFsc+5iEkclhf7mD7EA//cAiBYSyuSU9I7LqVDOmc67wZu3P5hxanCxf64hZvBX0nKOA==",
+          "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+        }
+      ],
+      "unpackedSize": 38509
+    },
+    "gitHead": "648463bee9a3f55ed874a99e3b2983ce3a87a063"
+  },
+  {
+    "packageName": "dsh-settings-groups",
+    "requestedVersion": "0.1.0",
+    "status": 404,
+    "repository": {
+      "kind": "unknown",
+      "reason": "package.json does not declare a source repository; do not infer one from the directory name"
+    }
+  },
+  {
+    "packageName": "dsh-smooth-stream",
+    "requestedVersion": "0.4.3",
+    "status": 200,
+    "version": "0.4.3",
+    "license": "MIT",
+    "dsh": {
+      "bundle": {
+        "patch": "./cordis.patch.yml"
+      },
+      "client": {
+        "inject": [
+          "@deepseek-ai/dsh-client-runtime",
+          "@deepseek-ai/dsh-client-ui-conversation",
+          "@deepseek-ai/dsh-client-locale",
+          "@deepseek-ai/dsh-client-connection",
+          "@deepseek-ai/dsh-client-ui-settings",
+          "@deepseek-ai/dsh-client-ui-settings-plugins"
+        ],
+        "platform": "web"
+      }
+    },
+    "engines": {
+      "node": "^22.19.0 || >=24.0.0"
+    },
+    "repository": {
+      "url": "git+https://github.com/Laplace-bit/dsh-smooth-stream.git",
+      "type": "git"
+    },
+    "dist": {
+      "shasum": "36ffe1f2a3060d6e471233e059e2f54506e72b00",
+      "tarball": "https://registry.npmjs.org/dsh-smooth-stream/-/dsh-smooth-stream-0.4.3.tgz",
+      "fileCount": 37,
+      "integrity": "sha512-K/yMj5JaSC1vssjXswUnm1nfku6NOJOSqhMExZatAldv8m3EncF1KDibdiaKi9P3CDsmem2mRAadXjCCvcSFRQ==",
+      "signatures": [
+        {
+          "sig": "MEQCIGvVAEAP9vQEGqwwDQlM2TNvWodrUmgRdVt6eAUP9pfiAiAQNMiLkYIsJBM40ryGK37Frurl0J7h4jFTtcKO2uVoZg==",
+          "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+        }
+      ],
+      "unpackedSize": 975145
+    },
+    "gitHead": "41b0d218a46a85f9d0ee94eca076dd55537f5968",
+    "scripts": {
+      "test": "vitest run",
+      "build": "tsdown",
+      "prepare": "tsdown",
+      "benchmark": "node scripts/run-stream-benchmark.mjs",
+      "typecheck": "tsc -p tsconfig.json --pretty false",
+      "build:repro": "esbuild repro/main.tsx --bundle --format=esm --platform=browser --loader:.css=local-css --alias:@deepseek-ai/dsh-client-runtime=./repro/shims/client-runtime.ts --alias:@deepseek-ai/dsh-client-runtime/client=./repro/shims/client-runtime.ts --alias:@deepseek-ai/dsh-client-ui-primitives=./repro/shims/primitives.tsx --outfile=repro/bundle.js",
+      "test:smooth": "node scripts/probe-tailbob.mjs 1200 20 && node scripts/verify-overflow.mjs --runs 3",
+      "probe:overlap": "node scripts/probe-overlap.mjs"
+    }
+  },
+  {
+    "packageName": "dsh-soul-md",
+    "requestedVersion": "0.2.8",
+    "status": 200,
+    "version": "0.2.8",
+    "license": "MIT",
+    "dsh": {
+      "client": {
+        "platform": "web"
+      }
+    },
+    "engines": {
+      "node": ">=20.18"
+    },
+    "repository": {
+      "url": "git+https://github.com/Scorp1o117/dsh-soul-md.git",
+      "type": "git"
+    },
+    "dist": {
+      "shasum": "def8b8281c313794a53e4aea98cdcea208882655",
+      "tarball": "https://registry.npmjs.org/dsh-soul-md/-/dsh-soul-md-0.2.8.tgz",
+      "fileCount": 8,
+      "integrity": "sha512-0oXzHFTvkrsRRCTcRENnJzFWpmLjwlf3HwOjJRn54OxUVHS00TwCYYIWY/5bQlSV7VxFyyNoLHJ2fIVTgPrs5w==",
+      "signatures": [
+        {
+          "sig": "MEUCIQDmAh8JE9k2dXD/getRw/eUF/tPRlHgY0ogGaVAOOodfAIgb30KY+j4zVQ40TZOZ9W0XsEb5kls8msiQBjrXTTULS0=",
+          "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+        }
+      ],
+      "unpackedSize": 31834
+    },
+    "gitHead": "be2dea0db6d6f7a1451cdaa72f51c8ec2769e99c",
+    "dependencies": {
+      "@deepseek-ai/schemastery": "^3.18.1"
+    }
+  },
+  {
+    "packageName": "dsh-status-rotator",
+    "requestedVersion": "0.9.1",
+    "status": 200,
+    "version": "0.9.1",
+    "license": "MIT",
+    "dsh": {
+      "bundle": {
+        "patch": "./cordis.patch.yml"
+      },
+      "client": {
+        "inject": [],
+        "platform": "web",
+        "immediately": true
+      }
+    },
+    "repository": {
+      "url": "git+https://github.com/01Virex/dsh-status-rotator.git",
+      "type": "git"
+    },
+    "dist": {
+      "shasum": "7e78b61f26faffb92edfcebca5c82312474d9a07",
+      "tarball": "https://registry.npmjs.org/dsh-status-rotator/-/dsh-status-rotator-0.9.1.tgz",
+      "fileCount": 10,
+      "integrity": "sha512-Knr5whUZkEh19/gglp3/XqCvvua0pX61Xf6c/qQ9hEsfxWDBn1Eb/nZRfX/Ae/9Cf9udACcfe8/KCs0Ui7jJQA==",
+      "signatures": [
+        {
+          "sig": "MEQCICBDaXTyCpi22Ebr/i8fZr4jWxtaDx3g14ERGRmAj3wYAiBTkIdgDEg+pRctr1mPIiMDe4p4JYjsMyOYrMVKEr4a0A==",
+          "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+        }
+      ],
+      "unpackedSize": 215333
+    },
+    "gitHead": "6fea78af62300670a5e78c77308df73eeef3c515",
+    "scripts": {
+      "test": "node scripts/smoke-test.cjs",
+      "fetch-qq-group": "node scripts/fetch-qq-group.cjs"
+    }
+  },
+  {
+    "packageName": "dsh-think-zh-expand-eac",
+    "requestedVersion": "1.0.0",
+    "status": 404,
+    "repository": {
+      "kind": "github",
+      "repository": "https://github.com/jing-hy/dsh-think-zh-expand-eac"
+    }
+  },
+  {
+    "packageName": "dsh-undo-savepoint",
+    "requestedVersion": "0.3.4",
+    "status": 404,
+    "repository": {
+      "kind": "github",
+      "repository": "https://github.com/lire1131/dsh-undo-savepoint"
+    }
+  },
+  {
+    "packageName": "dsh-web-attention-badge",
+    "requestedVersion": "0.3.2",
+    "status": 200,
+    "version": "0.3.2",
+    "license": "MIT",
+    "dsh": {
+      "bundle": {
+        "patch": "./cordis.patch.yml"
+      },
+      "client": {
+        "inject": [
+          "@deepseek-ai/dsh-client-runtime"
+        ],
+        "platform": "web"
+      }
+    },
+    "repository": {
+      "url": "git+https://github.com/Luaphes/dsh-web-attention-badge.git",
+      "type": "git"
+    },
+    "dist": {
+      "shasum": "485cd868ea083a6b8d5189f40f569f0df9a0b2f9",
+      "tarball": "https://registry.npmjs.org/dsh-web-attention-badge/-/dsh-web-attention-badge-0.3.2.tgz",
+      "fileCount": 9,
+      "integrity": "sha512-o8EoA7nLw2A7JWpLdg8KWazr57n2AJt526FG9AwrEi8KKoAYao4U/03Sq5gbn3EDUGt/yyAF1pblDbysco3bzw==",
+      "signatures": [
+        {
+          "sig": "MEQCIGG8Em/ur1qD8ieaPKrM1mgXDi8YKm9nnMsh9eTExBXWAiBA8TNunGCao+uuECfdtO5hetF5c3u7LXkPi6vXBifVrw==",
+          "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+        }
+      ],
+      "attestations": {
+        "url": "https://registry.npmjs.org/-/npm/v1/attestations/dsh-web-attention-badge@0.3.2",
+        "provenance": {
+          "predicateType": "https://slsa.dev/provenance/v1"
+        }
+      },
+      "unpackedSize": 18462
+    },
+    "gitHead": "8b2ede6ccda65da20d57e5e1af995aa9e089dc04"
+  },
+  {
+    "packageName": "dsh-web-mobile-fix",
+    "requestedVersion": "1.0.1",
+    "status": 200,
+    "version": "1.0.1",
+    "license": "MIT",
+    "dsh": {
+      "bundle": {
+        "patch": "./cordis.patch.yml"
+      },
+      "client": {
+        "platform": "web"
+      }
+    },
+    "repository": {
+      "url": "git+https://github.com/AcidGr/dsh-web-mobile-fix.git",
+      "type": "git"
+    },
+    "dist": {
+      "shasum": "615c771e57dd0642cd646ea24598bd84ad837076",
+      "tarball": "https://registry.npmjs.org/dsh-web-mobile-fix/-/dsh-web-mobile-fix-1.0.1.tgz",
+      "fileCount": 7,
+      "integrity": "sha512-fy9/0jjPCCAiHBzgyxyEqoYswA2Z89NXlNuBMYbuQk23VbAgLNzyGXmP4Mtw600M9xs7RHNBY6QaYYEkPm41Sg==",
+      "signatures": [
+        {
+          "sig": "MEYCIQDFz49OXQM8ySKRhhHzx9EvhY4OBUJr/Rr+4Hq1r5UJ9QIhAIP62tT+K6CFGYDV0OfcLAQSC1iUSoN8GKpsfpRBX/Ir",
+          "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+        }
+      ],
+      "unpackedSize": 14662
+    },
+    "gitHead": "bf705b267807762fe75e348048d4bda9376e88ba"
+  },
+  {
+    "packageName": "dsh-webui-prompt-optimizer",
+    "requestedVersion": "0.1.0",
+    "status": 404,
+    "repository": {
+      "kind": "unknown",
+      "reason": "package.json does not declare a source repository; do not infer one from the directory name"
+    }
+  },
+  {
+    "packageName": "dsh-whale-widget",
+    "requestedVersion": "0.2.10",
+    "status": 200,
+    "version": "0.2.10",
+    "license": "MIT",
+    "dsh": {
+      "bundle": {
+        "patch": "./cordis.patch.yml"
+      }
+    },
+    "repository": {
+      "url": "git+https://github.com/MeteorNOX/DeepSeek-Balance-Whale-Widget.git",
+      "type": "git"
+    },
+    "dist": {
+      "shasum": "e89c983b6e2246baa27875db3b94a8cf78f62086",
+      "tarball": "https://registry.npmjs.org/dsh-whale-widget/-/dsh-whale-widget-0.2.10.tgz",
+      "fileCount": 13,
+      "integrity": "sha512-s/9kFqQwGnSi3hLm7Gm4slHDrHL+738D8dcCjlWAxKtrvz/hu7bjoFH44ruWEKwxS0JoTS7qQLma2g0vRvFFBw==",
+      "signatures": [
+        {
+          "sig": "MEYCIQC7GQvNgKGGNhTtrP3jrbmgSrWdteEykRESkUkMAcQ5oAIhALwi6pDS5j90LXxHiDEI2v7gLyWoBQ02hW/qupg2o2tF",
+          "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+        }
+      ],
+      "unpackedSize": 2032113
+    },
+    "gitHead": "4448c61db7d180c4c307aa3fa734db7c8507658d"
+  },
+  {
+    "packageName": "meow-smooth",
+    "requestedVersion": "0.5.0",
+    "status": 200,
+    "version": "0.5.0",
+    "license": "MIT",
+    "dsh": {
+      "bundle": {
+        "patch": "./cordis.patch.yml"
+      },
+      "client": {
+        "platform": "web"
+      }
+    },
+    "repository": {
+      "url": "git+https://github.com/Phant0Meow/dsh-meow-smooth.git",
+      "type": "git"
+    },
+    "dist": {
+      "shasum": "7384a36cf0da93bbadb3f77fe3a0920d216fe428",
+      "tarball": "https://registry.npmjs.org/meow-smooth/-/meow-smooth-0.5.0.tgz",
+      "fileCount": 10,
+      "integrity": "sha512-1znMsoXIykX/QqlU8s99rmesS/Z+CDGn5E+wSiE/v6SwRVDU9yCS9ZqgFNJVtd/6kaW3MfU2S8wxe7i3jYoo1A==",
+      "signatures": [
+        {
+          "sig": "MEQCIF5OM9q8+qhq1LSNBlGYQELJ951UJ2PjXNqQUa7uWASyAiBn0UpdWE6CkA3duHncJiVSwHQk1zTl1bbutiVkQ0TUUA==",
+          "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+        }
+      ],
+      "unpackedSize": 503540
+    },
+    "dependencies": {
+      "web-push": "^3.6.7"
+    },
+    "scripts": {
+      "build": "node build.mjs",
+      "watch": "node build.mjs --watch",
+      "link-workspace": "powershell -ExecutionPolicy Bypass -File scripts/link-workspace.ps1"
+    }
+  },
+  {
+    "packageName": "picturereader",
+    "requestedVersion": "3.3.1",
+    "status": 200,
+    "version": "3.3.1",
+    "license": "MIT",
+    "dsh": {
+      "bundle": {
+        "patch": "./cordis.patch.yml"
+      },
+      "client": {
+        "platform": "web"
+      }
+    },
+    "engines": {
+      "node": "^22.19 || >=24"
+    },
+    "repository": {
+      "url": "git+https://github.com/jing-hy/picturereader.git",
+      "type": "git"
+    },
+    "dist": {
+      "shasum": "8840a184d2c472989a8e7c3321dd75925102fee5",
+      "tarball": "https://registry.npmjs.org/picturereader/-/picturereader-3.3.1.tgz",
+      "fileCount": 33,
+      "integrity": "sha512-wjzbhmaMDcVrKqhjM/jxPgTguGakJf6WKRVJrRvJFcorvcGQSog0Q89JMPb8hUZ9MVRqGJcSwDPYJNcHcyqI/A==",
+      "signatures": [
+        {
+          "sig": "MEQCIDrV3tV4vGnFKdBkzu6OoO23vV/zIAh4iEEZcbpQe7tcAiAZNT3p7SsgWLttFgKUbPp9FRsIuN+BlqzAnWTBBspgSg==",
+          "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+        },
+        {
+          "sig": "MEQCIH9FAztJqfrFNQC81iWoCplEKDwjbE6S2y4FclBN5Y8hAiBuV2SWs3OHljwtKSlVpGpcI2WmMq08YiuNq9jLbL39/Q==",
+          "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+        }
+      ],
+      "unpackedSize": 417155
+    },
+    "dependencies": {
+      "pngjs": "^7.0.0",
+      "omggif": "^1.0.10",
+      "jpeg-js": "^0.4.4"
+    },
+    "scripts": {
+      "test": "node --test"
+    }
+  }
+]

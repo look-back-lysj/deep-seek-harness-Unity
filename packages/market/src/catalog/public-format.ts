@@ -86,7 +86,7 @@ function assertUri(value: unknown, field: string): string {
   return result
 }
 
-export function validatePackageMetadata(value: unknown, field: string): void {
+export function validatePackageMetadata(value: unknown, field: string, maxRangeBytes = 100): void {
   const object = exact(value, field, [], ['dependencies', 'peerDependencies', 'engines', 'dsh'])
   if (!Object.keys(object).length) fail('catalog/invalid-public-format', `${field} 不允许空投影`)
   for (const key of ['dependencies', 'peerDependencies'] as const) {
@@ -94,7 +94,7 @@ export function validatePackageMetadata(value: unknown, field: string): void {
       const deps = record(object[key], `${field}.${key}`)
       for (const [name, version] of Object.entries(deps)) {
         text(name, `${field}.${key}.name`, 214)
-        text(version, `${field}.${key}.${name}`, 100)
+      text(version, `${field}.${key}.${name}`, maxRangeBytes)
       }
     }
   }
@@ -102,7 +102,7 @@ export function validatePackageMetadata(value: unknown, field: string): void {
     const engines = record(object.engines, `${field}.engines`)
     for (const [name, version] of Object.entries(engines)) {
       text(name, `${field}.engines.name`, 100)
-      text(version, `${field}.engines.${name}`, 100)
+      text(version, `${field}.engines.${name}`, maxRangeBytes)
     }
   }
   if (object.dsh !== undefined) {
