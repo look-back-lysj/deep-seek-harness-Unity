@@ -7,7 +7,7 @@ import { CatalogRepository, releaseIdFor, validateMarketIndex } from '../../pack
 import { commitAcceptance, latestAcceptance, prepareAcceptance } from '../../packages/market/src/catalog/lifecycle.ts'
 import { rawRecord } from '../../packages/market/src/catalog/public-format.ts'
 
-const evidenceRoot = process.platform === 'win32' ? 'D:/eac-market-verify/distribution-20260928/catalog-floor' : tmpdir()
+const evidenceRoot = process.env.EAC_TEST_OUTPUT ?? join(tmpdir(), 'eac-market-tests')
 function fresh(): string { mkdirSync(evidenceRoot, { recursive: true }); return mkdtempSync(join(evidenceRoot, 'embedded-')) }
 const digest = (bytes: Uint8Array): string => 'sha256:' + createHash('sha256').update(bytes).digest('hex')
 const bytesOf = (document: unknown): Buffer => Buffer.from(JSON.stringify(document, null, 2) + '\n')
