@@ -1,0 +1,5 @@
+# Official installBundle loads exactly this bundle layer. Never add a second
+# user-layer insert row for the same package; it would register it twice.
+- insert:
+    - id: dsh-eac-market
+      name: "@dsh-eac/market"

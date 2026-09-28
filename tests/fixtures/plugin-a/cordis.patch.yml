@@ -1,0 +1,3 @@
+- insert:
+    - id: fixture-plugin-a
+      name: "@dsh-eac/fixture-plugin-a"

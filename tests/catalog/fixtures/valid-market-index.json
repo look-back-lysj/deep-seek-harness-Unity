@@ -1,0 +1,94 @@
+{
+  "schemaVersion": "1",
+  "revision": "test-revision-1",
+  "generatedAt": "2026-09-27T00:00:00.000Z",
+  "plugins": [
+    {
+      "id": "dev.test.alpha",
+      "name": "Alpha Test Fixture",
+      "packageName": "@test/alpha",
+      "version": "1.2.3",
+      "summary": "正向目录 fixture；只用于测试，不是生产推荐。",
+      "author": "fixture-author",
+      "distribution": "unclassified",
+      "capabilityTier": "test",
+      "verification": "unverified",
+      "installability": "bundle-installable",
+      "artifactDigest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "presentationId": "dev.test.alpha@p1",
+      "categories": [
+        "test"
+      ],
+      "screenshots": [],
+      "enabledPolicy": "default-off",
+      "requiresRestart": false,
+      "requiresSetup": false,
+      "largeExternalResource": false,
+      "manifestDigest": "sha256:fa828f251291218df5d6eeaa61035b9717f34cb0adb545d08ba1c978738cc53c",
+      "manifest": {
+        "contentBase64": "ewogICIkc2NoZW1hIjogImh0dHBzOi8vcmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbS9ZYW4tWmVyby9kc2gtc3RkLzNkZjA1NDMwMjQ2OGQyMDkxODU5ZGI0YjNiZDA3OTA0MmQzM2YxMDAvcGFja2FnZXMvbWFuaWZlc3Qvc2NoZW1hL2RzaC1wbHVnaW4tMC4xNS5zY2hlbWEuanNvbiIsCiAgIm1hbmlmZXN0VmVyc2lvbiI6ICIwLjE1IiwKICAiaWQiOiAiZGV2LnRlc3QuYWxwaGEiLAogICJuYW1lIjogIkB0ZXN0L2FscGhhIiwKICAidmVyc2lvbiI6ICIxLjIuMyIsCiAgImZhY2V0cyI6IHsKICAgICJob3N0IjogewogICAgICAiZW50cnkiOiAibGliL2luZGV4LmpzIiwKICAgICAgImFwaVZlcnNpb24iOiAidjFhbHBoYTEiCiAgICB9CiAgfSwKICAibGljZW5zZSI6ICJNSVQiLAogICJzb3VyY2UiOiB7CiAgICAicmVwb3NpdG9yeSI6ICJodHRwczovL2V4YW1wbGUuaW52YWxpZC90ZXN0L2FscGhhIiwKICAgICJyZXZpc2lvbiI6ICIxMjM0NTY3ODkwYWJjZGVmMTIzNDU2Nzg5MGFiY2RlZjEyMzQ1Njc4IgogIH0KfQo=",
+        "sha256": "sha256:fa828f251291218df5d6eeaa61035b9717f34cb0adb545d08ba1c978738cc53c"
+      }
+    }
+  ],
+  "packs": [
+    {
+      "id": "dev.test.pack",
+      "name": "Test Pack",
+      "version": "1.0.0",
+      "summary": "绑定 Lock 原字节摘要的测试套餐。",
+      "category": "function",
+      "components": [
+        {
+          "pluginId": "dev.test.alpha",
+          "version": "1.2.3",
+          "required": true
+        }
+      ],
+      "lockDigest": "sha256:3a2c845e0b9e118dc9c1df04e5d356cecf6cc9e293a3d15d6c543221c3d1372e",
+      "execution": {
+        "schemaVersion": "1",
+        "packId": "dev.test.pack",
+        "packVersion": "1.0.0",
+        "lockDigest": "sha256:3a2c845e0b9e118dc9c1df04e5d356cecf6cc9e293a3d15d6c543221c3d1372e",
+        "coverage": "complete",
+        "edges": [],
+        "provenance": "自建 fixture；complete+空边表示已核实组件彼此独立，不代表生产兼容证据。"
+      },
+      "packDigest": "sha256:84dd44b322a8dc115623aae0876f68a49405d3414a829f66472aa01a9b612a76",
+      "pack": {
+        "contentBase64": "ewogICIkc2NoZW1hIjogImh0dHBzOi8vbW9qb2JveC5kZXYvc2NoZW1hcy9wYWNrLXYxYWxwaGExLmpzb24iLAogICJhcGlWZXJzaW9uIjogInBhY2tzLm1vam9ib3guZGV2L3YxYWxwaGExIiwKICAia2luZCI6ICJQYWNrIiwKICAibWV0YWRhdGEiOiB7CiAgICAiaWQiOiAiZGV2LnRlc3QucGFjayIsCiAgICAidmVyc2lvbiI6ICIxLjAuMCIsCiAgICAibmFtZSI6ICJUZXN0IFBhY2siLAogICAgImRlc2NyaXB0aW9uIjogIue7keWumiBMb2NrIOWOn+Wtl+iKguaRmOimgeeahOa1i+ivleWll+mkkOOAgiIsCiAgICAiY2F0ZWdvcnkiOiAiZnVuY3Rpb24iCiAgfSwKICAiY29tcG9uZW50cyI6IFsKICAgIHsKICAgICAgImlkIjogImRldi50ZXN0LmFscGhhIiwKICAgICAgInZlcnNpb24iOiAiMS4yLjMiLAogICAgICAicmVxdWlyZWQiOiB0cnVlCiAgICB9CiAgXQp9Cg==",
+        "sha256": "sha256:84dd44b322a8dc115623aae0876f68a49405d3414a829f66472aa01a9b612a76"
+      },
+      "lock": {
+        "contentBase64": "ewogICIkc2NoZW1hIjogImh0dHBzOi8vbW9qb2JveC5kZXYvc2NoZW1hcy9wYWNrLWxvY2stdjFhbHBoYTEuanNvbiIsCiAgImFwaVZlcnNpb24iOiAicGFja3MubW9qb2JveC5kZXYvdjFhbHBoYTEiLAogICJraW5kIjogIlBhY2tMb2NrIiwKICAicGFjayI6ICJkZXYudGVzdC5wYWNrQDEuMC4wIiwKICAiY29tcG9uZW50cyI6IFsKICAgIHsKICAgICAgImlkIjogImRldi50ZXN0LmFscGhhIiwKICAgICAgInZlcnNpb24iOiAiMS4yLjMiLAogICAgICAic291cmNlIjogIm5wbTpAdGVzdC9hbHBoYUAxLjIuMyIsCiAgICAgICJtYW5pZmVzdCI6ICJjYXRhbG9nL3BsdWdpbnMvZGV2LnRlc3QuYWxwaGEuanNvbiIsCiAgICAgICJtYW5pZmVzdERpZ2VzdCI6ICJzaGEyNTY6ZmE4MjhmMjUxMjkxMjE4ZGY1ZDZlZWFhNjEwMzViOTcxN2YzNGNiMGFkYjU0NWQwOGJhMWM5Nzg3MzhjYzUzYyIsCiAgICAgICJhcnRpZmFjdERpZ2VzdCI6ICJzaGEyNTY6YWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYSIKICAgIH0KICBdCn0K",
+        "sha256": "sha256:3a2c845e0b9e118dc9c1df04e5d356cecf6cc9e293a3d15d6c543221c3d1372e"
+      }
+    }
+  ],
+  "presentations": [
+    {
+      "id": "dev.test.alpha@p1",
+      "revision": "p1",
+      "title": "Alpha Test Fixture",
+      "summary": "测试介绍。",
+      "markdown": "# Alpha\n\n正向 fixture。",
+      "media": []
+    }
+  ],
+  "deliveries": [
+    {
+      "pluginId": "dev.test.alpha",
+      "version": "1.2.3",
+      "artifactDigest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "packageName": "@test/alpha",
+      "sources": [
+        {
+          "kind": "https-artifact",
+          "ref": "https://example.invalid/alpha-1.2.3.tgz",
+          "priority": 0
+        }
+      ]
+    }
+  ]
+}

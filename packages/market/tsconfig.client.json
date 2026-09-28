@@ -1,0 +1,19 @@
+{
+  "extends": "../../tsconfig.base.client.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "lib/types",
+    "tsBuildInfoFile": "lib/tsconfig.client.tsbuildinfo"
+  },
+  "include": ["src/**/*.ts", "src/**/*.tsx"],
+  "exclude": [
+    "src/host/**",
+    "src/index.ts",
+    "src/adapters/**",
+    "src/catalog/**",
+    "src/core/**",
+    "src/delivery/**",
+    "src/persistence/**",
+    "src/authoring/**"
+  ]
+}

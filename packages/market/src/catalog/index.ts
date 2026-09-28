@@ -1,0 +1,41 @@
+/**
+ * Catalog 模块入口：公共目录只读投影、市场私有 PackExecution 绑定、离线缓存切换。
+ * 本模块不下载制品、不执行安装，也不把 Presentation 文本写回技术 Manifest。
+ */
+export {
+  CatalogValidationError,
+  DEFAULT_CATALOG_LIMITS,
+  MARKET_INDEX_SCHEMA_VERSION,
+  type CatalogHostEvidenceContext,
+  type CatalogLimitOptions,
+  type MarketIndexDocument,
+  type MarketPackRecord,
+  type MarketPluginRecord,
+  type ValidatedCatalog,
+} from './model.ts'
+export { isCompletePackExecution, validateMarketIndex } from './validate.ts'
+export {
+  evidenceSupportsVerification,
+  validatePublicEvidence,
+  validatePublicManifest,
+  validatePublicPack,
+  validatePublicPackLock,
+  type EvidenceSummary,
+  type PublicPackLockComponent,
+} from './public-format.ts'
+export {
+  CatalogSourceConfigurationError,
+  CatalogSourceRegistry,
+  type CatalogSourceConnection,
+  type CatalogSourceIdentity,
+  type CatalogSourceReadResult,
+  type CatalogSourceRegistryOptions,
+  type CatalogSourceTrust,
+} from './source.ts'
+export {
+  CatalogRepository,
+  type CatalogLoadResult,
+  type CatalogRefreshResult,
+  type CatalogSourceReader,
+  type CatalogSourceRefreshInput,
+} from './store.ts'

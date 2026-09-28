@@ -1,0 +1,6 @@
+{
+  "files": [],
+  "references": [
+    { "path": "./packages/market/tsconfig.client.json" }
+  ]
+}
