@@ -1,23 +1,72 @@
 # Deep Seek Harness Unity · EAC 插件市场
 
-运行在**官方 DeepSeek Harness 内**的社区插件市场，包名 `@dsh-eac/market`。复用官方插件管理器，不另建桌面外壳，不依赖旧 EAC 的 `window.dshDesktop`。
+运行在**官方 DeepSeek Harness 内**的社区插件市场。安装后，从侧边栏 **EAC** 浏览和安装插件，不需要自己下载源码或运行命令。
+
+## 新手安装：复制链接，粘贴到「添加插件」
+
+当前市场版本 **0.1.0-mvp.6**；已验证环境：**官方 DeepSeek Harness Desktop 0.1.7-rc.2 / Windows x64**。
+
+**复制下面完整一行链接：**
+
+```text
+https://gitee.com/flowing-shadows-like-scenes/deep-seek-harness-unity-mirror/raw/0bd802b7ef501d9625bdebeb6f7bedc797fa5cc2/artifacts/sha256/934b12ada90edf225756b6a6503a08c1a74349a639cae8455603c109595b70ff/dsh-eac-market-0.1.0-mvp.6.tgz
+```
+
+1. 打开官方 DSH → **插件 → 添加插件**。
+2. 把上面的链接粘贴到 **「包名或地址」** 输入框，点击 **安装**。不用提前下载、不用登录 GitHub/Gitee，也不用填写令牌。
+3. 安装完成后点击 **立即启用**，在侧边栏打开 **EAC**。需要重启时，先保存任务，再完整退出 DSH 并重新打开。
+
+输入框虽然提示「输入插件的包名、GitHub 仓库地址或本地目录路径」，**也支持上面这种 `.tgz` 安装包链接**。链接固定到已发布版本，不会随源码更新而变动。
+
+### 在线拉取失败？用本地安装包
+
+点击 [下载市场安装包 0.1.0-mvp.6](https://gitee.com/flowing-shadows-like-scenes/deep-seek-harness-unity-mirror/raw/0bd802b7ef501d9625bdebeb6f7bedc797fa5cc2/artifacts/sha256/934b12ada90edf225756b6a6503a08c1a74349a639cae8455603c109595b70ff/dsh-eac-market-0.1.0-mvp.6.tgz)，保存后，在同一个 **「包名或地址」** 输入框填写该文件的完整本地路径，例如：
+
+```text
+D:\Downloads\dsh-eac-market-0.1.0-mvp.6.tgz
+```
+
+把示例改成你实际保存的位置；**不用解压，不要加引号**。此方法只替代安装包下载，首次安装依赖仍可能需要联网。失败时打开官方安装界面的「查看安装详情」查看具体原因。
+
+### 哪些内容不要填进安装框？
+
+| 内容 | 应该怎么用 |
+| --- | --- |
+| 上面的完整 `.tgz` 链接 | **直接粘贴安装，推荐新手使用** |
+| 下载后 `.tgz` 的完整本地路径 | 在线拉取失败时使用 |
+| `@dsh-eac/market` | 这是包的名称；目前未发布到 npm，**不能只填这个名字安装** |
+| 本项目 GitHub / Gitee 仓库首页、源码 ZIP | 用于浏览源码或发行文件，**不是本市场的直接安装入口** |
+| `catalog/index.json` | 市场读取的插件目录，**不是安装包** |
+
+<details>
+<summary>安装包校验信息（按需查看）</summary>
+
+大小：821719 字节；SHA256（文件校验值）：
+
+```text
+934b12ada90edf225756b6a6503a08c1a74349a639cae8455603c109595b70ff
+```
+
+</details>
+
+## 项目与协作入口
+
+包名 `@dsh-eac/market`。复用官方插件管理器，不另建桌面外壳，不依赖旧 EAC 的 `window.dshDesktop`。
 
 目标宿主：**官方 Desktop 0.1.7-rc.2 / Windows x64 / Node 24**。其他版本或平台不能仅凭编译通过就认为兼容。
 
 - [公开发行镜像（Gitee，无需登录）](https://gitee.com/flowing-shadows-like-scenes/deep-seek-harness-unity-mirror)：市场包、插件制品、目录、校验值及原许可。
 - [公开源码仓（GitHub）](https://github.com/look-back-lysj/deep-seek-harness-Unity)：任何人都可以下载、克隆或 Fork；向 `main` 合并必须通过 Pull Request 和代码所有者审核。
-- [本次六项交付与实际验证](docs/handoff/DISTRIBUTION-2026-09-28.md)：通过项、未验证项及最终摘要以此为准。
+- [最新交付与实际验证](docs/handoff/PULLABILITY-2026-09-28.md)：当前版本、通过项及未验证项；[此前发行记录](docs/handoff/DISTRIBUTION-2026-09-28.md) 保留历史。
 - [下一位维护者从这里开始](docs/handoff/START-HERE.md)。历史审查报告保留，不代表最新实现仍未修复。
 
 > 最新修复：**0.1.0-mvp.6** 已将作者真实发行接入市场，可安装条目由15增至29。Gitee新目录实际读取200；默认展示“可安装”，研究清单在“全部记录”。[本轮交付与真实安装验证](docs/handoff/PULLABILITY-2026-09-28.md)。
 
-## 普通用户安装
+## 装好市场后，怎样安装其他插件？
 
-1. 从 Gitee 镜像首页下载所列**市场 `.tgz` 发行包**，不要把源码 ZIP 当插件；对照同页 SHA256。
-2. 打开官方 DSH →「插件」→「添加插件」→在“包名或地址”框粘贴下载后 `.tgz` 的完整本地路径，点击安装，再点“立即启用”。提示需要重启时重启 DSH。
-3. 侧边栏出现 **EAC**。打开即可读随包目录；「刷新目录」获取公开目录，失败保留上次可用内容并说明原因。
-4. 查看插件详情 → 安装预检 → 核对版本及启用意图 → 确认。未验证项需明确选择尝试；硬性不兼容、缺包和官方同名冲突不能绕过。
-5. 「我的插件」显示真实结果。下载完成不等于安装完成；部分完成、等待授权、等待重启、失败分别展示。
+1. 在侧边栏打开 **EAC**，进入「全部插件」。默认显示可安装的功能；「刷新目录」获取新增内容，失败保留上次可用目录并说明原因。
+2. 查看插件详情 → 安装预检 → 核对版本及启用意图 → 确认。未验证项需明确选择尝试；硬性不兼容、缺包和官方同名冲突不能绕过。
+3. 到「我的插件」查看真实结果。下载完成不等于安装完成；部分完成、等待授权、等待重启、失败分别展示。
 
 **皮肤：**保留「发现 / 全部插件 / 我的插件」三个主导航。从「皮肤中心」进入二级页面，先安装并启用皮肤管理器，再安装皮肤，最后选择应用。切换及恢复默认调用真实 `uiSkinLoader`；缺服务仅提供引导。独立皮肤不再成批占据主目录。含非商业许可素材的皮肤须遵守对应 LICENSE/NOTICE。
 
