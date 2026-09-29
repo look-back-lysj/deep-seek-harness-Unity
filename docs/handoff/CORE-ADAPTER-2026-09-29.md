@@ -51,3 +51,9 @@
 6. 不触碰官方源、EAC 组织仓及用户日常 profile；安装验收用 `D:/eac-market-verify` 新目录。
 
 当前未上传新双包；README 继续保留已发布 mvp.9 安装入口，不能让普通用户误装未发布候选。
+
+## 源码交付
+
+实现提交 `1765008` 已推送到个人 GitHub 与 Gitee 的 `refactor/market-core-adapter` 协作分支。GitHub main 与 Gitee master 的正式发行入口未改；此分支不是 Gitee 默认发行站，不要将其整体覆盖 master。
+
+后续先在该分支继续隔离 Desktop 新装/升级验收，再选择发布 core 的真实 registry 或固定 HTTPS 制品地址。`install-final/packages/release.json` 创建于提交前，source.dirty=true 已如实保留；不得声称该报告来自一个干净发布提交。
