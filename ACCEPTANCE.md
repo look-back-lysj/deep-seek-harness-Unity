@@ -75,3 +75,28 @@
 - 其他操作系统/架构、正式在线目录、首批真实插件名单和生产 Evidence。
 
 因此当前可以称：**市场核心已可运行，单插件精确下载—校验—官方安装—真实状态闭环已通过；完整 MVP 验收矩阵为 partial。**
+
+## 6. DSH 核心宽泛兼容阶段一 · 2026-09-29
+
+状态：**兼容准入与 0.2.0 真实 Desktop 加载通过；完整跨版本运行矩阵仍为 partial。**
+
+| 项目 | 实际值 |
+|---|---|
+| 验证包 | `D:\eac-market-verify\official-compat-stage1-20260929\dsh-eac-market-0.1.0-mvp.8.tgz` |
+| 包大小 | 839313 bytes |
+| SHA256 | `14DFE071D6E3766163BFE237DF66074C193E99310F7DA81BA518283119B0B2FE` |
+| 官方 Desktop | `0.2.0-rc.1 / Windows x64` |
+| 隔离 DSH_HOME | `D:\eac-market-verify\official-compat-stage1-20260929\home-0.2.0-rc.1` |
+| 隔离 Electron user-data | `D:\eac-market-verify\official-compat-stage1-20260929\electron-user-data-0.2.0-rc.1` |
+
+实际结果：
+
+- `pnpm check`：54 files / 392 tests passed / 2 skipped；`pnpm typecheck` 通过。
+- `pnpm test:pack`：176 package files，Remote descriptors 30，运行 schema 通过。
+- 官方 app-boot 0.1.7-rc.2 与 0.2.0-rc.1 的 `evaluatePluginCompatibility` 均通过；合成未来版本只记 peer gate。
+- 0.2.0 隔离 Desktop 中市场真实加载：侧栏出现 EAC，发现页正常，“我的插件”由官方 pluginManager 返回 `@dsh-eac/market 0.1.0-mvp.8` 运行中，官方/系统组件 13 项可展开。
+- 本次隔离 profile 通过官方 pnpm 安装最终 tgz；未把“官方添加插件 UI 点击安装”重复记为本轮通过。
+- 0.1.7 当前机器缺少独立 Desktop 可执行包，真实 Desktop 项记 `not-run`，不能由 peer gate 替代。
+- 未来 DSH 若改变 manager/ChangeResult/atomic-write API，只能保证不伪造成功，不保证免改直接运行。
+
+详细根因、方案与边界见 [DSH 核心宽泛兼容阶段一](docs/handoff/DSH-CORE-COMPAT-2026-09-29.md)。

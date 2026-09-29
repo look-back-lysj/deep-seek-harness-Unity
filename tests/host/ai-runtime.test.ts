@@ -16,8 +16,8 @@ async function scenario(action: 'enable' | 'remove', run: (data: { runtime: Mark
   const manager = {
     async listBundles() { return installed ? [{ name: 'fixture', version: '1.0.0', installed: true, enabled, removable: true, rows: [], overrides: [] }] : [] },
     async listPlugins() { return [] },
-    async setBundleEnabled() { calls.push('enable'); enabled = true; return { application: 'applied', changed: true } },
-    async removeBundle() { calls.push('remove'); installed = false; return { application: 'applied', changed: true } },
+    async setBundleEnabled() { calls.push('enable'); enabled = true; return { application: 'applied', changed: true, stage: 'enable', target: 'fixture' } },
+    async removeBundle() { calls.push('remove'); installed = false; return { application: 'applied', changed: true, stage: 'remove', target: 'fixture' } },
   }
   const llm = { async *stream() {
     yield { type: 'text-delta', text: JSON.stringify({ summary: '处理所选插件', facts: ['fact-1'], actions: [{ kind: action, packageName: 'fixture', reason: '用户查看此插件的状态' }] }) }

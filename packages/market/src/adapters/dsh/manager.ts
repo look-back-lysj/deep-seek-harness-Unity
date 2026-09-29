@@ -15,12 +15,12 @@ interface RemoteRecord {
 }
 
 export interface OfficialManager {
-  listBundles(): Promise<unknown[]>
-  listPlugins(): Promise<unknown[]>
+  listBundles?(): Promise<unknown[]>
+  listPlugins?(): Promise<unknown[]>
   setBundleEnabled?(name: string, enabled: boolean): Promise<unknown>
   setPluginEnabled?(id: string, enabled: boolean): Promise<unknown>
   installBundle?(spec: string, options?: unknown): Promise<unknown>
-  removeBundle?(name: string, options?: unknown): Promise<unknown>
+  removeBundle?(name: string): Promise<unknown>
   inspect?(spec: string, options?: unknown): Promise<unknown>
   cancelInstall?(requestId: string): Promise<unknown>
   waitForInstall?(requestId: string): Promise<unknown>
@@ -59,25 +59,53 @@ function stringAt(value: unknown): string | undefined {
   return typeof value === 'string' ? value : undefined
 }
 
+function errorAt(value: unknown): string | undefined {
+  const text = stringAt(value)
+  return text === undefined ? undefined : redactText(text.replaceAll(/[\r\n]+/g, ' | '))
+}
+
+function redactText(value: string, limit = 500): string {
+  const redacted = value
+    .replace(/(https?:\/\/)([^\s:@/]+):([^\s@/]+)@/gi, '$1***@')
+    .replace(/((?:bearer|basic)\s+)[A-Za-z0-9._+/=-]+/gi, '$1<redacted>')
+    .replace(/((?:["']?)(?:token|password|secret|api[_-]?key|authorization)(?:["']?)\s*[:=]\s*["']?)[^"'\s,;}&]+/gi, '$1<redacted>')
+    .replace(/([A-Za-z]:[\\/]|\\\\)[^\s"']+/g, '<path>')
+  return redacted.length > limit ? redacted.slice(0, limit) + '…' : redacted
+}
+
 function booleanAt(value: unknown): boolean {
   return typeof value === 'boolean' ? value : false
 }
 
-function fiberAt(value: unknown): FiberPhase {
+function optionalBooleanAt(value: unknown): boolean | undefined {
+  return typeof value === 'boolean' ? value : undefined
+}
+
+function fiberAt(value: unknown): FiberPhase | 'unknown' {
   return value === 'failed' || value === 'pending' || value === 'active' || value === 'loading' || value === 'unloading'
     ? value
-    : null
+    : value === null
+      ? null
+      : 'unknown'
 }
 
 function capability(name: CapabilityName, available: boolean, result: CapabilityName[]): void {
   if (available) result.push(name)
 }
 
-function rowState(enabled: boolean, fiberPhase: FiberPhase, error?: string): InventoryRow['state'] {
+function rowState(enabled: boolean | undefined, fiberPhase: FiberPhase | 'unknown', error?: string): InventoryRow['state'] {
   if (error !== undefined || fiberPhase === 'failed') return 'load-error'
-  if (fiberPhase === 'active') return enabled ? 'enabled' : 'disabled'
-  if (fiberPhase === 'pending' || fiberPhase === 'loading' || fiberPhase === 'unloading' || fiberPhase === null) return 'unknown'
-  return enabled ? 'enabled' : 'disabled'
+  if (enabled === undefined || fiberPhase === 'pending' || fiberPhase === 'loading' || fiberPhase === 'unloading' || fiberPhase === null || fiberPhase === 'unknown') return 'unknown'
+  return fiberPhase === 'active' ? (enabled ? 'enabled' : 'disabled') : enabled ? 'enabled' : 'disabled'
+}
+
+function unavailable(name: string, result: string[]): void {
+  result.push(`${name}:unavailable`)
+}
+
+function methodError(name: string, error: unknown, result: string[]): void {
+  const detail = error instanceof Error ? error.message : 'unknown-error'
+  result.push(`${name}:${redactText(detail.replaceAll(/[\r\n]+/g, ' '), 300)}`)
 }
 
 function sourceFor(
@@ -110,7 +138,7 @@ export class DshManagerAdapter {
   capabilities(): readonly CapabilityName[] {
     const manager = this.manager
     const result: CapabilityName[] = []
-    capability('browse', manager !== undefined, result)
+    capability('browse', typeof manager?.listBundles === 'function' && typeof manager?.listPlugins === 'function', result)
     capability('install', typeof manager?.installBundle === 'function', result)
     capability('enable', typeof manager?.setBundleEnabled === 'function', result)
     capability('disable', typeof manager?.setBundleEnabled === 'function', result)
@@ -128,32 +156,41 @@ export class DshManagerAdapter {
     let bundleValue: unknown[] = []
     let pluginValue: unknown[] = []
     const unknownItems: string[] = []
-    try {
-      bundleValue = await manager.listBundles()
-    } catch (error) {
-      unknownItems.push(`listBundles:${error instanceof Error ? error.message : 'unknown-error'}`)
+    if (typeof manager.listBundles !== 'function') unavailable('listBundles', unknownItems)
+    else {
+      try {
+        bundleValue = await manager.listBundles()
+      } catch (error) {
+        methodError('listBundles', error, unknownItems)
+      }
     }
-    try {
-      pluginValue = await manager.listPlugins()
-    } catch (error) {
-      unknownItems.push(`listPlugins:${error instanceof Error ? error.message : 'unknown-error'}`)
+    if (typeof manager.listPlugins !== 'function') unavailable('listPlugins', unknownItems)
+    else {
+      try {
+        pluginValue = await manager.listPlugins()
+      } catch (error) {
+        methodError('listPlugins', error, unknownItems)
+      }
     }
 
-    if (!Array.isArray(bundleValue)) { unknownItems.push('listBundles:invalid'); bundleValue = [] }
-    if (!Array.isArray(pluginValue)) { unknownItems.push('listPlugins:invalid'); pluginValue = [] }
+    if (!Array.isArray(bundleValue)) { unknownItems.push(`listBundles:invalid:${typeof bundleValue}`); bundleValue = [] }
+    if (!Array.isArray(pluginValue)) { unknownItems.push(`listPlugins:invalid:${typeof pluginValue}`); pluginValue = [] }
     let evidence: readonly InventorySourceEvidence[] = []
     try { evidence = typeof this.sourceEvidence === 'function' ? await this.sourceEvidence() : this.sourceEvidence }
-    catch { unknownItems.push('source-evidence:unreadable') }
+    catch (error) { methodError('source-evidence', error, unknownItems) }
     const pluginsByEntry = new Map<string, RemoteRecord>()
     const standalone: RemoteRecord[] = []
     for (const raw of pluginValue) {
       const item = record(raw)
       const entryId = stringAt(item.entryId)
       if (entryId === undefined) {
-        unknownItems.push(`plugin-entry:${stringAt(item.moduleName) ?? 'unknown'}`)
+        unknownItems.push(`plugin-entry:${stringAt(item.moduleName) ?? 'unknown'}:missing-entry-id`)
         continue
       }
-      if (pluginsByEntry.has(entryId)) unknownItems.push(`plugin-entry:duplicate:${entryId}`)
+      if (pluginsByEntry.has(entryId)) {
+        unknownItems.push(`plugin-entry:duplicate:${entryId}`)
+        continue
+      }
       pluginsByEntry.set(entryId, item)
       standalone.push(item)
     }
@@ -167,21 +204,36 @@ export class DshManagerAdapter {
         unknownItems.push('bundle-entry:missing-name')
         continue
       }
+      const installed = optionalBooleanAt(item.installed)
+      const enabled = optionalBooleanAt(item.enabled)
+      const removable = optionalBooleanAt(item.removable)
+      if (installed === undefined || enabled === undefined || removable === undefined) {
+        unknownItems.push(`bundle:${name}:invalid-installed-enabled-removable`)
+        continue
+      }
       const rows: InventoryRowProjection[] = []
-      const rawRows = Array.isArray(item.rows) ? item.rows : []
-      for (const rawRow of rawRows) {
+      const rawRowsValue = item.rows
+      if (!Array.isArray(rawRowsValue)) unknownItems.push(`bundle:${name}:invalid-rows`)
+      for (const rawRow of Array.isArray(rawRowsValue) ? rawRowsValue : []) {
         const rowRecord = record(rawRow)
-        const rowId = stringAt(rowRecord.rowId) ?? stringAt(rowRecord.id) ?? stringAt(rowRecord.moduleName) ?? name
-        const moduleName = stringAt(rowRecord.moduleName) ?? stringAt(rowRecord.name) ?? rowId
+        const rowId = stringAt(rowRecord.rowId) ?? stringAt(rowRecord.id)
+        const moduleName = stringAt(rowRecord.moduleName) ?? stringAt(rowRecord.name)
+        if (rowId === undefined || moduleName === undefined) {
+          unknownItems.push(`bundle:${name}:invalid-row-identity`)
+          continue
+        }
         const entryId = stringAt(rowRecord.entryId)
+        if ('entryId' in rowRecord && entryId === undefined) unknownItems.push(`bundle:${name}:invalid-row-entry-id:${rowId}`)
         const plugin = entryId === undefined ? undefined : pluginsByEntry.get(entryId)
         if (entryId !== undefined && plugin !== undefined) usedEntries.add(entryId)
-        const error = plugin === undefined ? undefined : stringAt(record(plugin.meta).error)
+        const error = plugin === undefined ? undefined : errorAt(record(plugin.meta).error)
         const fiberPhase = plugin === undefined ? null : fiberAt(plugin.fiberPhase)
+        const pluginEnabled = plugin === undefined ? undefined : optionalBooleanAt(plugin.enabled)
+        if (plugin !== undefined && pluginEnabled === undefined) unknownItems.push(`plugin-entry:${entryId}:invalid-enabled`)
         const row: InventoryRowProjection = {
           id: rowId,
           name: moduleName,
-          state: entryId === undefined || plugin === undefined ? (booleanAt(item.enabled) ? 'unknown' : 'disabled') : rowState(booleanAt(plugin?.enabled), fiberPhase, error),
+          state: entryId === undefined || plugin === undefined ? (enabled ? 'unknown' : 'disabled') : rowState(pluginEnabled, fiberPhase, error),
           rowId,
           moduleName,
           ...(entryId === undefined ? {} : { entryId }),
@@ -194,11 +246,16 @@ export class DshManagerAdapter {
       const restartRequired = evidence.some(proof => proof.packageName === name && proof.version === stringAt(item.version) && proof.restartRequired === true)
       const managementError = stringAt(record(item.error).code)
       const declaredReadOnly = stringAt(item.readOnlyReason)
+      const hasManagementError = item.error !== undefined
       const readOnlyReason = declaredReadOnly === 'management-required' || declaredReadOnly === 'unaddressable'
         ? declaredReadOnly
         : managementError === 'management-required' || managementError === 'unaddressable'
           ? managementError
-          : undefined
+          : declaredReadOnly !== undefined || hasManagementError
+            ? 'unknown'
+            : undefined
+      if (item.error !== undefined && managementError === undefined) unknownItems.push(`bundle:${name}:invalid-management-error`)
+      if (item.overrides !== undefined && !Array.isArray(item.overrides)) unknownItems.push(`bundle:${name}:invalid-overrides`)
       const version = stringAt(item.version)
       if (booleanAt(item.installed) && version === undefined) unknownItems.push('bundle-version:' + name)
       items.push({
@@ -206,10 +263,10 @@ export class DshManagerAdapter {
         ...(version === undefined ? {} : { version }),
         ...(source.source === 'market-cache-file' ? { artifactDigest: evidence.find(proof => proof.packageName === name && proof.version === version)?.digest } : {}),
         source: source.source,
-        installed: booleanAt(item.installed),
-        bundleEnabled: booleanAt(item.enabled),
-        removable: booleanAt(item.removable),
-        ...(readOnlyReason === 'management-required' || readOnlyReason === 'unaddressable' ? { readOnlyReason } : {}),
+        installed,
+        bundleEnabled: enabled,
+        removable,
+        ...(readOnlyReason === undefined ? {} : { readOnlyReason }),
         rows,
         restartRequired,
         provenance: source.source === 'market-cache-file' || source.source === 'profile' || source.source === 'installation' ? source.source : 'unknown',
@@ -221,16 +278,17 @@ export class DshManagerAdapter {
       const entryId = stringAt(plugin.entryId)
       if (entryId === undefined || usedEntries.has(entryId)) continue
       const moduleName = stringAt(plugin.moduleName)
-      if (moduleName === undefined) {
-        unknownItems.push(`plugin-entry:${entryId}`)
+      const enabled = optionalBooleanAt(plugin.enabled)
+      if (moduleName === undefined || enabled === undefined) {
+        unknownItems.push(`plugin-entry:${entryId}:invalid-module-name-or-enabled`)
         continue
       }
-      const error = stringAt(record(plugin.meta).error)
+      const error = errorAt(record(plugin.meta).error)
       const fiberPhase = fiberAt(plugin.fiberPhase)
       const row: InventoryRowProjection = {
         id: entryId,
         name: moduleName,
-        state: rowState(booleanAt(plugin.enabled), fiberPhase, error),
+        state: rowState(enabled, fiberPhase, error),
         rowId: entryId,
         moduleName,
         entryId,
@@ -242,7 +300,7 @@ export class DshManagerAdapter {
         packageName: moduleName,
         source: 'unknown',
         installed: true,
-        bundleEnabled: booleanAt(plugin.enabled),
+        bundleEnabled: enabled,
         removable: false,
         readOnlyReason: 'unaddressable',
         rows: [row],
