@@ -1,6 +1,6 @@
-# EAC 插件市场 0.1.0-mvp.6
+# EAC 插件市场 0.1.0-mvp.9
 
-官方 DeepSeek Harness Desktop 内的标准 bundle，目标版本0.1.7-rc.2。安装并启用后，从侧边栏 EAC 打开。
+官方 DeepSeek Harness Desktop 内的标准 bundle。0.1.0-mvp.9 已完成 DSH 核心宽泛准入改造；官方 0.1.7-rc.2 与 0.2.0-rc.1 兼容门禁通过，0.2.0 隔离 Desktop 真实加载通过。安装并启用后，从侧边栏 EAC 打开。
 
 三个主导航：发现、全部插件、我的插件。皮肤集中到二级皮肤中心；先装管理器、再装皮肤、最后主动应用。切换使用真实 uiSkinLoader，缺服务时给引导，不假报成功。
 
@@ -8,7 +8,7 @@
 
 已有市场升级后，请完整退出并重新启动DSH，使后台和界面同步到同一版本。
 
-市场提供确认后的官方安装与管理、作者本地图文/资料包、受限AI提案和协作扩展接口。没有在线投稿、GitHub登录、自动Star或任意命令执行。AI真实模型、所有第三方业务和其他平台未统一验收，不能视为保证。
+市场提供确认后的官方安装与管理、作者本地图文/资料包、受限AI提案和协作扩展接口。没有在线投稿、GitHub登录、自动Star或任意命令执行。AI真实模型、所有第三方业务和其他平台未统一验收，不能视为保证。未来 DSH 若更改官方管理器、ChangeResult 或 atomic-write API，市场会安全报告未知状态；“宽泛准入”不等于任意未来 API 免改运行。
 
 公开发行镜像：https://gitee.com/flowing-shadows-like-scenes/deep-seek-harness-unity-mirror
 

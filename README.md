@@ -4,12 +4,12 @@
 
 ## 新手安装：复制链接，粘贴到「添加插件」
 
-当前市场版本 **0.1.0-mvp.7**；已验证环境：**官方 DeepSeek Harness Desktop 0.1.7-rc.2 / Windows x64**。
+当前市场版本 **0.1.0-mvp.9**；官方 **0.1.7-rc.2 / 0.2.0-rc.1** 核心兼容门禁通过，0.2.0 隔离 Desktop 真实加载通过。
 
 **复制下面完整一行链接：**
 
 ```text
-https://gitee.com/flowing-shadows-like-scenes/deep-seek-harness-unity-mirror/raw/0bd802b7ef501d9625bdebeb6f7bedc797fa5cc2/artifacts/sha256/204eb66280f6c16979c3eedb88cf7b48498e4c00310167b3cb2578ec562376d4/dsh-eac-market-0.1.0-mvp.7.tgz
+https://gitee.com/flowing-shadows-like-scenes/deep-seek-harness-unity-mirror/raw/master/artifacts/sha256/a8856180264fea4ba949ac6505c10a71bbf512cfa0dda253992994711904be7c/dsh-eac-market-0.1.0-mvp.9.tgz
 ```
 
 1. 打开官方 DSH → **插件 → 添加插件**。
@@ -20,10 +20,10 @@ https://gitee.com/flowing-shadows-like-scenes/deep-seek-harness-unity-mirror/raw
 
 ### 在线拉取失败？用本地安装包
 
-点击 [下载市场安装包 0.1.0-mvp.7](https://gitee.com/flowing-shadows-like-scenes/deep-seek-harness-unity-mirror/raw/0bd802b7ef501d9625bdebeb6f7bedc797fa5cc2/artifacts/sha256/204eb66280f6c16979c3eedb88cf7b48498e4c00310167b3cb2578ec562376d4/dsh-eac-market-0.1.0-mvp.7.tgz)，保存后，在同一个 **「包名或地址」** 输入框填写该文件的完整本地路径，例如：
+点击 [下载市场安装包 0.1.0-mvp.9](https://gitee.com/flowing-shadows-like-scenes/deep-seek-harness-unity-mirror/raw/master/artifacts/sha256/a8856180264fea4ba949ac6505c10a71bbf512cfa0dda253992994711904be7c/dsh-eac-market-0.1.0-mvp.9.tgz)，保存后，在同一个 **「包名或地址」** 输入框填写该文件的完整本地路径，例如：
 
 ```text
-D:\Downloads\dsh-eac-market-0.1.0-mvp.7.tgz
+D:\Downloads\dsh-eac-market-0.1.0-mvp.9.tgz
 ```
 
 把示例改成你实际保存的位置；**不用解压，不要加引号**。此方法只替代安装包下载，首次安装依赖仍可能需要联网。失败时打开官方安装界面的「查看安装详情」查看具体原因。
@@ -41,10 +41,10 @@ D:\Downloads\dsh-eac-market-0.1.0-mvp.7.tgz
 <details>
 <summary>安装包校验信息（按需查看）</summary>
 
-大小：832241 字节；SHA256（文件校验值）：
+大小：839538 字节；SHA256（文件校验值）：
 
 ```text
-204eb66280f6c16979c3eedb88cf7b48498e4c00310167b3cb2578ec562376d4
+a8856180264fea4ba949ac6505c10a71bbf512cfa0dda253992994711904be7c
 ```
 
 </details>
@@ -53,14 +53,14 @@ D:\Downloads\dsh-eac-market-0.1.0-mvp.7.tgz
 
 包名 `@dsh-eac/market`。复用官方插件管理器，不另建桌面外壳，不依赖旧 EAC 的 `window.dshDesktop`。
 
-目标宿主：**官方 Desktop 0.1.7-rc.2 / Windows x64 / Node 24**。其他版本或平台不能仅凭编译通过就认为兼容。
+目标宿主：官方 Desktop **0.1.7-rc.2 与 0.2.0-rc.1 / Windows x64 / Node 24** 已验证核心准入；未来版本通过门禁不等于未知 API 免改运行。
 
 - [公开发行镜像（Gitee，无需登录）](https://gitee.com/flowing-shadows-like-scenes/deep-seek-harness-unity-mirror)：市场包、插件制品、目录、校验值及原许可。
-- [公开源码仓（GitHub）](https://github.com/look-back-lysj/deep-seek-harness-Unity)：任何人都可以下载、克隆或 Fork；向 `main` 合并必须通过 Pull Request 和代码所有者审核。
+- [公开源码仓（GitHub）](https://github.com/look-back-lysj/deep-seek-harness-Unity)：任何人都可以下载、克隆或 Fork；维护者当前可直接更新 `main`；团队协作仍建议通过 Pull Request 留下审查记录。
 - [最新交付与实际验证](docs/handoff/PULLABILITY-2026-09-28.md)：当前版本、通过项及未验证项；[此前发行记录](docs/handoff/DISTRIBUTION-2026-09-28.md) 保留历史。
 - [下一位维护者从这里开始](docs/handoff/START-HERE.md)。历史审查报告保留，不代表最新实现仍未修复。
 
-> 最新修复：**0.1.0-mvp.7** 已将作者真实发行接入市场，可安装条目由15增至29。Gitee新目录实际读取200；默认展示“可安装”，研究清单在“全部记录”。[本轮交付与真实安装验证](docs/handoff/PULLABILITY-2026-09-28.md)。
+> 最新版本：**0.1.0-mvp.9** 在宽泛 DSH 核心准入基础上补齐根 README 与随包 README；mvp.8 的兼容代码、测试和真实隔离 Desktop 验证继续有效。Gitee新目录实际读取200；默认展示“可安装”，研究清单在“全部记录”。[本轮交付与真实安装验证](docs/handoff/PULLABILITY-2026-09-28.md)。
 
 ## 装好市场后，怎样安装其他插件？
 

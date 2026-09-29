@@ -1,6 +1,6 @@
 # DSH 核心宽泛兼容阶段一记录（2026-09-29）
 
-本文记录 `0.1.0-mvp.8` 的核心准入兼容改造、真实验证边界和后续维护约束。它是新增记录，不覆盖历史报告。
+本文记录 `0.1.0-mvp.8` 的核心准入兼容改造，以及 `0.1.0-mvp.9` 的 README/发行元数据修正、真实验证边界和后续维护约束。它是新增记录，不覆盖历史报告。
 
 ## 1. 结论
 
@@ -35,7 +35,7 @@
 
 ## 4. 代码改动
 
-- `packages/market/package.json`、`dsh-plugin.json`：版本统一为 `0.1.0-mvp.8`；DSH peer 改为 `workspace:*`；`engines.dsh` 改为 `*`。
+- `packages/market/package.json`、`dsh-plugin.json`：初版兼容包统一为 `0.1.0-mvp.8`；最终 README 修正包升为 `0.1.0-mvp.9`，DSH peer 改为 `workspace:*`；`engines.dsh` 改为 `*`。
 - `packages/market/src/adapters/dsh/host-port.ts`：官方方法缺失时返回真实 `unknown`；`removeBundle(name)` 使用官方单参数签名；保留未知错误码、失败诊断并脱敏路径/凭据/Token。
 - `packages/market/src/adapters/dsh/manager.ts`：能力探测改为按实际方法判断，不再把缺方法当成功；inventory 保留 `unknownItems`。
 - `packages/market/src/adapters/dsh/persistence-adapter.ts`：atomic-write 懒加载并严格校验 `writeFileAtomic`/`withFileLock`；缺能力时不降级普通写入、不自制锁。
@@ -68,7 +68,7 @@ D:\eac-market-verify\official-compat-stage1-20260929\dsh-eac-market-0.1.0-mvp.8.
 SHA256 14DFE071D6E3766163BFE237DF66074C193E99310F7DA81BA518283119B0B2FE
 ```
 
-这是验证用包，不代表已发布。`pnpm peers check` 在隔离 profile 报缺少 runtime peer，因为官方 Desktop 的基础运行时由 app.asar 提供，不在 profile 的 pnpm 依赖树中；这与真实 Desktop 已加载并不矛盾，但后续发布前应补一条发行环境说明，不能把该警告隐藏成通过。
+这是完成真实 Desktop 验证的 mvp.8 验证包。随后仅修正根 README、随包 README 与版本元数据并升为 `0.1.0-mvp.9`；mvp.9 已重新构建和全量测试，但未重复真实 Desktop 安装。`pnpm peers check` 在隔离 profile 报缺少 runtime peer，因为官方 Desktop 的基础运行时由 app.asar 提供，不在 profile 的 pnpm 依赖树中；这与真实 Desktop 已加载并不矛盾，但后续发布前应补一条发行环境说明，不能把该警告隐藏成通过。
 
 ## 6. 后续维护门槛
 

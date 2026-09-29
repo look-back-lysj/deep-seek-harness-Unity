@@ -100,3 +100,15 @@
 - 未来 DSH 若改变 manager/ChangeResult/atomic-write API，只能保证不伪造成功，不保证免改直接运行。
 
 详细根因、方案与边界见 [DSH 核心宽泛兼容阶段一](docs/handoff/DSH-CORE-COMPAT-2026-09-29.md)。
+
+## 7. README 与发行元数据修正 · 2026-09-29
+
+`0.1.0-mvp.9` 仅修正根 README、随包 README 和版本元数据，兼容代码来自已完成真实 Desktop 验证的 mvp.8。重新执行 `pnpm check`、`pnpm typecheck` 与 `npm pack` 后生成：
+
+```text
+D:\eac-market-verify\readme-mvp9-final-20260929\dsh-eac-market-0.1.0-mvp.9.tgz
+大小 839538 bytes
+SHA256 A8856180264FEA4BA949AC6505C10A71BBF512CFA0DDA253992994711904BE7C
+```
+
+mvp.9 未重复真实 Desktop 安装；它只应被表述为“基于已验证 mvp.8 代码的 README/发行元数据修正包”。
