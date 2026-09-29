@@ -1,4 +1,6 @@
 # Deep Seek Harness Unity / EAC 市场：当前接力入口
+> **本轮已实装**：2026-09-29 UI 升级候选 `0.1.0-mvp.7` 已推送 GitHub/Gitee 协作分支、发布到 Gitee mirror master，并在本机官方 Desktop 通过添加插件、立即启用、完整重启后加载。SHA256 `204EB66280F6C16979C3EEDB88CF7B48498E4C00310167B3CB2578EC562376D4`。详见 [UI 升级记录](UI-UPGRADE-2026-09-29.md)。
+
 > **最新 UI 升级**：[2026-09-29 UI 与交互升级记录](UI-UPGRADE-2026-09-29.md)。已完成导航、焦点、筛选、卡片、任务与安装弹窗升级；pnpm check 与浏览器检查通过，真实 Desktop 仍待验收。
 
 

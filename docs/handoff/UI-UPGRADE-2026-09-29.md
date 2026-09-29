@@ -135,3 +135,17 @@ D:\eac-market-verify\ui-install-backup-20260929-133615
 ```
 
 待执行并回填：安装结果、重启结果、实际加载的包版本与 Client 摘要。
+
+### 本地官方 Desktop 实装结果（2026-09-29）
+
+已通过官方 Desktop 的“插件 → 添加插件”界面，从 Gitee 固定地址安装并启用 `0.1.0-mvp.7`：
+
+- 安装源：`https://gitee.com/flowing-shadows-like-scenes/deep-seek-harness-unity-mirror/raw/6c72ba83e2c0449e11f885f0790c6b6146173fd3/artifacts/sha256/204eb66280f6c16979c3eedb88cf7b48498e4c00310167b3cb2578ec562376d4/dsh-eac-market-0.1.0-mvp.7.tgz`
+- 官方安装结果：`已安装`，随后点击`立即启用`
+- 已正常退出并重新启动官方 Desktop
+- 重启后 EAC 页面正常加载
+- 真实页面显示：发现 / 全部插件 / 我的插件、皮肤管理器入口、13 款已收录皮肤、3 款已安装皮肤及真实插件卡片
+- 本地 profile `package.json`、`pnpm-lock.yaml` 和已安装包均已核对为 `0.1.0-mvp.7`
+- 真实用户 profile 控制文件备份：`D:\eac-market-verify\ui-install-backup-20260929-133615`
+
+这证明本次候选包已完成**本机官方 Desktop 安装、启用、重启后加载**。未证明第三方插件业务安装、真实 AI 模型或跨平台兼容。
