@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useId, useState } from 'react'
 import { Button, Input, Modal } from './ui.tsx'
 import type {
+  CatalogMedia,
   CatalogPlugin,
   InventoryItem,
   TransferResult,
@@ -9,6 +10,7 @@ import {
   formatBytes,
   installabilityLabel,
   isInstalled,
+  isSystemInventoryItem,
   readOnlyLabel,
   summarizeInventory,
   verificationLabel,
@@ -25,11 +27,12 @@ export function toneClass(tone: 'success' | 'info' | 'warning' | 'danger' | 'neu
   return tone === 'neutral' ? '' : ` eac-market__status--${tone}`
 }
 
+/** 状态标签始终携带文字；颜色只增强语义，不能成为唯一线索。 */
 export function Status({ tone = 'neutral', children }: {
   readonly tone?: 'success' | 'info' | 'warning' | 'danger' | 'neutral'
   readonly children: React.ReactNode
 }): React.JSX.Element {
-  return <span className={`eac-market__status${toneClass(tone)}`}>{children}</span>
+  return <span className={`eac-market__status${toneClass(tone)}`} data-tone={tone}>{children}</span>
 }
 
 export function VerificationStatus({ value }: { readonly value: CatalogPlugin['verification'] }): React.JSX.Element {
@@ -42,25 +45,37 @@ export function EmptyState({ title, description, action }: {
   readonly description: string
   readonly action?: React.ReactNode
 }): React.JSX.Element {
+  const headingId = useId()
   return (
-    <section className="eac-market__empty">
-      <h2>{title}</h2>
+    <section className="eac-market__empty" aria-labelledby={headingId}>
+      <h2 id={headingId}>{title}</h2>
       <p>{description}</p>
       {action}
     </section>
   )
 }
 
-export function PluginCard({ plugin, inventory, onOpen, onInstall, canInstall = true }: {
+export function PluginCard({ plugin, inventory, onOpen, onInstall, onManage, canInstall = true }: {
   readonly plugin: CatalogPlugin
   readonly inventory: readonly InventoryItem[]
   readonly onOpen: (plugin: CatalogPlugin) => void
   readonly onInstall: (plugin: CatalogPlugin) => void
+  /** 已安装且主控接好管理入口时启用；缺入口时保留原有 disabled“已安装”。 */
+  readonly onManage?: (() => void) | undefined
   readonly canInstall?: boolean
 }): React.JSX.Element {
+  const actionReasonId = useId()
   const installed = isInstalled(inventory, plugin)
   const blocked = !canInstall || plugin.installability !== 'bundle-installable' || plugin.verification === 'hard-incompatible'
-  const blockedReason = !canInstall ? '当前市场未提供安装服务' : plugin.verification === 'hard-incompatible' ? '与当前环境已知不兼容，不能安装' : installabilityLabel(plugin.installability)
+  const blockedReason = !canInstall
+    ? '当前市场未提供安装服务'
+    : plugin.verification === 'hard-incompatible'
+      ? '与当前环境已知不兼容，不能安装'
+      : installabilityLabel(plugin.installability)
+  const canManage = installed !== undefined && onManage !== undefined
+  const actionReason = installed !== undefined
+    ? canManage ? undefined : '已安装，请到“我的插件”管理。'
+    : blocked ? `暂不可安装：${blockedReason}。` : undefined
   return (
     <article className="eac-market__card eac-market__plugin-card">
       <div className="eac-market__plugin-top">
@@ -71,8 +86,9 @@ export function PluginCard({ plugin, inventory, onOpen, onInstall, canInstall = 
         </div>
       </div>
       <p className="eac-market__plugin-summary">{plugin.summary || '作者尚未提供一句话简介。'}</p>
-      {plugin.kind === 'skin' && blocked && <p className="eac-market__usage-guidance">暂不可安装：{blockedReason}。可查看详情中的暂停原因。</p>}
-      {plugin.kind === 'skin' && !blocked && plugin.verification === 'unknown' && <p className="eac-market__usage-guidance">兼容状态未知，需要在完整安装方案中明确确认试装。</p>}
+      {plugin.kind === 'skin' && !blocked && plugin.verification === 'unknown' && (
+        <p className="eac-market__usage-guidance">兼容状态未知，需要在完整安装方案中明确确认试装。</p>
+      )}
       <div className="eac-market__plugin-bottom">
         <div className="eac-market__tags">
           <VerificationStatus value={plugin.verification} />
@@ -80,16 +96,22 @@ export function PluginCard({ plugin, inventory, onOpen, onInstall, canInstall = 
           {!installed && plugin.installability !== 'bundle-installable' && <Status tone="warning">{installabilityLabel(plugin.installability)}</Status>}
         </div>
         <div className="eac-market__button-row">
-          <Button size="sm" onClick={() => onOpen(plugin)}>查看详情</Button>
-          <Button
-            size="sm"
-            variant={blocked || installed !== undefined ? 'outline' : 'primary'}
-            disabled={blocked || installed !== undefined}
-            title={blocked ? blockedReason : installed !== undefined ? '已安装，请到我的插件管理' : undefined}
-            onClick={() => onInstall(plugin)}
-          >{installed !== undefined ? '已安装' : blocked ? '暂不可安装' : '查看安装方案'}</Button>
+          <Button size="sm" variant="outline" aria-label={`查看 ${plugin.name} 详情`} onClick={() => onOpen(plugin)}>查看详情</Button>
+          {canManage ? (
+            <Button size="sm" variant="primary" aria-label={`管理插件：${plugin.name}`} onClick={onManage}>管理</Button>
+          ) : (
+            <Button
+              size="sm"
+              variant={blocked || installed !== undefined ? 'outline' : 'primary'}
+              disabled={blocked || installed !== undefined}
+              title={actionReason}
+              aria-describedby={actionReason === undefined ? undefined : actionReasonId}
+              onClick={() => onInstall(plugin)}
+            >{installed !== undefined ? '已安装' : blocked ? '暂不可安装' : '查看安装方案'}</Button>
+          )}
         </div>
       </div>
+      {actionReason !== undefined && <p className="eac-market__action-reason" id={actionReasonId}>{actionReason}</p>}
     </article>
   )
 }
@@ -98,9 +120,11 @@ export { InstallPlanDialog, planSelectionFor, type PlanTarget } from './InstallP
 
 export { TaskDrawer } from './TaskDrawer.tsx'
 
-export function InventoryCard({ item, catalogPlugin, onToggle, onRemove, onUpdate, updatePlugin, onOpenOfficialPlugins, busy = false }: {
+export function InventoryCard({ item, catalogPlugin, showCatalogNotice = true, onToggle, onRemove, onUpdate, updatePlugin, onOpenOfficialPlugins, busy = false }: {
   readonly item: InventoryItem
   readonly catalogPlugin: CatalogPlugin | undefined
+  /** 普通卡片默认展示目录缺失说明；系统分组由顶部统一说明一次。 */
+  readonly showCatalogNotice?: boolean
   readonly onToggle: (item: InventoryItem, enabled: boolean) => void
   readonly onRemove: (item: InventoryItem) => void
   readonly onUpdate?: (item: InventoryItem, plugin: CatalogPlugin) => void
@@ -108,60 +132,140 @@ export function InventoryCard({ item, catalogPlugin, onToggle, onRemove, onUpdat
   readonly onOpenOfficialPlugins?: (() => void) | undefined
   readonly busy?: boolean
 }): React.JSX.Element {
+  const actionReasonId = useId()
   const readOnly = readOnlyLabel(item)
-  const state = summarizeInventory(item)
+  const stateSummary = summarizeInventory(item)
+  const state = item.restartRequired ? stateSummary.replace(' · 需要重启', '') : stateSummary
   const self = item.packageName === '@dsh-eac/market'
+  const systemItem = isSystemInventoryItem(item, catalogPlugin)
+  const catalogNoticeVisible = showCatalogNotice && catalogPlugin === undefined && !systemItem
+  const busyReason = busy ? '正在处理插件操作，请稍候后再试。' : undefined
+  const selfReason = self ? '市场自身请在 DSH 官方插件页管理。' : undefined
+  const toggleReasons = [busyReason, selfReason, readOnly].filter((reason): reason is string => reason !== undefined)
+  const removeReasons = [busyReason, selfReason, readOnly, item.removable ? undefined : '当前项目不可卸载'].filter((reason): reason is string => reason !== undefined)
+  const updateReasons = busyReason === undefined ? [] : [busyReason]
+  const toggleReasonText = [...new Set(toggleReasons)].join('；')
+  const removeReasonText = [...new Set(removeReasons)].join('；')
+  const updateReasonText = [...new Set(updateReasons)].join('；')
+  const actionReasonText = [...new Set([...toggleReasons, ...removeReasons, ...updateReasons])].join('；')
+  const diagnostics = item.rows.filter((row) => row.error || row.state === 'unknown')
   return (
     <article className="eac-market__card">
       <div className="eac-market__plugin-top">
         <span className="eac-market__plugin-icon" aria-hidden="true">{item.packageName.slice(0, 1).toUpperCase()}</span>
         <div className="eac-market__plugin-title">
-          <h3>{catalogPlugin?.name ?? item.packageName}</h3>
-          <p>{item.packageName}{item.version === undefined ? '' : ` · ${item.version}`}</p>
+          <h3 title={catalogPlugin?.name ?? item.packageName}>{catalogPlugin?.name ?? item.packageName}</h3>
+          <p title={`${item.packageName}${item.version === undefined ? '' : ` · ${item.version}`}`}>{item.packageName}{item.version === undefined ? '' : ` · ${item.version}`}</p>
         </div>
       </div>
-      <p className="eac-market__plugin-summary">{catalogPlugin?.summary ?? '此插件不在当前市场目录中，以下状态来自官方插件管理器。'}</p>
+      {catalogNoticeVisible && (
+        <p className="eac-market__plugin-summary">此插件不在当前市场目录中，以下状态来自官方插件管理器。</p>
+      )}
       {catalogPlugin?.requiresSetup === true && <p className="eac-market__usage-guidance">需要设置：请到 DSH 官方插件页，按作者说明完成设置。</p>}
-      {self && <p>管理市场自身时，请使用 DSH 侧栏的「插件」页面。</p>}
-      {item.rows.some((row) => row.error || row.state === 'unknown') && <details><summary>查看运行诊断</summary><ul>{item.rows.map((row) => <li key={row.id}>{row.name}：{row.error ?? (row.state === 'unknown' ? '运行状态尚未确认' : row.state === 'disabled' ? '已停用' : row.state === 'load-error' ? '加载失败' : '配置启用')}</li>)}</ul></details>}
+      {self && <p className="eac-market__usage-guidance">管理市场自身时，请使用 DSH 侧栏的「插件」页面。</p>}
+      {diagnostics.length > 0 && (
+        <details className="eac-market__diagnostics">
+          <summary>查看运行诊断</summary>
+          <ul>
+            {diagnostics.map((row) => (
+              <li key={row.id}>{row.name}：{row.error ?? (row.state === 'unknown' ? '运行状态尚未确认' : row.state === 'disabled' ? '已停用' : row.state === 'load-error' ? '加载失败' : '配置启用')}</li>
+            ))}
+          </ul>
+        </details>
+      )}
       <div className="eac-market__plugin-bottom">
         <div className="eac-market__tags">
-          <Status tone={state.includes('失败') ? 'danger' : state.includes('启用') ? 'success' : state.includes('重启') ? 'warning' : 'neutral'}>{state}</Status>
+          <Status tone={state.includes('失败') ? 'danger' : state.includes('启用') || state.includes('运行中') ? 'success' : state.includes('重启') ? 'warning' : 'neutral'}>{state}</Status>
+          {item.restartRequired && <Status tone="warning">需要重启</Status>}
           {readOnly && <Status tone="warning">{readOnly}</Status>}
         </div>
         <div className="eac-market__button-row">
           {onOpenOfficialPlugins && <Button size="sm" variant="outline" onClick={onOpenOfficialPlugins}>打开官方插件页</Button>}
           {!self && updatePlugin !== undefined && hasCatalogUpdate(item, updatePlugin) && onUpdate !== undefined && (
-            <Button size="sm" variant="primary" onClick={() => onUpdate(item, updatePlugin)}>更新到 {updatePlugin.version}</Button>
+            <Button
+              size="sm"
+              variant="primary"
+              disabled={updateReasonText !== ''}
+              title={updateReasonText === '' ? undefined : updateReasonText}
+              aria-describedby={updateReasonText === '' ? undefined : actionReasonId}
+              onClick={() => onUpdate(item, updatePlugin)}
+            >更新到 {updatePlugin.version}</Button>
           )}
           <Button
             size="sm"
-            disabled={busy || self || readOnly !== undefined}
-            title={readOnly}
+            disabled={toggleReasonText !== ''}
+            title={toggleReasonText === '' ? undefined : toggleReasonText}
+            aria-describedby={toggleReasonText === '' ? undefined : actionReasonId}
             onClick={() => onToggle(item, !item.bundleEnabled)}
           >{item.bundleEnabled ? '停用' : '启用'}</Button>
-          <Button size="sm" variant="outline" disabled={busy || self || !item.removable || readOnly !== undefined} title={item.removable ? undefined : '当前项目不可卸载'} onClick={() => onRemove(item)}>卸载</Button>
+          <Button
+            size="sm"
+            variant="outline"
+            disabled={removeReasonText !== ''}
+            title={removeReasonText === '' ? undefined : removeReasonText}
+            aria-describedby={removeReasonText === '' ? undefined : actionReasonId}
+            onClick={() => onRemove(item)}
+          >卸载</Button>
         </div>
       </div>
+      {actionReasonText !== '' && <p className="eac-market__action-reason" id={actionReasonId}>{actionReasonText}</p>}
     </article>
+  )
+}
+
+function ImageOffIcon(): React.JSX.Element {
+  return (
+    <svg className="eac-market__fallback-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <rect x="3.5" y="4.5" width="17" height="15" rx="2.5" />
+      <path d="m6.5 16 3.2-3.2 2.2 2.2 1.7-1.7 3.9 3.9M8 8.5h.01M4 4l16 16" />
+    </svg>
+  )
+}
+
+/** 加载失败不是空白图块：保留来源、真实图片说明，并提供可重复尝试的恢复入口。 */
+export function ScreenshotFailure({ media, onRetry }: {
+  readonly media: CatalogMedia
+  readonly onRetry: (media: CatalogMedia) => void
+}): React.JSX.Element {
+  return (
+    <div className="eac-market__gallery-fallback" role="status">
+      <ImageOffIcon />
+      <div className="eac-market__fallback-copy">
+        <strong>截图加载失败</strong>
+        <span>{media.alt}</span>
+        <span>图片来源暂时无法读取。可重试；不会用占位图替代真实截图。</span>
+        <small>来源：<span className="eac-market__fallback-source">{media.sourceUrl}</span></small>
+      </div>
+      <Button size="sm" variant="outline" aria-label={`重试加载截图：${media.alt}`} onClick={() => onRetry(media)}>重试加载</Button>
+    </div>
   )
 }
 
 export function ScreenshotGallery({ screenshots }: { readonly screenshots: CatalogPlugin['screenshots'] }): React.JSX.Element | null {
   const [failed, setFailed] = useState<ReadonlySet<string>>(new Set())
+  const [attempts, setAttempts] = useState<ReadonlyMap<string, number>>(new Map())
   const [active, setActive] = useState<string | undefined>(undefined)
   if (screenshots.length === 0) return null
   const current = screenshots.find((item) => item.id === active)
+  function retry(media: CatalogMedia): void {
+    setFailed((value) => {
+      const next = new Set(value)
+      next.delete(media.id)
+      return next
+    })
+    setAttempts((value) => new Map(value).set(media.id, (value.get(media.id) ?? 0) + 1))
+  }
   return (
     <>
       <section className="eac-market__section" aria-labelledby="screenshots-title">
         <div className="eac-market__section-head"><h2 id="screenshots-title">真实截图</h2></div>
         <div className="eac-market__gallery">
           {screenshots.map((media) => failed.has(media.id) ? (
-            <div className="eac-market__gallery-fallback" key={media.id}>{media.alt}（图片加载失败）</div>
+            <ScreenshotFailure key={media.id} media={media} onRetry={retry} />
           ) : (
             <button type="button" key={media.id} onClick={() => setActive(media.id)} aria-label={`放大查看：${media.alt}`}>
               <img
+                key={`${media.id}:${attempts.get(media.id) ?? 0}`}
                 src={media.sourceUrl}
                 alt={media.alt}
                 loading="lazy"
@@ -214,7 +318,10 @@ export function FileTransferField({ remote, purpose, label, accept, onComplete }
   )
 }
 
-export function SearchField({ value, onChange }: { readonly value: string; readonly onChange: (value: string) => void }): React.JSX.Element {
+export function SearchField({ value, onChange }: {
+  readonly value: string
+  readonly onChange: (value: string) => void
+}): React.JSX.Element {
   return (
     <div className="eac-market__search">
       <label className="eac-market__sr-only" htmlFor="eac-market-search">搜索功能、插件或作者</label>

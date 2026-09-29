@@ -44,6 +44,24 @@ interface Props {
   readonly onStarted: (task: TaskState, reveal?: boolean) => void
 }
 
+export function nextPreflightRetry(value: number): number {
+  return value + 1
+}
+
+/** The retry action is explicit even when checkbox changes already trigger preflight. */
+export function UnsafePlanReview({ consentRequired, onRetry }: {
+  readonly consentRequired: boolean
+  readonly onRetry: () => void
+}): React.JSX.Element {
+  return <section className="eac-market__notice eac-market__notice--warning" role="alert" aria-label="不安全的预检项目">
+    <strong>暂不能确认安装</strong>
+    <p>{consentRequired
+      ? '勾选上方选项后会自动重新预检；也可以点击下方“重新预检”立即重试。'
+      : '预检仍包含未获同意或不安全的项目。请重新预检；硬性不兼容和校验失败不能绕过。'}</p>
+    <Button variant="outline" onClick={onRetry}>重新预检</Button>
+  </section>
+}
+
 /** A distinct mounted session owns each target. A's late success can reconcile A's
  * inventory, but cannot close B's dialog or move its focus to the task drawer. */
 export function InstallPlanDialog(props: Props): React.JSX.Element | null {
@@ -110,7 +128,8 @@ function PlanSession({ target, inventory, remote, onClose, onStarted }: Props & 
     } finally { writing.current = false; if (alive.current) setBusy(undefined) }
   }
   const blocked = !review?.canConfirm || (!group && consentRequired && !consent)
-  return <Modal open onClose={onClose} title={riskStep ? '再次确认降级影响' : target.collection ? `安装组合：${target.collection.name}` : target.pack ? `安装套餐：${target.pack.name}` : `安装：${target.plugin?.name ?? '所选插件'}`} closeLabel="关闭安装确认" description="预检不会安装插件。核对以下内容后再确认。">
+  const unsafeReady = result?.status === 'ready' && review !== undefined && review.unsafe.length > 0
+  return <Modal open onClose={onClose} title={riskStep ? '第 2 步：再次确认降级影响' : target.collection ? `安装确认：${target.collection.name}` : target.pack ? `安装确认：${target.pack.name}` : `安装确认：${target.plugin?.name ?? '所选插件'}`} closeLabel="关闭安装确认" description={riskStep ? '只有完成这次专门影响确认后，才会提交降级安装。' : '预检不会安装插件。请核对目标版本、风险和操作层级后再确认。'}>
     <div className="eac-market__form">
       {busy === 'preflight' && <p role="status">正在核对版本、安装条件和当前状态…</p>}
       {consentRequired && <label className="eac-market__notice eac-market__notice--warning"><input type="checkbox" checked={consent} disabled={busy === 'starting'} onChange={(event) => {
@@ -118,7 +137,7 @@ function PlanSession({ target, inventory, remote, onClose, onStarted }: Props & 
       }} /> 仍然尝试安装未验证内容。已知不兼容或校验失败仍会阻止安装。</label>}
       {missingComponents.length > 0 && <p role="status">以下条目缺少匹配的目录版本，未提交安装：{missingComponents.map((item) => `${item.pluginId}@${item.version}`).join('、')}。必选项缺失时，后台会阻止整份预检。</p>}
       {group && review && <section className="eac-market__notice" aria-label="组合执行范围"><strong>本次确认范围</strong><p>可执行 {review.executable.length} 项（含已安装的保持项）；跳过 {review.skipped.length} 项；依赖暂停 {review.dependencyPaused.length} 项。</p><p>只执行预检允许的项目。成功项会保留，失败或暂停会逐项显示，不代表整套成功。</p></section>}
-      {review && review.unsafe.length > 0 && <p role="alert">预检仍将未获同意或不安全的项目列为可执行，暂不能确认。请重新预检。</p>}
+      {unsafeReady && <UnsafePlanReview consentRequired={consentRequired} onRetry={() => setRetry(nextPreflightRetry)} />}
       {result?.status === 'ready' && <ul className="eac-market__plan-items">{result.plan.items.map((item) => <li key={item.pluginId}>
         <strong>{target.plugins.find((plugin) => plugin.id === item.pluginId)?.name ?? item.packageName}</strong>
         <p>{item.action === 'blocked' ? '跳过' : review?.dependencyPaused.includes(item) ? '依赖暂停' : item.action === 'keep' ? '保持' : item.action === 'add' ? '将安装' : item.action === 'upgrade' ? '将升级' : '将降级'}：{item.currentVersion === undefined ? '' : `${item.currentVersion} → `}{item.targetVersion} · {item.requestedEnabled ? '配置启用' : '保持停用'}</p>
@@ -134,12 +153,20 @@ function PlanSession({ target, inventory, remote, onClose, onStarted }: Props & 
       </section>}
       {result?.status === 'blocked' && <div role="alert" className="eac-market__notice eac-market__notice--warning">暂不能安装：{result.reason}<details><summary>查看原因</summary>{result.blockers.join('；')}</details></div>}
       {result?.status === 'stale' && <p role="alert">状态已变化，请重新预检。{result.reason}</p>}
+      <section className="eac-market__notice" aria-label="确认边界">
+        <strong>确认边界</strong>
+        <ul>
+          <li>硬性不兼容、缺少可安装制品和校验失败不会被“仍然尝试安装”绕过。</li>
+          <li>降级必须在方案确认后再看专门影响卡，并点击第二次确认。</li>
+          <li>提交结果未知时先到任务面板核对，不自动重放安装。</li>
+        </ul>
+      </section>
       {notice && <p role="alert">{notice}</p>}
       {uncertain && <p>请关闭此窗口，到任务面板核对。已经提交的任务可能仍在运行。</p>}
       <div className="eac-market__button-row">
         <Button variant="outline" onClick={onClose}>{busy === 'starting' ? '关闭窗口' : '取消'}</Button>
-        {busy === undefined && !uncertain && (result?.status !== 'ready' || notice) && <Button variant="outline" onClick={() => setRetry((value) => value + 1)}>重新预检</Button>}
-        <Button variant="primary" disabled={busy !== undefined || blocked || remote.startTask === undefined || uncertain} onClick={() => void confirm()}>{busy === 'starting' ? '正在提交…' : riskStep ? '已了解影响，确认降级' : group ? '确认执行可用项' : '确认安装'}</Button>
+        {busy === undefined && !uncertain && !unsafeReady && (result?.status !== 'ready' || notice) && <Button variant="outline" onClick={() => setRetry(nextPreflightRetry)}>重新预检</Button>}
+        <Button variant="primary" disabled={busy !== undefined || blocked || remote.startTask === undefined || uncertain} onClick={() => void confirm()}>{busy === 'starting' ? '正在提交…' : riskStep ? '已了解影响，确认降级' : downgrades.length > 0 ? '查看降级影响' : group ? '确认执行可用项' : '确认安装'}</Button>
       </div>
     </div>
   </Modal>

@@ -5,6 +5,7 @@
 | 文档 | 用途 |
 |---|---|
 | [Agent 插件投稿指南](contributing/AGENT-SUBMISSION.md) | 作者Agent提示词、写入白名单、材料/制品检查、Fork投稿与维护者发布边界 |
+| [UI 与交互升级记录](handoff/UI-UPGRADE-2026-09-29.md) | 2026-09-29：导航、焦点、筛选、卡片、任务与安装弹窗升级及本批验收 |
 | [真实下载修复交付](handoff/PULLABILITY-2026-09-28.md) | 当前mvp.6：从作者实际发布补回14安装入口、22可用镜像及官方业务验证 |
 | [发行与皮肤中心交付](handoff/DISTRIBUTION-2026-09-28.md) | mvp.4发行包、82项清点、公开镜像、真实Desktop与未验边界 |
 | [首次使用链路复检](reviews/2026-09-28-portability-recheck.md) | 远端源码、干净构建、安装链、制品下载及Gitee 451限制 |

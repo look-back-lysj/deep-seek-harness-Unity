@@ -80,8 +80,47 @@ const HELP_STEPS = [
   { title: '开始使用', text: '按插件说明打开入口；需要设置或重启时，市场会明确提示。' },
 ]
 
-function pageTab(view: MarketView): PrimaryView {
-  return view === 'all' || view === 'detail' || view === 'skins' ? 'all' : view === 'mine' ? 'mine' : 'discover'
+function pageTab(view: MarketView): PrimaryView | undefined {
+  if (view === 'all' || view === 'detail' || view === 'skins') return 'all'
+  if (view === 'mine') return 'mine'
+  if (view === 'discover') return 'discover'
+  // 次级页和扩展页不是主导航页面，不能把“发现”误标为当前页。
+  return undefined
+}
+
+export function detailTab(origin: PrimaryView | 'skins'): PrimaryView {
+  // 皮肤中心沿用现有 all 语义；详情只继承真正打开它的主导航。
+  return origin === 'skins' ? 'all' : origin
+}
+
+export function applyBrowseChange(change: () => void, resetPage: () => void): void {
+  change()
+  resetPage()
+}
+
+export function runAfterNextFrame(callback: () => void): void {
+  if (typeof window !== 'undefined' && typeof window.requestAnimationFrame === 'function') window.requestAnimationFrame(callback)
+  else callback()
+}
+
+export function restoreDetailReturnFocus(
+  trigger: HTMLElement | null | undefined,
+  scrollContainer: HTMLElement | null | undefined,
+  origin: PrimaryView | 'skins',
+  doc: Document | undefined = typeof document === 'undefined' ? undefined : document,
+): void {
+  if (trigger?.isConnected !== false && typeof trigger?.focus === 'function') {
+    trigger.focus()
+    return
+  }
+  const selector = origin === 'discover' ? '.eac-market__discover-head h1' : '.eac-market__page-head h1'
+  const title = doc?.querySelector<HTMLElement>(selector)
+  if (title && typeof title.focus === 'function') {
+    if (!title.hasAttribute('tabindex')) title.setAttribute('tabindex', '-1')
+    title.focus()
+    return
+  }
+  scrollContainer?.focus()
 }
 
 export function packPlugins(pack: CatalogPack, catalogPlugins: readonly CatalogPlugin[]): readonly CatalogPlugin[] {
@@ -122,6 +161,7 @@ export function MarketPage({ remote, skinService, onOpenOfficialPlugins, homeSup
   const [extensionDraft, setExtensionDraft] = useState<ExtensionDraftRef>()
   const [draftChange, setDraftChange] = useState<ExtensionDraftChange>()
   const extensionLifetime = useRef(new AbortController())
+  const detailReturnFocus = useRef<HTMLElement | null>(null)
   useEffect(() => { const lifetime = new AbortController(); extensionLifetime.current = lifetime; return () => lifetime.abort() }, [remote])
 
   useEffect(() => {
@@ -140,18 +180,22 @@ export function MarketPage({ remote, skinService, onOpenOfficialPlugins, homeSup
 
   const selectedPlugin = state.status === 'ready' ? findPlugin(state.catalog, detailSelection?.id, detailSelection?.version) : undefined
   const activeCount = state.status === 'ready' ? activeTasks(state.tasks).length : 0
+  const activeTab = view === 'detail' ? detailTab(previousView) : undefined
 
   function navigate(next: PrimaryView): void {
     setView(next)
     setPreviousView(next)
     setPage(1)
     setActionNotice('')
+    runAfterNextFrame(() => scrollRef.current?.scrollTo({ top: 0 }))
     if (next === 'mine') void controller.sync(true)
   }
 
   function openDetail(plugin: CatalogPlugin): void {
     if (state.status !== 'ready') return
-    const from = view === 'skins' ? 'skins' : pageTab(view)
+    const active = typeof document === 'undefined' ? undefined : document.activeElement
+    detailReturnFocus.current = active instanceof HTMLElement ? active : null
+    const from = view === 'skins' ? 'skins' : pageTab(view) ?? 'discover'
     scrollPositions.current.set(`${from}:${filters.category}:${filters.query}:${page}`, scrollRef.current?.scrollTop ?? 0)
     setPreviousView(from)
     setDetailSelection({ id: plugin.id, version: plugin.version })
@@ -169,8 +213,13 @@ export function MarketPage({ remote, skinService, onOpenOfficialPlugins, homeSup
 
   function backFromDetail(): void {
     const key = `${previousView}:${filters.category}:${filters.query}:${page}`
+    const returnFocus = detailReturnFocus.current
+    detailReturnFocus.current = null
     setView(previousView)
-    window.requestAnimationFrame(() => { scrollRef.current?.scrollTo({ top: scrollPositions.current.get(key) ?? 0 }) })
+    runAfterNextFrame(() => {
+      scrollRef.current?.scrollTo({ top: scrollPositions.current.get(key) ?? 0 })
+      restoreDetailReturnFocus(returnFocus, scrollRef.current, previousView)
+    })
   }
 
   function openPlanForPlugin(plugin: CatalogPlugin): void {
@@ -282,8 +331,9 @@ export function MarketPage({ remote, skinService, onOpenOfficialPlugins, homeSup
         onNavigate={navigate}
         onTasks={() => setTaskDrawer(true)}
         onMore={() => setMoreMenu((value) => !value)}
-        moreMenu={false}
-        onSecondary={(next) => setView(next)}
+        moreMenu={moreMenu}
+        onSecondary={(next) => { setMoreMenu(false); setView(next) }}
+        activeTab={activeTab}
       >
         <div className="eac-market__loading" aria-busy="true" aria-live="polite">
           <p>正在读取市场目录和当前插件状态…</p>
@@ -301,8 +351,9 @@ export function MarketPage({ remote, skinService, onOpenOfficialPlugins, homeSup
         onNavigate={navigate}
         onTasks={() => setTaskDrawer(true)}
         onMore={() => setMoreMenu((value) => !value)}
-        moreMenu={false}
-        onSecondary={(next) => setView(next)}
+        moreMenu={moreMenu}
+        onSecondary={(next) => { setMoreMenu(false); setView(next) }}
+        activeTab={activeTab}
       >
         <section className="eac-market__error" role="alert">
           <h2>市场暂时无法读取状态</h2>
@@ -320,7 +371,7 @@ export function MarketPage({ remote, skinService, onOpenOfficialPlugins, homeSup
   const inventoryPartition = partitionInventory(state.inventory.items.filter((item) => !item.installed || !skinCatalogForInventory(item, state.catalog.plugins)), state.catalog.plugins)
   const loaderPlugin = latestCompatiblePlugin(state.catalog, SKIN_LOADER_PACKAGE) ?? functionalPlugins.find((plugin) => plugin.packageName === SKIN_LOADER_PACKAGE)
   const openSkins = () => {
-    const from = pageTab(view)
+    const from = pageTab(view) ?? 'discover'
     scrollPositions.current.set(`${from}:${filters.category}:${filters.query}:${page}`, scrollRef.current?.scrollTop ?? 0)
     setSkinOrigin(from); setSkinVisited(true); setView('skins')
     window.requestAnimationFrame(() => scrollRef.current?.scrollTo({ top: 0 }))
@@ -354,6 +405,7 @@ export function MarketPage({ remote, skinService, onOpenOfficialPlugins, homeSup
         onTasks={() => setTaskDrawer(true)}
         onMore={() => setMoreMenu((value) => !value)}
         moreMenu={moreMenu}
+        activeTab={activeTab}
         scrollRef={scrollRef}
         onSecondary={(next) => { setMoreMenu(false); setView(next) }}
         moreSupplemental={surface(EXTENSION_SLOTS.more)}
@@ -372,6 +424,7 @@ export function MarketPage({ remote, skinService, onOpenOfficialPlugins, homeSup
             onBrowse={browse}
             onHelp={() => setView('help')}
             onSettings={() => setView('settings')}
+            onManage={() => navigate('mine')}
             skinEntry={skinEntry}
             supplemental={<>{homeSupplemental}{surface(EXTENSION_SLOTS.home)}</>}
           />
@@ -385,19 +438,19 @@ export function MarketPage({ remote, skinService, onOpenOfficialPlugins, homeSup
             </header>
             {skinEntry}
             <div className="eac-market__filters" aria-label="安装包范围">
-              <Pill active={availableOnly} onClick={() => { setAvailableOnly(true); setPage(1) }}>可安装</Pill>
-              <Pill active={!availableOnly} onClick={() => { setAvailableOnly(false); setPage(1) }}>全部记录</Pill>
+              <Pill active={availableOnly} onClick={() => applyBrowseChange(() => setAvailableOnly(true), () => setPage(1))}>可安装</Pill>
+              <Pill active={!availableOnly} onClick={() => applyBrowseChange(() => setAvailableOnly(false), () => setPage(1))}>全部记录</Pill>
             </div>
             <div className="eac-market__toolbar">
-              <SearchField value={filters.query} onChange={(query) => { setFilters({ ...filters, query }); setPage(1) }} />
+              <SearchField value={filters.query} onChange={(query) => applyBrowseChange(() => setFilters({ ...filters, query }), () => setPage(1))} />
               <div className="eac-market__filters">
                 <label className="eac-market__sr-only" htmlFor="eac-category">用途分类</label>
-                <select id="eac-category" value={filters.category} onChange={(event) => { setFilters({ ...filters, category: event.currentTarget.value }); setPage(1) }}>
+                <select id="eac-category" value={filters.category} onChange={(event) => applyBrowseChange(() => setFilters({ ...filters, category: event.currentTarget.value }), () => setPage(1))}>
                   <option value="all">全部用途</option>
                   {categoriesOf(marketPlugins).map((category) => <option key={category} value={category}>{category}</option>)}
                 </select>
                 <label className="eac-market__sr-only" htmlFor="eac-sort">排序</label>
-                <select id="eac-sort" value={browseSort} onChange={(event) => setBrowseSort(event.currentTarget.value as BrowseSortMode)}>
+                <select id="eac-sort" value={browseSort} onChange={(event) => applyBrowseChange(() => setBrowseSort(event.currentTarget.value as BrowseSortMode), () => setPage(1))}>
                   <option value="rules">规则排序（默认）</option>
                   <option value="compatibility">兼容性优先</option>
                   <option value="recommended">团队精选优先（由我选择）</option>
@@ -407,28 +460,28 @@ export function MarketPage({ remote, skinService, onOpenOfficialPlugins, homeSup
             {advanced && (
               <div className="eac-market__advanced">
                 <label>验证状态
-                  <select value={filters.verification} onChange={(event) => setFilters({ ...filters, verification: event.currentTarget.value as PluginFilters['verification'] })}>
+                  <select id="eac-verification" value={filters.verification} onChange={(event) => applyBrowseChange(() => setFilters({ ...filters, verification: event.currentTarget.value as PluginFilters['verification'] }), () => setPage(1))}>
                     <option value="all">全部</option><option value="verified">已验证</option><option value="unverified">未验证</option>
                     <option value="hard-incompatible">已知不兼容</option><option value="unknown">状态未知</option>
                   </select>
                 </label>
                 <label>安装状态
-                  <select value={filters.installed} onChange={(event) => setFilters({ ...filters, installed: event.currentTarget.value as PluginFilters['installed'] })}>
+                  <select id="eac-installation" value={filters.installed} onChange={(event) => applyBrowseChange(() => setFilters({ ...filters, installed: event.currentTarget.value as PluginFilters['installed'] }), () => setPage(1))}>
                     <option value="all">全部</option><option value="yes">已安装</option><option value="no">未安装</option>
                   </select>
                 </label>
-                <Button variant="ghost" onClick={() => { setFilters(EMPTY_FILTERS); setPage(1) }}>清除筛选</Button>
+                <Button variant="ghost" onClick={() => applyBrowseChange(() => setFilters(EMPTY_FILTERS), () => setPage(1))}>清除筛选</Button>
               </div>
             )}
             {visible.length === 0 ? (
               <EmptyState
                 title="没有匹配的插件"
                 description="目录里没有满足当前搜索和筛选条件的项目。可以清除筛选，或查看全部插件。"
-                action={<Button variant="outline" onClick={() => { setFilters(EMPTY_FILTERS); setPage(1) }}>清除筛选</Button>}
+                action={<Button variant="outline" onClick={() => applyBrowseChange(() => setFilters(EMPTY_FILTERS), () => setPage(1))}>清除筛选</Button>}
               />
             ) : (
               <div className="eac-market__grid">
-                {visible.map((plugin) => <PluginCard key={plugin.id + ":" + plugin.version} plugin={plugin} inventory={state.inventory.items} onOpen={openDetail} onInstall={openPlanForPlugin} />)}
+                {visible.map((plugin) => <PluginCard key={plugin.id + ":" + plugin.version} plugin={plugin} inventory={state.inventory.items} onOpen={openDetail} onInstall={openPlanForPlugin} onManage={() => navigate('mine')} />)}
               </div>
             )}
             {pageCount > 1 && (
@@ -446,6 +499,7 @@ export function MarketPage({ remote, skinService, onOpenOfficialPlugins, homeSup
           <>
             <header className="eac-market__page-head">
               <div><h1>我的插件</h1><p>这里只显示官方插件管理器返回的真实安装和启停状态。</p></div>
+              {onOpenOfficialPlugins && <div className="eac-market__button-row"><Button variant="outline" onClick={onOpenOfficialPlugins}>打开官方插件页</Button></div>}
             </header>
             {skinEntry}
             {state.inventory.unknownItems.length > 0 && (
@@ -466,7 +520,6 @@ export function MarketPage({ remote, skinService, onOpenOfficialPlugins, homeSup
                       updatePlugin={latestCompatiblePlugin(state.catalog, item.packageName)}
                       onToggle={(target, enabled) => void toggleInventory(target, enabled)}
                       onRemove={(item) => { setRemoveStep(false); setRemoveTarget(item) }}
-                      onOpenOfficialPlugins={onOpenOfficialPlugins}
                       busy={managementBusy}
                       onUpdate={(_target, plugin) => openPlanForPlugin(plugin)}
                     />
@@ -489,7 +542,6 @@ export function MarketPage({ remote, skinService, onOpenOfficialPlugins, homeSup
                       updatePlugin={latestCompatiblePlugin(state.catalog, item.packageName)}
                         onToggle={(target, enabled) => void toggleInventory(target, enabled)}
                         onRemove={(item) => { setRemoveStep(false); setRemoveTarget(item) }}
-                      onOpenOfficialPlugins={onOpenOfficialPlugins}
                       busy={managementBusy}
                         onUpdate={(_target, plugin) => openPlanForPlugin(plugin)}
                       />
@@ -640,7 +692,7 @@ export function MarketPage({ remote, skinService, onOpenOfficialPlugins, homeSup
   )
 }
 
-export function MarketFrame({ view, activeCount, onNavigate, onTasks, onMore, moreMenu, onSecondary, scrollRef, children, moreSupplemental }: {
+export function MarketFrame({ view, activeCount, onNavigate, onTasks, onMore, moreMenu, onSecondary, activeTab, scrollRef, children, moreSupplemental }: {
   readonly view: MarketView
   readonly activeCount: number
   readonly onNavigate: (view: PrimaryView) => void
@@ -648,11 +700,12 @@ export function MarketFrame({ view, activeCount, onNavigate, onTasks, onMore, mo
   readonly onMore: () => void
   readonly moreMenu: boolean
   readonly onSecondary: (view: 'help' | 'settings' | 'author') => void
+  readonly activeTab?: PrimaryView | undefined
   readonly moreSupplemental?: React.ReactNode
   readonly scrollRef?: React.Ref<HTMLDivElement>
   readonly children: React.ReactNode
 }): React.JSX.Element {
-  const currentTab = pageTab(view)
+  const currentTab = activeTab ?? pageTab(view)
   const moreTrigger = useRef<HTMLButtonElement>(null)
   const menuRef = useRef<HTMLDivElement>(null)
   useEffect(() => { if (moreMenu) menuRef.current?.querySelector<HTMLElement>('[role="menuitem"]')?.focus() }, [moreMenu])
@@ -704,7 +757,7 @@ export function MarketFrame({ view, activeCount, onNavigate, onTasks, onMore, mo
   )
 }
 
-export function DiscoverView({ catalog, inventory, onOpen, onInstall, onPack, onCollection, onBrowse, onHelp, onSettings, skinEntry, supplemental }: {
+export function DiscoverView({ catalog, inventory, onOpen, onInstall, onPack, onCollection, onBrowse, onHelp, onSettings, onManage, skinEntry, supplemental }: {
   readonly catalog: CatalogSnapshot
   readonly inventory: readonly InventoryItem[]
   readonly onOpen: (plugin: CatalogPlugin) => void
@@ -714,6 +767,7 @@ export function DiscoverView({ catalog, inventory, onOpen, onInstall, onPack, on
   readonly onBrowse: (category?: string) => void
   readonly onHelp: () => void
   readonly onSettings?: (() => void) | undefined
+  readonly onManage?: (() => void) | undefined
   readonly skinEntry?: React.ReactNode
   readonly supplemental?: React.ReactNode
 }): React.JSX.Element {
@@ -734,7 +788,7 @@ export function DiscoverView({ catalog, inventory, onOpen, onInstall, onPack, on
         <>
           {recommended.length > 0 && <section className="eac-market__section">
             <div className="eac-market__section-head"><h2>团队精选</h2><p>每项推荐都有对应理由。</p></div>
-            <div className="eac-market__grid">{recommended.slice(0, 6).map(({ plugin, reason }) => <div key={plugin.id + ":" + plugin.version}><p className="eac-market__recommendation">推荐理由：{reason}</p><PluginCard plugin={plugin} inventory={inventory} onOpen={onOpen} onInstall={onInstall} /></div>)}</div>
+            <div className="eac-market__grid">{recommended.slice(0, 6).map(({ plugin, reason }) => <div key={plugin.id + ":" + plugin.version}><p className="eac-market__recommendation">推荐理由：{reason}</p><PluginCard plugin={plugin} inventory={inventory} onOpen={onOpen} onInstall={onInstall} onManage={onManage} /></div>)}</div>
           </section>}
 
           <section className="eac-market__section">
@@ -747,7 +801,7 @@ export function DiscoverView({ catalog, inventory, onOpen, onInstall, onPack, on
               </div>
             )}
             <div className="eac-market__grid">
-              {ruleSorted.slice(0, 6).map((plugin) => <PluginCard key={plugin.id + ":" + plugin.version} plugin={plugin} inventory={inventory} onOpen={onOpen} onInstall={onInstall} />)}
+              {ruleSorted.slice(0, 6).map((plugin) => <PluginCard key={plugin.id + ":" + plugin.version} plugin={plugin} inventory={inventory} onOpen={onOpen} onInstall={onInstall} onManage={onManage} />)}
             </div>
           </section>
 
