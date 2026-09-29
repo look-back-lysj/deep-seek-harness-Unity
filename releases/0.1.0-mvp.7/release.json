@@ -1,0 +1,14 @@
+{
+  "url": "https://gitee.com/flowing-shadows-like-scenes/deep-seek-harness-unity-mirror/raw/6c72ba83e2c0449e11f885f0790c6b6146173fd3/artifacts/sha256/204eb66280f6c16979c3eedb88cf7b48498e4c00310167b3cb2578ec562376d4/dsh-eac-market-0.1.0-mvp.7.tgz",
+  "localProfile": "C:/Users/刘沛伦/.dsh/profiles/desktop",
+  "packageName": "@dsh-eac/market",
+  "sha256": "204eb66280f6c16979c3eedb88cf7b48498e4c00310167b3cb2578ec562376d4",
+  "bytes": 832241,
+  "host": "official Desktop 0.1.7-rc.2",
+  "localInstalled": true,
+  "version": "0.1.0-mvp.7",
+  "uiEvidence": "D:/eac-market-verify/post-upgrade-ui-final-20260929-124054",
+  "catalogRevision": "eac-published-20260928-6",
+  "mirrorCommit": "6c72ba83e2c0449e11f885f0790c6b6146173fd3",
+  "sourceCommit": "e85246c44319930e1989edcf58b37fa023c47a23"
+}

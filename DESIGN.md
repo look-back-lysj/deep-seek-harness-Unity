@@ -121,3 +121,18 @@ await ctx.remote.$mount(TYPERT_REMOTE)
 - 测试预览容器缺少内边距，已补 1px 校验内距。
 
 修复后重新生成四张同视口截图并人工复核；按技能要求没有重复运行第二次 detector。`pnpm test` 当前被工作区依赖供应链校验/网络重试阻塞在测试脚本之前，未进入 Vitest；等价的 `pnpm exec vitest run tests/client` 与客户端类型检查已通过，不能把网络阻塞写成测试通过。
+
+## 9. 2026-09-29 交互与视觉升级
+
+本节记录当前 Client 升级，不覆盖前文历史证据。
+
+- 三个主导航的滚动、高亮和详情来源上下文已统一。
+- 次级页面不再错误高亮“发现”。
+- 已安装卡片提供“管理”入口；官方插件页入口提升到“我的插件”页头。
+- 系统组件说明去重；禁用操作显示可见理由。
+- 截图失败使用结构化占位、真实来源和重试，不伪造图片。
+- 任务抽屉显示真实逐项进度和错误下一步；不伪造百分比。
+- 安装 unsafe 预检提供真实“重新预检”按钮。
+- 新增 `navigation.test.tsx`、`visual-polish.test.tsx`、`dialogs.test.tsx`。
+- 本批 `pnpm check`、`pnpm typecheck`、Client 86 项测试、browser-check 26 项及 `impeccable detect` 均通过。
+- 官方 Desktop、真实读屏、真实缩放和真实网络截图重试仍未验证，详见 [UI 升级记录](docs/handoff/UI-UPGRADE-2026-09-29.md)。

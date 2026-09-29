@@ -28,15 +28,15 @@ import { canonicalJson, pendingBuildsDigest } from '../../core/canonical.ts'
 import { DshManagerAdapter, type InventorySourceEvidence } from './manager.ts'
 
 interface OfficialManager {
-  installBundle(spec: string, options?: {
+  installBundle?(spec: string, options?: {
     enabled?: boolean
     requestId?: PluginInstallRequestId
     approvedBuilds?: readonly string[]
   }): Promise<ChangeResult>
-  setBundleEnabled(name: string, enabled: boolean): Promise<ChangeResult>
-  removeBundle(name: string, options?: unknown): Promise<ChangeResult>
-  cancelInstall(requestId: PluginInstallRequestId): Promise<PluginInstallCancellation>
-  waitForInstall(requestId: PluginInstallRequestId): Promise<ChangeResult | null>
+  setBundleEnabled?(name: string, enabled: boolean): Promise<ChangeResult>
+  removeBundle?(name: string): Promise<ChangeResult>
+  cancelInstall?(requestId: PluginInstallRequestId): Promise<PluginInstallCancellation>
+  waitForInstall?(requestId: PluginInstallRequestId): Promise<ChangeResult | null>
 }
 
 interface RunRecord {
@@ -44,60 +44,250 @@ interface RunRecord {
   readonly grouped?: unknown
 }
 
-function errorCode(result: ChangeResult): string | undefined {
-  return result.error?.code ?? result.packageResult?.kind
+type UnknownRecord = Record<string, unknown>
+type PermissionChange = HostInstallOutcome['permissionChanges'][number]
+
+const CHANGE_FIELDS = new Set([
+  'kind', 'changed', 'application', 'stage', 'target', 'enabled', 'error', 'warnings',
+  'packageResult', 'bundle', 'pendingBuilds', 'approvedBuilds', 'registries', 'failedAt',
+])
+
+function record(value: unknown): UnknownRecord | undefined {
+  return typeof value === 'object' && value !== null && !Array.isArray(value) ? value as UnknownRecord : undefined
+}
+
+interface ChangeView {
+  readonly changed: boolean
+  readonly application: string
+  readonly stage: 'install' | 'enable' | 'remove'
+  readonly target: string
+}
+
+function changeShapeErrors(result: UnknownRecord): readonly string[] {
+  const errors: string[] = []
+  if (typeof result.changed !== 'boolean') errors.push('changed')
+  if (typeof result.application !== 'string') errors.push('application')
+  if (result.stage !== 'install' && result.stage !== 'enable' && result.stage !== 'remove') errors.push('stage')
+  if (typeof result.target !== 'string' || result.target.length === 0) errors.push('target')
+  return errors
+}
+
+function isChangeView(result: UnknownRecord): result is UnknownRecord & ChangeView {
+  return changeShapeErrors(result).length === 0
+}
+
+function safeJson(value: unknown): string {
+  try {
+    return JSON.stringify(value) ?? String(value)
+  } catch {
+    return String(value)
+  }
 }
 
 /** Keeps useful official diagnostics bounded and strips credentials/absolute paths. */
 export function redactDiagnostic(value: string, limit = 2000): string {
   const redacted = value
-    .replace(/([A-Za-z]:[\\/]|\\\\)[^\s"']+/g, '<path>')
     .replace(/(https?:\/\/)([^\s:@/]+):([^\s@/]+)@/gi, '$1***@')
-    .replace(/(bearer\s+)[A-Za-z0-9._-]+/gi, '$1<redacted>')
-    .replace(/((?:token|password|secret|api[_-]?key)\s*[=:]\s*)[^\s,;]+/gi, '$1<redacted>')
+    .replace(/((?:bearer|basic)\s+)[A-Za-z0-9._+/=-]+/gi, '$1<redacted>')
+    .replace(/((?:["']?)(?:token|password|secret|api[_-]?key|authorization)(?:["']?)\s*[:=]\s*["']?)[^"'\s,;}&]+/gi, '$1<redacted>')
+    .replace(/([?&](?:token|password|secret|api[_-]?key)=)[^&\s]+/gi, '$1<redacted>')
+    .replace(/([A-Za-z]:[\\/]|\\\\)[^\s"']+/g, '<path>')
   return redacted.length > limit ? redacted.slice(0, limit) + '…' : redacted
 }
 
-function diagnosticFor(result: ChangeResult): string | undefined {
+function errorCode(result: UnknownRecord): string | undefined {
+  const error = record(result.error)
+  const packageResult = record(result.packageResult)
+  const code = typeof error?.code === 'string' && error.code.length > 0 ? error.code : undefined
+  if (code !== undefined) return code
+  const packageKind = typeof packageResult?.kind === 'string' && packageResult.kind.length > 0 ? packageResult.kind : undefined
+  if (packageKind !== undefined) return packageKind
+  return typeof packageResult?.exitCode === 'number' ? `exit-${packageResult.exitCode}` : undefined
+}
+
+function packageResultCode(result: UnknownRecord): string | undefined {
+  const packageResult = record(result.packageResult)
+  if (packageResult === undefined) return undefined
+  const kind = typeof packageResult.kind === 'string' && packageResult.kind.length > 0 ? packageResult.kind : undefined
+  return kind ?? (typeof packageResult.exitCode === 'number' ? `exit-${packageResult.exitCode}` : undefined)
+}
+
+function diagnosticFor(result: UnknownRecord): string | undefined {
+  const error = record(result.error)
+  const packageResult = record(result.packageResult)
   const parts = [
-    result.error?.diagnostic,
-    result.packageResult?.output,
-    result.packageResult?.logPath === undefined ? undefined : 'log:' + result.packageResult.logPath,
-    result.failedAt === undefined ? undefined : 'failedAt:' + result.failedAt,
+    typeof error?.diagnostic === 'string' ? error.diagnostic : undefined,
+    typeof packageResult?.output === 'string' ? packageResult.output : undefined,
+    typeof packageResult?.logPath === 'string' ? 'log:' + packageResult.logPath : undefined,
+    result.failedAt === undefined ? undefined : 'failedAt:' + (typeof result.failedAt === 'string' ? result.failedAt : safeJson(result.failedAt)),
+    Array.isArray(result.warnings) && result.warnings.length > 0 ? 'warnings:' + safeJson(result.warnings) : undefined,
+    Array.isArray(result.registries) && result.registries.length > 0 ? 'registries:' + safeJson(result.registries) : undefined,
+    error?.incompatible === undefined ? undefined : 'incompatible:' + safeJson(error.incompatible),
+    packageResult?.incompatible === undefined ? undefined : 'packageIncompatible:' + safeJson(packageResult.incompatible),
   ].filter((part): part is string => typeof part === 'string' && part.length > 0)
+  const additional = Object.fromEntries(Object.entries(result).filter(([key]) => !CHANGE_FIELDS.has(key)))
+  if (Object.keys(additional).length > 0) parts.push('additionalFields:' + safeJson(additional))
+  if (error !== undefined) {
+    const errorAdditional = Object.fromEntries(Object.entries(error).filter(([key]) => key !== 'code' && key !== 'diagnostic' && key !== 'incompatible'))
+    if (typeof error.code !== 'string' || error.code.length === 0 || Object.keys(errorAdditional).length > 0) {
+      parts.push('errorFields:' + safeJson({ ...errorAdditional, ...(typeof error.code === 'string' ? {} : { code: error.code }) }))
+    }
+  }
+  if (packageResult !== undefined) {
+    const packageAdditional = Object.fromEntries(Object.entries(packageResult).filter(([key]) =>
+      key !== 'exitCode' && key !== 'output' && key !== 'truncated' && key !== 'logPath' && key !== 'kind' && key !== 'timedOut' && key !== 'incompatible'))
+    if (Object.keys(packageAdditional).length > 0) parts.push('packageResultFields:' + safeJson(packageAdditional))
+  }
   return parts.length === 0 ? undefined : redactDiagnostic(parts.join('\n'))
 }
 
-function permissionChanges(result: ChangeResult): readonly { packageName: string; decision: 'approved' | 'revoked' | 'already-approved' }[] {
+function permissionChanges(names: readonly string[]): readonly PermissionChange[] {
   // Requested permission is not evidence of persisted permission. Official
   // approval can fail (for example a stale package list) before changing it.
-  const names = result.approvedBuilds ?? []
   return [...new Set(names)].sort().map((packageName) => ({ packageName, decision: 'approved' }))
 }
 
-export async function mapOfficialChange(result: ChangeResult, _approvedBuilds?: readonly string[], attemptId = `official-${Date.now()}`): Promise<HostInstallOutcome> {
-  const permissions = permissionChanges(result)
+function isPermissionChanges(value: unknown): value is readonly PermissionChange[] {
+  return Array.isArray(value) && value.every(item => {
+    const entry = record(item)
+    return entry !== undefined
+      && typeof entry.packageName === 'string'
+      && (entry.decision === 'approved' || entry.decision === 'revoked' || entry.decision === 'already-approved')
+  })
+}
+
+function isMarketOutcome(value: unknown): value is HostInstallOutcome {
+  const entry = record(value)
+  if (entry === undefined || !isPermissionChanges(entry.permissionChanges)) return false
+  if (entry.kind === 'applied') return typeof entry.changed === 'boolean' && typeof entry.restartRequired === 'boolean'
+  if (entry.kind === 'awaiting-approval') {
+    return typeof entry.attemptId === 'string' && Array.isArray(entry.pendingBuilds)
+      && entry.pendingBuilds.every(name => typeof name === 'string') && typeof entry.pendingBuildsDigest === 'string'
+  }
+  if (entry.kind === 'failed') return typeof entry.changed === 'boolean' && typeof entry.error === 'string'
+  if (entry.kind === 'cancelled') return typeof entry.changed === 'boolean'
+  return entry.kind === 'unknown' && typeof entry.error === 'string'
+}
+
+function unknownOutcome(message: string, errorCodeValue: string, result: unknown, permissions: readonly PermissionChange[] = []): HostInstallOutcome {
+  const diagnostic = redactDiagnostic(safeJson(result))
+  return {
+    kind: 'unknown',
+    error: message,
+    errorCode: errorCodeValue,
+    ...(diagnostic === undefined ? {} : { diagnostic }),
+    permissionChanges: permissions,
+  }
+}
+
+export async function mapOfficialChange(value: unknown, _approvedBuilds?: readonly string[], attemptId = `official-${Date.now()}`): Promise<HostInstallOutcome> {
+  if (isMarketOutcome(value)) return value
+  const result = record(value)
+  if (result === undefined) return unknownOutcome('official ChangeResult is not an object', 'protocol/shape', value)
+
+  if (!isChangeView(result)) {
+    return unknownOutcome(
+      'official ChangeResult fields are missing or use an unverified signature: ' + changeShapeErrors(result).join(', '),
+      'protocol/shape',
+      value,
+    )
+  }
+  const changed = result.changed
+  const application = result.application
+
+  let pendingBuilds: readonly string[] = []
+  if (result.pendingBuilds !== undefined) {
+    if (!Array.isArray(result.pendingBuilds) || result.pendingBuilds.some(name => typeof name !== 'string')) {
+      return unknownOutcome('official pendingBuilds field changed shape', 'protocol/shape', value)
+    }
+    pendingBuilds = result.pendingBuilds as string[]
+  }
+  let approvedBuilds: readonly string[] = []
+  if (result.approvedBuilds !== undefined) {
+    if (!Array.isArray(result.approvedBuilds) || result.approvedBuilds.some(name => typeof name !== 'string')) {
+      return unknownOutcome('official approvedBuilds field changed shape', 'protocol/shape', value)
+    }
+    approvedBuilds = result.approvedBuilds as string[]
+  }
+  if (result.enabled !== undefined && typeof result.enabled !== 'boolean') {
+    return unknownOutcome('official enabled field changed shape', 'protocol/shape', value)
+  }
+  if (result.bundle !== undefined && typeof result.bundle !== 'string') {
+    return unknownOutcome('official bundle field changed shape', 'protocol/shape', value)
+  }
+  if (result.warnings !== undefined && (!Array.isArray(result.warnings) || result.warnings.some(warning => typeof warning !== 'string'))) {
+    return unknownOutcome('official warnings field changed shape', 'protocol/shape', value)
+  }
+  if (result.failedAt !== undefined && result.failedAt !== 'registry' && result.failedAt !== 'spec-host') {
+    return unknownOutcome('official failedAt field changed shape', 'protocol/shape', value)
+  }
+  if (result.registries !== undefined && (!Array.isArray(result.registries) || result.registries.some(registry => typeof registry !== 'string' && registry !== null))) {
+    return unknownOutcome('official registries field changed shape', 'protocol/shape', value)
+  }
+  if (result.error !== undefined && record(result.error) === undefined) {
+    return unknownOutcome('official error field changed shape', 'protocol/shape', value)
+  }
+  const errorRecord = record(result.error)
+  if (errorRecord !== undefined && errorRecord.code !== undefined && typeof errorRecord.code !== 'string') {
+    return unknownOutcome('official error code field changed shape', 'protocol/shape', value)
+  }
+  if (result.packageResult !== undefined && record(result.packageResult) === undefined) {
+    return unknownOutcome('official packageResult field changed shape', 'protocol/shape', value)
+  }
+  const packageRecord = record(result.packageResult)
+  if (packageRecord !== undefined && (
+    typeof packageRecord.exitCode !== 'number'
+    || typeof packageRecord.output !== 'string'
+    || typeof packageRecord.truncated !== 'boolean'
+    || typeof packageRecord.logPath !== 'string'
+    || (packageRecord.kind !== undefined && typeof packageRecord.kind !== 'string')
+    || (packageRecord.timedOut !== undefined && typeof packageRecord.timedOut !== 'boolean')
+  )) {
+    return unknownOutcome('official packageResult field changed shape', 'protocol/shape', value)
+  }
+  const permissions = permissionChanges(approvedBuilds)
   const diagnostic = diagnosticFor(result)
-  const packageResultCode = result.packageResult?.kind ?? (result.packageResult?.exitCode === undefined ? undefined : `exit-${result.packageResult.exitCode}`)
-  if (result.pendingBuilds !== undefined && result.pendingBuilds.length > 0) {
+  const code = errorCode(result)
+  const packageCode = packageResultCode(result)
+
+  if (pendingBuilds.length > 0) {
     return {
       kind: 'awaiting-approval',
       attemptId,
-      pendingBuilds: [...result.pendingBuilds].sort(),
-      pendingBuildsDigest: await pendingBuildsDigest(result.pendingBuilds),
+      pendingBuilds: [...pendingBuilds].sort(),
+      pendingBuildsDigest: await pendingBuildsDigest(pendingBuilds),
       permissionChanges: permissions,
     }
   }
-  if (result.application === 'applied' || result.application === 'restart-required') {
+
+  const packageResult = record(result.packageResult)
+  const explicitFailure = result.error !== undefined
+    || (typeof packageResult?.kind === 'string' && packageResult.kind.length > 0)
+    || (typeof packageResult?.exitCode === 'number' && packageResult.exitCode !== 0)
+  if (explicitFailure) {
+    const conflicting = application !== 'failed'
+    return {
+      kind: 'failed',
+      changed,
+      ...(packageCode === undefined ? {} : { packageResultCode: packageCode }),
+      error: code ?? (conflicting ? 'official success-shaped result also contains a failure field' : 'official operation failed without an error code'),
+      errorCode: code ?? (conflicting ? 'protocol/conflicting-result' : 'protocol/missing-error-code'),
+      ...(diagnostic === undefined ? {} : { diagnostic }),
+      permissionChanges: permissions,
+      ...(conflicting ? { unknownSharedImpact: true } : {}),
+    }
+  }
+
+  if (application === 'applied' || application === 'restart-required') {
     return {
       kind: 'applied',
-      changed: result.changed,
-      restartRequired: result.application === 'restart-required',
-      ...(packageResultCode === undefined ? {} : { packageResultCode }),
+      changed,
+      restartRequired: application === 'restart-required',
+      ...(packageCode === undefined ? {} : { packageResultCode: packageCode }),
       permissionChanges: permissions,
     }
   }
-  if (result.application === 'overridden') {
+  if (application === 'overridden') {
     return {
       kind: 'unknown',
       error: 'official application was overridden by a higher-priority state',
@@ -106,33 +296,37 @@ export async function mapOfficialChange(result: ChangeResult, _approvedBuilds?: 
       permissionChanges: permissions,
     }
   }
-  if (result.application === 'cancelled') {
+  if (application === 'cancelled') {
     return {
       kind: 'cancelled',
-      changed: result.changed,
-      ...(packageResultCode === undefined ? {} : { packageResultCode }),
+      changed,
+      ...(packageCode === undefined ? {} : { packageResultCode: packageCode }),
       permissionChanges: permissions,
     }
   }
-  if (result.application === 'failed') {
-    const code = errorCode(result)
+  if (application === 'failed') {
     return {
       kind: 'failed',
-      changed: result.changed,
-      ...(packageResultCode === undefined ? {} : { packageResultCode }),
-      error: code ?? 'operation-error',
-      ...(code === undefined ? {} : { errorCode: code }),
+      changed,
+      ...(packageCode === undefined ? {} : { packageResultCode: packageCode }),
+      error: code ?? 'official operation failed without an error code',
+      errorCode: code ?? 'protocol/missing-error-code',
       ...(diagnostic === undefined ? {} : { diagnostic }),
       permissionChanges: permissions,
     }
   }
-  return {
-    kind: 'unknown',
-    error: 'official ChangeResult application is missing or unrecognised',
-    errorCode: 'protocol/unknown',
-    ...(diagnostic === undefined ? {} : { diagnostic }),
-    permissionChanges: permissions,
-  }
+  return unknownOutcome(
+    'official ChangeResult application is missing or unrecognised',
+    'protocol/unknown-application',
+    value,
+    permissions,
+  )
+}
+
+export function officialResultTarget(value: unknown): string | undefined {
+  const result = record(value)
+  const bundle = typeof result?.bundle === 'string' ? result.bundle : undefined
+  return bundle ?? (typeof result?.target === 'string' ? result.target : undefined)
 }
 function alive(pid: number, grouped: boolean): boolean {
   try {
@@ -260,7 +454,12 @@ export class OfficialHostPort implements HostPort {
   }
 
   async install(request: HostInstallRequest): Promise<HostInstallOutcome> {
-    if (this.manager?.installBundle === undefined) return { kind: 'failed', changed: false, error: 'official installBundle is unavailable', permissionChanges: [] }
+    if (this.manager?.installBundle === undefined) return {
+      kind: 'unknown',
+      error: 'official installBundle is unavailable',
+      errorCode: 'adapter/capability-unavailable',
+      permissionChanges: [],
+    }
     const prior = await this.readReceipt(request.requestId)
     if (prior !== undefined) {
       if (canonicalJson(prior.request) !== canonicalJson(request)) return { kind: 'unknown', error: 'request identity changed', permissionChanges: [] }
@@ -278,8 +477,8 @@ export class OfficialHostPort implements HostPort {
         ...(request.approvedBuilds === undefined ? {} : { approvedBuilds: [...request.approvedBuilds] }),
       })
       let mapped = await mapOfficialChange(result, request.approvedBuilds, request.requestId)
-      if (mapped.kind === 'applied' && (result.bundle ?? result.target) !== request.artifact.packageName)
-        mapped = { kind: 'unknown', error: 'official result target differs from confirmed artifact', permissionChanges: mapped.permissionChanges }
+      if (mapped.kind === 'applied' && officialResultTarget(result) !== request.artifact.packageName)
+        mapped = { kind: 'unknown', error: 'official result target differs from confirmed artifact', errorCode: 'receipt/target-mismatch', permissionChanges: mapped.permissionChanges }
       await this.receipts.writeAtomic(this.receiptPath(request.requestId), encodeJson({ ...receipt, stage: 'received', outcome: mapped }))
       // The official enabled:false option leaves existing selections untouched.
       // A corrective disable remains inside the caller's execution occupation.
@@ -332,12 +531,13 @@ export class OfficialHostPort implements HostPort {
   async cancel(requestId: string): Promise<HostCancelOutcome> {
     if (this.manager?.cancelInstall === undefined) return { kind: 'unknown', reason: 'official cancelInstall is unavailable' }
     try {
-      const result = await this.manager.cancelInstall(requestId as PluginInstallRequestId)
-      return result.status === 'cancelled' || result.status === 'too-late' || result.status === 'not-running'
-        ? { kind: result.status }
-        : { kind: 'unknown', reason: 'unrecognised cancellation result' }
+      const result = await this.manager.cancelInstall(requestId as PluginInstallRequestId) as unknown
+      const status = record(result)?.status
+      return status === 'cancelled' || status === 'too-late' || status === 'not-running'
+        ? { kind: status }
+        : { kind: 'unknown', reason: 'unrecognised cancellation result: ' + redactDiagnostic(safeJson(result)) }
     } catch (error) {
-      return { kind: 'unknown', reason: error instanceof Error ? error.message : 'cancellation failed' }
+      return { kind: 'unknown', reason: redactDiagnostic(error instanceof Error ? error.message : 'cancellation failed') }
     }
   }
 
@@ -356,8 +556,27 @@ export class OfficialHostPort implements HostPort {
     }
   }
 
-  async remove(packageName: string): Promise<ChangeResult> {
-    if (this.manager?.removeBundle === undefined) throw new Error('official removeBundle is unavailable')
-    return this.manager.removeBundle(packageName, {})
+  async remove(packageName: string): Promise<ChangeResult | HostInstallOutcome> {
+    if (this.manager?.removeBundle === undefined) {
+      return {
+        kind: 'unknown',
+        error: 'official removeBundle is unavailable',
+        errorCode: 'adapter/capability-unavailable',
+        permissionChanges: [],
+      }
+    }
+    try {
+      // Official 0.1.7-rc.2 and the typed remote contract accept exactly one
+      // argument; extra options could alter future compatibility silently.
+      return await this.manager.removeBundle(packageName)
+    } catch (error) {
+      return {
+        kind: 'unknown',
+        error: redactDiagnostic(error instanceof Error ? error.message : 'official remove failed'),
+        errorCode: 'adapter/exception',
+        diagnostic: redactDiagnostic(error instanceof Error ? error.stack ?? error.message : 'official remove failed'),
+        permissionChanges: [],
+      }
+    }
   }
 }

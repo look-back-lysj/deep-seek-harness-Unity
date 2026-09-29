@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
-import type { AiAnalysisResult, AiApplyResult, AiConfirmRequest, TaskState } from '../types.ts'
+import type { AiAnalysisResult, AiApplyResult, AiConfirmRequest, TaskItemResult, TaskItemStatus, TaskState } from '../types.ts'
 import { boundedRequest } from './data-controller.ts'
-import { createIdempotencyKey, isTaskSettled, taskItemStatusLabel, taskNextStep, taskStatusLabel, type MarketRemote } from './model.ts'
+import { createIdempotencyKey, isTaskSettled, taskItemStatusLabel, taskNextStep, taskStatusLabel, taskTone, type MarketRemote } from './model.ts'
 import { Button, Modal } from './ui.tsx'
 
 interface Props {
@@ -15,6 +15,62 @@ interface Props {
 }
 const actionNames = { install: '安装', update: '更新', 'retry-source': '使用已登记来源重试', enable: '启用', disable: '停用', remove: '卸载', downgrade: '降级' } as const
 const applyNames: Record<AiApplyResult['status'], string> = { queued: '任务已排队，正在读取执行状态', applied: '操作已执行，请核对实际状态', 'restart-required': '需要重启 DSH', failed: '操作失败', unknown: '结果未知，请先核对', blocked: '操作已阻止', 'requires-confirmation': '等待再次确认影响' }
+type SemanticTone = 'success' | 'info' | 'warning' | 'danger' | 'neutral'
+
+function semanticToneClass(tone: SemanticTone): string {
+  return tone === 'neutral' ? '' : ` eac-market__status--${tone}`
+}
+
+function taskItemTone(value: TaskItemStatus): SemanticTone {
+  if (['installed', 'enabled', 'disabled'].includes(value)) return 'success'
+  if (value === 'failed') return 'danger'
+  if (['restart-required', 'blocked-by-dependency', 'blocked-on-restart'].includes(value)) return 'warning'
+  if (value === 'unknown' || value === 'cancelled') return 'neutral'
+  return 'info'
+}
+
+function isCompletedItem(item: TaskItemResult): boolean {
+  return ['installed', 'enabled', 'disabled'].includes(item.status)
+}
+
+function hasFailureEvidence(item: TaskItemResult): boolean {
+  return ['failed', 'blocked-by-dependency', 'blocked-on-restart', 'unknown'].includes(item.status) || item.installOutcome === 'failed'
+    || item.error !== undefined || item.errorCode !== undefined || item.packageResultCode !== undefined || item.diagnostic !== undefined
+}
+
+/** Recovery copy stays deterministic; raw Host fields remain visible below it. */
+function failureSuggestion(item: TaskItemResult, task: TaskState): string {
+  if (item.status === 'blocked-by-dependency') return '先处理前置组件；前置状态满足后，重新生成安装计划再继续。'
+  if (item.installOutcome === 'unknown' || item.status === 'unknown') return '先到官方插件页核对实际状态，不要重复安装；确认失败后再发起新的重试。'
+  if (item.status === 'blocked-on-restart' || item.status === 'restart-required') return '保存当前工作并重启 DSH，再回到任务面板核对剩余项目。'
+  if (item.errorCode?.toLowerCase().includes('digest') === true || item.packageResultCode?.toLowerCase().includes('integrity') === true) return '不要使用校验失败的文件；核对已登记来源和摘要后重新预检。'
+  return task.nextAction || '查看错误代码与诊断片段；保留现场并从官方插件页核对后，再决定是否重新预检。'
+}
+
+function TaskFailureSummary({ task }: { readonly task: TaskState }): React.JSX.Element | null {
+  const failedItems = task.items.filter(hasFailureEvidence)
+  const errorEvents = task.events.filter((event) => event.level === 'error' || event.phase === 'failed')
+  if (failedItems.length === 0 && errorEvents.length === 0 && !['failed', 'partial', 'needs-attention', 'interrupted', 'unknown'].includes(task.status)) return null
+  return <section className="eac-market__notice eac-market__notice--danger" aria-label="错误摘要">
+    <strong>错误摘要</strong>
+    {failedItems.length === 0 && errorEvents.length === 0 && <p><strong>下一步：</strong>{task.nextAction || '先核对官方插件状态，不要重复安装。'}</p>}
+    {failedItems.map((item) => <div key={item.pluginId}>
+      <h4>{item.packageName}</h4>
+      <p><strong>下一步：</strong>{failureSuggestion(item, task)}</p>
+      <dl>
+        <dt>逐项状态</dt><dd>{taskItemStatusLabel(item.status)}</dd>
+        <dt>安装结果</dt><dd>{item.installOutcome}</dd>
+        <dt>是否产生变更</dt><dd>{item.changed ? '是，保留已完成变更' : '否'}</dd>
+        {item.error !== undefined && <><dt>错误信息</dt><dd>{item.error}</dd></>}
+        {item.errorCode !== undefined && <><dt>错误代码</dt><dd><code>{item.errorCode}</code></dd></>}
+        {item.packageResultCode !== undefined && <><dt>包结果代码</dt><dd><code>{item.packageResultCode}</code></dd></>}
+        {item.diagnostic !== undefined && <><dt>诊断片段</dt><dd>{item.diagnostic}</dd></>}
+        {item.permissionChanges.length > 0 && <><dt>脚本许可变化</dt><dd>{item.permissionChanges.map((change) => `${change.packageName}：${change.decision}`).join('；')}</dd></>}
+      </dl>
+    </div>)}
+    {errorEvents.length > 0 && <ul className="eac-market__event-list">{errorEvents.slice(-6).map((event) => <li key={`${event.sequence}-${event.at}`} data-level={event.level}>{event.message}</li>)}</ul>}
+  </section>
+}
 
 export function TaskDrawer({ open, tasks, ...props }: Props): React.JSX.Element | null {
   if (!open) return null
@@ -94,16 +150,27 @@ function TaskCard({ task, remote, onChanged, onRefresh, onOpenOfficialPlugins }:
   }
   const proposal = analysis?.proposal
   const challenge = applied?.status === 'requires-confirmation' ? applied.challenge : undefined
-  const done = task.items.filter((item) => ['installed', 'enabled', 'disabled'].includes(item.status)).length
+  const done = task.items.filter(isCompletedItem).length
+  const title = task.items.length > 1 ? `${task.items[0]?.packageName ?? '安装任务'} 等 ${task.items.length} 项` : task.items[0]?.packageName ?? '安装任务'
   return <article className="eac-market__task" aria-label={`任务 ${task.taskId}`}>
-    <div className="eac-market__task-head"><h3>{task.items[0]?.packageName ?? '安装任务'}</h3><strong>{busy === '取消' ? '正在请求取消' : taskStatusLabel(task.status)}</strong></div>
-    <p>{taskNextStep(task)}</p><p>已完成 {done} / {task.items.length} 项</p>
-    <ul className="eac-market__task-items">{task.items.map((item) => <li key={item.pluginId}>{item.packageName}：{taskItemStatusLabel(item.status)}</li>)}</ul>
+    <div className="eac-market__task-head">
+      <h3>{title}</h3>
+      <strong className={`eac-market__status${semanticToneClass(taskTone(busy === '取消' ? 'cancelling' : task.status))}`}>{busy === '取消' ? '正在请求取消' : taskStatusLabel(task.status)}</strong>
+    </div>
+    <p><strong>下一步：</strong>{taskNextStep(task)}</p>
+    {task.items.length > 0
+      ? <p aria-label="任务进度"><strong>已完成 {done} / {task.items.length} 项</strong> · 按逐项状态统计，不显示未经核实的百分比。</p>
+      : <p>后台未提供逐项总数，不显示百分比。</p>}
+    <ul className="eac-market__task-items">{task.items.map((item) => <li key={item.pluginId}>
+      <span>{item.packageName}：{taskItemStatusLabel(item.status)}</span>
+      <strong className={`eac-market__status${semanticToneClass(taskItemTone(item.status))}`}>{item.changed ? '已产生变更' : '尚未变更'}</strong>
+    </li>)}</ul>
     <div className="eac-market__button-row">
       {(!isTaskSettled(task) || task.status === 'awaiting-approval' || task.status === 'awaiting-resume') && remote.cancelTask && <Button size="sm" variant="outline" disabled={!!busy} onClick={() => void run('取消', cancel)}>取消任务</Button>}
       {['failed', 'partial', 'needs-attention', 'unknown', 'interrupted'].includes(task.status) && remote.aiAnalyze && <Button size="sm" variant="outline" disabled={!!busy} onClick={() => void run('AI 分析', askAi)}>AI 分析本任务</Button>}
       {onOpenOfficialPlugins && <Button size="sm" variant="outline" onClick={onOpenOfficialPlugins}>打开官方插件页</Button>}
     </div>
+    <TaskFailureSummary task={task} />
     {task.approval && task.status === 'awaiting-approval' && <section className="eac-market__notice"><strong>待运行的安装脚本</strong><ul>{task.approval.packages.map((name) => <li key={name}>{name}</li>)}</ul><Button disabled={!!busy || !remote.approveTask} onClick={() => void run('授权', approve)}>同意运行清单内脚本并继续</Button></section>}
     {task.resume && task.status === 'awaiting-resume' && <Button variant="primary" disabled={!!busy || !remote.resumeTask} onClick={() => void run('核对重启', resume)}>已重启，重新核对</Button>}
     {busy && <p role="status">{busy}中…</p>}
@@ -125,6 +192,6 @@ function TaskCard({ task, remote, onChanged, onRefresh, onOpenOfficialPlugins }:
       <div className="eac-market__button-row"><Button variant="outline" disabled={!!busy} onClick={() => { setApplied(undefined); setAnalysis(undefined) }}>取消此方案</Button><Button variant="primary" disabled={!!busy} onClick={() => void run('确认影响', () => applyAi(true))}>已了解影响，再次确认执行</Button></div>
     </section>}
     {applied && <p role="status">{applyNames[applied.status]}{applied.error ? `：${applied.error}` : ''}</p>}
-    <details><summary>查看任务记录</summary><p>任务编号：{task.taskId} · 后台下一步：{task.nextAction}</p><ul>{task.events.slice(-12).map((event) => <li key={`${event.sequence}-${event.at}`}>{event.message}</li>)}</ul></details>
+    <details><summary>查看任务记录（最近 {Math.min(task.events.length, 12)} 条）</summary><p>任务编号：{task.taskId} · 后台下一步：{task.nextAction}</p><ul className="eac-market__event-list">{task.events.slice(-12).map((event) => <li key={`${event.sequence}-${event.at}`} data-level={event.level}>{event.message}</li>)}</ul></details>
   </article>
 }

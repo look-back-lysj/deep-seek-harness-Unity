@@ -56,7 +56,9 @@ try {
     await expect('fixture.stats.plans[0].selections[0].targetVersion === "1.0.0"', 'detail preflight selected the wrong version')
   })
   await check('版本：公共套餐按component.version预检，不取第一个同ID插件', async () => {
-    await render('versions-home'); await click('查看套餐变更'); await until('fixture.stats.plans.length === 1')
+    await send('Page.navigate', { url: `http://127.0.0.1:${server.address().port}` });
+    await until('!!window.fixture && document.body.innerText.includes("发现适合你的插件")');
+    await render('versions-home'); await until("([...document.querySelectorAll('button')].some(b => b.textContent.trim()==='查看套餐变更' && !b.disabled))"); await click('查看套餐变更'); await until('fixture.stats.plans.length === 1')
     await expect('fixture.stats.plans[0].packId === "versioned-pack" && fixture.stats.plans[0].selections[0].targetVersion === "1.0.0"', 'Pack selected the wrong version')
   })
   await check('版本：我的插件与旧版详情的默认更新均选择最高已登记兼容版本', async () => {
@@ -118,11 +120,11 @@ try {
   await check('A迟到成功不能关闭B或串用B计划', async () => {
     await render('late'); await click('打开安装窗口'); await until('fixture.stats.plans.length === 1')
     await evaluate("document.querySelector('input[type=checkbox]').click()"); await until('fixture.stats.plans.length === 2'); await click('确认安装')
-    await evaluate('fixture.openB()'); await until('document.body.innerText.includes("安装：合成插件 B")'); await evaluate('fixture.resolveA()'); await pause(100)
-    await expect('fixture.stats.closes === 0 && fixture.stats.started[0] === "A" && document.body.innerText.includes("安装：合成插件 B")', 'late A closed B')
+    await evaluate('fixture.openB()'); await until('document.body.innerText.includes("安装确认：合成插件 B")'); await evaluate('fixture.resolveA()'); await pause(100)
+    await expect('fixture.stats.closes === 0 && fixture.stats.started[0] === "A" && document.body.innerText.includes("安装确认：合成插件 B")', 'late A closed B')
   })
   await check('降级第一次确认零写，第二次确认才提交', async () => {
-    await render('downgrade'); await click('打开安装窗口'); await until('fixture.stats.plans.length === 1'); await click('确认安装')
+    await render('downgrade'); await click('打开安装窗口'); await until('fixture.stats.plans.length === 1'); await until("([...document.querySelectorAll('button')].some(b => b.textContent.trim()==='查看降级影响' && !b.disabled))"); await click('查看降级影响')
     await expect('fixture.stats.starts.length === 0 && document.body.innerText.includes("再次确认降级影响")', 'downgrade wrote before impact')
     await click('已了解影响，确认降级'); await expect('fixture.stats.starts.length === 1', 'downgrade second confirmation did not submit')
   })
