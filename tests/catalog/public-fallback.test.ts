@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
-import { CatalogSourceRegistry } from '../../packages/market/src/catalog/source.ts'
-import { DEFAULT_CATALOG_SOURCES } from '../../packages/market/src/catalog/defaults.ts'
-import { desktopHttpsFetch } from '../../packages/market/src/delivery/https-reader.ts'
+import { CatalogSourceRegistry } from '../../packages/market-core/src/catalog/source.ts'
+import { DEFAULT_CATALOG_SOURCES } from '../../packages/market-core/src/catalog/defaults.ts'
+import { desktopHttpsFetch } from '../../packages/market-core/src/delivery/https-reader.ts'
 
 describe('公开目录故障切换', () => {
   it('Gitee451时读取已登记GitHub原字节，保留同一目录身份，不使用登录凭据', async () => {

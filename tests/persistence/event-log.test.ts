@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
-import { SegmentedEventLog } from '../../packages/market/src/persistence/event-log.ts'
-import { cleanupTaskLogs } from '../../packages/market/src/persistence/cleanup.ts'
-import { JsonTaskStore } from '../../packages/market/src/persistence/task-store.ts'
+import { SegmentedEventLog } from '../../packages/market-core/src/persistence/event-log.ts'
+import { cleanupTaskLogs } from '../../packages/market-core/src/persistence/cleanup.ts'
+import { JsonTaskStore } from '../../packages/market-core/src/persistence/task-store.ts'
 import { makeBundle } from '../core/helpers.ts'
 import { event, InMemoryFiles, makeTaskRecord, TestLocks } from './helpers.ts'
 

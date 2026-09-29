@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url'
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const sourceRoots = [
   join(root, 'packages', 'market', 'src'),
+  join(root, 'packages', 'market-core', 'src'),
   join(root, 'tests'),
   join(root, 'scripts'),
 ]
@@ -28,7 +29,14 @@ for (const sourceRoot of sourceRoots) {
     if (relativePath === 'scripts/lint.mjs') continue
     if (forbiddenSecret.test(text)) problems.push(`${relativePath}: possible secret`)
     const isClient = relativePath.startsWith('packages/market/src/client/')
-    const isCore = relativePath.startsWith('packages/market/src/core/')
+    const isCore = relativePath.startsWith('packages/market-core/src/core/')
+    const isCorePackage = relativePath.startsWith('packages/market-core/src/')
+    if (isCorePackage && /(?:from\s*|import\s*\()['"](?:react(?:\/[^'"]*)?|react-dom(?:\/[^'"]*)?|@dsh-eac\/market(?:\/[^'"]*)?)['"]/u.test(text)) {
+      problems.push(`${relativePath}: core cannot depend on its desktop adapter or React`)
+    }
+    if (isClient && /from ['"](?:\.\.\/)+(?:host|adapters|catalog|delivery|persistence|authoring)\//u.test(text)) {
+      problems.push(`${relativePath}: Client imports backend implementation`)
+    }
     if ((isClient || isCore) && /from ['"](?:node:)?fs(?:\/promises)?['"]/u.test(text)) {
       problems.push(`${relativePath}: filesystem import outside Host-side module`)
     }

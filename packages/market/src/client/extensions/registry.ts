@@ -1,7 +1,7 @@
 /** One in-memory registry for both adapters. Metadata is copied and frozen;
  * lifecycle ownership is explicit, never inferred from an author's ID string.
  */
-import { validVersion } from '../../core/semver.ts'
+import { validVersion } from '@dsh-eac/market-core/semver'
 import { compatibleVersion } from './compatibility.ts'
 import {
   EXTENSION_API_VERSION, EXTENSION_SLOTS,

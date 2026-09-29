@@ -1,8 +1,10 @@
 # 市场接口与状态协议
 
-公开 DTO 的事实源是 `packages/market/src/contracts/types.ts`；生成的 `/types`、`/typert`、`/remote` 是构建产物。主控独占契约变更。
+公开 DTO 的事实源是 `packages/market-core/src/contracts/types.ts`；生成的 `/types`、`/typert`、`/remote` 是构建产物。主控独占契约变更。
 
 ## 1. 握手和环境
+
+通信协议现为 v2。`clientConnect({ protocolVersion, adapterVersion })` 返回 accepted、后台协议、core版本及core API版本；记录绑定真实传输peer，有效期5分钟且上限512。所有副作用方法在Host检查此登记，Client每次写前重新协商。旧v1页面必须刷新。`hello`保留只读入口，API要求与包发布版本分别管理。
 
 `hello` 返回 protocol/schema/market 版本、当前 profile 的不透明 environmentId、宿主版本和真实能力。Host 根据 `profileContext` 确定目标，Client 无权指定其他 profile 或绝对路径。
 

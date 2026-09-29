@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { FakeHost, InMemoryLocks, InMemoryTaskStore, MemoryEventLog, FakeArtifactPort, makeBundle, waitForTask } from './helpers.ts'
-import { InstallTaskManager } from '../../packages/market/src/core/task-manager.ts'
+import { InstallTaskManager } from '../../packages/market-core/src/core/task-manager.ts'
 
 describe('interrupted task reconciliation', () => {
   it('keeps an in-flight write with no receipt blocked without a resume challenge', async () => {

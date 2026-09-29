@@ -2,11 +2,11 @@ import { mkdtempSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { isAbsolute, join, relative } from 'node:path'
 import { describe, expect, it, vi } from 'vitest'
-import { MarketRuntime } from '../../packages/market/src/host/market-runtime.ts'
-import { sanitizeDiagnostic } from '../../packages/market/src/host/diagnostics.ts'
-import { assessRiskyAction } from '../../packages/market/src/host/management-impact.ts'
-import type { AiActionImpact, CatalogPlugin } from '../../packages/market/src/contracts/types.ts'
-import type { AiProposalStore } from '../../packages/market/src/host/ai-proposal-store.ts'
+import { MarketRuntime } from '../../packages/market-core/src/host/market-runtime.ts'
+import { sanitizeDiagnostic } from '../../packages/market-core/src/host/diagnostics.ts'
+import { assessRiskyAction } from '../../packages/market-core/src/host/management-impact.ts'
+import type { AiActionImpact, CatalogPlugin } from '../../packages/market-core/src/contracts/types.ts'
+import type { AiProposalStore } from '../../packages/market-core/src/host/ai-proposal-store.ts'
 
 async function scenario(action: 'enable' | 'remove', run: (data: { runtime: MarketRuntime; calls: string[]; restart: () => MarketRuntime }) => Promise<void>): Promise<void> {
   const root = mkdtempSync(join(tmpdir(), 'eac-ai-runtime-'))

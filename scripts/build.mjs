@@ -8,6 +8,8 @@ import { WorkspaceTypertGenerator } from '@deepseek-ai/dsh-typert-generator'
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const packageDir = join(root, 'packages', 'market')
 const libDir = join(packageDir, 'lib')
+const coreDir = join(root, 'packages', 'market-core')
+const coreLib = join(coreDir, 'lib')
 
 function run(command, args) {
   const result = spawnSync(command, args, { cwd: root, stdio: 'inherit', shell: false })
@@ -16,13 +18,32 @@ function run(command, args) {
 
 await rm(libDir, { recursive: true, force: true })
 await mkdir(libDir, { recursive: true })
+await rm(coreLib, { recursive: true, force: true })
+await mkdir(coreLib, { recursive: true })
+
+// Core declarations must exist before the official generator follows the
+// adapter's public re-exports. Aggregate tsconfig source maps are used only
+// by the official analyzer; runtime imports remain real package dependencies.
+run(process.execPath, [join(root, 'node_modules', 'typescript', 'bin', 'tsc'), '-b', join(coreDir, 'tsconfig.json')])
+await esbuild.build({
+  entryPoints: {
+    index: join(coreDir, 'src/index.ts'),
+    dsh: join(coreDir, 'src/dsh.ts'),
+    contracts: join(coreDir, 'src/contracts/types.ts'),
+    compatibility: join(coreDir, 'src/contracts/compatibility.ts'),
+    semver: join(coreDir, 'src/core/semver.ts'),
+  },
+  outdir: coreLib, bundle: true, splitting: true, format: 'esm',
+  platform: 'node', target: 'node24', external: ['@deepseek-ai/*'],
+  logLevel: 'warning',
+})
 
 // Generate strict Host/Client/Remote descriptors before tsc and bundling. The
 // generator validates package exports and files from the source manifest.
 const generator = new WorkspaceTypertGenerator(root)
 // Host first so the generated `./remote` module exists while the Client face
 // is analyzed. The two faces otherwise form a type-resolution cycle.
-for (const artifact of generator.generate(['@dsh-eac/market'], ['host'])) {
+for (const artifact of generator.generate(['@dsh-eac/market-core', '@dsh-eac/market'], ['host'])) {
   const output = join(artifact.packageRoot, 'lib')
   await mkdir(output, { recursive: true })
   await writeFile(join(output, `typert.${artifact.face}.js`), artifact.js)
@@ -41,20 +62,21 @@ for (const artifact of generator.generate(['@dsh-eac/market'], ['client'])) {
 
 run(process.execPath, [join(root, 'node_modules', 'typescript', 'bin', 'tsc'), '-b', 'tsconfig.host.json', 'tsconfig.client.json'])
 
-await esbuild.build({
+const hostBuild = await esbuild.build({
   entryPoints: [join(packageDir, 'src', 'index.ts')],
   outfile: join(libDir, 'index.js'),
   bundle: true,
   format: 'esm',
   platform: 'node',
   target: 'node24',
-  external: ['@deepseek-ai/*'],
+  external: ['@deepseek-ai/*', '@dsh-eac/market-core', '@dsh-eac/market-core/*'],
+  metafile: true,
   logLevel: 'warning',
 })
 
 const banner = `window.__ModuleLoader__.load({\n  id: "@dsh-eac/market",\n  factory: (require) => {\n    var module = { exports: {} };\n`
 const footer = `\n    return module.exports;\n  },\n});\n`
-await esbuild.build({
+const clientBuild = await esbuild.build({
   entryPoints: [join(packageDir, 'src', 'client', 'index.ts')],
   outfile: join(libDir, 'client.js'),
   bundle: true,
@@ -66,7 +88,10 @@ await esbuild.build({
   define: { 'process.env.NODE_ENV': '"production"' },
   banner: { js: banner },
   footer: { js: footer },
+  metafile: true,
   logLevel: 'warning',
 })
 
-console.log('built market Host, Client, and Typert artifacts')
+await mkdir(join(root, '.verify'), { recursive: true })
+await writeFile(join(root, '.verify', 'split-build.json'), JSON.stringify({ host: hostBuild.metafile, client: clientBuild.metafile }, null, 2))
+console.log('built separate market-core and desktop adapter Host, Client, and Typert artifacts')

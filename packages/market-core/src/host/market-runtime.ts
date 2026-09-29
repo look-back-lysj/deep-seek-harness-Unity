@@ -7,7 +7,6 @@ import { readFileSync } from 'node:fs'
 import { createHash, randomUUID } from 'node:crypto'
 import { createRequire } from 'node:module'
 import { dirname, join } from 'node:path'
-import { fileURLToPath } from 'node:url'
 import type { Context } from '@deepseek-ai/cordis'
 import type {
   AiAnalyzeRequest,
@@ -57,6 +56,7 @@ import { AiProposalStore } from './ai-proposal-store.ts'
 import { collectDiagnostics, diagnosticDigest, sanitizeDiagnostic, sourceIdentity } from './diagnostics.ts'
 import { assessRiskyAction, type ManagementManifest } from './management-impact.ts'
 import { canonicalJson } from '../core/canonical.ts'
+import { isProtectedMarketPackage } from '../core/identity.ts'
 import { CatalogRepository } from '../catalog/store.ts'
 import { CatalogSourceRegistry, type CatalogSourceIdentity } from '../catalog/source.ts'
 import { DEFAULT_CATALOG_SOURCES } from '../catalog/defaults.ts'
@@ -87,6 +87,9 @@ export interface RuntimeIdentity {
 
 export interface RuntimeOptions {
   readonly catalogSources?: readonly CatalogSourceIdentity[]
+  /** Adapter 读取其随包 data/index.json 后提供原始字节；core 不猜资源路径。 */
+  readonly embeddedCatalogBytes?: Uint8Array
+  /** 兼容合成测试的对象注入；生产 adapter 应使用 embeddedCatalogBytes。 */
   readonly embeddedCatalog?: unknown
   readonly marketVersion?: string
 }
@@ -133,16 +136,23 @@ export class MarketRuntime {
   private readonly marketVersion: string
 
   constructor(ctx: Context, readonly identity: RuntimeIdentity, dataDirectory: string, options: RuntimeOptions = {}) {
+    if (options.embeddedCatalogBytes !== undefined && !(options.embeddedCatalogBytes instanceof Uint8Array)) {
+      throw new Error('embeddedCatalogBytes 必须是 Uint8Array')
+    }
+    // 在接触宿主或启动恢复前验证资源输入。原始字节优先，不能由测试对象
+    // 覆盖生产摘要；拷贝防止调用方随后改动目录字节。
+    const embeddedRaw = options.embeddedCatalogBytes === undefined ? undefined : new Uint8Array(options.embeddedCatalogBytes)
+    if (embeddedRaw === undefined && options.embeddedCatalog === undefined) {
+      throw new Error('缺少随包目录 embeddedCatalogBytes；DSH adapter 必须提供 data/index.json 原始字节')
+    }
+    const embeddedCatalog = embeddedRaw === undefined ? options.embeddedCatalog : JSON.parse(Buffer.from(embeddedRaw).toString('utf8')) as unknown
     this.context = ctx
     this.marketVersion = options.marketVersion ?? 'development'
     this.host = new OfficialHostPort(ctx, identity.environmentId, { hostVersion: identity.hostVersion, profileName: identity.profileName })
     this.files = new NodePersistenceFiles(join(dataDirectory, 'state'))
     const locks = new AtomicProfileLocks(dataDirectory)
     this.aiProposals = new AiProposalStore(this.files, locks, identity.environmentId)
-    // Bundle output lives at lib/index.js, so package data is one level up.
-    const embeddedPath = fileURLToPath(new URL('../data/index.json', import.meta.url))
-    const embeddedRaw = options.embeddedCatalog === undefined ? readFileSync(embeddedPath) : undefined
-    this.catalog = new CatalogRepository(options.embeddedCatalog ?? JSON.parse(Buffer.from(embeddedRaw!).toString('utf8')), join(dataDirectory, 'catalog'), {
+    this.catalog = new CatalogRepository(embeddedCatalog, join(dataDirectory, 'catalog'), {
       host: {
         // This is the market adapter's explicit host identity, not an invented
         // field purported to have been provided by an official DSH API.
@@ -556,7 +566,7 @@ export class MarketRuntime {
       if (analysis.status !== 'ready' || !analysis.proposal) return analysis
       const action = analysis.proposal.actions[0]!
       const allowed = new Set(request.packageName ? [request.packageName] : selectedTask?.items.map(item => item.packageName))
-      if (!allowed.has(action.packageName) || action.packageName === '@dsh-eac/market') return { status: 'blocked', reason: '建议不属于本次所选目标，或目标是市场自身' }
+      if (!allowed.has(action.packageName) || isProtectedMarketPackage(action.packageName)) return { status: 'blocked', reason: '建议不属于本次所选目标，或目标是市场自身' }
       const state = await this.host.readState()
       if (!state.activity.stable || state.activity.unknownSharedImpact || state.inventory.unknownItems.length || state.activeRequests.length) return { status: 'blocked', reason: '当前安装状态尚未核实，暂不能生成可执行建议' }
       const current = this.targetState(state.inventory, action.packageName)
@@ -628,7 +638,7 @@ export class MarketRuntime {
         if (saved.stage === 'dispatched') return { status: 'unknown', changed: false, error: '该建议已发起但回执未核定；请检查原任务，不会重复执行' }
         if (Date.parse(proposal.expiresAt) <= Date.now()) return { status: 'blocked', changed: false, error: '提案已过期，请重新分析' }
         const action = proposal.actions[0]!
-        if (proposal.actions.length !== 1 || action.packageName === '@dsh-eac/market') return { status: 'blocked', changed: false, error: '动作清单无效' }
+        if (proposal.actions.length !== 1 || isProtectedMarketPackage(action.packageName)) return { status: 'blocked', changed: false, error: '动作清单无效' }
         const state = await this.host.readState()
         const current = this.targetState(state.inventory, action.packageName)
         if (!state.activity.stable || state.activity.unknownSharedImpact || state.inventory.unknownItems.length || state.activeRequests.length

@@ -2,7 +2,7 @@ import { mkdtempSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { expect, it } from 'vitest'
-import { AuthorPackageService, ReadmeImporter, readZip } from '../../packages/market/src/authoring/index.ts'
+import { AuthorPackageService, ReadmeImporter, readZip } from '../../packages/market-core/src/authoring/index.ts'
 
 it('Host 传空 provenance 对象导出不会抹掉上次保存的许可与署名', () => {
   const service = new AuthorPackageService(mkdtempSync(join(tmpdir(), 'author-provenance-')))

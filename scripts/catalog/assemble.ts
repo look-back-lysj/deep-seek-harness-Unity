@@ -2,8 +2,8 @@
 import { readFileSync, realpathSync, writeFileSync } from 'node:fs'
 import { dirname, isAbsolute, relative, resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
-import { validateProductionCatalog, validateMarketIndex } from '../../packages/market/src/catalog/index.ts'
-import * as v from '../../packages/market/src/catalog/input.ts'
+import { validateProductionCatalog, validateMarketIndex } from '../../packages/market-core/src/catalog/index.ts'
+import * as v from '../../packages/market-core/src/catalog/input.ts'
 
 export function assembleCatalog(input: unknown, root: string, allowTestFixture = false): unknown {
   const assembly = v.object(input, 'assembly')

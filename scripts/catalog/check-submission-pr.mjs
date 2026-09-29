@@ -6,9 +6,9 @@
 import { execFileSync } from 'node:child_process'
 import { resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
-import { parseRelease } from '../../packages/market/src/catalog/releases.ts'
-import { parseMetadata } from '../../packages/market/src/catalog/metadata.ts'
-import { validateBuildRecipe } from '../../packages/market/src/catalog/submission.ts'
+import { parseRelease } from '../../packages/market-core/src/catalog/releases.ts'
+import { parseMetadata } from '../../packages/market-core/src/catalog/metadata.ts'
+import { validateBuildRecipe } from '../../packages/market-core/src/catalog/submission.ts'
 
 const FIXED = new Set(['submission.json', 'release.json', 'metadata.json', 'presentation.json', 'README.md', 'LICENSE', 'NOTICE', 'download.json', 'verification.md', 'build-recipe.json', 'pnpm-lock.yaml', 'package-lock.json', 'yarn.lock', 'bun.lock'])
 const REQUIRED = ['submission.json', 'release.json', 'metadata.json', 'presentation.json', 'README.md', 'LICENSE', 'download.json', 'verification.md']

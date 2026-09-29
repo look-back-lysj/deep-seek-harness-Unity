@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
-import type { CatalogRefreshView, InventorySnapshot, TaskState } from '../types.ts'
-import { isTaskSettled, taskStateIsNewer, type LoadState, type MarketRemote } from './model.ts'
+import type { CatalogRefreshView, InventorySnapshot, TaskState } from '@dsh-eac/market-core/contracts'
+import { assertCompatibleHello, ClientCompatibilityError, isTaskSettled, taskStateIsNewer, type LoadState, type MarketRemote } from './model.ts'
 
 export class RequestTimeout extends Error {}
 
@@ -67,6 +67,7 @@ export class MarketDataController {
     this.publish({ state: { status: 'loading' }, notice: '', paused: false })
     try {
       const hello = await this.read(this.remote.hello(), '环境读取')
+      assertCompatibleHello(hello)
       const catalog = await this.read(this.remote.catalog(), '目录读取')
       const inventory = await this.read(this.remote.inventory(), '插件状态读取')
       const tasks = await this.read(this.remote.listTasks?.() ?? Promise.resolve([]), '任务读取')
@@ -107,6 +108,7 @@ export class MarketDataController {
         this.cycles += 1
         const hello = await this.read(this.remote.hello(), '环境核对')
         if (this.stopped || epoch !== this.epoch) return
+        assertCompatibleHello(hello)
         if (hello.environmentId !== this.ready()?.hello.environmentId) {
           // Never leave old-environment action buttons operable after host/profile changes.
           this.epoch += 1
@@ -129,6 +131,13 @@ export class MarketDataController {
         this.failures = 0
       } catch (error) {
         if (epoch !== this.epoch) return
+        if (error instanceof ClientCompatibilityError) {
+          // 协议变化不能当作临时读取失败：撤掉可操作旧状态，
+          // 并使仍在等待的旧回包失效，避免重新展示旧操作入口。
+          this.epoch += 1
+          this.publish({ state: { status: 'error', message: error.message }, notice: '', paused: true })
+          return
+        }
         this.failures += 1
         this.publish({ notice: `同步失败，保留上次状态：${error instanceof Error ? error.message : String(error)}`, paused: error instanceof RequestTimeout || this.failures >= 3 })
       }

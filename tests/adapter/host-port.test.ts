@@ -2,11 +2,11 @@ import { describe, expect, it, vi } from 'vitest'
 import { mkdtempSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { DshManagerAdapter } from '../../packages/market/src/adapters/dsh/manager.ts'
-import { OfficialHostPort, mapOfficialChange, redactDiagnostic } from '../../packages/market/src/adapters/dsh/host-port.ts'
-import { AtomicProfileLocks, NodePersistenceFiles } from '../../packages/market/src/adapters/dsh/persistence-adapter.ts'
-import { pendingBuildsDigest } from '../../packages/market/src/core/canonical.ts'
-import type { HostInstallRequest } from '../../packages/market/src/core/ports.ts'
+import { DshManagerAdapter } from '../../packages/market-core/src/adapters/dsh/manager.ts'
+import { OfficialHostPort, mapOfficialChange, redactDiagnostic } from '../../packages/market-core/src/adapters/dsh/host-port.ts'
+import { AtomicProfileLocks, NodePersistenceFiles } from '../../packages/market-core/src/adapters/dsh/persistence-adapter.ts'
+import { pendingBuildsDigest } from '../../packages/market-core/src/core/canonical.ts'
+import type { HostInstallRequest } from '../../packages/market-core/src/core/ports.ts'
 
 function context(manager: unknown) {
   return {

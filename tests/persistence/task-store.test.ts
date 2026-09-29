@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
-import { PersistenceError, decodeJson, encodeJson, writeJsonDocument } from '../../packages/market/src/persistence/files.ts'
-import { JsonTaskStore } from '../../packages/market/src/persistence/task-store.ts'
-import { migrateTaskDocument } from '../../packages/market/src/persistence/schema.ts'
+import { PersistenceError, decodeJson, encodeJson, writeJsonDocument } from '../../packages/market-core/src/persistence/files.ts'
+import { JsonTaskStore } from '../../packages/market-core/src/persistence/task-store.ts'
+import { migrateTaskDocument } from '../../packages/market-core/src/persistence/schema.ts'
 import { makeBundle } from '../core/helpers.ts'
 import { InMemoryFiles, makeTaskRecord, TestLocks } from './helpers.ts'
 

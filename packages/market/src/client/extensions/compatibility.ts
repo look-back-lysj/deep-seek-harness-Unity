@@ -2,7 +2,7 @@
  * Exact versions, ^/~ full versions, comparator intersections and || are supported.
  * Prereleases require a comparator with the same prerelease base, as in npm SemVer.
  */
-import { compareVersions, validVersion } from '../../core/semver.ts'
+import { compareVersions, validVersion } from '@dsh-eac/market-core/semver'
 
 interface Comparator { op: string; version: string }
 const base = (version: string): string => version.split(/[+-]/)[0]!

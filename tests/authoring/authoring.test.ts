@@ -13,7 +13,7 @@ import {
   createZip,
   readZip,
   renderSafeMarkdown,
-} from '../../packages/market/src/authoring/index.ts'
+} from '../../packages/market-core/src/authoring/index.ts'
 
 const PNG = (() => {
   const bytes = Buffer.alloc(45)

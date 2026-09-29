@@ -2,6 +2,7 @@ import { createHash, randomUUID } from 'node:crypto'
 import type { AiAnalysisResult, AiAnalyzeRequest, AiProposal, AiProposedAction, DiagnosticExport } from '../contracts/types.ts'
 import { sanitizeDiagnostic } from './diagnostics.ts'
 import { canonicalJson } from '../core/canonical.ts'
+import { isProtectedMarketPackage } from '../core/identity.ts'
 
 interface LlmChunk { type: string; text?: string; reason?: { kind?: string }; blockType?: string; block?: { type?: string } }
 interface LlmService { stream(options: Record<string, unknown>): AsyncIterable<LlmChunk> }
@@ -45,6 +46,7 @@ function parseProposal(text: string, diagnostics: DiagnosticExport): AiProposal 
     const action = exact(raw, ['kind', 'packageName', 'reason'], ['targetVersion', 'sourceId'])
     if (typeof action.kind !== 'string' || !ALLOWED.has(action.kind) || typeof action.packageName !== 'string' || typeof action.reason !== 'string') throw new Error('invalid action')
     if (!PACKAGE_NAME.test(action.packageName) || action.packageName.length > 214) throw new Error('invalid package identity')
+    if (isProtectedMarketPackage(action.packageName)) throw new Error('市场及核心包应通过官方管理入口处理')
     parsed.push({
       kind: action.kind as AiProposedAction['kind'],
       packageName: action.packageName,

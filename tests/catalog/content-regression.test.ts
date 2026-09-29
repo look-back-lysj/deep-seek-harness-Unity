@@ -2,7 +2,7 @@ import { readFileSync, mkdtempSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { CatalogRepository, CatalogSourceRegistry, validateMarketIndex } from '../../packages/market/src/catalog/index.ts'
+import { CatalogRepository, CatalogSourceRegistry, validateMarketIndex } from '../../packages/market-core/src/catalog/index.ts'
 
 const fixture = () => JSON.parse(readFileSync(new URL('./fixtures/valid-market-index.json', import.meta.url), 'utf8'))
 

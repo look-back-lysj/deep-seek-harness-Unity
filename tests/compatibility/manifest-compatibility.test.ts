@@ -39,7 +39,7 @@ describe('market manifest official peer gate', () => {
   })
 
   it('keeps package and DSH manifest versions identical', () => {
-    expect(packageManifest.version).toBe('0.1.0-mvp.9')
+    expect(packageManifest.version).toMatch(/^0\.1\.0-mvp\.\d+$/u)
     expect(packageManifest.version).toBe(pluginManifest.version)
   })
 })

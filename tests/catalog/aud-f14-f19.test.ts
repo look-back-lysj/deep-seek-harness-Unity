@@ -9,7 +9,7 @@ import {
   CatalogSourceRegistry,
   CatalogValidationError,
   validateMarketIndex,
-} from '../../packages/market/src/catalog/index.ts'
+} from '../../packages/market-core/src/catalog/index.ts'
 
 const fixtureDir = fileURLToPath(new URL('../catalog/fixtures/', import.meta.url))
 const fixture = JSON.parse(readFileSync(join(fixtureDir, 'valid-market-index.json'), 'utf8')) as any

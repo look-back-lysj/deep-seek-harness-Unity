@@ -6,10 +6,12 @@ import type {} from '@deepseek-ai/dsh-client-ui-sidebar/client'
 import type {} from '@deepseek-ai/dsh-client-ui-slots'
 import type { Context } from '@deepseek-ai/cordis'
 import type { MainPanelId } from '@deepseek-ai/dsh-client-ui-layout/client'
-import type { MarketRemote } from './model.ts'
+import { assertCompatibleHello, ClientCompatibilityError, PROTOCOL_REFRESH_HINT, type MarketRemote } from './model.ts'
 import type { MarketPageProps } from './MarketPage.tsx'
 import { createMarketExtensionHost, attachDshService, EXTENSION_CHILDREN, createDshExtensionRenderer, type MarketExtensionController, type MarketExtensionSlotRenderer } from './extensions/index.ts'
-import { SERVICE_NAME } from '../types.ts'
+import { SERVICE_NAME, type ClientHandshakeRequest, type ClientHandshakeResult, type EnvironmentHello } from '@dsh-eac/market-core/contracts'
+import { supportsApiVersion } from '@dsh-eac/market-core/compatibility'
+import { ADAPTER_PROTOCOL_VERSION, ADAPTER_VERSION, REQUIRED_CORE_API_VERSION } from '../version.ts'
 import type { SkinRuntime, SkinServiceBridge } from './skin-service.ts'
 
 /** Optional Cordis dependency: installing/removing the loader updates the page
@@ -91,6 +93,17 @@ const METHOD_ALIASES: Readonly<Record<string, string>> = {
   exportDiagnostic: 'diagnosticsExport',
 }
 
+// 按后台方法名分类，让页面别名和直接调用都受保护。
+// 预览、导出和 AI 分析也会分配后台状态，因此同样需要握手。
+const SIDE_EFFECT_METHODS = new Set([
+  'planCreate', 'taskStart', 'taskApproveBuilds', 'taskResume', 'taskCancel',
+  'pluginSetEnabled', 'pluginRemove', 'catalogRefresh',
+  'authorDraftSave', 'authorDraftDelete', 'authorReadmeImport', 'authorReadmePreview', 'authorReadmeApplyPreview',
+  'authorTransferBegin', 'authorTransferChunk', 'authorTransferDispose', 'authorExportDraft',
+  'aiAnalyze', 'aiConfirm',
+])
+const HANDSHAKE_TIMEOUT_MS = 8_000
+
 class RemoteCallError extends Error {
   readonly code?: string
   readonly details?: unknown
@@ -111,6 +124,55 @@ function unwrap(value: unknown): unknown {
   return result.value
 }
 
+/** 每次副作用都重新协商当前官方连接；不缓存许可、不自造连接身份。
+ * hello 与握手共用等待上限，迟到回包不能恢复已经拒绝的写入。
+ * 此处仅检查兼容性；真实连接绑定、审批与锁仍由后台负责。 */
+async function negotiateWrite(source: Record<string, unknown>): Promise<void> {
+  const deadline = Date.now() + HANDSHAKE_TIMEOUT_MS
+  const read = async (name: 'hello' | 'clientConnect', args: unknown[]): Promise<unknown> => {
+    let timer: ReturnType<typeof setTimeout> | undefined
+    try {
+      const method = source[name]
+      if (typeof method !== 'function') throw new ClientCompatibilityError('后台缺少协议协商能力。')
+      const remaining = deadline - Date.now()
+      if (remaining <= 0) throw new ClientCompatibilityError('连接协商超时。')
+      // 直接调用原始接口，避免代理再次进入自己的写入防护。
+      return unwrap(await Promise.race([
+        (method as (...values: unknown[]) => unknown).apply(source, args),
+        new Promise<never>((_, reject) => {
+          timer = setTimeout(() => reject(new ClientCompatibilityError('连接协商超时。')), remaining)
+        }),
+      ]))
+    } catch (error) {
+      if (error instanceof ClientCompatibilityError) throw error
+      // 补充中文刷新提示，同时保留后台错误码、详情与重试语义。
+      const failure = new RemoteCallError(`连接协商失败，已停止操作：${error instanceof Error ? error.message : String(error)}。${PROTOCOL_REFRESH_HINT}`)
+      failure.name = 'RemoteCallError'
+      if (error instanceof RemoteCallError) {
+        for (const key of ['code', 'details', 'retryable', 'nextAction'] as const) {
+          if (error[key] !== undefined) Object.assign(failure, { [key]: error[key] })
+        }
+      }
+      throw failure
+    } finally { if (timer !== undefined) clearTimeout(timer) }
+  }
+
+  const hello = await read('hello', []) as EnvironmentHello
+  assertCompatibleHello(hello)
+  const request: ClientHandshakeRequest = { protocolVersion: ADAPTER_PROTOCOL_VERSION, adapterVersion: ADAPTER_VERSION }
+  const result = await read('clientConnect', [request]) as ClientHandshakeResult | undefined
+  if (result?.accepted !== true) {
+    throw new ClientCompatibilityError(`后台未接受当前页面的连接${typeof result?.reason === 'string' ? `：${result.reason}` : ''}。`)
+  }
+  if (typeof result.protocolVersion !== 'string' || !supportsApiVersion(result.protocolVersion, ADAPTER_PROTOCOL_VERSION)) {
+    throw new ClientCompatibilityError('连接协商返回了不兼容的市场协议。')
+  }
+  if (typeof result.coreApiVersion !== 'string' || !supportsApiVersion(result.coreApiVersion, REQUIRED_CORE_API_VERSION)
+    || typeof result.coreVersion !== 'string' || result.coreVersion.trim() === '') {
+    throw new ClientCompatibilityError('连接协商返回了不兼容或不完整的核心接口信息。')
+  }
+}
+
 export function remoteFacade(raw: unknown): MarketRemote {
   const source = raw as Record<string, unknown>
   return new Proxy(source, {
@@ -120,6 +182,7 @@ export function remoteFacade(raw: unknown): MarketRemote {
       const method = target[name]
       if (typeof method !== 'function') return undefined
       return async (...args: readonly unknown[]): Promise<unknown> => {
+        if (SIDE_EFFECT_METHODS.has(name)) await negotiateWrite(source)
         const callArgs = property === 'refreshCatalog' && args.length === 0 ? [{}] : [...args]
         const value = unwrap(await (method as (...values: unknown[]) => unknown).apply(target, callArgs))
         // Refresh failure is a domain result with a usable old snapshot. The

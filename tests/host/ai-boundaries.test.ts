@@ -1,8 +1,8 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { AiAssistant } from '../../packages/market/src/host/ai-assist.ts'
-import { collectDiagnostics, sanitizeDiagnostic } from '../../packages/market/src/host/diagnostics.ts'
-import { assessRiskyAction, type ManagementManifest } from '../../packages/market/src/host/management-impact.ts'
-import type { CatalogPlugin, DiagnosticExport, InventorySnapshot, TaskState } from '../../packages/market/src/contracts/types.ts'
+import { AiAssistant } from '../../packages/market-core/src/host/ai-assist.ts'
+import { collectDiagnostics, sanitizeDiagnostic } from '../../packages/market-core/src/host/diagnostics.ts'
+import { assessRiskyAction, type ManagementManifest } from '../../packages/market-core/src/host/management-impact.ts'
+import type { CatalogPlugin, DiagnosticExport, InventorySnapshot, TaskState } from '../../packages/market-core/src/contracts/types.ts'
 
 const diagnostic: DiagnosticExport = {
   schemaVersion: '1', generatedAt: new Date().toISOString(), marketVersion: 'test', environmentId: 'test', summaries: [], redacted: true,

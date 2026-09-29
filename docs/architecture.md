@@ -1,54 +1,32 @@
 # 架构与模块边界
 
-## 1. 运行形态
+现行架构为同仓两包，详细合同见 [Core / Adapter 指南](CORE-ADAPTER-GUIDE.md)。
 
-市场是一个标准 DSH bundle：Host 服务运行在当前 profile 的 DSH 进程中，Client 注册官方 `main` 与 `sidebar.panellist`。它不另起端口、不创建桌面壳，不读取 Client 传来的任意文件路径。
+## 运行与依赖方向
 
-```text
-EAC页面 -> 官方Remote -> eacMarket Host -> 计划/任务 -> 官方 pluginManager
-                                      ├-> Catalog/Delivery -> 已核验本地tgz
-                                      ├-> Persistence -> <profile>/eac-market
-                                      └-> Authoring -> 草稿/媒体/资料包
-```
+桌面页面 → 官方 Remote → market 的 MarketService → core 的 MarketBackend → 官方 pluginManager。
 
-## 2. 目录位置
+- packages/market：DSH bundle 入口、Cordis/Typert 服务注册、连接协商、Client/扩展和随包目录。
+- packages/market-core：不带图形界面的业务库；默认入口只有安全合同与版本，/dsh 入口才创建 Node/DSH 后台。
+- core 内 adapters/dsh 集中吸收官方差异，业务规划经 ports 调用；核心算法不依赖 React、DOM、Cordis 服务实例。
+- Client 只导入安全合同、兼容判断和纯版本比较；不能导入 core/dsh 或业务文件路径。
 
-真正的插件包是 `packages/market`。根 `packages/typert-protocol-shim`、`packages/cordis-shim` 只用于解决独立工程的源码分析，不进入发布包；最终运行仍使用官方包。构建脚本必须确认这些 shim 不在 `npm pack` 文件清单。
+Core 公开接口见 src/api.ts；工厂见 src/dsh.ts。门面冻结且显式绑定函数，不暴露原始 Context、host、tasks、files。包的 exports 没有内部通配入口。
 
-`src/index.ts` 是公开 Host/Typert 根；`src/contracts` 是 Host/Client 共享 wire 类型；`src/adapters/dsh` 是唯一接触官方管理器的层。Client 不能直接读取 Node 文件系统、本机路径或私有 HTTP 端口。
+## 资源、身份与生命周期
 
-## 3. 依赖方向
+Adapter 读取自身 data/index.json 原始字节交给 core，不让 core 根据搬迁后的目录猜资源位置。安装身份仍是 @dsh-eac/market，后台服务仍为 eacMarket，数据仍在当前 profile/eac-market。此拆分未迁移持久化格式。
 
-```text
-client -> contracts
-host   -> contracts -> core
-host   -> adapters/dsh -> official pluginManager
-host   -> catalog/delivery/persistence/authoring
-core   -X-> React/Cordis/Node fs/network
-```
+Client 先 mount 生成的 Remote 描述，再读 remote.eacMarket。每次副作用先核对协议并调用 clientConnect；Host 用官方 invocation.peer.id 登记与核查连接。协议检查不替代用户审批或官方安全边界。
 
-core 的规划器保持纯函数，任务执行器通过 ports 管理状态与副作用；adapter 翻译官方事实，UI 消费契约。任何跨层捷径都要说明依据并补调用链测试。
+一个 profile 一份后台；UI 卸载只释放自己的 slot、locale、订阅。未来多个界面共用 Host，不各起一份后台并抢写。市场文件锁不保证所有外部工具协同；未知回执保持写入阻断，不自动重放。
 
-## 4. 生命周期
+## 构建边界
 
-bundle 自带 `cordis.patch.yml` 只有一个自插入行；禁止再写用户层同名 insert。Client 先 mount 生成的 `TYPERT_REMOTE`，之后才读取 `remote.eacMarket`。所有 slot、locale、事件订阅、传输任务必须可释放。
+Core 独立编译，Host 产物保留 @dsh-eac/market-core/dsh 外部依赖。Client 只合入少量浏览器安全合同和版本辅助代码。verify-package 校验实际 esbuild 图、公开导出、两包版本和 Remote 描述符。
 
-Host 写操作进入每 profile 队列。官方调用前后分别记录意图和事实，不把 `undefined` 当成功。进程退出后先核对残留包管理进程和磁盘状态，不自动重放不确定步骤。
+官方 Typert 生成器在聚合 tsconfig 上使用 source 映射读取两包的同一份合同，并显式选择 core + market 的 Host 图；普通包编译使用项目引用和公开声明，运行时不依赖这些 source 映射。core 无 DSH 服务，不生成或伪造自己的 Remote 入口；现有 market/remote、market/types 等入口保留。
 
-## 5. mvp.1 的维护入口
+## 后续维护
 
-| 职责 | 真实代码位置 | 关键边界 |
-| --- | --- | --- |
-| Host 组装、Remote 确认 | `src/index.ts`、`host/market-runtime.ts` | 官方 `this.ctx.invocation.peer.id` 绑定连接；用户字段不能伪造连接；只传 JSON 安全视图 |
-| 安装与管理协调 | `core/task-manager.ts`、`core/execution-state.ts` | 执行占用与短时记录锁分开；取消可先落盘；未知写入保留持久阻断 |
-| 官方事实与回执 | `adapters/dsh/host-port.ts`、`manager.ts` | 真实版本/能力指纹、进程启动身份、缓存字节与依赖引用；不把磁盘版本当运行版本 |
-| 原子记录 | `persistence/task-store.ts`、`schema.ts` | schema3提交日志、摘要与可重建索引；坏数据不能静默当空 |
-| 发布、目录及镜像 | `catalog/{metadata,releases,lifecycle,collections,submission}.ts`、`delivery/` | 官方-only与真实社区Manifest区分；公共Pack与私有组合分开；每次写前复核撤回 |
-| 作者工作区 | `authoring/`、`client/AuthorWorkspace.tsx` | 草稿revision、README预览候选、草稿媒体归属、资料ZIP；导出不等于上架 |
-| 页面与数据 | `client/data-controller.ts`、`MarketPage.tsx`、`InstallPlanDialog.tsx`、`TaskDrawer.tsx` | 终态同步库存、按目标拒绝旧回包、单任务AI、无假成功 |
-| AI诊断及确认 | `host/{diagnostics,ai-assist,ai-proposal-store,management-impact}.ts` | 无工具模型、有限事实、持久提案、精确范围、风险挑战、未知结果不重放 |
-| 双扩展 | `client/extensions/` | 一合同两适配、五类私有位置、逐贡献清理；同JS环境不是安全沙箱 |
-
-上表 `src/` 相对 `packages/market`。作者发布CLI在 `scripts/catalog/`；团队资料模板在 `catalog-source/`；独立扩展示例在 `examples/market-extension/`，不属于生产默认目录。
-
-可选模型服务按调用时查询，缺模型不影响普通市场。AI 的危险操作审查记录必须与当前制品摘要相符；没有足够依赖和数据影响证据时只阻断对应建议。来源证明不是对安装后的每个文件做持续完整性监控，市场锁也不是所有外部工具共享的原子事务。
+UI、业务、官方适配分工见底座指南。合同/版本/manifest/构建只由集成人员修改，writer 冻结后串行构建与打包。新增端先复用业务接口与确认规则；TUI 渲染、连接和生命周期仍待实现，不把拆包当成 TUI 已交付。

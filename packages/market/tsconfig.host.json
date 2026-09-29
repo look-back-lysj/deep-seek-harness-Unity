@@ -4,8 +4,19 @@
     "rootDir": "src",
     "outDir": "lib/types",
     "tsBuildInfoFile": "lib/tsconfig.host.tsbuildinfo",
-    "types": ["node"]
+    "types": [
+      "node"
+    ]
   },
-  "include": ["src/**/*.ts"],
-  "exclude": ["src/client/**"]
+  "include": [
+    "src/**/*.ts"
+  ],
+  "exclude": [
+    "src/client/**"
+  ],
+  "references": [
+    {
+      "path": "../market-core/tsconfig.json"
+    }
+  ]
 }

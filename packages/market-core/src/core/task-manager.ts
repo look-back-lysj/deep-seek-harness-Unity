@@ -23,6 +23,7 @@ import type {
 } from '../contracts/types.ts'
 import { canonicalJson, pendingBuildsDigest, sha256Hex } from './canonical.ts'
 import { MarketCoreError } from './errors.ts'
+import { isProtectedMarketPackage } from './identity.ts'
 import type {
   ArtifactAcquisition,
   ArtifactPort,
@@ -487,7 +488,7 @@ export class InstallTaskManager {
       const before = await this.deps.host.readState()
       if (!this.stateStable(before) || before.inventory.environmentId !== request.environmentId) throw new MarketCoreError('management/state-unknown', '库存或活动写入状态无法核实')
       const item = packageItem(before.inventory, request.packageName)
-      if (request.packageName === '@dsh-eac/market' || item === undefined || item.readOnlyReason !== undefined)
+      if (isProtectedMarketPackage(request.packageName) || item === undefined || item.readOnlyReason !== undefined)
         throw new MarketCoreError('management/protected-target', '目标不存在、受保护或需使用官方管理入口')
       if (item.version !== request.expectedVersion) throw new MarketCoreError('management/version-drift', '目标版本已变化，请重新确认')
       // Installation-supplied optional bundles legitimately have installed:false.
@@ -710,6 +711,10 @@ export class InstallTaskManager {
       if (item === undefined || planItem === undefined || SUCCESS_ITEM_STATUS.has(item.status) || ['failed', 'cancelled', 'blocked-by-dependency'].includes(item.status)) continue
       if (record.cancellationRequested) {
         record = await this.save(this.updateItem(record, itemIndex, { status: 'cancelled', installOutcome: 'cancelled' })); continue
+      }
+      // 旧持久化方案也必须遵守当前自保护边界，不能靠恢复/批准绕过预检。
+      if (isProtectedMarketPackage(step.packageName) || isProtectedMarketPackage(planItem.packageName)) {
+        await this.pause(record, '市场及核心包应通过官方管理入口处理', false); return
       }
       if (this.deps.host.requiresFrozenDelivery === true && !record.bundle.deliveries?.some(delivery =>
         delivery.pluginId === step.pluginId && delivery.packageName === step.packageName

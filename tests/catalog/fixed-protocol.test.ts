@@ -1,7 +1,7 @@
 /** 只读固定组织仓对象；不 checkout、不更新 refs、不修改公共 schema 或生产记录。 */
 import { execFileSync } from 'node:child_process'
 import { expect, it } from 'vitest'
-import { evidenceSupportsVerification, validatePublicEvidence, validatePublicManifest, validatePublicPack, validatePublicPackLock } from '../../packages/market/src/catalog/public-format.ts'
+import { evidenceSupportsVerification, validatePublicEvidence, validatePublicManifest, validatePublicPack, validatePublicPackLock } from '../../packages/market-core/src/catalog/public-format.ts'
 
 const revision = '44178ab1360dcb8221a666e782391a11f5716074'
 const repository = process.env.EAC_PROTOCOL_READONLY_REPO

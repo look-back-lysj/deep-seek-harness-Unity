@@ -3,8 +3,8 @@ import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { resolve, join } from 'node:path'
 import { gzipSync } from 'node:zlib'
 import { pathToFileURL } from 'node:url'
-import { hash } from '../../packages/market/src/catalog/input.ts'
-import { releaseIdFor } from '../../packages/market/src/catalog/releases.ts'
+import { hash } from '../../packages/market-core/src/catalog/input.ts'
+import { releaseIdFor } from '../../packages/market-core/src/catalog/releases.ts'
 
 function tgz(files: Readonly<Record<string, string>>): Uint8Array {
   const blocks: Buffer[] = []

@@ -1,5 +1,7 @@
 # 团队维护与升级指南
 
+当前双包底座先读 [Core / Adapter 指南](CORE-ADAPTER-GUIDE.md)。业务模块现位于 packages/market-core/src；桌面入口/Client/Remote适配仍在 packages/market/src。公开接口、协议协商和两包发行必须一起验收。下文历史要求仍有效，旧路径按此映射。
+
 本文件保留团队维护约定，并补入2026-09-28的真实实施入口。功能验收以当批测试与桌面证据为准，文件存在本身不算通过。
 
 ## mvp.1 升级先读

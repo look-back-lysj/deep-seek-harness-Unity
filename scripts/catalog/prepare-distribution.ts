@@ -2,8 +2,8 @@
  * receipt, not arbitrary download URLs. It never uploads, installs or runs code. */
 import { readFileSync, writeFileSync } from 'node:fs'
 import { resolve } from 'node:path'
-import { validateProductionCatalog, validateMarketIndex } from '../../packages/market/src/catalog/index.ts'
-import { prepareAcceptance } from '../../packages/market/src/catalog/lifecycle.ts'
+import { validateProductionCatalog, validateMarketIndex } from '../../packages/market-core/src/catalog/index.ts'
+import { prepareAcceptance } from '../../packages/market-core/src/catalog/lifecycle.ts'
 import { createHash } from 'node:crypto'
 
 const [oldFilename, candidateFilename, listingsFilename, uploadsFilename, output] = process.argv.slice(2)

@@ -1,9 +1,9 @@
 import { describe, expect, it, vi } from 'vitest'
-import { AiAssistant } from '../../packages/market/src/host/ai-assist.ts'
-import { AiProposalStore, type SavedAiProposal } from '../../packages/market/src/host/ai-proposal-store.ts'
-import { decodeJson, encodeJson } from '../../packages/market/src/persistence/files.ts'
+import { AiAssistant } from '../../packages/market-core/src/host/ai-assist.ts'
+import { AiProposalStore, type SavedAiProposal } from '../../packages/market-core/src/host/ai-proposal-store.ts'
+import { decodeJson, encodeJson } from '../../packages/market-core/src/persistence/files.ts'
 import { InMemoryFiles, TestLocks } from '../persistence/helpers.ts'
-import type { AiProposal } from '../../packages/market/src/contracts/types.ts'
+import type { AiProposal } from '../../packages/market-core/src/contracts/types.ts'
 
 function fixture() {
   const files = new InMemoryFiles()

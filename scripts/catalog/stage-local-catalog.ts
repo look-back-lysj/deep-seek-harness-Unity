@@ -6,9 +6,9 @@
 import { copyFileSync, constants, existsSync, mkdirSync, readFileSync, realpathSync, statSync, writeFileSync } from 'node:fs'
 import { isAbsolute, join, relative, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { validateMarketIndex } from '../../packages/market/src/catalog/validate.ts'
-import { CatalogRepository } from '../../packages/market/src/catalog/store.ts'
-import { verifyTgzFile } from '../../packages/market/src/delivery/tgz.ts'
+import { validateMarketIndex } from '../../packages/market-core/src/catalog/validate.ts'
+import { CatalogRepository } from '../../packages/market-core/src/catalog/store.ts'
+import { verifyTgzFile } from '../../packages/market-core/src/delivery/tgz.ts'
 
 const [catalogDirectory, profileDirectory, backupDirectory] = process.argv.slice(2)
 if (!catalogDirectory || !profileDirectory || !backupDirectory || ![catalogDirectory, profileDirectory, backupDirectory].every(isAbsolute)) {

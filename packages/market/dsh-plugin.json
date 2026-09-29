@@ -3,22 +3,39 @@
   "manifestVersion": "0.15",
   "id": "dev.dsh-eac.market",
   "name": "@dsh-eac/market",
-  "version": "0.1.0-mvp.9",
+  "version": "0.1.0-mvp.10",
   "facets": {
-    "host": { "entry": "lib/index.js", "apiVersion": "v1alpha1" },
-    "client": { "entry": "lib/client.js", "apiVersion": "v1alpha1" }
+    "host": {
+      "entry": "lib/index.js",
+      "apiVersion": "v1alpha1"
+    },
+    "client": {
+      "entry": "lib/client.js",
+      "apiVersion": "v1alpha1"
+    }
   },
-  "requires": { "contracts": [] },
+  "requires": {
+    "contracts": []
+  },
   "permissions": [],
-  "contributes": { "commands": [] },
+  "contributes": {
+    "commands": []
+  },
   "subscriptions": [],
   "license": "MIT",
-  "source": { "repository": "https://github.com/look-back-lysj/deep-seek-harness-Unity" },
+  "source": {
+    "repository": "https://github.com/look-back-lysj/deep-seek-harness-Unity"
+  },
   "overrides": [],
   "x-eac": {
     "role": "community-plugin-market",
     "credentials": "official DSH services own account credentials; market never stores API keys",
     "scope": "MVP user market and local author presentation editing",
-    "outOfScope": ["online publication", "author claim", "GitHub OAuth", "star"]
+    "outOfScope": [
+      "online publication",
+      "author claim",
+      "GitHub OAuth",
+      "star"
+    ]
   }
 }

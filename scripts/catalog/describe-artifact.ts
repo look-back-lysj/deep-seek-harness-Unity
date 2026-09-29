@@ -2,8 +2,8 @@
 import { createReadStream, mkdirSync, statSync, writeFileSync } from 'node:fs'
 import { createHash } from 'node:crypto'
 import { resolve } from 'node:path'
-import { verifyTgzFile, DEFAULT_TGZ_LIMITS } from '../../packages/market/src/delivery/tgz.ts'
-import { releaseIdFor } from '../../packages/market/src/catalog/releases.ts'
+import { verifyTgzFile, DEFAULT_TGZ_LIMITS } from '../../packages/market-core/src/delivery/tgz.ts'
+import { releaseIdFor } from '../../packages/market-core/src/catalog/releases.ts'
 
 try {
   const [filename, pluginId, packageName, version, output, ...extra] = process.argv.slice(2)

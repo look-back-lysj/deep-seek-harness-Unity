@@ -112,3 +112,7 @@ SHA256 A8856180264FEA4BA949AC6505C10A71BBF512CFA0DDA253992994711904BE7C
 ```
 
 mvp.9 未重复真实 Desktop 安装；它只应被表述为“基于已验证 mvp.8 代码的 README/发行元数据修正包”。
+
+## Core / Adapter 双包底座（2026-09-29）
+
+构建/类型/包边界通过；534测试通过、2跳过。官方0.2.0-rc.1 CLI本地制品源、空store安装通过；官方Web亲自操作与作者保存通过。整体验收partial，未验Desktop升级、公网core部署或TUI。精确包摘要、UI与最终包差异和后续接手事项见 [本批接力](docs/handoff/CORE-ADAPTER-2026-09-29.md)。

@@ -8,7 +8,7 @@ import {
   ReadmeImporter,
   renderSafeMarkdown,
   rewriteRelativeLinks,
-} from '../../packages/market/src/authoring/index.ts'
+} from '../../packages/market-core/src/authoring/index.ts'
 
 const PNG = (() => {
   const bytes = Buffer.alloc(45)
@@ -88,7 +88,7 @@ describe('AUD-F17 真实 ZIP 往返与 provenance/许可持久化', () => {
         const imported = target.import(archive, { targetDraftId: 'zip-roundtrip' })
         target.drafts.update({ ...imported.draft, expectedRevision: imported.draft.revision, markdown: '# 修改后' })
         const second = target.export('zip-roundtrip')
-        const entries = new Map(Array.from((await import('../../packages/market/src/authoring/index.ts')).readZip(second), (entry) => [entry.path, entry.data]))
+        const entries = new Map(Array.from((await import('../../packages/market-core/src/authoring/index.ts')).readZip(second), (entry) => [entry.path, entry.data]))
         const provenance = JSON.parse(Buffer.from(entries.get('provenance.json') ?? Buffer.alloc(0)).toString('utf8'))
         expect(provenance).toMatchObject({ repositoryUrl: 'https://github.com/acme/widget', commit: COMMIT, license: 'MIT', licenseNotice: 'Copyright Example' })
         expect(entries.has(`media/${media.id}.bin`)).toBe(true)

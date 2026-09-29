@@ -2,7 +2,7 @@
 import assert from 'node:assert/strict'
 import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { resolve, join } from 'node:path'
-import { validateMarketIndex } from '../../packages/market/src/catalog/validate.ts'
+import { validateMarketIndex } from '../../packages/market-core/src/catalog/validate.ts'
 
 const root = resolve(process.argv[2] ?? 'D:/eac-market-verify/distribution-20260928/inventory-v3')
 const basePath = resolve(process.argv[3] ?? 'D:/eac-market/releases/eac-skins-1.1.0/market-index.json')

@@ -5,8 +5,8 @@ import type {
   PackExecution,
   TaskEvent,
   TaskState,
-} from '../../packages/market/src/contracts/types.ts'
-import { canonicalJson, sha256Hex } from '../../packages/market/src/core/canonical.ts'
+} from '../../packages/market-core/src/contracts/types.ts'
+import { canonicalJson, sha256Hex } from '../../packages/market-core/src/core/canonical.ts'
 import type {
   ArtifactAcquireRequest,
   ArtifactAcquisition,
@@ -23,9 +23,9 @@ import type {
   TaskEventLogPort,
   TaskRecord,
   TaskStorePort,
-} from '../../packages/market/src/core/ports.ts'
-import { createPlanBundle } from '../../packages/market/src/core/planner.ts'
-import { InstallTaskManager } from '../../packages/market/src/core/task-manager.ts'
+} from '../../packages/market-core/src/core/ports.ts'
+import { createPlanBundle } from '../../packages/market-core/src/core/planner.ts'
+import { InstallTaskManager } from '../../packages/market-core/src/core/task-manager.ts'
 
 export function inventoryItem(packageName: string, version: string | undefined, enabled = true): InventoryItem {
   return {

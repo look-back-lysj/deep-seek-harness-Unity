@@ -1,6 +1,31 @@
 {
   "files": [],
   "references": [
-    { "path": "./packages/market/tsconfig.client.json" }
-  ]
+    {
+      "path": "./packages/market/tsconfig.client.json"
+    }
+  ],
+  "extends": "./tsconfig.base.client.json",
+  "compilerOptions": {
+    "paths": {
+      "@deepseek-ai/dsh-typert-protocol": [
+        "./packages/market/src/protocol-ambient.d.ts"
+      ],
+      "@dsh-eac/market-core": [
+        "./packages/market-core/src/index.ts"
+      ],
+      "@dsh-eac/market-core/contracts": [
+        "./packages/market-core/src/contracts/types.ts"
+      ],
+      "@dsh-eac/market-core/compatibility": [
+        "./packages/market-core/src/contracts/compatibility.ts"
+      ],
+      "@dsh-eac/market-core/semver": [
+        "./packages/market-core/src/core/semver.ts"
+      ],
+      "@dsh-eac/market-core/dsh": [
+        "./packages/market-core/src/dsh.ts"
+      ]
+    }
+  }
 }

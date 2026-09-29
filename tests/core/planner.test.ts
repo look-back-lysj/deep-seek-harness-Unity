@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { verifyPlanBundle } from '../../packages/market/src/core/planner.ts'
+import { verifyPlanBundle } from '../../packages/market-core/src/core/planner.ts'
 import { makeBundle } from './helpers.ts'
 
 describe('core planner', () => {
@@ -8,7 +8,7 @@ describe('core planner', () => {
     expect(ok.plan.packExecutionDigest).toHaveLength(64)
     await expect(verifyPlanBundle(ok)).resolves.toBe(true)
 
-    const result = await (await import('../../packages/market/src/core/planner.ts')).createPlanBundle({
+    const result = await (await import('../../packages/market-core/src/core/planner.ts')).createPlanBundle({
       planId: 'plan-drift',
       catalogRevision: 'catalog-1',
       environmentId: 'env-test',

@@ -4,8 +4,8 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { expect, it } from 'vitest'
 import { createSamples } from '../../scripts/catalog/create-sample.ts'
-import { validateAuthorSubmission, validateBuildRecipe, validateProductionCatalog } from '../../packages/market/src/catalog/index.ts'
-import { hash } from '../../packages/market/src/catalog/input.ts'
+import { validateAuthorSubmission, validateBuildRecipe, validateProductionCatalog } from '../../packages/market-core/src/catalog/index.ts'
+import { hash } from '../../packages/market-core/src/catalog/input.ts'
 
 it('两条发行路线校验实际无害 tgz 字节；团队 fixture 能在本地复建相同字节', async () => {
   const root = mkdtempSync(join(tmpdir(), 'submission-routes-'))

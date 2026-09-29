@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest'
-import { createPlanBundle, verifyPlanBundle } from '../../packages/market/src/core/planner.ts'
-import { collectionPlanInput } from '../../packages/market/src/catalog/collections.ts'
-import type { MarketCollection } from '../../packages/market/src/catalog/model.ts'
-import type { PlanCatalogContext } from '../../packages/market/src/core/ports.ts'
+import { createPlanBundle, verifyPlanBundle } from '../../packages/market-core/src/core/planner.ts'
+import { collectionPlanInput } from '../../packages/market-core/src/catalog/collections.ts'
+import type { MarketCollection } from '../../packages/market-core/src/catalog/model.ts'
+import type { PlanCatalogContext } from '../../packages/market-core/src/core/ports.ts'
 
 const hash = `sha256:${'a'.repeat(64)}`
 const collection: MarketCollection = {

@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
-import { DshManagerAdapter } from '../../packages/market/src/adapters/dsh/manager.ts'
-import { OfficialHostPort } from '../../packages/market/src/adapters/dsh/host-port.ts'
+import { DshManagerAdapter } from '../../packages/market-core/src/adapters/dsh/manager.ts'
+import { OfficialHostPort } from '../../packages/market-core/src/adapters/dsh/host-port.ts'
 
 function context(manager: unknown) {
   return {

@@ -14,6 +14,7 @@ import type {
   PlanAction,
   PlanSelection,
 } from '../contracts/types.ts'
+import { isProtectedMarketPackage } from './identity.ts'
 import {
   canonicalJson,
   deepFreeze,
@@ -180,6 +181,7 @@ export async function createPlanBundle(
       const fact = factsByPlugin.get(pluginId)
       const current = findInventoryItem(inventory, selection.packageName, pluginId)
       const blockers: string[] = []
+      if (isProtectedMarketPackage(selection.packageName)) blockers.push('management:protected-target')
       if (fact === undefined || fact.packageName !== selection.packageName || fact.version !== selection.targetVersion || fact.artifactDigest !== selection.targetDigest) {
         blockers.push('catalog:selection-fact-mismatch')
       }
@@ -257,6 +259,7 @@ export async function createPlanBundle(
     const fact = factsByPlugin.get(selection.pluginId)
     const current = findInventoryItem(inventory, selection.packageName, selection.pluginId)
     const blockers: string[] = []
+    if (isProtectedMarketPackage(selection.packageName)) blockers.push('management:protected-target')
     if (fact === undefined || fact.packageName !== selection.packageName || fact.version !== selection.targetVersion || fact.artifactDigest !== selection.targetDigest) {
       blockers.push('catalog:selection-fact-mismatch')
     }

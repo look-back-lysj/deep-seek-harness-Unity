@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest'
-import { CatalogSourceRegistry, isRegisteredCatalogRedirect } from '../../packages/market/src/catalog/source.ts'
-import { DEFAULT_CATALOG_SOURCES } from '../../packages/market/src/catalog/defaults.ts'
+import { CatalogSourceRegistry, isRegisteredCatalogRedirect } from '../../packages/market-core/src/catalog/source.ts'
+import { DEFAULT_CATALOG_SOURCES } from '../../packages/market-core/src/catalog/defaults.ts'
 import { readFileSync, mkdtempSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { createHash } from 'node:crypto'
-import { validateProductionCatalog, CatalogRepository, validateMarketIndex } from '../../packages/market/src/catalog/index.ts'
+import { validateProductionCatalog, CatalogRepository, validateMarketIndex } from '../../packages/market-core/src/catalog/index.ts'
 
 describe('公开目录来源', () => {
   it('随包目录覆盖完整清点，并只给已有制品的条目提供固定公开下载地址', () => {

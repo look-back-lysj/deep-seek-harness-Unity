@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { CacheReferenceIndex } from '../../packages/market/src/core/cache.ts'
+import { CacheReferenceIndex } from '../../packages/market-core/src/core/cache.ts'
 
 describe('cache reference cleanup', () => {
   it('protects active task and installed market-managed references', () => {

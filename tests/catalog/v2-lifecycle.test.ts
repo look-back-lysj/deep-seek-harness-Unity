@@ -3,8 +3,8 @@ import { readFileSync, mkdtempSync, writeFileSync, mkdirSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { CatalogRepository, CatalogSourceRegistry, releaseIdFor, validateMarketIndex } from '../../packages/market/src/catalog/index.ts'
-import { rawRecord } from '../../packages/market/src/catalog/public-format.ts'
+import { CatalogRepository, CatalogSourceRegistry, releaseIdFor, validateMarketIndex } from '../../packages/market-core/src/catalog/index.ts'
+import { rawRecord } from '../../packages/market-core/src/catalog/public-format.ts'
 
 function fixture() {
   const document = JSON.parse(readFileSync(new URL('./fixtures/valid-market-index.json', import.meta.url), 'utf8'))

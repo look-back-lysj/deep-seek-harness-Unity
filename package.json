@@ -4,8 +4,13 @@
   "private": true,
   "type": "module",
   "packageManager": "pnpm@11.7.0",
-  "engines": { "node": ">=24" },
-  "workspaces": ["packages/market"],
+  "engines": {
+    "node": ">=24"
+  },
+  "workspaces": [
+    "packages/market-core",
+    "packages/market"
+  ],
   "scripts": {
     "typecheck": "tsc -b tsconfig.host.json tsconfig.client.json",
     "lint": "node scripts/lint.mjs",
@@ -13,7 +18,8 @@
     "build": "node scripts/build.mjs",
     "test:pack": "node scripts/verify-package.mjs",
     "test:catalog": "vitest run tests/catalog tests/delivery tests/authoring",
-    "check": "pnpm build && pnpm lint && pnpm test && pnpm test:pack"
+    "check": "pnpm build && pnpm lint && pnpm test && pnpm test:pack",
+    "pack:release": "node scripts/pack-release.mjs"
   },
   "devDependencies": {
     "@deepseek-ai/dsh-typert-generator": "0.1.7-rc.2",

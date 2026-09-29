@@ -1,7 +1,8 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { MarketDataController } from '../../packages/market/src/client/data-controller.ts'
 import type { MarketRemote } from '../../packages/market/src/client/model.ts'
-import type { InventorySnapshot, TaskState } from '../../packages/market/src/types.ts'
+import type { EnvironmentHello, InventorySnapshot, TaskState } from '@dsh-eac/market-core/contracts'
+import { remoteFacade } from '../../packages/market/src/client/activation.ts'
 import { catalogFixture, helloFixture, inventoryFixture, readOnlyRemote, taskFixture } from './fixtures.ts'
 
 function deferred<T>() { let resolve!: (value: T) => void; const promise = new Promise<T>((done) => { resolve = done }); return { promise, resolve } }
@@ -11,6 +12,85 @@ afterEach(() => { controllers.forEach((item) => item.stop()); controllers.length
 function ready(value: MarketDataController) { const state = value.snapshot().state; if (state.status !== 'ready') throw new Error('expected ready'); return state }
 
 describe('REV-10 bounded client data lifecycle', () => {
+  it.each(['1.9.9', '3.0.0', '2.0.0-rc.1', 'invalid', '02.0.0'])('首次hello协议%s不兼容时不读取可操作旧状态', async (protocolVersion) => {
+    const remote = {
+      ...readOnlyRemote(), hello: async () => ({ ...helloFixture, protocolVersion }),
+      catalog: vi.fn(async () => catalogFixture), inventory: vi.fn(async () => inventoryFixture), listTasks: vi.fn(async () => []),
+    }
+    const data = controller(remote)
+    await data.start()
+    expect(data.snapshot()).toMatchObject({ state: { status: 'error', message: expect.stringContaining('刷新') }, paused: true })
+    expect(remote.catalog).not.toHaveBeenCalled()
+    expect(remote.inventory).not.toHaveBeenCalled()
+    expect(remote.listTasks).not.toHaveBeenCalled()
+  })
+
+  it.each(['1.0.0', '3.0.0', 'invalid'])('同步发现协议%s不兼容时撤掉ready状态并暂停', async (protocolVersion) => {
+    vi.useFakeTimers()
+    let hello = helloFixture
+    const listTasks = vi.fn(async () => [])
+    const data = controller({ ...readOnlyRemote(), hello: async () => hello, listTasks })
+    await data.start()
+    expect(data.snapshot().state.status).toBe('ready')
+    hello = { ...helloFixture, protocolVersion }
+    await data.sync()
+    expect(data.snapshot()).toMatchObject({ state: { status: 'error', message: expect.stringContaining('刷新') }, paused: true })
+    expect(listTasks).toHaveBeenCalledTimes(1)
+    await vi.advanceTimersByTimeAsync(60_000)
+    expect(listTasks).toHaveBeenCalledTimes(1)
+    expect(vi.getTimerCount()).toBe(0)
+  })
+
+  it('协议不兼容使在途库存和目录回包失效；修复后可重新读取', async () => {
+    let hello = helloFixture
+    const pendingInventory = deferred<InventorySnapshot>()
+    const pendingCatalog = deferred<{ status: 'refreshed'; current: typeof catalogFixture }>()
+    const inventory = vi.fn().mockResolvedValueOnce(inventoryFixture).mockReturnValueOnce(pendingInventory.promise).mockResolvedValue(inventoryFixture)
+    const data = controller({ ...readOnlyRemote(), hello: async () => hello, inventory, refreshCatalog: () => pendingCatalog.promise })
+    await data.start()
+    const inventoryRead = data.refreshInventory()
+    const catalogRead = expect(data.refreshCatalog()).rejects.toThrow('请求已失效')
+    hello = { ...helloFixture, protocolVersion: '3.0.0' }
+    await data.sync()
+    pendingInventory.resolve({ ...inventoryFixture, revision: 'test-late' })
+    pendingCatalog.resolve({ status: 'refreshed', current: { ...catalogFixture, revision: 'test-late' } })
+    await inventoryRead; await catalogRead
+    data.acceptTask(taskFixture())
+    expect(data.snapshot().state.status).toBe('error')
+    hello = helloFixture
+    await data.sync(true)
+    expect(ready(data).inventory.revision).toBe(inventoryFixture.revision)
+    expect(ready(data).catalog.revision).toBe(catalogFixture.revision)
+  })
+
+  it('hello声明不兼容核心API时，首次加载与同步均禁用旧状态', async () => {
+    let hello: EnvironmentHello = { ...helloFixture, coreApiVersion: '2.0.0' }
+    const data = controller({ ...readOnlyRemote(), hello: async () => hello })
+    await data.start()
+    expect(data.snapshot()).toMatchObject({ state: { status: 'error', message: expect.stringContaining('核心接口不兼容') } })
+    hello = { ...helloFixture, coreApiVersion: '1.1.0' }
+    await data.start()
+    expect(data.snapshot().state.status).toBe('ready')
+    hello = { ...helloFixture, coreApiVersion: 'invalid' }
+    await data.sync()
+    expect(data.snapshot()).toMatchObject({ state: { status: 'error', message: expect.stringContaining('刷新') }, paused: true })
+  })
+
+  it('真实facade首次加载和同步均为只读；hello可选核心字段缺失不要求写握手', async () => {
+    const clientConnect = vi.fn(async () => { throw new Error('只读流程不得协商写入') })
+    const raw = {
+      hello: vi.fn(async () => ({ ok: true, value: helloFixture })),
+      catalog: async () => ({ ok: true, value: catalogFixture }),
+      inventory: async () => ({ ok: true, value: inventoryFixture }),
+      taskList: async () => ({ ok: true, value: [] }), clientConnect,
+    }
+    const data = controller(remoteFacade(raw))
+    await data.start(); await data.sync()
+    expect(data.snapshot().state.status).toBe('ready')
+    expect(raw.hello).toHaveBeenCalledTimes(2)
+    expect(clientConnect).not.toHaveBeenCalled()
+  })
+
   it('startTask直接返回终态也会刷新同页库存', async () => {
     let inventory = { ...inventoryFixture, revision: 'before', items: [] }
     const remote = { ...readOnlyRemote(), inventory: vi.fn(async () => inventory), listTasks: async () => [] }

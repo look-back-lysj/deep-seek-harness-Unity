@@ -3,7 +3,7 @@ import { mkdtempSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { TransferManager } from '../../packages/market/src/authoring/index.ts'
+import { TransferManager } from '../../packages/market-core/src/authoring/index.ts'
 
 function request(size: number, data: Uint8Array) {
   return {

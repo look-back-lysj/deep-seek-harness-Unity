@@ -2,7 +2,7 @@ import { existsSync, mkdtempSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { expect, it } from 'vitest'
-import { ArtifactCache, verifyTgzFile } from '../../packages/market/src/delivery/index.ts'
+import { ArtifactCache, verifyTgzFile } from '../../packages/market-core/src/delivery/index.ts'
 import { createTgz, digest, validTgz } from './fixtures.ts'
 
 const delivery = (bytes: Uint8Array) => ({ pluginId: 'dev.test.alpha', packageName: '@test/alpha', version: '1.2.3', artifactDigest: digest(bytes), sources: [{ kind: 'https-artifact' as const, ref: 'https://primary.example.test/a.tgz', priority: 0 }, { kind: 'https-artifact' as const, ref: 'https://mirror.example.test/a.tgz', priority: 1 }] })

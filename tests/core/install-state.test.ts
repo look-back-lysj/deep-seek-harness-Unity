@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
-import { createPlanBundle } from '../../packages/market/src/core/planner.ts'
-import { InstallTaskManager } from '../../packages/market/src/core/task-manager.ts'
+import { createPlanBundle } from '../../packages/market-core/src/core/planner.ts'
+import { InstallTaskManager } from '../../packages/market-core/src/core/task-manager.ts'
 import {
   FakeArtifactPort,
   FakeHost,

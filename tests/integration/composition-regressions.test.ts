@@ -3,10 +3,10 @@ import { tmpdir } from 'node:os'
 import { join, relative, isAbsolute } from 'node:path'
 import type { Context } from '@deepseek-ai/cordis'
 import { describe, expect, it, vi } from 'vitest'
-import { MarketRuntime } from '../../packages/market/src/host/market-runtime.ts'
-import { CatalogArtifactPort } from '../../packages/market/src/adapters/dsh/artifact-adapter.ts'
-import type { ArtifactCache } from '../../packages/market/src/delivery/cache.ts'
-import type { CatalogDelivery } from '../../packages/market/src/contracts/types.ts'
+import { MarketRuntime } from '../../packages/market-core/src/host/market-runtime.ts'
+import { CatalogArtifactPort } from '../../packages/market-core/src/adapters/dsh/artifact-adapter.ts'
+import type { ArtifactCache } from '../../packages/market-core/src/delivery/cache.ts'
+import type { CatalogDelivery } from '../../packages/market-core/src/contracts/types.ts'
 
 const digest = `sha256:${'a'.repeat(64)}`
 const delivery: CatalogDelivery = {

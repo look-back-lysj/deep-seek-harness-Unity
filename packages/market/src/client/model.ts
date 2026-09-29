@@ -12,6 +12,8 @@ import type {
   CatalogSnapshot,
   CatalogRefreshView,
   CatalogRecommendation,
+  ClientHandshakeRequest,
+  ClientHandshakeResult,
   AiAnalyzeRequest,
   AiAnalysisResult,
   AiApplyResult,
@@ -32,6 +34,8 @@ import type {
   ResumeChallenge,
   TaskApprovalRequest,
   TaskCancelRequest,
+  TaskEventPage,
+  TaskEventRequest,
   TaskIdRequest,
   TaskItemStatus,
   TaskResumeRequest,
@@ -44,18 +48,44 @@ import type {
   TransferChunkReadRequest,
   TransferChunkReadResult,
   TransferDisposeRequest,
+  AuthorDraftDeleteRequest,
   VerificationState,
-} from '../types.ts'
-import { compareVersions as compareSemVer, validVersion } from '../core/semver.ts'
+} from '@dsh-eac/market-core/contracts'
+import { supportsApiVersion } from '@dsh-eac/market-core/compatibility'
+import { compareVersions as compareSemVer, validVersion } from '@dsh-eac/market-core/semver'
+import { ADAPTER_PROTOCOL_VERSION, REQUIRED_CORE_API_VERSION } from '../version.ts'
+
+export const PROTOCOL_REFRESH_HINT = '请刷新页面或重新打开市场；若仍不兼容，请更新市场插件后重试。'
+
+export class ClientCompatibilityError extends Error {
+  constructor(reason: string) {
+    super(`${reason}已停止操作。${PROTOCOL_REFRESH_HINT}`)
+    this.name = 'ClientCompatibilityError'
+  }
+}
+
+/** 首次加载、同步与写入防护共用；兼容要求固定来自 adapter 自身版本文件。
+ * hello 可缺少可选核心信息以保留读取能力，写入仍须通过完整握手。 */
+export function assertCompatibleHello(hello: EnvironmentHello): void {
+  if (typeof hello?.protocolVersion !== 'string' || !supportsApiVersion(hello.protocolVersion, ADAPTER_PROTOCOL_VERSION)) {
+    throw new ClientCompatibilityError('市场页面与后台协议不兼容。')
+  }
+  if (hello.coreApiVersion !== undefined
+    && (typeof hello.coreApiVersion !== 'string' || !supportsApiVersion(hello.coreApiVersion, REQUIRED_CORE_API_VERSION))) {
+    throw new ClientCompatibilityError('市场页面与后台核心接口不兼容。')
+  }
+}
 
 export interface MarketRemote {
   hello(): Promise<EnvironmentHello>
+  clientConnect?(request: ClientHandshakeRequest): Promise<ClientHandshakeResult>
   catalog(): Promise<CatalogSnapshot>
   inventory(): Promise<InventorySnapshot>
   createPlan?(request: PlanCreateRequest): Promise<PlanResult>
   startTask?(request: TaskStartRequest): Promise<TaskState>
   getTask?(request: TaskIdRequest): Promise<TaskState>
   listTasks?(): Promise<readonly TaskState[]>
+  taskEvents?(request: TaskEventRequest): Promise<TaskEventPage>
   cancelTask?(request: TaskCancelRequest): Promise<TaskState>
   approveTask?(request: TaskApprovalRequest): Promise<TaskState>
   resumeTask?(request: TaskResumeRequest): Promise<TaskState>
@@ -64,6 +94,7 @@ export interface MarketRemote {
   listDrafts?(): Promise<readonly AuthorDraft[]>
   getDraft?(id: string): Promise<AuthorDraft>
   saveDraft?(request: AuthorDraftInput): Promise<AuthorDraft>
+  deleteDraft?(request: AuthorDraftDeleteRequest): Promise<boolean>
   exportDraft?(request: AuthorExportRequest): Promise<TransferResult>
   readMedia?(request: AuthorMediaReadRequest): Promise<AuthorMediaReadResult>
   importReadme?(request: ReadmeImportRequest): Promise<ReadmeImportResult>

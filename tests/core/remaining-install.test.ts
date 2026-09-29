@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { createPlanBundle } from '../../packages/market/src/core/planner.ts'
+import { createPlanBundle } from '../../packages/market-core/src/core/planner.ts'
 import {
   FakeHost,
   InMemoryTaskStore,

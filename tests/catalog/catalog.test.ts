@@ -8,7 +8,7 @@ import {
   CatalogValidationError,
   isCompletePackExecution,
   validateMarketIndex,
-} from '../../packages/market/src/catalog/index.ts'
+} from '../../packages/market-core/src/catalog/index.ts'
 
 const fixtureDir = fileURLToPath(new URL('./fixtures/', import.meta.url))
 const readFixture = (name: string): unknown => JSON.parse(readFileSync(join(fixtureDir, name), 'utf8'))

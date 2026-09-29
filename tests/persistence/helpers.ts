@@ -1,12 +1,12 @@
-import type { TaskEvent, TaskState } from '../../packages/market/src/contracts/types.ts'
+import type { TaskEvent, TaskState } from '../../packages/market-core/src/contracts/types.ts'
 import type {
   ProfileLockHandle,
   ProfileLockPort,
   TaskItemFact,
   TaskRecord,
-} from '../../packages/market/src/core/ports.ts'
-import type { PlanBundle } from '../../packages/market/src/core/ports.ts'
-import type { PersistenceFilePort } from '../../packages/market/src/persistence/files.ts'
+} from '../../packages/market-core/src/core/ports.ts'
+import type { PlanBundle } from '../../packages/market-core/src/core/ports.ts'
+import type { PersistenceFilePort } from '../../packages/market-core/src/persistence/files.ts'
 
 export class InMemoryFiles implements PersistenceFilePort {
   readonly files = new Map<string, Uint8Array>()

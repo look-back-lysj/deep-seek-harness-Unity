@@ -8,9 +8,9 @@ import { createHash } from 'node:crypto'
 import { spawnSync } from 'node:child_process'
 import { build } from 'esbuild'
 import { describe, expect, it, vi } from 'vitest'
-import { OfficialHostPort } from '../../packages/market/src/adapters/dsh/host-port.ts'
-import type { HostInstallRequest } from '../../packages/market/src/core/ports.ts'
-import { createPlanBundle } from '../../packages/market/src/core/planner.ts'
+import { OfficialHostPort } from '../../packages/market-core/src/adapters/dsh/host-port.ts'
+import type { HostInstallRequest } from '../../packages/market-core/src/core/ports.ts'
+import { createPlanBundle } from '../../packages/market-core/src/core/planner.ts'
 
 const output = process.env.EAC_TEST_OUTPUT ?? join(tmpdir(), 'eac-market-tests')
 mkdirSync(output, { recursive: true })
@@ -90,7 +90,7 @@ describe('REV-02/03/05 recoverable official ownership', () => {
     expect(sameProcess.inventory.items[0]?.restartRequired).toBe(true)
     const script = join(f.root, 'isolated-host-restart.cjs')
     await build({ stdin: { resolveDir: fileURLToPath(new URL('../../', import.meta.url)), contents: `
-      import { OfficialHostPort } from './packages/market/src/adapters/dsh/host-port.ts';
+      import { OfficialHostPort } from './packages/market-core/src/adapters/dsh/host-port.ts';
       const manager = { async listBundles() { return [{ name:'test-package', version:'1.0.0', installed:true, enabled:true, removable:true, rows: [{rowId:'new-row',moduleName:'test-package',entryId:'new-active'}] }] },
         async listPlugins() { return [{entryId:'new-active',moduleName:'test-package',enabled:true,fiberPhase:'active'}] } };
       const port = new OfficialHostPort({profileContext:{dir:${JSON.stringify(f.root)}},get:()=>manager}, 'env-test');

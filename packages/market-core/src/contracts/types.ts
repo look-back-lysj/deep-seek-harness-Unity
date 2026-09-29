@@ -4,7 +4,9 @@
  * It never exposes local absolute paths, credentials, or executable callbacks.
  */
 
-export const PROTOCOL_VERSION = '1.1.0'
+// v2 requires a connection-scoped handshake before writes. Cached v1 pages
+// must refresh; persistent task/author/catalog schemas are unchanged.
+export const PROTOCOL_VERSION = '2.0.0'
 export const SERVICE_NAME = 'eacMarket'
 export const MARKET_SCHEMA_VERSION = '1'
 
@@ -25,6 +27,22 @@ export interface EnvironmentHello {
   readonly profileName: string
   readonly hostVersion: string
   readonly capabilities: readonly CapabilityName[]
+  readonly coreVersion?: string
+  readonly coreApiVersion?: string
+}
+
+/** Adapter identity is diagnostic data, never an authorization credential. */
+export interface ClientHandshakeRequest {
+  readonly protocolVersion: string
+  readonly adapterVersion: string
+}
+
+export interface ClientHandshakeResult {
+  readonly accepted: boolean
+  readonly protocolVersion: string
+  readonly coreVersion: string
+  readonly coreApiVersion: string
+  readonly reason?: string
 }
 
 export type VerificationState = 'verified' | 'unverified' | 'hard-incompatible' | 'unknown'

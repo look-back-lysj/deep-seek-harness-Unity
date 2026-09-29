@@ -1,8 +1,8 @@
 import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
-import { validateMarketIndex } from '../../packages/market/src/catalog/validate.ts'
-import { validatePackageMetadata } from '../../packages/market/src/catalog/public-format.ts'
-import { prepareAcceptance } from '../../packages/market/src/catalog/lifecycle.ts'
+import { validateMarketIndex } from '../../packages/market-core/src/catalog/validate.ts'
+import { validatePackageMetadata } from '../../packages/market-core/src/catalog/public-format.ts'
+import { prepareAcceptance } from '../../packages/market-core/src/catalog/lifecycle.ts'
 import { createHash } from 'node:crypto'
 
 const read = (path: string) => JSON.parse(readFileSync(new URL(path, import.meta.url), 'utf8'))

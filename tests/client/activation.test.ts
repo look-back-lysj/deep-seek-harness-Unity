@@ -1,6 +1,21 @@
 import { describe, expect, it, vi } from 'vitest'
 import { activateMarketClient, remoteFacade } from '../../packages/market/src/client/activation.ts'
-import type { AuthorDraft, ReadmeApplyPreviewRequest, ReadmeImportRequest, ReadmePreviewView } from '../../packages/market/src/types.ts'
+import type { AuthorDraft, ClientHandshakeRequest, ClientHandshakeResult, ReadmeApplyPreviewRequest, ReadmeImportRequest, ReadmePreviewView } from '@dsh-eac/market-core/contracts'
+import { ADAPTER_PROTOCOL_VERSION, ADAPTER_VERSION } from '../../packages/market/src/version.ts'
+import { helloFixture } from './fixtures.ts'
+
+// 成功别名测试仍经过真实代理防护，提供完整握手响应；
+// 拒绝、缺方法与超时分支由 protocol-guard.test.ts 覆盖。
+function compatibleConnection() {
+  return {
+    hello: async () => ({ ok: true, value: helloFixture }),
+    clientConnect: async (request: ClientHandshakeRequest) => {
+      expect(request).toEqual({ protocolVersion: ADAPTER_PROTOCOL_VERSION, adapterVersion: ADAPTER_VERSION })
+      const value: ClientHandshakeResult = { accepted: true, protocolVersion: ADAPTER_PROTOCOL_VERSION, coreVersion: '0.1.0', coreApiVersion: '1.0.0' }
+      return { ok: true, value }
+    },
+  }
+}
 
 function emptyComponent() {
   return null
@@ -10,6 +25,7 @@ describe('client activation order', () => {
   it('unwraps RemoteResult, maps legacy UI names and supplies an empty refresh request', async () => {
     const calls: unknown[][] = []
     const facade = remoteFacade({
+      ...compatibleConnection(),
       planCreate: async (...args: unknown[]) => { calls.push(['planCreate', ...args]); return { ok: true, value: 'plan' } },
       catalogRefresh: async (...args: unknown[]) => { calls.push(['catalogRefresh', ...args]); return { ok: true, value: { status: 'refreshed', current: 'catalog' } } },
     })
@@ -20,7 +36,7 @@ describe('client activation order', () => {
 
   it('目录刷新失败保留状态、原因与上次可用目录', async () => {
     const failure = { status: 'failed', current: { revision: 'last-good' }, reason: '没有可用目录来源' }
-    const facade = remoteFacade({ catalogRefresh: async () => ({ ok: true, value: failure }) })
+    const facade = remoteFacade({ ...compatibleConnection(), catalogRefresh: async () => ({ ok: true, value: failure }) })
     expect(await facade.refreshCatalog?.()).toEqual(failure)
   })
 
@@ -34,7 +50,7 @@ describe('client activation order', () => {
     const result = { draft: { ...draft, revision: 'r2', markdown: preview.candidate.markdown }, repositoryUrl: preview.repositoryUrl, commit: preview.commit, importedAt: preview.importedAt, mediaWarnings: preview.mediaWarnings }
     const read = vi.fn(async (_request: ReadmeImportRequest) => ({ ok: true, value: preview }))
     const apply = vi.fn(async (_request: ReadmeApplyPreviewRequest) => ({ ok: true, value: result }))
-    const facade = remoteFacade({ authorReadmePreview: read, authorReadmeApplyPreview: apply })
+    const facade = remoteFacade({ ...compatibleConnection(), authorReadmePreview: read, authorReadmeApplyPreview: apply })
     const request: ReadmeImportRequest = { repositoryUrl: preview.repositoryUrl, targetDraftId: draft.id, expectedRevision: draft.revision }
     expect(await facade.previewReadme?.(request)).toEqual(preview)
     expect(read).toHaveBeenCalledWith(request)
@@ -45,7 +61,7 @@ describe('client activation order', () => {
   })
 
   it('README确认的revision冲突穿过alias后仍是失败', async () => {
-    const facade = remoteFacade({ authorReadmeApplyPreview: async () => ({ ok: false, error: { code: 'draft/revision-conflict', message: '草稿已在另一窗口更新', retryable: false } }) })
+    const facade = remoteFacade({ ...compatibleConnection(), authorReadmeApplyPreview: async () => ({ ok: false, error: { code: 'draft/revision-conflict', message: '草稿已在另一窗口更新', retryable: false } }) })
     await expect(facade.applyReadmePreview?.({ previewId: 'test-preview', expectedRevision: 'old' })).rejects.toMatchObject({ code: 'draft/revision-conflict', message: '草稿已在另一窗口更新', retryable: false })
   })
 

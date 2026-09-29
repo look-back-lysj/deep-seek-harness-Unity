@@ -5,9 +5,9 @@ import { join, resolve } from 'node:path'
 import { expect, it } from 'vitest'
 import { checkSubmissionPr } from '../../scripts/catalog/check-submission-pr.mjs'
 import { createSamples } from '../../scripts/catalog/create-sample.ts'
-import { releaseIdFor } from '../../packages/market/src/catalog/releases.ts'
-import { validateAuthorSubmission } from '../../packages/market/src/catalog/submission.ts'
-import { hash } from '../../packages/market/src/catalog/input.ts'
+import { releaseIdFor } from '../../packages/market-core/src/catalog/releases.ts'
+import { validateAuthorSubmission } from '../../packages/market-core/src/catalog/submission.ts'
+import { hash } from '../../packages/market-core/src/catalog/input.ts'
 
 function setup() {
   const root = mkdtempSync(join(tmpdir(), 'eac-submission-pr-'))

@@ -2,15 +2,15 @@
 import assert from 'node:assert/strict';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { MarketRuntime } from '../../../packages/market/src/host/market-runtime.ts';
-import { AiAssistant } from '../../../packages/market/src/host/ai-assist.ts';
-import { OfficialHostPort } from '../../../packages/market/src/adapters/dsh/host-port.ts';
-import { CatalogArtifactPort } from '../../../packages/market/src/adapters/dsh/artifact-adapter.ts';
-import { AtomicProfileLocks, NodePersistenceFiles } from '../../../packages/market/src/adapters/dsh/persistence-adapter.ts';
-import { JsonTaskStore } from '../../../packages/market/src/persistence/task-store.ts';
-import { createPlanBundle } from '../../../packages/market/src/core/planner.ts';
-import { sha256Hex } from '../../../packages/market/src/core/canonical.ts';
-import { InstallTaskManager } from '../../../packages/market/src/core/task-manager.ts';
+import { MarketRuntime } from '../../../packages/market-core/src/host/market-runtime.ts';
+import { AiAssistant } from '../../../packages/market-core/src/host/ai-assist.ts';
+import { OfficialHostPort } from '../../../packages/market-core/src/adapters/dsh/host-port.ts';
+import { CatalogArtifactPort } from '../../../packages/market-core/src/adapters/dsh/artifact-adapter.ts';
+import { AtomicProfileLocks, NodePersistenceFiles } from '../../../packages/market-core/src/adapters/dsh/persistence-adapter.ts';
+import { JsonTaskStore } from '../../../packages/market-core/src/persistence/task-store.ts';
+import { createPlanBundle } from '../../../packages/market-core/src/core/planner.ts';
+import { sha256Hex } from '../../../packages/market-core/src/core/canonical.ts';
+import { InstallTaskManager } from '../../../packages/market-core/src/core/task-manager.ts';
 
 if (!process.env.MARKET_REVIEW_OUTPUT) throw new Error('Use run.mjs with an explicit MARKET_REVIEW_OUTPUT');
 const root = join(process.env.MARKET_REVIEW_OUTPUT!, `probe-run-${new Date().toISOString().replaceAll(/[:.]/g, '-')}-${process.pid}`);

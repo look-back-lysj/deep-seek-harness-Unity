@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { InstallTaskManager } from '../../packages/market/src/core/task-manager.ts'
+import { InstallTaskManager } from '../../packages/market-core/src/core/task-manager.ts'
 import {
   approvalDigest,
   FakeArtifactPort,

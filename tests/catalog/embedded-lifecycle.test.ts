@@ -3,9 +3,9 @@ import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { CatalogRepository, releaseIdFor, validateMarketIndex } from '../../packages/market/src/catalog/index.ts'
-import { commitAcceptance, latestAcceptance, prepareAcceptance } from '../../packages/market/src/catalog/lifecycle.ts'
-import { rawRecord } from '../../packages/market/src/catalog/public-format.ts'
+import { CatalogRepository, releaseIdFor, validateMarketIndex } from '../../packages/market-core/src/catalog/index.ts'
+import { commitAcceptance, latestAcceptance, prepareAcceptance } from '../../packages/market-core/src/catalog/lifecycle.ts'
+import { rawRecord } from '../../packages/market-core/src/catalog/public-format.ts'
 
 const evidenceRoot = process.env.EAC_TEST_OUTPUT ?? join(tmpdir(), 'eac-market-tests')
 function fresh(): string { mkdirSync(evidenceRoot, { recursive: true }); return mkdtempSync(join(evidenceRoot, 'embedded-')) }

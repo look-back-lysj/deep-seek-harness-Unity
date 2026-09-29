@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { AiAssistant } from '../../packages/market/src/host/ai-assist.ts'
+import { AiAssistant } from '../../packages/market-core/src/host/ai-assist.ts'
 
 const emptyDiagnostics = {
   schemaVersion: '1',

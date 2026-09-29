@@ -5,11 +5,11 @@ import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:
 import { tmpdir } from 'node:os'
 import { dirname, isAbsolute, join, relative } from 'node:path'
 import { describe, expect, it, vi } from 'vitest'
-import { MarketRuntime } from '../../packages/market/src/host/market-runtime.ts'
-import { sourceIdentity } from '../../packages/market/src/host/diagnostics.ts'
-import type { AiProposalStore, SavedAiProposal } from '../../packages/market/src/host/ai-proposal-store.ts'
-import type { JsonTaskStore } from '../../packages/market/src/persistence/task-store.ts'
-import type { AiProposedAction, CatalogPlugin, CatalogSnapshot, DeliverySource, InstallPlan } from '../../packages/market/src/contracts/types.ts'
+import { MarketRuntime } from '../../packages/market-core/src/host/market-runtime.ts'
+import { sourceIdentity } from '../../packages/market-core/src/host/diagnostics.ts'
+import type { AiProposalStore, SavedAiProposal } from '../../packages/market-core/src/host/ai-proposal-store.ts'
+import type { JsonTaskStore } from '../../packages/market-core/src/persistence/task-store.ts'
+import type { AiProposedAction, CatalogPlugin, CatalogSnapshot, DeliverySource, InstallPlan } from '../../packages/market-core/src/contracts/types.ts'
 import { makeTaskRecord } from '../persistence/helpers.ts'
 
 const empty: CatalogSnapshot = { schemaVersion: '1', revision: 'synthetic-ai-wiring', generatedAt: new Date().toISOString(),

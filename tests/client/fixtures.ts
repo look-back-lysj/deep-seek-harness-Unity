@@ -7,7 +7,7 @@ import type {
 } from '../../packages/market/src/types.ts'
 
 export const helloFixture: EnvironmentHello = {
-  protocolVersion: '1.0.0',
+  protocolVersion: '2.0.0',
   schemaVersion: '1',
   marketVersion: '0.1.0-mvp.0',
   environmentId: 'test-environment',

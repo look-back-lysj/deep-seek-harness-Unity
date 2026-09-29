@@ -3,6 +3,7 @@
  * runs its own package manager; all write calls later delegate here.
  */
 import type { Context } from '@deepseek-ai/cordis'
+import { isProtectedMarketPackage } from '../../core/identity.ts'
 import type {
   CapabilityName,
   InventoryItem,
@@ -253,7 +254,8 @@ export class DshManagerAdapter {
           ? managementError
           : declaredReadOnly !== undefined || hasManagementError
             ? 'unknown'
-            : undefined
+            // 市场及执行核心的库存事实仍如实展示，只将管理入口交回官方。
+            : isProtectedMarketPackage(name) ? 'management-required' : undefined
       if (item.error !== undefined && managementError === undefined) unknownItems.push(`bundle:${name}:invalid-management-error`)
       if (item.overrides !== undefined && !Array.isArray(item.overrides)) unknownItems.push(`bundle:${name}:invalid-overrides`)
       const version = stringAt(item.version)

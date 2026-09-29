@@ -35,3 +35,10 @@ U/P/I 不能替代 D。跑不了的项写 `blocked/not-run` 和原因，不能�
 ## 报告
 
 每条记录用例ID、U/P/I/D、pass/fail/blocked/not-run、操作、真实结果、证据。测试 fixture 不是生产 Evidence。产物与源码版本一一对应，修改后旧截图/摘要不能复用为新证据。
+
+## 双包底座验收
+
+- `pnpm test:pack` 核验31个生成Remote描述、旧公开入口、core独立Host依赖和Client无Node后端泄漏。
+- `pnpm pack:release` 必须指定固定core URL或registry模式；见底座指南。
+- 可选实际官方安装：`node scripts/verify-split-install.mjs <官方解包runtime根> <全新仓外输出目录>`。脚本使用本地制品源、空store和独立DSH_HOME，明确是测试源而非公网验收；只显式安装adapter，核验core自动拉取与真实包导入。需本机已有官方运行时和npm，不下载它们。
+- 本批图形验收是官方0.2.0-rc.1 Web界面；不是Desktop/全部第三方插件验收。

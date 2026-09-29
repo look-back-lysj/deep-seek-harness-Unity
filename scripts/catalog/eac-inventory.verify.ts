@@ -3,11 +3,11 @@ import assert from 'node:assert/strict'
 import { createHash } from 'node:crypto'
 import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { resolve, join } from 'node:path'
-import { validateMarketIndex } from '../../packages/market/src/catalog/validate.ts'
-import { parseRelease } from '../../packages/market/src/catalog/releases.ts'
-import { validateBuildRecipe } from '../../packages/market/src/catalog/submission.ts'
-import { verifyTgzFile } from '../../packages/market/src/delivery/tgz.ts'
-import { compareVersions } from '../../packages/market/src/core/semver.ts'
+import { validateMarketIndex } from '../../packages/market-core/src/catalog/validate.ts'
+import { parseRelease } from '../../packages/market-core/src/catalog/releases.ts'
+import { validateBuildRecipe } from '../../packages/market-core/src/catalog/submission.ts'
+import { verifyTgzFile } from '../../packages/market-core/src/delivery/tgz.ts'
+import { compareVersions } from '../../packages/market-core/src/core/semver.ts'
 
 const root = resolve(process.argv[2] ?? 'D:/eac-market-verify/distribution-20260928/inventory-v3')
 const read = (name: string): any => JSON.parse(readFileSync(join(root, name), 'utf8'))

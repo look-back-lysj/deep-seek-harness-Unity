@@ -2,14 +2,16 @@
 
 运行在**官方 DeepSeek Harness 内**的社区插件市场。安装后，从侧边栏 **EAC** 浏览和安装插件，不需要自己下载源码或运行命令。
 
+> 开发分支已实现 core / desktop adapter 双包底座：源码候选 `@dsh-eac/market 0.1.0-mvp.10` + `@dsh-eac/market-core 0.1.0`。维护者先读 [接口与升级指南](docs/CORE-ADAPTER-GUIDE.md) 和 [本批接力](docs/handoff/CORE-ADAPTER-2026-09-29.md)。下方 mvp.9 是此前已发布入口，不代表新双包已发布。
+
 ## 新手安装：复制链接，粘贴到「添加插件」
 
-当前市场版本 **0.1.0-mvp.9**；官方 **0.1.7-rc.2 / 0.2.0-rc.1** 核心兼容门禁通过，0.2.0 隔离 Desktop 真实加载通过。
+当前市场版本 **0.1.0-mvp.9**；官方 **0.1.7-rc.2 / 0.2.0-rc.1** 核心兼容门禁通过，兼容代码所在的 mvp.8 在 0.2.0 隔离 Desktop 真实加载通过；mvp.9 未重复 Desktop 安装。
 
 **复制下面完整一行链接：**
 
 ```text
-https://gitee.com/flowing-shadows-like-scenes/deep-seek-harness-unity-mirror/raw/master/artifacts/sha256/a8856180264fea4ba949ac6505c10a71bbf512cfa0dda253992994711904be7c/dsh-eac-market-0.1.0-mvp.9.tgz
+https://gitee.com/flowing-shadows-like-scenes/deep-seek-harness-unity-mirror/raw/dbeb4b7f0e655f7bdd299a8e40d59af83f0e7da0/artifacts/sha256/a8856180264fea4ba949ac6505c10a71bbf512cfa0dda253992994711904be7c/dsh-eac-market-0.1.0-mvp.9.tgz
 ```
 
 1. 打开官方 DSH → **插件 → 添加插件**。
@@ -20,7 +22,7 @@ https://gitee.com/flowing-shadows-like-scenes/deep-seek-harness-unity-mirror/raw
 
 ### 在线拉取失败？用本地安装包
 
-点击 [下载市场安装包 0.1.0-mvp.9](https://gitee.com/flowing-shadows-like-scenes/deep-seek-harness-unity-mirror/raw/master/artifacts/sha256/a8856180264fea4ba949ac6505c10a71bbf512cfa0dda253992994711904be7c/dsh-eac-market-0.1.0-mvp.9.tgz)，保存后，在同一个 **「包名或地址」** 输入框填写该文件的完整本地路径，例如：
+点击 [下载市场安装包 0.1.0-mvp.9](https://gitee.com/flowing-shadows-like-scenes/deep-seek-harness-unity-mirror/raw/dbeb4b7f0e655f7bdd299a8e40d59af83f0e7da0/artifacts/sha256/a8856180264fea4ba949ac6505c10a71bbf512cfa0dda253992994711904be7c/dsh-eac-market-0.1.0-mvp.9.tgz)，保存后，在同一个 **「包名或地址」** 输入框填写该文件的完整本地路径，例如：
 
 ```text
 D:\Downloads\dsh-eac-market-0.1.0-mvp.9.tgz
@@ -57,7 +59,7 @@ a8856180264fea4ba949ac6505c10a71bbf512cfa0dda253992994711904be7c
 
 - [公开发行镜像（Gitee，无需登录）](https://gitee.com/flowing-shadows-like-scenes/deep-seek-harness-unity-mirror)：市场包、插件制品、目录、校验值及原许可。
 - [公开源码仓（GitHub）](https://github.com/look-back-lysj/deep-seek-harness-Unity)：任何人都可以下载、克隆或 Fork；维护者当前可直接更新 `main`；团队协作仍建议通过 Pull Request 留下审查记录。
-- [最新交付与实际验证](docs/handoff/PULLABILITY-2026-09-28.md)：当前版本、通过项及未验证项；[此前发行记录](docs/handoff/DISTRIBUTION-2026-09-28.md) 保留历史。
+- [此前兼容改造与实际验证](docs/handoff/DSH-CORE-COMPAT-2026-09-29.md)：当前版本、通过项及未验证项；[此前发行记录](docs/handoff/DISTRIBUTION-2026-09-28.md) 保留历史。
 - [下一位维护者从这里开始](docs/handoff/START-HERE.md)。历史审查报告保留，不代表最新实现仍未修复。
 
 > 最新版本：**0.1.0-mvp.9** 在宽泛 DSH 核心准入基础上补齐根 README 与随包 README；mvp.8 的兼容代码、测试和真实隔离 Desktop 验证继续有效。Gitee新目录实际读取200；默认展示“可安装”，研究清单在“全部记录”。[本轮交付与真实安装验证](docs/handoff/PULLABILITY-2026-09-28.md)。
@@ -102,6 +104,13 @@ a8856180264fea4ba949ac6505c10a71bbf512cfa0dda253992994711904be7c
 
 [EAC 清点说明](docs/contributing/EAC-PLUGIN-INVENTORY.md) 记录最新基线、官方对照、旧私桥、同名冲突及暂缓原因。全部收录不等于全部兼容。
 
+## Core / Adapter 协作
+
+- `packages/market-core`：无图形界面业务，公开类型在 `src/api.ts`，官方接线入口为 `/dsh`。
+- `packages/market`：保留原包名的桌面入口，负责官方服务注册、协议协商和 UI。
+- 浏览器仅使用 core 的安全合同；安装仍经官方 pluginManager。两个包必须按已验证版本配对。
+- [总目录与接口维护](docs/CORE-ADAPTER-GUIDE.md)、[core 包说明](packages/market-core/README.md)、[本批接力](docs/handoff/CORE-ADAPTER-2026-09-29.md)。
+
 ## 开发与从新目录重建
 
 需要 Node.js 24+ 和 pnpm 11.7.0。克隆有权访问的源码仓后：
@@ -109,7 +118,9 @@ a8856180264fea4ba949ac6505c10a71bbf512cfa0dda253992994711904be7c
 ```powershell
 pnpm install --frozen-lockfile
 pnpm check
-pnpm --dir packages/market exec npm pack
+pnpm typecheck
+# 双包发行前必须明确core来源；下列命令只准备候选，不证明已发布
+pnpm pack:release --out-dir D:/eac-market-verify/release-candidate --registry-core
 ```
 
 `check` 串行完成构建、静态检查、测试和包清单检查；失败就停止交付。首次安装依赖需要网络，遵守各自环境下载约定。本项目另做不含 node_modules/lib/shim 的新目录重建，结果见交付报告。
@@ -120,7 +131,7 @@ pnpm --dir packages/market exec npm pack
 
 | 路径 | 职责 / 维护入口 |
 |---|---|
-| `packages/market/src/contracts` | 可序列化 Host/Client 契约，变更后重新生成 Typert |
+| `packages/market-core/src/contracts` | 可序列化 Host/Client 契约，变更后重新生成 Typert |
 | `src/adapters/dsh` | 官方管理器与真实库存，禁止另写私有安装器 |
 | `src/core`、`src/persistence` | 预检、确认、任务、锁、事件与恢复 |
 | `src/catalog`、`src/delivery` | 元数据、发行/撤回、来源、校验和缓存 |
@@ -131,6 +142,6 @@ pnpm --dir packages/market exec npm pack
 | `examples/market-extension` | 可构建的独立 DSH 扩展示例 |
 | `tests`、`docs` | 自动检查、真实验收、协议证据与协作记录 |
 
-上表 `src/` 相对 `packages/market/`。新增首页补充、更多工具、二级页、详情补充、作者工具，优先用扩展契约。外部作者导入 **`@dsh-eac/market/client/extensions`**（仅类型），不要复制安装器。
+上表中 `src/client` 相对 `packages/market/`；业务 `core/host/adapters/catalog/delivery/persistence/authoring` 已迁到 `packages/market-core/src/`。新增首页补充、更多工具、二级页、详情补充、作者工具，优先用扩展契约。外部作者导入 **`@dsh-eac/market/client/extensions`**（仅类型），不要复制安装器。
 
 升级前读 [升级指南](docs/UPGRADE-GUIDE.md)、[生态接口](docs/ECOSYSTEM-INTERFACES.md)、[总目录](docs/index.md) 及 [多智能体分工](docs/handoff/NEXT-AGENT-PLAYBOOK.md)。发行记录不可原地改字节；新构建用新版本/摘要，撤回保留历史。令牌、个人 profile 和真实会话日志不得入库。

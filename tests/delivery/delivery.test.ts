@@ -8,8 +8,8 @@ import {
   assertSafeRemoteUrl,
   safeFetch,
   verifyTgzFile,
-} from '../../packages/market/src/delivery/index.ts'
-import type { CatalogDelivery } from '../../packages/market/src/contracts/types.ts'
+} from '../../packages/market-core/src/delivery/index.ts'
+import type { CatalogDelivery } from '../../packages/market-core/src/contracts/types.ts'
 import { createTgz, digest, validTgz } from './fixtures.ts'
 
 function withTemp<T>(name: string, action: (root: string) => T | Promise<T>): Promise<T> {

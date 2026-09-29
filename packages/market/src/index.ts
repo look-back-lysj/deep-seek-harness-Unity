@@ -16,7 +16,8 @@ import {
   AiApplyResult,
   AiConfirmRequest,
   MARKET_SCHEMA_VERSION,
-  PROTOCOL_VERSION,
+  type ClientHandshakeRequest,
+  type ClientHandshakeResult,
   type AuthorDraft,
   type AuthorDraftDeleteRequest,
   type AuthorDraftInput,
@@ -53,7 +54,11 @@ import {
   type TransferDisposeRequest,
   type TransferResult,
 } from './types.ts'
-import { MarketRuntime } from './host/market-runtime.ts'
+import type { MarketBackend } from '@dsh-eac/market-core'
+import { createDshMarketBackend } from '@dsh-eac/market-core/dsh'
+import { CORE_API_VERSION, CORE_VERSION, supportsApiVersion } from '@dsh-eac/market-core/compatibility'
+import { ClientSessionGate } from './session-gate.ts'
+import { ADAPTER_PROTOCOL_VERSION, REQUIRED_CORE_API_VERSION } from './version.ts'
 
 export interface Config {
   readonly dataDirectory?: string
@@ -97,10 +102,14 @@ export class MarketService extends Service {
   private readonly marketDataDir: string
   private readonly hostVersion: string
   readonly typertRemote: unknown = bindTypertRemote(this, 'eacMarket')
-  private readonly runtime: MarketRuntime
+  private readonly runtime: MarketBackend
+  private readonly clientSessions = new ClientSessionGate(ADAPTER_PROTOCOL_VERSION)
 
   constructor(ctx: Context, config: Config = {}) {
     super(ctx, 'eacMarket')
+    if (!supportsApiVersion(CORE_API_VERSION, REQUIRED_CORE_API_VERSION)) {
+      throw new Error('市场 core 接口版本不匹配，请安装经过验证的完整市场版本。')
+    }
     this.context = ctx
     this.profileDir = ctx.profileContext.dir
     this.marketDataDir = config.dataDirectory || join(this.profileDir, 'eac-market')
@@ -110,7 +119,8 @@ export class MarketService extends Service {
       profileName: ctx.profileContext.name,
       hostVersion: this.hostVersion,
     }
-    this.runtime = new MarketRuntime(ctx, identity, this.marketDataDir, {
+    this.runtime = createDshMarketBackend(ctx, identity, this.marketDataDir, {
+      embeddedCatalogBytes: readFileSync(new URL('../data/index.json', import.meta.url)),
       marketVersion,
       catalogSources: (config.catalogSources ?? []).map((source) => ({
         id: source.id,
@@ -134,41 +144,64 @@ export class MarketService extends Service {
     return { id: String(invocation.peer.id), signal: invocation.signal }
   }
 
+  private assertWriteCompatible(): void {
+    const caller = this.remoteCaller()
+    this.clientSessions.assert(caller.id)
+  }
+
+  @Remote
+  clientConnect(request: ClientHandshakeRequest): ClientHandshakeResult {
+    const caller = this.remoteCaller()
+    const accepted = this.clientSessions.connect(caller.id, request?.protocolVersion)
+    return {
+      accepted,
+      protocolVersion: ADAPTER_PROTOCOL_VERSION,
+      coreVersion: CORE_VERSION,
+      coreApiVersion: CORE_API_VERSION,
+      ...(accepted ? {} : { reason: '市场页面与后台协议不兼容，请刷新或更新市场。' }),
+    }
+  }
+
   @Remote
   hello(): EnvironmentHello {
     return {
-      protocolVersion: PROTOCOL_VERSION,
+      protocolVersion: ADAPTER_PROTOCOL_VERSION,
+      coreVersion: CORE_VERSION,
+      coreApiVersion: CORE_API_VERSION,
       schemaVersion: MARKET_SCHEMA_VERSION,
       marketVersion,
       environmentId: createHash('sha256').update(`eac-market:${this.profileDir}`).digest('hex').slice(0, 24),
       profileName: this.context.profileContext.name,
       hostVersion: this.hostVersion,
-      capabilities: this.runtime.host.capabilities(),
+      capabilities: this.runtime.capabilities(),
     }
   }
 
   @Remote
   catalog(): CatalogSnapshot {
-    return { ...this.runtime.catalog.load().snapshot, collections: this.runtime.catalog.collectionViews() }
+    return this.runtime.catalog()
   }
 
   @Remote
   catalogRefresh(request?: CatalogRefreshRequest): Promise<CatalogRefreshView> {
+    this.assertWriteCompatible()
     return this.runtime.catalogRefresh(request)
   }
 
   @Remote
   async inventory(): Promise<InventorySnapshot> {
-    return (await this.runtime.host.readState()).inventory
+    return this.runtime.inventory()
   }
 
   @Remote
   planCreate(request: PlanCreateRequest): Promise<PlanResult> {
+    this.assertWriteCompatible()
     return this.runtime.planCreate(request, this.remoteCaller().id)
   }
 
   @Remote
   taskStart(request: TaskStartRequest): Promise<TaskState> {
+    this.assertWriteCompatible()
     return this.runtime.taskStart(request, this.remoteCaller().id)
   }
 
@@ -189,26 +222,31 @@ export class MarketService extends Service {
 
   @Remote
   taskApproveBuilds(request: TaskApprovalRequest): Promise<TaskState> {
+    this.assertWriteCompatible()
     return this.runtime.taskApproveBuilds(request)
   }
 
   @Remote
   taskResume(request: TaskResumeRequest): Promise<TaskState> {
+    this.assertWriteCompatible()
     return this.runtime.taskResume(request)
   }
 
   @Remote
   taskCancel(request: TaskCancelRequest): Promise<TaskState> {
+    this.assertWriteCompatible()
     return this.runtime.taskCancel(request)
   }
 
   @Remote
   pluginSetEnabled(request: PluginActionRequest): Promise<PluginActionResult> {
+    this.assertWriteCompatible()
     return this.runtime.pluginSetEnabled(request)
   }
 
   @Remote
   pluginRemove(request: RemovePluginRequest): Promise<PluginActionResult> {
+    this.assertWriteCompatible()
     return this.runtime.pluginRemove(request)
   }
 
@@ -224,36 +262,43 @@ export class MarketService extends Service {
 
   @Remote
   authorDraftSave(input: AuthorDraftInput): AuthorDraft {
+    this.assertWriteCompatible()
     return this.runtime.authorDraftSave(input)
   }
 
   @Remote
   authorDraftDelete(request: AuthorDraftDeleteRequest): boolean {
+    this.assertWriteCompatible()
     return this.runtime.authorDraftDelete(request)
   }
 
   @Remote
   authorReadmeImport(request: ReadmeImportRequest): Promise<ReadmeImportResult> {
+    this.assertWriteCompatible()
     return this.runtime.authorReadmeImport(request)
   }
 
   @Remote
   authorReadmePreview(request: ReadmeImportRequest): Promise<ReadmePreviewView> {
+    this.assertWriteCompatible()
     return this.runtime.authorReadmePreview(request)
   }
 
   @Remote
   authorReadmeApplyPreview(request: ReadmeApplyPreviewRequest): ReadmeImportResult {
+    this.assertWriteCompatible()
     return this.runtime.authorReadmeApplyPreview(request)
   }
 
   @Remote
   authorTransferBegin(request: TransferBeginRequest): TransferResult {
+    this.assertWriteCompatible()
     return this.runtime.authorTransferBegin(request)
   }
 
   @Remote
   authorTransferChunk(request: TransferChunkRequest): Promise<TransferResult> {
+    this.assertWriteCompatible()
     return this.runtime.authorTransferChunk(request)
   }
 
@@ -264,11 +309,13 @@ export class MarketService extends Service {
 
   @Remote
   authorTransferDispose(request: TransferDisposeRequest): boolean {
+    this.assertWriteCompatible()
     return this.runtime.authorTransferDispose({ taskId: request.transferId })
   }
 
   @Remote
   authorExportDraft(request: AuthorExportRequest): TransferResult {
+    this.assertWriteCompatible()
     return this.runtime.authorExportDraft(request)
   }
 
@@ -284,12 +331,14 @@ export class MarketService extends Service {
 
   @Remote
   aiAnalyze(request: AiAnalyzeRequest): Promise<AiAnalysisResult> {
+    this.assertWriteCompatible()
     const caller = this.remoteCaller()
     return this.runtime.aiAnalyze(request, caller.id, caller.signal)
   }
 
   @Remote
   aiConfirm(request: AiConfirmRequest): Promise<AiApplyResult> {
+    this.assertWriteCompatible()
     return this.runtime.aiConfirm(request, this.remoteCaller().id)
   }
 

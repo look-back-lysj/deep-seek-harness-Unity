@@ -4,6 +4,8 @@
 
 | 文档 | 用途 |
 |---|---|
+| [Core / Adapter 底座指南](CORE-ADAPTER-GUIDE.md) | 两包职责、公开API、通信协商、版本、打包、后续TUI边界 |
+| [本批拆包接力](handoff/CORE-ADAPTER-2026-09-29.md) | 实际变更、测试结果、发行与未验范围 |
 | [Agent 插件投稿指南](contributing/AGENT-SUBMISSION.md) | 作者Agent提示词、写入白名单、材料/制品检查、Fork投稿与维护者发布边界 |
 | [UI 与交互升级记录](handoff/UI-UPGRADE-2026-09-29.md) | 2026-09-29：导航、焦点、筛选、卡片、任务与安装弹窗升级及本批验收 |
 | [DSH 核心宽泛兼容阶段一](handoff/DSH-CORE-COMPAT-2026-09-29.md) | 2026-09-29：0.1.7/0.2.0 peer gate、官方适配层、隔离 Desktop 验证与未来版本边界 |

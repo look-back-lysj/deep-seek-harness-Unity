@@ -1,0 +1,67 @@
+{
+  "name": "@dsh-eac/market-core",
+  "version": "0.1.0",
+  "description": "Headless EAC market business runtime and explicit DSH host binding",
+  "type": "module",
+  "main": "./lib/index.js",
+  "types": "./lib/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./dsh": {
+      "types": "./lib/types/dsh.d.ts",
+      "default": "./lib/dsh.js"
+    },
+    "./contracts": {
+      "types": "./lib/types/contracts/types.d.ts",
+      "default": "./lib/contracts.js"
+    },
+    "./compatibility": {
+      "types": "./lib/types/contracts/compatibility.d.ts",
+      "default": "./lib/compatibility.js"
+    },
+    "./semver": {
+      "types": "./lib/types/core/semver.d.ts",
+      "default": "./lib/semver.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib/*.js",
+    "lib/types/**/*.d.ts",
+    "README.md",
+    "LICENSE"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=24"
+  },
+  "peerDependencies": {
+    "@deepseek-ai/cordis": "~4.0.4",
+    "@deepseek-ai/dsh-app-boot": "*",
+    "@deepseek-ai/dsh-atomic-write": "*",
+    "@deepseek-ai/dsh-plugin-manager": "*"
+  },
+  "peerDependenciesMeta": {
+    "@deepseek-ai/cordis": {
+      "optional": true
+    },
+    "@deepseek-ai/dsh-app-boot": {
+      "optional": true
+    },
+    "@deepseek-ai/dsh-atomic-write": {
+      "optional": true
+    },
+    "@deepseek-ai/dsh-plugin-manager": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@deepseek-ai/cordis": "~4.0.4",
+    "@deepseek-ai/dsh-app-boot": "0.1.7-rc.2",
+    "@deepseek-ai/dsh-atomic-write": "0.1.7-rc.2",
+    "@deepseek-ai/dsh-plugin-manager": "0.1.7-rc.2"
+  }
+}

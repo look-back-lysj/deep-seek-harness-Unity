@@ -1,4 +1,5 @@
 packages:
+  - packages/market-core
   - packages/market
 allowBuilds:
   esbuild: true

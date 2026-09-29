@@ -1,7 +1,7 @@
 /** 离线内容 CLI：不下载、不构建作者项目、不改 profile。Node 24 原生运行 TS。 */
 import { readFileSync, writeFileSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
-import { validateAuthorSubmission, validateBuildRecipe, validateProductionCatalog } from '../../packages/market/src/catalog/index.ts'
+import { validateAuthorSubmission, validateBuildRecipe, validateProductionCatalog } from '../../packages/market-core/src/catalog/index.ts'
 
 const [command, filename, ...args] = process.argv.slice(2)
 try {
