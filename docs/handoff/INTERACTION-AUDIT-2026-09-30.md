@@ -70,3 +70,10 @@ interface NavigationSnapshot {
 - 搜索、用途、验证、安装状态和可安装范围统一通过 clearBrowseFilters 清理。
 - 来源筛选不会无声消失，用户可以明确清除来源条件。
 - 筛选变更仍只影响目录结果，不触发 Remote 或页面跳转。
+
+## 阶段 3 插件动作状态
+
+- 已加入 pluginActionState，让首推、普通插件卡、皮肤推荐和详情共用安装/确认/管理/阻断/运行时不可用状态。
+- 旧组件测试保留真实文案和 disabled 原因，未改 Remote 或 Core。
+- 安装提交中的 Modal 不能通过 Escape 或遮罩关闭，避免用户在官方写入进行时误以为操作已取消。
+- 代码复制在 Clipboard API 不可用时尝试安全 fallback，并显示失败提示。
