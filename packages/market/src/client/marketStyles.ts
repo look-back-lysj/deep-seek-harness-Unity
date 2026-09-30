@@ -706,4 +706,37 @@ export const MARKET_CSS = `
 .eac-market__skin-card-reason { color: var(--eac-link) !important; }
 .eac-market__skin-card .eac-market__button-row { margin-top: 10px; }
 .eac-market__skin-grid { gap: 20px; }
-.eac-market__skin-grid > div { flex: 0 0 min(360px, 82%); }`
+.eac-market__skin-grid > div { flex: 0 0 min(360px, 82%); }
+/* Stage 4: detail, management and task surfaces share one information hierarchy. */
+.eac-market__detail { gap: 32px; }
+.eac-market__detail-main { max-width: 78ch; }
+.eac-market__detail-side { top: 88px; padding: 20px; border-radius: 14px; background: var(--eac-panel-2); }
+.eac-market__detail-side details[open] summary { margin-bottom: 14px; }
+.eac-market__detail-side .eac-market__section-head { margin-top: 16px; margin-bottom: 10px; }
+.eac-market__plugin-head { margin: 20px 0 10px; }
+.eac-market__plugin-head h1 { font-size: clamp(25px, 3vw, 36px); letter-spacing: -.04em; }
+.eac-market__lead { max-width: 62ch; margin: 12px 0 22px; font-size: 16px; line-height: 1.7; }
+.eac-market__detail-main > .eac-market__button-row { padding-bottom: 18px; border-bottom: 1px solid var(--eac-border); }
+.eac-market__task-dialog .eac-modal__content { padding: 20px; }
+.eac-market__task-list { gap: 24px; }
+.eac-market__task { padding: 20px; border-radius: 14px; box-shadow: none; }
+.eac-market__task + .eac-market__task { border-top: 1px solid var(--eac-border); }
+.eac-market__task-head { padding-bottom: 12px; border-bottom: 1px solid var(--eac-border); }
+.eac-market__task-head h3 { font-size: 17px; letter-spacing: -.02em; }
+.eac-market__task-items { margin: 14px 0; padding: 0; list-style: none; }
+.eac-market__task-items li { display: flex; justify-content: space-between; gap: 14px; padding: 9px 0; border-bottom: 1px solid var(--eac-border); color: var(--eac-text-2); font-size: 12px; }
+.eac-market__task-items li:last-child { border-bottom: 0; }
+.eac-market__task details { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--eac-border); }
+.eac-market__task .eac-market__notice { margin-top: 16px; background: var(--eac-page); }
+.eac-market__setting { padding: 18px 0; }
+.eac-market__settings-list { border-top: 1px solid var(--eac-border); }
+@media (max-width: 899px) {
+  .eac-market__detail { gap: 20px; }
+  .eac-market__detail-side { position: static; order: 0; }
+}
+@media (max-width: 719px) {
+  .eac-market__detail { gap: 18px; }
+  .eac-market__detail-main > .eac-market__button-row { align-items: stretch; flex-direction: column; }
+  .eac-market__task { padding: 16px; }
+  .eac-market__task-items li { align-items: flex-start; flex-direction: column; gap: 4px; }
+}`
