@@ -20,6 +20,10 @@
 
 [打开 Gitee 最新发行说明](https://gitee.com/flowing-shadows-like-scenes/deep-seek-harness-unity-mirror)
 
+当前正式安装包固定地址（mvp.9）：
+
+https://gitee.com/flowing-shadows-like-scenes/deep-seek-harness-unity-mirror/raw/dbeb4b7f0e655f7bdd299a8e40d59af83f0e7da0/artifacts/sha256/a8856180264fea4ba949ac6505c10a71bbf512cfa0dda253992994711904be7c/dsh-eac-market-0.1.0-mvp.9.tgz
+
 安装完成后点击「立即启用」，然后完整退出并重新启动 DSH。打开侧边栏 EAC，使用「发现 / 全部插件 / 我的插件」三个主导航。
 
 双包正式发布后，用户仍只安装桌面适配器，官方包管理器负责取得 core。首次获取依赖仍需联网，本地 `.tgz` 不等于完整离线包。
