@@ -5,6 +5,10 @@
 ## 用户当前可用的升级入口
 
 1. 从 [Gitee 发行站](https://gitee.com/flowing-shadows-like-scenes/deep-seek-harness-unity-mirror) 复制当前正式版本的固定安装包地址，在官方 DSH 的「插件 → 添加插件」中安装。当前正式版是单包 `0.1.0-mvp.9`，不需要独立 core。
+
+固定下载地址（当前正式版 mvp.9）：
+
+https://gitee.com/flowing-shadows-like-scenes/deep-seek-harness-unity-mirror/raw/dbeb4b7f0e655f7bdd299a8e40d59af83f0e7da0/artifacts/sha256/a8856180264fea4ba949ac6505c10a71bbf512cfa0dda253992994711904be7c/dsh-eac-market-0.1.0-mvp.9.tgz
 2. 完整退出 DSH，再重新启动，让新的 Host、Client 和 Remote 描述符同时加载。
 3. 打开 EAC，确认「发现 / 全部插件 / 我的插件」三个主导航可用。
 4. 在「我的插件」确认市场版本与发行站公布的版本一致，且由官方插件管理器管理。
