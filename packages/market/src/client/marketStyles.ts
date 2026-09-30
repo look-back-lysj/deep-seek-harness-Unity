@@ -739,4 +739,6 @@ export const MARKET_CSS = `
   .eac-market__detail-main > .eac-market__button-row { align-items: stretch; flex-direction: column; }
   .eac-market__task { padding: 16px; }
   .eac-market__task-items li { align-items: flex-start; flex-direction: column; gap: 4px; }
-}`
+}.eac-market__filter-summary { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 8px 0 14px; padding: 9px 0; border-bottom: 1px solid var(--eac-border); color: var(--eac-text-2); font-size: 12px; }
+.eac-market__filter-summary > span { min-width: 0; overflow-wrap: anywhere; }
+@media (max-width: 719px) { .eac-market__filter-summary { align-items: flex-start; flex-direction: column; } }`

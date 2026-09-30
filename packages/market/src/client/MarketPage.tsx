@@ -27,6 +27,7 @@ import {
   latestCompatiblePlugin,
   installabilityLabel,
   isInstalled,
+  pluginActionState,
   packCoverageLabel,
   presentationForPlugin,
   recommendationMatches,
@@ -34,6 +35,7 @@ import {
   type MarketRemote,
   type MarketView,
   type BrowseNavigationContext,
+  type NavigationSnapshot,
   type DiscoverNavigationSection,
   type PluginFilters,
   type PrimaryView,
@@ -139,6 +141,10 @@ export function MarketPage({ remote, skinService, onOpenOfficialPlugins, homeSup
   const [view, setView] = useState<MarketView>('discover')
   const [previousView, setPreviousView] = useState<PrimaryView | 'skins'>('discover')
   const [browseContext, setBrowseContext] = useState<BrowseNavigationContext>()
+  const secondaryOrigin = useRef<NavigationSnapshot>()
+  const detailOrigin = useRef<NavigationSnapshot>()
+  const skinOriginSnapshot = useRef<NavigationSnapshot>()
+  const extensionOrigin = useRef<NavigationSnapshot>()
   const [skinOrigin, setSkinOrigin] = useState<PrimaryView>('discover')
   const [skinVisited, setSkinVisited] = useState(false)
   const [skinInstallGuide, setSkinInstallGuide] = useState<CatalogPlugin>()
@@ -197,6 +203,29 @@ export function MarketPage({ remote, skinService, onOpenOfficialPlugins, homeSup
   const activeCount = state.status === 'ready' ? activeTasks(state.tasks).length : 0
   const activeTab = view === 'detail' ? detailTab(previousView) : undefined
 
+  function navigationSnapshot(source: NavigationSnapshot['source'], targetView: MarketView = view): NavigationSnapshot {
+    return { view: targetView, source, filters, availableOnly, sort: browseSort, page, scrollTop: scrollRef.current?.scrollTop ?? 0 }
+  }
+
+  function restoreNavigation(snapshot: NavigationSnapshot): void {
+    setView(snapshot.view)
+    if (snapshot.view === 'discover' || snapshot.view === 'all' || snapshot.view === 'mine') setPreviousView(snapshot.view)
+    else if (snapshot.view === 'skins') setPreviousView(skinOrigin)
+    setFilters(snapshot.filters)
+    setAvailableOnly(snapshot.availableOnly)
+    setBrowseSort(snapshot.sort)
+    setPage(snapshot.page)
+    setBrowseContext(snapshot.source === 'discover' ? { source: 'discover', ...(snapshot.filters.category === 'all' ? {} : { category: snapshot.filters.category }), page: snapshot.page, scrollTop: snapshot.scrollTop } : undefined)
+    runAfterNextFrame(() => scrollRef.current?.scrollTo({ top: snapshot.scrollTop }))
+  }
+
+  function returnFromSecondary(): void {
+    const snapshot = secondaryOrigin.current
+    secondaryOrigin.current = undefined
+    if (snapshot) restoreNavigation(snapshot)
+    else restoreNavigation({ view: 'discover', source: 'secondary', filters: EMPTY_FILTERS, availableOnly, sort: browseSort, page: 1, scrollTop: 0 })
+  }
+
   function navigate(next: PrimaryView): void {
     const intent = ++navigationIntent.current
     const currentView = pageTab(view)
@@ -204,6 +233,8 @@ export function MarketPage({ remote, skinService, onOpenOfficialPlugins, homeSup
     if (currentView !== undefined) {
       scrollPositions.current.set(`${currentView}:${filters.category}:${filters.query}:${page}`, currentScrollTop)
     }
+    secondaryOrigin.current = undefined
+    extensionOrigin.current = undefined
     setView(next)
     setPreviousView(next)
     setPage(1)
@@ -219,8 +250,7 @@ export function MarketPage({ remote, skinService, onOpenOfficialPlugins, homeSup
   }
 
   function navigateSecondary(next: 'help' | 'settings' | 'author'): void {
-    const from = pageTab(view) ?? (view === 'skins' ? skinOrigin : 'discover')
-    scrollPositions.current.set(`${from}:${filters.category}:${filters.query}:${page}`, scrollRef.current?.scrollTop ?? 0)
+    secondaryOrigin.current = navigationSnapshot('secondary')
     setMoreMenu(false)
     setView(next)
   }
@@ -228,6 +258,7 @@ export function MarketPage({ remote, skinService, onOpenOfficialPlugins, homeSup
   function openDetail(plugin: CatalogPlugin): void {
     if (state.status !== 'ready') return
     const active = typeof document === 'undefined' ? undefined : document.activeElement
+    detailOrigin.current = navigationSnapshot('detail')
     detailReturnFocus.current = active instanceof HTMLElement ? active : null
     const from = view === 'skins' ? 'skins' : pageTab(view) ?? 'discover'
     scrollPositions.current.set(`${from}:${filters.category}:${filters.query}:${page}`, scrollRef.current?.scrollTop ?? 0)
@@ -262,14 +293,17 @@ export function MarketPage({ remote, skinService, onOpenOfficialPlugins, homeSup
   }
 
   function backFromDetail(): void {
-    const key = `${previousView}:${filters.category}:${filters.query}:${page}`
+    const snapshot = detailOrigin.current
+    detailOrigin.current = undefined
     const returnFocus = detailReturnFocus.current
     detailReturnFocus.current = null
-    setView(previousView)
-    runAfterNextFrame(() => {
-      scrollRef.current?.scrollTo({ top: scrollPositions.current.get(key) ?? 0 })
-      restoreDetailReturnFocus(returnFocus, scrollRef.current, previousView)
-    })
+    if (snapshot) {
+      restoreNavigation(snapshot)
+      runAfterNextFrame(() => restoreDetailReturnFocus(returnFocus, scrollRef.current, pageTab(snapshot.view) ?? (snapshot.view === 'skins' ? 'skins' : previousView)))
+    } else {
+      setView(previousView)
+      runAfterNextFrame(() => restoreDetailReturnFocus(returnFocus, scrollRef.current, previousView))
+    }
   }
 
   function openPlanForPlugin(plugin: CatalogPlugin): void {
@@ -301,6 +335,25 @@ export function MarketPage({ remote, skinService, onOpenOfficialPlugins, homeSup
   function updateTask(task: TaskState, reveal = true): void {
     controller.acceptTask(task)
     if (reveal) setTaskDrawer(true)
+  }
+
+  function clearBrowseFilters(): void {
+    setFilters(EMPTY_FILTERS)
+    setAvailableOnly(false)
+    setBrowseSort('rules')
+    setAdvanced(false)
+    setBrowseContext(undefined)
+    setPage(1)
+  }
+
+  function browseFilterSummary(): string[] {
+    const summary: string[] = []
+    if (filters.query.trim() !== '') summary.push('搜索：' + filters.query.trim())
+    if (filters.category !== 'all') summary.push('用途：' + filters.category)
+    if (filters.verification !== 'all') summary.push('验证：' + verificationLabel(filters.verification))
+    if (filters.installed !== 'all') summary.push(filters.installed === 'yes' ? '已安装' : '未安装')
+    if (availableOnly) summary.push('仅可安装')
+    return summary
   }
 
   async function refreshCatalog(): Promise<void> {
@@ -422,7 +475,7 @@ export function MarketPage({ remote, skinService, onOpenOfficialPlugins, homeSup
   const loaderPlugin = latestCompatiblePlugin(state.catalog, SKIN_LOADER_PACKAGE) ?? functionalPlugins.find((plugin) => plugin.packageName === SKIN_LOADER_PACKAGE)
   const openSkins = () => {
     const from = pageTab(view) ?? 'discover'
-    scrollPositions.current.set(`${from}:${filters.category}:${filters.query}:${page}`, scrollRef.current?.scrollTop ?? 0)
+    skinOriginSnapshot.current = navigationSnapshot('skins', from)
     setSkinOrigin(from); setSkinVisited(true); setView('skins')
     window.requestAnimationFrame(() => scrollRef.current?.scrollTo({ top: 0 }))
   }
@@ -437,13 +490,13 @@ export function MarketPage({ remote, skinService, onOpenOfficialPlugins, homeSup
     plugin: selectedPlugin === undefined ? undefined : { id: selectedPlugin.id, name: selectedPlugin.name, packageName: selectedPlugin.packageName, version: selectedPlugin.version, artifactDigest: selectedPlugin.artifactDigest },
     draft: extensionDraft === undefined ? undefined : { ...extensionDraft },
     openDetail(id) { const plugin = findPlugin(state.catalog, id); if (plugin) openDetail(plugin) },
-    openOwnPage(id) { setExtensionPage(id); setView('extension'); setMoreMenu(false) },
+    openOwnPage(id) { extensionOrigin.current = navigationSnapshot('extension'); setExtensionPage(id); setView('extension'); setMoreMenu(false) },
     requestInstallReview(request) {
       const plugin = state.catalog.plugins.find((item) => item.id === request.pluginId && item.version === request.version && item.artifactDigest === request.artifactDigest)
       if (plugin) openPlanForPlugin(plugin)
       else setActionNotice('扩展引用的插件版本已变化，请在全部插件中重新选择。')
     },
-    previewDraftChange(change) { setDraftChange({ ...change }); setView('author') },
+    previewDraftChange(change) { secondaryOrigin.current = navigationSnapshot('extension'); setDraftChange({ ...change }); setView('author') },
   }
   const surface = (slot: ExtensionSlot): React.ReactNode => extensions && renderExtensionSurface ? renderExtensionSurface({ host: extensions, slot, context: extensionContext, pageId: extensionPage }) : null
 
@@ -494,13 +547,14 @@ export function MarketPage({ remote, skinService, onOpenOfficialPlugins, homeSup
                 <Button variant="ghost" size="sm" onClick={() => { setBrowseContext({ source: 'top-nav', page: 1, scrollTop: 0 }); setFilters((current) => ({ ...current, category: 'all' })); setPage(1) }}>清除来源筛选</Button>
               </div>
             )}
-            <div className="eac-market__directory-meta"><span>{filtered.length} 个插件符合当前条件</span><span className="eac-market__directory-hint">默认展示全部记录</span></div>
+            <div className="eac-market__directory-meta" aria-live="polite"><span>{filtered.length} 个插件符合当前条件</span><span className="eac-market__directory-hint">默认展示全部记录</span></div>
+            {browseFilterSummary().length > 0 && <div className="eac-market__filter-summary" role="status"><span>当前筛选：{browseFilterSummary().join(' · ')}</span><Button size="sm" variant="ghost" onClick={clearBrowseFilters}>清除全部筛选</Button></div>}
             <div className="eac-market__filters" aria-label="安装包范围">
               <Pill active={availableOnly} onClick={() => applyBrowseChange(() => setAvailableOnly(true), () => setPage(1))}>可安装</Pill>
               <Pill active={!availableOnly} onClick={() => applyBrowseChange(() => setAvailableOnly(false), () => setPage(1))}>全部记录</Pill>
             </div>
             <div className="eac-market__toolbar">
-              <SearchField value={filters.query} onChange={(query) => applyBrowseChange(() => setFilters({ ...filters, query }), () => setPage(1))} />
+              <SearchField value={filters.query} onChange={(query) => applyBrowseChange(() => setFilters((current) => ({ ...current, query })), () => setPage(1))} />
               <div className="eac-market__filters">
                 <label className="eac-market__sr-only" htmlFor="eac-category">用途分类</label>
                 <select id="eac-category" value={filters.category} onChange={(event) => applyBrowseChange(() => setFilters({ ...filters, category: event.currentTarget.value }), () => setPage(1))}>
@@ -528,14 +582,14 @@ export function MarketPage({ remote, skinService, onOpenOfficialPlugins, homeSup
                     <option value="all">全部</option><option value="yes">已安装</option><option value="no">未安装</option>
                   </select>
                 </label>
-                <Button variant="ghost" onClick={() => applyBrowseChange(() => setFilters(EMPTY_FILTERS), () => setPage(1))}>清除筛选</Button>
+                <Button variant="ghost" onClick={clearBrowseFilters}>清除全部筛选</Button>
               </div>
             )}
             {visible.length === 0 ? (
               <EmptyState
                 title="没有匹配的插件"
                 description="目录里没有满足当前搜索和筛选条件的项目。可以清除筛选，或查看全部插件。"
-                action={<Button variant="outline" onClick={() => applyBrowseChange(() => setFilters(EMPTY_FILTERS), () => setPage(1))}>清除筛选</Button>}
+                action={<Button variant="outline" onClick={clearBrowseFilters}>清除全部筛选</Button>}
               />
             ) : (
               <div className="eac-market__grid eac-market__directory-grid">
@@ -619,7 +673,7 @@ export function MarketPage({ remote, skinService, onOpenOfficialPlugins, homeSup
 
         {skinVisited && <div hidden={view !== 'skins'}><SkinCenter
           catalog={state.catalog} inventory={state.inventory.items} skinService={skinService}
-          onBack={() => { setView(skinOrigin); window.requestAnimationFrame(() => scrollRef.current?.scrollTo({ top: scrollPositions.current.get(`${skinOrigin}:${filters.category}:${filters.query}:${page}`) ?? 0 })) }}
+          onBack={() => { const snapshot = skinOriginSnapshot.current; skinOriginSnapshot.current = undefined; if (snapshot) restoreNavigation(snapshot); else setView(skinOrigin) }}
           onOpen={openDetail} onInstall={openPlanForPlugin}
           onToggle={(item, enabled) => void toggleInventory(item, enabled)}
           onRemove={(item) => { setRemoveStep(false); setRemoveTarget(item) }}
@@ -647,6 +701,7 @@ export function MarketPage({ remote, skinService, onOpenOfficialPlugins, homeSup
 
         {view === 'help' && (
           <>
+            <Button variant="ghost" onClick={returnFromSecondary}>返回市场</Button>
             <header className="eac-market__page-head"><div><h1>上手帮助</h1><p>第一次使用只需要三步。安装不是教程完成条件。</p></div></header>
             <div className="eac-market__help-steps">
               {HELP_STEPS.map((step, index) => (
@@ -669,6 +724,7 @@ export function MarketPage({ remote, skinService, onOpenOfficialPlugins, homeSup
 
         {view === 'settings' && (
           <>
+            <Button variant="ghost" onClick={returnFromSecondary}>返回市场</Button>
             <header className="eac-market__page-head"><div><h1>设置</h1><p>查看目录、外观和诊断信息。</p></div></header>
             <div className="eac-market__settings-list">
               <section className="eac-market__setting">
@@ -704,8 +760,8 @@ export function MarketPage({ remote, skinService, onOpenOfficialPlugins, homeSup
           </>
         )}
 
-        {view === 'extension' && <section><Button variant="outline" onClick={() => navigate('discover')}>返回发现</Button>{surface(EXTENSION_SLOTS.page)}</section>}
-        <div hidden={view !== 'author'}><AuthorWorkspace remote={remote} onDraftSnapshot={setExtensionDraft} draftChange={draftChange} supplemental={<>{authorSupplemental}{surface(EXTENSION_SLOTS.author)}</>} /></div>
+        {view === 'extension' && <section><Button variant="outline" onClick={() => { const snapshot = extensionOrigin.current; extensionOrigin.current = undefined; if (snapshot) restoreNavigation(snapshot); else navigate('discover') }}>返回上一页</Button>{surface(EXTENSION_SLOTS.page)}</section>}
+        <div hidden={view !== 'author'}><Button variant="ghost" onClick={returnFromSecondary}>返回市场</Button><AuthorWorkspace remote={remote} onDraftSnapshot={setExtensionDraft} draftChange={draftChange} supplemental={<>{authorSupplemental}{surface(EXTENSION_SLOTS.author)}</>} /></div>
 
         <p className="eac-market__footer-note">EAC 是社区整合市场，不代表 DeepSeek 官方认证。</p>
       </MarketFrame>
@@ -872,8 +928,7 @@ function FeaturedPoster({ title, items, inventory, onOpen, onInstall, onManage }
   const pluginItem = (items[active] ?? items[0])!
   const plugin = pluginItem.plugin
   const reason = pluginItem.card.reason ?? ''
-  const installed = isInstalled(inventory, plugin) !== undefined
-  const blocked = plugin.installability !== 'bundle-installable' || plugin.verification === 'hard-incompatible'
+  const action = pluginActionState(plugin, inventory, { canInstall: true, canManage: onManage !== undefined })
   const media = [posterSource(pluginItem.card.poster)].filter((item): item is CatalogMedia => item !== undefined)
   const current = media[0]
   const hasImage = current !== undefined && !failed.has(current.id)
@@ -888,7 +943,7 @@ function FeaturedPoster({ title, items, inventory, onOpen, onInstall, onManage }
       <button type="button" className="eac-market__poster-art" onClick={() => onOpen(plugin)} aria-label={`查看 ${plugin.name} 详情`}>
         {hasImage ? <img src={current.sourceUrl} alt={current.alt || plugin.name} width={current.width ?? 1200} height={current.height ?? 675} onError={() => setFailed((value) => new Set(value).add(current.id))} /> : <span className="eac-market__poster-fallback-copy"><strong>{pluginItem.card.title || plugin.name}</strong><small>{pluginItem.card.summary || plugin.summary || '作者尚未提供一句话简介。'}</small></span>}
       </button>
-      <div className="eac-market__poster-copy"><p className="eac-market__poster-kicker">推荐理由</p><h3>{pluginItem.card.title || plugin.name}</h3><p>{pluginItem.card.summary || plugin.summary || '作者尚未提供一句话简介。'}</p>{reason && <p className="eac-market__recommendation">{reason}</p>}<div className="eac-market__button-row"><Button size="sm" variant="outline" onClick={() => onOpen(plugin)}>查看详情</Button>{installed && onManage ? <Button size="sm" variant="primary" onClick={onManage}>管理</Button> : <Button size="sm" variant="primary" disabled={blocked} onClick={() => onInstall(plugin)}>{blocked ? '暂不可安装' : '查看安装方案'}</Button>}</div>{blocked && !installed && <p className="eac-market__action-reason">{installabilityLabel(plugin.installability)}。</p>}</div>
+      <div className="eac-market__poster-copy"><p className="eac-market__poster-kicker">推荐理由</p><h3>{pluginItem.card.title || plugin.name}</h3><p>{pluginItem.card.summary || plugin.summary || '作者尚未提供一句话简介。'}</p>{reason && <p className="eac-market__recommendation">{reason}</p>}<div className="eac-market__button-row"><Button size="sm" variant="outline" onClick={() => onOpen(plugin)}>查看详情</Button>{action.kind === 'manage' && onManage ? <Button size="sm" variant="primary" onClick={onManage}>管理</Button> : <Button size="sm" variant="primary" disabled={action.disabled} title={action.reason} onClick={() => onInstall(plugin)}>{action.label}</Button>}</div>{action.reason && <p className="eac-market__action-reason">{action.reason}</p>}</div>
     </article>
   </section>
 }
@@ -906,13 +961,12 @@ function discoveryScoreItems(cards: readonly DiscoveryCard[] | undefined, plugin
 
 function SkinRecommendation({ item, inventory, onOpen, onInstall, onManage }: { readonly item: FeaturedItem; readonly inventory: readonly InventoryItem[]; readonly onOpen: (plugin: CatalogPlugin) => void; readonly onInstall: (plugin: CatalogPlugin) => void; readonly onManage?: (() => void) | undefined }): React.JSX.Element {
   const { plugin, card } = item
-  const installed = isInstalled(inventory, plugin) !== undefined
-  const blocked = plugin.installability !== 'bundle-installable' || plugin.verification === 'hard-incompatible'
+  const action = pluginActionState(plugin, inventory, { canInstall: true, canManage: onManage !== undefined })
   return <article className="eac-market__skin-card">
     <button type="button" className="eac-market__skin-card-art" onClick={() => onOpen(plugin)} aria-label={'查看 ' + plugin.name + ' 皮肤详情'}>
       <span aria-hidden="true">{plugin.name.slice(0, 1)}</span>
     </button>
-    <div className="eac-market__skin-card-copy"><h3>{card.title || plugin.name}</h3><p>{card.summary || plugin.summary}</p><p className="eac-market__skin-card-reason">{card.reason}</p><div className="eac-market__button-row"><Button size="sm" variant="outline" onClick={() => onOpen(plugin)}>查看详情</Button>{installed && onManage ? <Button size="sm" variant="primary" onClick={onManage}>管理</Button> : <Button size="sm" variant="primary" disabled={blocked} onClick={() => onInstall(plugin)}>{blocked ? '暂不可安装' : '查看安装方案'}</Button>}</div></div>
+    <div className="eac-market__skin-card-copy"><h3>{card.title || plugin.name}</h3><p>{card.summary || plugin.summary}</p><p className="eac-market__skin-card-reason">{card.reason}</p><div className="eac-market__button-row"><Button size="sm" variant="outline" onClick={() => onOpen(plugin)}>查看详情</Button>{action.kind === 'manage' && onManage ? <Button size="sm" variant="primary" onClick={onManage}>管理</Button> : <Button size="sm" variant="primary" disabled={action.disabled} title={action.reason} onClick={() => onInstall(plugin)}>{action.label}</Button>}</div>{action.reason && <p className="eac-market__action-reason">{action.reason}</p>}</div>
   </article>
 }
 
@@ -1045,7 +1099,7 @@ export function DetailView({ plugin, presentation, inventory, onBack, backLabel,
   readonly supplemental?: React.ReactNode
 }): React.JSX.Element {
   const installed = isInstalled(inventory, plugin)
-  const blocked = !canInstall || plugin.verification === 'hard-incompatible' || plugin.installability !== 'bundle-installable'
+  const action = pluginActionState(plugin, inventory, { canInstall, canManage: false })
   return (
     <>
       <Button variant="ghost" onClick={onBack}>{backLabel ?? '返回插件列表'}</Button>
@@ -1057,8 +1111,8 @@ export function DetailView({ plugin, presentation, inventory, onBack, backLabel,
           </div>
           <p className="eac-market__lead">{plugin.summary || '作者尚未提供一句话简介。'}</p>
           <div className="eac-market__button-row">
-            <Button variant="primary" disabled={blocked || installed !== undefined} title={!canInstall ? '当前 DSH 运行时未开放正式安装计划' : blocked ? installabilityLabel(plugin.installability) : installed !== undefined ? '已安装，请到我的插件管理' : undefined} onClick={() => onInstall(plugin)}>
-              {installed !== undefined ? '已安装' : blocked ? '暂不可安装' : plugin.verification === 'unverified' || plugin.verification === 'unknown' ? '确认安装条件' : '安装'}
+            <Button variant="primary" disabled={action.disabled} title={action.reason} onClick={() => onInstall(plugin)}>
+              {action.kind === 'install' ? '安装' : action.label}
             </Button>
             {installed !== undefined && updatePlugin !== undefined && hasCatalogUpdate(installed, updatePlugin) && canInstall && onUpdate !== undefined && (
               <Button variant="primary" onClick={() => onUpdate(updatePlugin)}>更新到 {updatePlugin.version}</Button>

@@ -67,7 +67,8 @@ describe('EAC 市场交互与导航回归', () => {
       expect(control).toContain('applyBrowseChange')
     }
     expect(source).toContain('onChange={(query) => applyBrowseChange')
-    expect(source).toContain('onClick={() => applyBrowseChange(() => setFilters(EMPTY_FILTERS)')
+    expect(source).toContain('function clearBrowseFilters')
+    expect(source).toContain('onClick={clearBrowseFilters}')
   })
 
   it('主导航切换使用下一帧把滚动容器滚回顶部', () => {

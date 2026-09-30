@@ -8,8 +8,8 @@ import type {
 } from '../types.ts'
 import {
   formatBytes,
-  installabilityLabel,
   isInstalled,
+  pluginActionState,
   isSystemInventoryItem,
   readOnlyLabel,
   summarizeInventory,
@@ -66,16 +66,9 @@ export function PluginCard({ plugin, inventory, onOpen, onInstall, onManage, can
 }): React.JSX.Element {
   const actionReasonId = useId()
   const installed = isInstalled(inventory, plugin)
-  const blocked = !canInstall || plugin.installability !== 'bundle-installable' || plugin.verification === 'hard-incompatible'
-  const blockedReason = !canInstall
-    ? '当前市场未提供安装服务'
-    : plugin.verification === 'hard-incompatible'
-      ? '与当前环境已知不兼容，不能安装'
-      : installabilityLabel(plugin.installability)
-  const canManage = installed !== undefined && onManage !== undefined
-  const actionReason = installed !== undefined
-    ? canManage ? undefined : '已安装，请到“我的插件”管理。'
-    : blocked ? `暂不可安装：${blockedReason}。` : undefined
+  const action = pluginActionState(plugin, inventory, { canInstall, canManage: onManage !== undefined })
+  const actionReason = action.reason
+  const canManage = action.kind === 'manage' && onManage !== undefined
   return (
     <article className="eac-market__card eac-market__plugin-card">
       <div className="eac-market__plugin-top">
@@ -86,14 +79,14 @@ export function PluginCard({ plugin, inventory, onOpen, onInstall, onManage, can
         </div>
       </div>
       <p className="eac-market__plugin-summary">{plugin.summary || '作者尚未提供一句话简介。'}</p>
-      {plugin.kind === 'skin' && !blocked && plugin.verification === 'unknown' && (
+      {plugin.kind === 'skin' && !action.disabled && plugin.verification === 'unknown' && (
         <p className="eac-market__usage-guidance">兼容状态未知，需要在完整安装方案中明确确认试装。</p>
       )}
       <div className="eac-market__plugin-bottom">
         <div className="eac-market__tags">
           <VerificationStatus value={plugin.verification} />
           {installed !== undefined && <Status tone="success">已安装</Status>}
-          {!installed && plugin.installability !== 'bundle-installable' && <Status tone="warning">{installabilityLabel(plugin.installability)}</Status>}
+          {installed === undefined && action.disabled && <Status tone="warning">{action.label}</Status>}
         </div>
         <div className="eac-market__button-row">
           <Button size="sm" variant="outline" aria-label={`查看 ${plugin.name} 详情`} onClick={() => onOpen(plugin)}>查看详情</Button>
@@ -102,12 +95,12 @@ export function PluginCard({ plugin, inventory, onOpen, onInstall, onManage, can
           ) : (
             <Button
               size="sm"
-              variant={blocked || installed !== undefined ? 'outline' : 'primary'}
-              disabled={blocked || installed !== undefined}
+              variant={action.disabled ? 'outline' : 'primary'}
+              disabled={action.disabled}
               title={actionReason}
               aria-describedby={actionReason === undefined ? undefined : actionReasonId}
               onClick={() => onInstall(plugin)}
-            >{installed !== undefined ? '已安装' : blocked ? '暂不可安装' : '查看安装方案'}</Button>
+            >{action.label}</Button>
           )}
         </div>
       </div>

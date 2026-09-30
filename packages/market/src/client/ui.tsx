@@ -51,6 +51,7 @@ export function Modal({ open, onClose, title, description, children, footer, clo
   const closeRef = useRef(onClose)
   closeRef.current = onClose
   const titleId = useId()
+  const descriptionId = useId()
   useEffect(() => {
     if (!open) return
     returnFocus.current = document.activeElement instanceof HTMLElement ? document.activeElement : null
@@ -86,9 +87,9 @@ export function Modal({ open, onClose, title, description, children, footer, clo
   if (!open) return null
   return (
     <div className="eac-modal-overlay" role="presentation" onMouseDown={(event) => { if (event.currentTarget === event.target) onClose() }}>
-      <div className={`eac-modal ${className}`.trim()} role="dialog" aria-modal="true" aria-labelledby={titleId} tabIndex={-1} ref={cardRef}>
+      <div className={`eac-modal ${className}`.trim()} role="dialog" aria-modal="true" aria-labelledby={titleId} {...(description === undefined ? {} : { 'aria-describedby': descriptionId })} tabIndex={-1} ref={cardRef}>
         <div className="eac-modal__head">
-          <div><h2 id={titleId}>{title}</h2>{description !== undefined && <p>{description}</p>}</div>
+          <div><h2 id={titleId}>{title}</h2>{description !== undefined && <p id={descriptionId}>{description}</p>}</div>
           <Button variant="ghost" aria-label={closeLabel} onClick={onClose}>关闭</Button>
         </div>
         <div className={`eac-modal__content ${contentClassName}`.trim()}>{children}</div>
@@ -133,15 +134,31 @@ function inlineNodes(text: string, keyPrefix: string, mediaUrls: Readonly<Record
 }
 
 function CodeBlock({ code }: { readonly code: string }): React.JSX.Element {
-  const [copied, setCopied] = useState(false)
+  const [copyState, setCopyState] = useState<'idle' | 'copied' | 'failed'>('idle')
   async function copy(): Promise<void> {
-    await navigator.clipboard.writeText(code)
-    setCopied(true)
-    globalThis.setTimeout(() => setCopied(false), 1500)
+    try {
+      if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) await navigator.clipboard.writeText(code)
+      else {
+        const field = document.createElement('textarea')
+        field.value = code
+        field.setAttribute('readonly', '')
+        field.style.position = 'fixed'
+        field.style.opacity = '0'
+        document.body.append(field)
+        field.select()
+        if (!document.execCommand('copy')) throw new Error('clipboard-unavailable')
+        field.remove()
+      }
+      setCopyState('copied')
+      globalThis.setTimeout(() => setCopyState('idle'), 1500)
+    } catch {
+      setCopyState('failed')
+      globalThis.setTimeout(() => setCopyState('idle'), 2500)
+    }
   }
   return (
     <div className="eac-code">
-      <div className="eac-code__bar"><span>示例</span><Button size="sm" variant="ghost" onClick={() => void copy()}>{copied ? '已复制' : '复制代码'}</Button></div>
+      <div className="eac-code__bar"><span>示例</span><Button size="sm" variant="ghost" onClick={() => void copy()}>{copyState === 'copied' ? '已复制' : copyState === 'failed' ? '复制失败，请手动选择' : '复制代码'}</Button></div>
       <pre><code>{code}</code></pre>
     </div>
   )
