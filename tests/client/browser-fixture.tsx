@@ -128,7 +128,17 @@ function render(name: string): void {
     }} />)
   }
   if (name.startsWith('collection-') || name === 'pack-partial') root.render(<MarketPage key={name} remote={groupRemote(name)} />)
-  if (name === 'home' || name === 'empty' || name === 'long' || name === 'remove') {
+  if (name === 'all-sections') {
+    const skin = { ...pluginFixtures.verified, id: 'skin-featured', kind: 'skin' as const, skinId: 'skin-featured', name: '雾蓝工作台', packageName: '@example/skin-featured', categories: ['外观'], screenshots: [] }
+    const skill = { ...pluginFixtures.unverified, id: 'skill-featured', kind: 'skill' as const, name: '资料归纳 Skill', packageName: '@example/skill-featured', categories: ['skill', '资料整理'], screenshots: [] }
+    const catalog = { ...catalogFixture, plugins: [...catalogFixture.plugins, skin, skill], discovery: {
+      featured: [{ pluginId: pluginFixtures.verified.id, version: pluginFixtures.verified.version, title: pluginFixtures.verified.name, summary: pluginFixtures.verified.summary, reason: '把真实任务整理成清晰的安装和使用路径。', source: 'curated' as const, order: 0 }],
+      recommendedSkins: [{ pluginId: skin.id, version: skin.version, title: skin.name, summary: skin.summary, reason: '适合长时间工作的低干扰外观。', source: 'curated' as const, order: 0 }],
+      highScorePlugins: [{ pluginId: pluginFixtures.verified.id, version: pluginFixtures.verified.version, title: pluginFixtures.verified.name, summary: pluginFixtures.verified.summary, reason: '维护者审核评分。', source: 'score' as const, order: 0, score: { value: 4.8, scale: 5 as const, source: 'editorial-review' } }],
+      highScoreSkills: [{ pluginId: skill.id, version: skill.version, title: skill.name, summary: skill.summary, reason: '维护者审核评分。', source: 'score' as const, order: 0, score: { value: 4.6, scale: 5 as const, source: 'editorial-review' } }],
+    } }
+    root.render(<MarketPage key={name} remote={{ ...remote, catalog: async () => catalog, inventory: async () => ({ ...inventoryFixture, items: [] }) }} />)
+  }  if (name === 'home' || name === 'empty' || name === 'long' || name === 'remove') {
     root.render(<MarketPage key={name} remote={{ ...remote,
       inventory: async () => name === 'remove' ? inventoryFixture : { ...inventoryFixture, items: [] },
       catalog: async () => ({ ...catalogFixture, recommendations: [{ pluginId: pluginFixtures.verified.id, placement: 'featured', order: 1, reason: '用于验证图文推荐的合成理由，不是正式推荐' }], plugins: name === 'empty' ? [] : name === 'long' ? Array.from({ length: 100 }, (_, i) => ({ ...pluginB, id: `long-${i}`, name: `很长的插件名称和详细版本说明${'长内容'.repeat(22)}${i}`, summary: '用途说明'.repeat(90), packageName: `@test/package-${i}` })) : catalogFixture.plugins }),

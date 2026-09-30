@@ -48,6 +48,11 @@ try {
   await send('Page.navigate', { url: `http://127.0.0.1:${server.address().port}` })
   await until('!!window.fixture && document.body.innerText.includes("发现适合你的插件")')
 
+  await check('发现页四区块：首推、推荐皮肤、高分插件、高分skill', async () => {
+    await render('all-sections')
+    await expect('document.body.innerText.includes("团队精选") && document.body.innerText.includes("皮肤推荐") && document.body.innerText.includes("高分插件") && document.body.innerText.includes("高分 skill")', 'discovery sections are incomplete')
+  })
+
   await check('版本：同ID点击旧版本详情仍展示并预检该确切版本', async () => {
     await render('versions-home'); await click('全部插件')
     await click('查看详情', "[...document.querySelectorAll('.eac-market__plugin-card')].find(el => el.querySelector('h3').textContent === '精确版本 1.0.0')")
