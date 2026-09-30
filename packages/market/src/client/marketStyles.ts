@@ -680,4 +680,22 @@ export const MARKET_CSS = `
   .eac-market__main { padding: 24px 16px 40px; }
   .eac-market__section { margin: 32px 0; }
   .eac-market__section + .eac-market__section { padding-top: 24px; }
+}
+/* Stage 2: the featured item is an editorial stage, not an enlarged tile. */
+.eac-market__featured { margin-top: 44px; }
+.eac-market__featured .eac-market__section-head { align-items: end; }
+.eac-market__poster { border-radius: 0; border-right: 0; border-left: 0; border-color: var(--eac-border-strong); box-shadow: none; background: transparent; }
+.eac-market__poster-art { background: var(--eac-panel-2); border-right: 1px solid var(--eac-border); }
+.eac-market__poster-art:hover { background: var(--eac-info-bg); }
+.eac-market__poster-copy { min-height: 330px; background: var(--eac-panel); }
+.eac-market__poster-copy h3 { max-width: 15ch; }
+.eac-market__poster-copy .eac-market__button-row { margin-top: auto; padding-top: 20px; }
+.eac-market__poster--fallback .eac-market__poster-art { background: var(--eac-panel-2); }
+.eac-market__poster--fallback .eac-market__poster-art::after { content: ''; position: absolute; inset: 0; pointer-events: none; opacity: .24; background-image: linear-gradient(135deg, transparent 0 48%, var(--eac-border-strong) 49% 50%, transparent 51% 100%); background-size: 28px 28px; }
+.eac-market__poster--fallback .eac-market__poster-art { position: relative; }
+.eac-market__poster-fallback-copy { position: relative; z-index: 1; }
+@media (max-width: 719px) {
+  .eac-market__featured { margin-top: 32px; }
+  .eac-market__poster-art { border-right: 0; border-bottom: 1px solid var(--eac-border); }
+  .eac-market__poster-copy { min-height: 0; }
 }`
