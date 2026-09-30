@@ -604,4 +604,28 @@ export const MARKET_CSS = `
   .eac-market__skin-entry { align-items: flex-start; flex-direction: column; }
   .eac-market__skin-entry .eac-button { width: 100%; }
   .eac-market__score-section .eac-market__ranked-item { grid-template-columns: 36px minmax(0, 1fr); }
+}/* Directory, detail and state surfaces. */
+.eac-market__directory-meta { display: flex; justify-content: space-between; gap: 16px; margin: 18px 0 8px; color: var(--eac-text-2); font-size: 12px; }
+.eac-market__directory-meta > span:first-child { color: var(--eac-text); font-weight: 700; font-variant-numeric: tabular-nums; }
+.eac-market__directory-hint { color: var(--eac-text-3); }
+.eac-market__directory-grid { align-items: stretch; }
+.eac-market__directory-grid .eac-market__plugin-card { min-height: 206px; }
+.eac-market__directory-grid .eac-market__plugin-summary { max-width: 58ch; }
+.eac-market__directory-grid .eac-market__plugin-bottom { margin-top: 12px; }
+.eac-market__advanced { padding: 14px; border: 1px solid var(--eac-border); border-radius: 12px; background: var(--eac-panel-2); }
+.eac-market__advanced label { color: var(--eac-text-2); font-size: 12px; font-weight: 650; }
+.eac-market__advanced select { margin-top: 5px; }
+.eac-market__detail-side { box-shadow: none; }
+.eac-market__detail-side h2, .eac-market__detail-side h3 { letter-spacing: -.02em; }
+.eac-market__facts { padding-top: 12px; border-top: 1px solid var(--eac-border); }
+.eac-market__facts dt { font-size: 12px; }
+.eac-market__facts dd { font-size: 13px; }
+.eac-market__plugin-head .eac-market__plugin-icon { width: 48px; height: 48px; flex-basis: 48px; }
+.eac-market__notice { line-height: 1.55; }
+.eac-market__notice .eac-button { margin-inline-start: 8px; }
+.eac-market__plugin-card .eac-button { white-space: nowrap; }
+@media (max-width: 719px) {
+  .eac-market__directory-meta { align-items: flex-start; flex-direction: column; gap: 3px; }
+  .eac-market__advanced { display: grid; gap: 12px; }
+  .eac-market__notice .eac-button { display: block; margin: 9px 0 0; }
 }`

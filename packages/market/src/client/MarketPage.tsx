@@ -538,7 +538,7 @@ export function MarketPage({ remote, skinService, onOpenOfficialPlugins, homeSup
                 action={<Button variant="outline" onClick={() => applyBrowseChange(() => setFilters(EMPTY_FILTERS), () => setPage(1))}>清除筛选</Button>}
               />
             ) : (
-              <div className="eac-market__grid">
+              <div className="eac-market__grid eac-market__directory-grid">
                 {visible.map((plugin) => <PluginCard key={plugin.id + ":" + plugin.version} plugin={plugin} inventory={state.inventory.items} onOpen={openDetail} onInstall={openPlanForPlugin} onManage={() => navigate('mine')} />)}
               </div>
             )}
