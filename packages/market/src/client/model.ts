@@ -214,6 +214,30 @@ export function verificationLabel(value: VerificationState): string {
   }
 }
 
+
+export type PluginActionKind = 'manage' | 'install' | 'confirm' | 'blocked' | 'runtime-unavailable'
+export interface PluginActionState {
+  readonly kind: PluginActionKind
+  readonly label: string
+  readonly disabled: boolean
+  readonly reason?: string
+  readonly installed?: InventoryItem
+}
+
+export function pluginActionState(plugin: CatalogPlugin, inventory: readonly InventoryItem[], options: { readonly canInstall?: boolean; readonly canManage?: boolean } = {}): PluginActionState {
+  const installed = isInstalled(inventory, plugin)
+  if (installed !== undefined) {
+    return options.canManage === true
+      ? { kind: 'manage', label: '管理', disabled: false, installed }
+      : { kind: 'manage', label: '已安装', disabled: true, reason: '已安装，请到“我的插件”管理。', installed }
+  }
+  if (options.canInstall === false) return { kind: 'runtime-unavailable', label: '暂不可安装', disabled: true, reason: '当前市场未提供安装服务。' }
+  if (plugin.verification === 'hard-incompatible') return { kind: 'blocked', label: '暂不可安装', disabled: true, reason: `与当前环境已知不兼容，不能安装。${plugin.installability === 'bundle-installable' ? '' : ' ' + installabilityLabel(plugin.installability) + '。'}` }
+  if (plugin.installability !== 'bundle-installable') return { kind: 'blocked', label: '暂不可安装', disabled: true, reason: installabilityLabel(plugin.installability) + '。' }
+  if (plugin.verification === 'unverified' || plugin.verification === 'unknown') return { kind: 'confirm', label: '确认安装条件', disabled: false, reason: '安装前需要明确确认当前验证状态。' }
+  return { kind: 'install', label: '查看安装方案', disabled: false }
+}
+
 export function installabilityLabel(value: CatalogPlugin['installability']): string {
   switch (value) {
     case 'bundle-installable': return '可安装'

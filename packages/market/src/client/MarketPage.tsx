@@ -27,6 +27,7 @@ import {
   latestCompatiblePlugin,
   installabilityLabel,
   isInstalled,
+  pluginActionState,
   packCoverageLabel,
   presentationForPlugin,
   recommendationMatches,
@@ -927,8 +928,7 @@ function FeaturedPoster({ title, items, inventory, onOpen, onInstall, onManage }
   const pluginItem = (items[active] ?? items[0])!
   const plugin = pluginItem.plugin
   const reason = pluginItem.card.reason ?? ''
-  const installed = isInstalled(inventory, plugin) !== undefined
-  const blocked = plugin.installability !== 'bundle-installable' || plugin.verification === 'hard-incompatible'
+  const action = pluginActionState(plugin, inventory, { canInstall: true, canManage: onManage !== undefined })
   const media = [posterSource(pluginItem.card.poster)].filter((item): item is CatalogMedia => item !== undefined)
   const current = media[0]
   const hasImage = current !== undefined && !failed.has(current.id)
@@ -943,7 +943,7 @@ function FeaturedPoster({ title, items, inventory, onOpen, onInstall, onManage }
       <button type="button" className="eac-market__poster-art" onClick={() => onOpen(plugin)} aria-label={`查看 ${plugin.name} 详情`}>
         {hasImage ? <img src={current.sourceUrl} alt={current.alt || plugin.name} width={current.width ?? 1200} height={current.height ?? 675} onError={() => setFailed((value) => new Set(value).add(current.id))} /> : <span className="eac-market__poster-fallback-copy"><strong>{pluginItem.card.title || plugin.name}</strong><small>{pluginItem.card.summary || plugin.summary || '作者尚未提供一句话简介。'}</small></span>}
       </button>
-      <div className="eac-market__poster-copy"><p className="eac-market__poster-kicker">推荐理由</p><h3>{pluginItem.card.title || plugin.name}</h3><p>{pluginItem.card.summary || plugin.summary || '作者尚未提供一句话简介。'}</p>{reason && <p className="eac-market__recommendation">{reason}</p>}<div className="eac-market__button-row"><Button size="sm" variant="outline" onClick={() => onOpen(plugin)}>查看详情</Button>{installed && onManage ? <Button size="sm" variant="primary" onClick={onManage}>管理</Button> : <Button size="sm" variant="primary" disabled={blocked} onClick={() => onInstall(plugin)}>{blocked ? '暂不可安装' : '查看安装方案'}</Button>}</div>{blocked && !installed && <p className="eac-market__action-reason">{installabilityLabel(plugin.installability)}。</p>}</div>
+      <div className="eac-market__poster-copy"><p className="eac-market__poster-kicker">推荐理由</p><h3>{pluginItem.card.title || plugin.name}</h3><p>{pluginItem.card.summary || plugin.summary || '作者尚未提供一句话简介。'}</p>{reason && <p className="eac-market__recommendation">{reason}</p>}<div className="eac-market__button-row"><Button size="sm" variant="outline" onClick={() => onOpen(plugin)}>查看详情</Button>{action.kind === 'manage' && onManage ? <Button size="sm" variant="primary" onClick={onManage}>管理</Button> : <Button size="sm" variant="primary" disabled={action.disabled} title={action.reason} onClick={() => onInstall(plugin)}>{action.label}</Button>}</div>{action.reason && <p className="eac-market__action-reason">{action.reason}</p>}</div>
     </article>
   </section>
 }
@@ -961,13 +961,12 @@ function discoveryScoreItems(cards: readonly DiscoveryCard[] | undefined, plugin
 
 function SkinRecommendation({ item, inventory, onOpen, onInstall, onManage }: { readonly item: FeaturedItem; readonly inventory: readonly InventoryItem[]; readonly onOpen: (plugin: CatalogPlugin) => void; readonly onInstall: (plugin: CatalogPlugin) => void; readonly onManage?: (() => void) | undefined }): React.JSX.Element {
   const { plugin, card } = item
-  const installed = isInstalled(inventory, plugin) !== undefined
-  const blocked = plugin.installability !== 'bundle-installable' || plugin.verification === 'hard-incompatible'
+  const action = pluginActionState(plugin, inventory, { canInstall: true, canManage: onManage !== undefined })
   return <article className="eac-market__skin-card">
     <button type="button" className="eac-market__skin-card-art" onClick={() => onOpen(plugin)} aria-label={'查看 ' + plugin.name + ' 皮肤详情'}>
       <span aria-hidden="true">{plugin.name.slice(0, 1)}</span>
     </button>
-    <div className="eac-market__skin-card-copy"><h3>{card.title || plugin.name}</h3><p>{card.summary || plugin.summary}</p><p className="eac-market__skin-card-reason">{card.reason}</p><div className="eac-market__button-row"><Button size="sm" variant="outline" onClick={() => onOpen(plugin)}>查看详情</Button>{installed && onManage ? <Button size="sm" variant="primary" onClick={onManage}>管理</Button> : <Button size="sm" variant="primary" disabled={blocked} onClick={() => onInstall(plugin)}>{blocked ? '暂不可安装' : '查看安装方案'}</Button>}</div></div>
+    <div className="eac-market__skin-card-copy"><h3>{card.title || plugin.name}</h3><p>{card.summary || plugin.summary}</p><p className="eac-market__skin-card-reason">{card.reason}</p><div className="eac-market__button-row"><Button size="sm" variant="outline" onClick={() => onOpen(plugin)}>查看详情</Button>{action.kind === 'manage' && onManage ? <Button size="sm" variant="primary" onClick={onManage}>管理</Button> : <Button size="sm" variant="primary" disabled={action.disabled} title={action.reason} onClick={() => onInstall(plugin)}>{action.label}</Button>}</div>{action.reason && <p className="eac-market__action-reason">{action.reason}</p>}</div>
   </article>
 }
 
@@ -1100,7 +1099,7 @@ export function DetailView({ plugin, presentation, inventory, onBack, backLabel,
   readonly supplemental?: React.ReactNode
 }): React.JSX.Element {
   const installed = isInstalled(inventory, plugin)
-  const blocked = !canInstall || plugin.verification === 'hard-incompatible' || plugin.installability !== 'bundle-installable'
+  const action = pluginActionState(plugin, inventory, { canInstall, canManage: false })
   return (
     <>
       <Button variant="ghost" onClick={onBack}>{backLabel ?? '返回插件列表'}</Button>
@@ -1112,8 +1111,8 @@ export function DetailView({ plugin, presentation, inventory, onBack, backLabel,
           </div>
           <p className="eac-market__lead">{plugin.summary || '作者尚未提供一句话简介。'}</p>
           <div className="eac-market__button-row">
-            <Button variant="primary" disabled={blocked || installed !== undefined} title={!canInstall ? '当前 DSH 运行时未开放正式安装计划' : blocked ? installabilityLabel(plugin.installability) : installed !== undefined ? '已安装，请到我的插件管理' : undefined} onClick={() => onInstall(plugin)}>
-              {installed !== undefined ? '已安装' : blocked ? '暂不可安装' : plugin.verification === 'unverified' || plugin.verification === 'unknown' ? '确认安装条件' : '安装'}
+            <Button variant="primary" disabled={action.disabled} title={action.reason} onClick={() => onInstall(plugin)}>
+              {action.kind === 'install' ? '安装' : action.label}
             </Button>
             {installed !== undefined && updatePlugin !== undefined && hasCatalogUpdate(installed, updatePlugin) && canInstall && onUpdate !== undefined && (
               <Button variant="primary" onClick={() => onUpdate(updatePlugin)}>更新到 {updatePlugin.version}</Button>
