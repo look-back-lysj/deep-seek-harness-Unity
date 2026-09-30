@@ -698,4 +698,12 @@ export const MARKET_CSS = `
   .eac-market__featured { margin-top: 32px; }
   .eac-market__poster-art { border-right: 0; border-bottom: 1px solid var(--eac-border); }
   .eac-market__poster-copy { min-height: 0; }
-}`
+}.eac-market__skin-card { flex: 0 0 min(320px, 82%); display: grid; grid-template-columns: 78px minmax(0, 1fr); gap: 14px; padding: 14px 0; scroll-snap-align: start; border-top: 1px solid var(--eac-border); }
+.eac-market__skin-card-art { display: flex; width: 78px; height: 78px; align-items: center; justify-content: center; border: 1px solid var(--eac-border-strong); border-radius: 50%; color: var(--eac-link); background: var(--eac-panel-2); font-size: 22px; font-weight: 760; cursor: pointer; }
+.eac-market__skin-card-copy { min-width: 0; }
+.eac-market__skin-card-copy h3 { margin: 0; font-size: 16px; letter-spacing: -.02em; }
+.eac-market__skin-card-copy p { margin: 4px 0 0; color: var(--eac-text-2); font-size: 12px; line-height: 1.5; }
+.eac-market__skin-card-reason { color: var(--eac-link) !important; }
+.eac-market__skin-card .eac-market__button-row { margin-top: 10px; }
+.eac-market__skin-grid { gap: 20px; }
+.eac-market__skin-grid > div { flex: 0 0 min(360px, 82%); }`

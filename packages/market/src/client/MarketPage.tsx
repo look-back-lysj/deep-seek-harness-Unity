@@ -904,6 +904,18 @@ function discoveryScoreItems(cards: readonly DiscoveryCard[] | undefined, plugin
   return discoveryItems(cards, plugins).filter(({ card }) => card.score !== undefined && Number.isFinite(card.score.value))
 }
 
+function SkinRecommendation({ item, inventory, onOpen, onInstall, onManage }: { readonly item: FeaturedItem; readonly inventory: readonly InventoryItem[]; readonly onOpen: (plugin: CatalogPlugin) => void; readonly onInstall: (plugin: CatalogPlugin) => void; readonly onManage?: (() => void) | undefined }): React.JSX.Element {
+  const { plugin, card } = item
+  const installed = isInstalled(inventory, plugin) !== undefined
+  const blocked = plugin.installability !== 'bundle-installable' || plugin.verification === 'hard-incompatible'
+  return <article className="eac-market__skin-card">
+    <button type="button" className="eac-market__skin-card-art" onClick={() => onOpen(plugin)} aria-label={'查看 ' + plugin.name + ' 皮肤详情'}>
+      <span aria-hidden="true">{plugin.name.slice(0, 1)}</span>
+    </button>
+    <div className="eac-market__skin-card-copy"><h3>{card.title || plugin.name}</h3><p>{card.summary || plugin.summary}</p><p className="eac-market__skin-card-reason">{card.reason}</p><div className="eac-market__button-row"><Button size="sm" variant="outline" onClick={() => onOpen(plugin)}>查看详情</Button>{installed && onManage ? <Button size="sm" variant="primary" onClick={onManage}>管理</Button> : <Button size="sm" variant="primary" disabled={blocked} onClick={() => onInstall(plugin)}>{blocked ? '暂不可安装' : '查看安装方案'}</Button>}</div></div>
+  </article>
+}
+
 function DiscoveryScoreSection({ title, items, inventory, onOpen, onInstall, onManage }: {
   readonly title: string
   readonly items: readonly FeaturedItem[]
@@ -957,7 +969,7 @@ export function DiscoverView({ catalog, inventory, onOpen, onInstall, onPack, on
 
           {skinRecommended.length > 0 && <section className="eac-market__section eac-market__skin-strip" aria-labelledby="skin-recommendations-title">
             <div className="eac-market__section-head"><div><h2 id="skin-recommendations-title">皮肤推荐</h2><p>只显示目录中有明确推荐记录的皮肤；更多皮肤请从皮肤中心进入。</p></div></div>
-            <div className="eac-market__grid eac-market__skin-grid">{skinRecommended.slice(0, 6).map(({ plugin, card }) => <div key={plugin.id + ":" + plugin.version}><p className="eac-market__recommendation">推荐理由：{card.reason || '目录推荐'}</p><PluginCard plugin={plugin} inventory={inventory} onOpen={onOpen} onInstall={onInstall} onManage={onManage} /></div>)}</div>
+            <div className="eac-market__grid eac-market__skin-grid">{skinRecommended.slice(0, 6).map((item) => <SkinRecommendation key={item.plugin.id + ":" + item.plugin.version} item={item} inventory={inventory} onOpen={onOpen} onInstall={onInstall} onManage={onManage} />)}</div>
           </section>}
 
           {scored.length > 0 && <DiscoveryScoreSection title="高分插件" items={scored} inventory={inventory} onOpen={onOpen} onInstall={onInstall} onManage={onManage} />}
