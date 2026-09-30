@@ -5,7 +5,8 @@
 1. [本批进度与真实验收](CORE-ADAPTER-2026-09-29.md)。
 2. [接口、目录与升级指南](../CORE-ADAPTER-GUIDE.md)。
 3. [产品要求](../PRODUCT.md)、[通用升级约束](../UPGRADE-GUIDE.md)。
-4. [多智能体协作规则](NEXT-AGENT-PLAYBOOK.md)：沿用独占文件、合同先行、最多三名worker、构建/打包/宿主验收串行；其中旧REV任务不自动成为本轮范围。
+4. [后端协作者指南](BACKEND-CONTRIBUTOR-GUIDE-2026-09-30.md)：Core、Host、目录和适配器的当前接入边界。
+5. [多智能体协作规则](NEXT-AGENT-PLAYBOOK.md)：沿用独占文件、合同先行、最多三名worker、构建/打包/宿主验收串行；其中旧REV任务不自动成为本轮范围。
 
 候选为 core 0.1.0 + adapter 0.1.0-mvp.10。原市场包名、数据目录和第三方作者接入规则保留。当前源码和远端、测试结果、是否发布必须查实际状态；不要把本地候选写成已经上线。
 
