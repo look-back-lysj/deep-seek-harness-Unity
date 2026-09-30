@@ -133,15 +133,31 @@ function inlineNodes(text: string, keyPrefix: string, mediaUrls: Readonly<Record
 }
 
 function CodeBlock({ code }: { readonly code: string }): React.JSX.Element {
-  const [copied, setCopied] = useState(false)
+  const [copyState, setCopyState] = useState<'idle' | 'copied' | 'failed'>('idle')
   async function copy(): Promise<void> {
-    await navigator.clipboard.writeText(code)
-    setCopied(true)
-    globalThis.setTimeout(() => setCopied(false), 1500)
+    try {
+      if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) await navigator.clipboard.writeText(code)
+      else {
+        const field = document.createElement('textarea')
+        field.value = code
+        field.setAttribute('readonly', '')
+        field.style.position = 'fixed'
+        field.style.opacity = '0'
+        document.body.append(field)
+        field.select()
+        if (!document.execCommand('copy')) throw new Error('clipboard-unavailable')
+        field.remove()
+      }
+      setCopyState('copied')
+      globalThis.setTimeout(() => setCopyState('idle'), 1500)
+    } catch {
+      setCopyState('failed')
+      globalThis.setTimeout(() => setCopyState('idle'), 2500)
+    }
   }
   return (
     <div className="eac-code">
-      <div className="eac-code__bar"><span>示例</span><Button size="sm" variant="ghost" onClick={() => void copy()}>{copied ? '已复制' : '复制代码'}</Button></div>
+      <div className="eac-code__bar"><span>示例</span><Button size="sm" variant="ghost" onClick={() => void copy()}>{copyState === 'copied' ? '已复制' : copyState === 'failed' ? '复制失败，请手动选择' : '复制代码'}</Button></div>
       <pre><code>{code}</code></pre>
     </div>
   )
