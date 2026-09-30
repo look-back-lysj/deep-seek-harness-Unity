@@ -8,6 +8,7 @@
 |---|---|
 | [Core / Adapter 底座指南](CORE-ADAPTER-GUIDE.md) | 两包职责、公开API、通信协商、版本、打包、后续TUI边界 |
 | [本批拆包接力](handoff/CORE-ADAPTER-2026-09-29.md) | 实际变更、测试结果、发行与未验范围 |
+| [后端协作者指南](handoff/BACKEND-CONTRIBUTOR-GUIDE-2026-09-30.md) | Core、Host、目录、适配器、发现页合同与后端验证入口 |
 | [发现页与全部插件基础接力](handoff/DISCOVERY-FOUNDATION-2026-09-30.md) | 首推海报、皮肤推荐、高分分区、全部插件网格与双包合同 |
 | [Agent 插件投稿指南](contributing/AGENT-SUBMISSION.md) | 作者Agent提示词、写入白名单、材料/制品检查、Fork投稿与维护者发布边界 |
 | [UI 与交互升级记录](handoff/UI-UPGRADE-2026-09-29.md) | 2026-09-29：导航、焦点、筛选、卡片、任务与安装弹窗升级及本批验收 |

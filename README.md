@@ -13,6 +13,11 @@
 上述版本是当前源码候选，尚未正式发布。已完成本地测试源下的空缓存安装、官方 Web 加载和作者草稿保存验证；公网 core 获取、Desktop 全新安装及从旧版升级仍待验证。当前正式安装包是 `0.1.0-mvp.9`，它是单包版本，不会安装独立 core。
 
 本页和 [升级指南](docs/UPGRADE-GUIDE.md) 仅保留当前有效说明。历史证据只用于追溯，不能替代当前版本验收。
+## 后端协作者从这里开始
+
+如果你负责 Core、Host、目录、DSH 适配器或公共业务接口，请先读 [后端协作者指南](docs/handoff/BACKEND-CONTRIBUTOR-GUIDE-2026-09-30.md)。它说明当前 mvp.10/core.0.1.0 候选状态、前端已经完成的 UI 合同、Core / Adapter 文件边界、失败语义、测试命令和禁止修改范围。
+
+后端协作的关键约束：Core 不依赖 React/DOM；前端不重复实现目录和安装规则；`CatalogSnapshot.discovery` 是可选投影，没有推荐或评分数据就不填；所有未验证的公网、Desktop 和发行结论必须如实保留。
 
 ## 新手安装
 
@@ -38,6 +43,7 @@ https://gitee.com/flowing-shadows-like-scenes/deep-seek-harness-unity-mirror/raw
 | `docs/UPGRADE-GUIDE.md` | 当前版本唯一升级指南 |
 | `docs/handoff/CORE-ADAPTER-2026-09-29.md` | 本批真实测试、包摘要和未验范围 |
 | `docs/handoff/START-HERE.md` | 下一位维护者接手入口 |
+| `docs/handoff/BACKEND-CONTRIBUTOR-GUIDE-2026-09-30.md` | Core、Host、目录和适配器协作者指南 |
 
 普通用户不需要接触源码、Node、pnpm 或 core 包。维护者只使用包 `exports` 中的公开入口；不要直接导入 `lib` 或跨包源码路径。
 

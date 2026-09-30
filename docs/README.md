@@ -5,8 +5,9 @@
 1. [当前接力入口](handoff/START-HERE.md)：当前分支、实际验证边界和阅读顺序。
 2. [最新版升级指南](UPGRADE-GUIDE.md)：当前用户升级、维护者构建、目录维护和发布门槛。
 3. [Core / Desktop Adapter 底座指南](CORE-ADAPTER-GUIDE.md)：两个包的职责、公开接口、发现页合同和扩展边界。
-4. [产品约束](PRODUCT.md)：已经确认的产品方向与范围。
-5. [工程总目录](index.md)：按主题查找验证、作者投稿、协议和历史证据。
+4. [后端协作者指南](handoff/BACKEND-CONTRIBUTOR-GUIDE-2026-09-30.md)：Core、Host、目录、适配器、失败语义和验证入口。
+5. [产品约束](PRODUCT.md)：已经确认的产品方向与范围。
+6. [工程总目录](index.md)：按主题查找验证、作者投稿、协议和历史证据。
 
 ## 当前事实
 
