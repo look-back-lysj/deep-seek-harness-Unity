@@ -467,4 +467,45 @@ export const MARKET_CSS = `
   .eac-modal .eac-market__split { grid-template-columns: 1fr; }
   .eac-market__task-head { flex-direction: column; gap: 6px; }
 }
-`
+/* Compatibility baseline: these declarations must work before optional CSS enhancements. */
+.eac-market :focus { outline: var(--dsw-focus-ring-width, 2px) solid var(--dsw-focus-ring-color, var(--eac-accent)); outline-offset: 2px; }
+.eac-market :focus:not(:focus-visible) { outline: none; }
+.eac-market ::selection { background: var(--eac-info-bg); }
+.eac-market__topbar { background: var(--eac-page); }
+@supports not (container-type: inline-size) {
+  .eac-market__grid { grid-template-columns: minmax(0, 1fr); }
+  .eac-market__grid--two { grid-template-columns: minmax(0, 1fr); }
+}
+.eac-market__status--success { border-color: var(--eac-success); }
+.eac-market__status--warning { border-color: var(--eac-warning); }
+.eac-market__status--danger { border-color: var(--eac-danger); }
+.eac-market__status--info { border-color: var(--eac-link); }
+.eac-market__error { border-color: var(--eac-danger); }
+.eac-market__notice--warning { border-color: var(--eac-warning); }
+.eac-market__notice--danger { border-color: var(--eac-danger); }
+.eac-button--primary { color: var(--dsw-alias-label-on-primary, #fff); background: var(--eac-accent); }
+.eac-market__poster-controls button { min-height: 36px; }
+.eac-market__poster-art { min-height: 220px; }
+.eac-modal { max-height: calc(100vh - 40px); }
+.eac-market__sr-only { position: absolute !important; width: 1px !important; height: 1px !important; padding: 0 !important; margin: -1px !important; overflow: hidden !important; clip: rect(0, 0, 0, 0) !important; white-space: nowrap !important; border: 0 !important; }
+@media (max-width: 719px) {
+  .eac-market__nav button, .eac-market__top-action, .eac-pill, .eac-market__poster-controls button { min-height: 44px; }
+  .eac-market__topbar { padding: 8px 16px; }
+}
+@media (pointer: coarse) {
+  .eac-market__nav button, .eac-market__top-action, .eac-pill, .eac-market__poster-controls button { min-height: 44px; }
+}
+@media (min-width: 320px) and (max-width: 559px) {
+  .eac-market__poster { grid-template-columns: 1fr; }
+  .eac-market__poster-art, .eac-market__poster-art img { min-height: 180px; max-height: 240px; }
+  .eac-market__poster-copy { padding: 18px; }
+}
+@supports (height: 100dvh) {
+  .eac-modal { max-height: min(820px, calc(100dvh - 40px)); }
+}
+@media (forced-colors: active) {
+  .eac-market :focus, .eac-modal-overlay :focus { outline: 2px solid Highlight; outline-offset: 2px; }
+  .eac-market__nav button[aria-current="page"], .eac-button--primary, .eac-pill--active { color: HighlightText; background: Highlight; forced-color-adjust: none; }
+  .eac-market__status, .eac-market__card, .eac-market__notice, .eac-button, .eac-pill { border: 1px solid CanvasText; }
+  .eac-market__status--success, .eac-market__status--warning, .eac-market__status--danger, .eac-market__status--info { color: CanvasText; background: Canvas; border-color: CanvasText; }
+}`
