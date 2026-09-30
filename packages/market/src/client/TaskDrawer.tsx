@@ -3,6 +3,8 @@ import type { AiAnalysisResult, AiApplyResult, AiConfirmRequest, TaskItemResult,
 import { boundedRequest } from './data-controller.ts'
 import { createIdempotencyKey, isTaskSettled, taskItemStatusLabel, taskNextStep, taskStatusLabel, taskTone, type MarketRemote } from './model.ts'
 import { Button, Modal } from './ui.tsx'
+import { ActionFeedback } from './action-feedback.tsx'
+import { completedActionFeedback, failedActionFeedback, idleActionFeedback, needsRecheckActionFeedback, partialActionFeedback, runningActionFeedback, taskActionFeedback, type ActionFeedbackState } from './action-state.ts'
 
 interface Props {
   readonly open: boolean
@@ -90,20 +92,25 @@ function TaskCard({ task, remote, onChanged, onRefresh, onOpenOfficialPlugins }:
   const [applied, setApplied] = useState<AiApplyResult>()
   const [busy, setBusy] = useState('')
   const [error, setError] = useState('')
+  const [feedback, setFeedback] = useState<ActionFeedbackState>(idleActionFeedback())
   const generation = useRef(0)
   const busyRef = useRef(false)
   const confirmationKeys = useRef({ first: '', second: '' })
   useEffect(() => {
-    generation.current += 1; setAnalysis(undefined); setApplied(undefined); setBusy(''); setError(''); busyRef.current = false
+    generation.current += 1; setAnalysis(undefined); setApplied(undefined); setBusy(''); setError(''); setFeedback(idleActionFeedback()); confirmationKeys.current = { first: '', second: '' }; busyRef.current = false
     return () => { generation.current += 1 }
   }, [task.taskId, task.environmentId, task.updatedAt, remote])
 
   async function run(label: string, operation: () => Promise<void>): Promise<void> {
     if (busyRef.current) return
-    busyRef.current = true; setBusy(label); setError('')
+    busyRef.current = true; setBusy(label); setError(''); setFeedback(runningActionFeedback(label))
     const ticket = generation.current
     try { await operation() } catch (reason) {
-      if (ticket === generation.current) setError(reason instanceof Error ? reason.message : String(reason))
+      if (ticket === generation.current) {
+        const message = reason instanceof Error ? reason.message : String(reason)
+        setError(message)
+        setFeedback(failedActionFeedback(label, reason, '确认任务仍处于当前环境后再重试；结果未知时先重新读取，不要重复提交。'))
+      }
     } finally { if (ticket === generation.current) { busyRef.current = false; setBusy('') } }
   }
   async function askAi(): Promise<void> {
@@ -117,6 +124,8 @@ function TaskCard({ task, remote, onChanged, onRefresh, onOpenOfficialPlugins }:
       throw new Error('AI 方案不属于本任务，已拒绝显示和执行。')
     }
     setAnalysis(result)
+    if (result.status === 'ready' && result.proposal) setFeedback({ status: 'completed', label: 'AI 分析本任务', message: 'AI 已完成分析，方案仍需你逐项核对。', nextStep: '阅读事实、版本和影响后，再决定是否确认。' })
+    else setFeedback(partialActionFeedback('AI 分析本任务', result.reason ?? 'AI 没有给出可执行方案。', '保留当前任务结果，并使用官方插件页继续核对。'))
   }
   async function applyAi(second: boolean): Promise<void> {
     const proposal = analysis?.proposal
@@ -134,19 +143,31 @@ function TaskCard({ task, remote, onChanged, onRefresh, onOpenOfficialPlugins }:
     if (ticket !== generation.current) { onRefresh?.(); return }
     setApplied(result)
     if (result.taskId && remote.getTask) onChanged(await boundedRequest(remote.getTask({ taskId: result.taskId }), '执行任务读取'))
+    if (result.status === 'requires-confirmation') setFeedback(needsRecheckActionFeedback('AI 方案确认', '后台要求再次确认影响，方案尚未执行。', '阅读影响清单后，明确确认或取消这次方案。', false))
+    else if (result.status === 'queued') setFeedback({ status: 'running', label: 'AI 方案确认', message: '方案已排队，正在读取真实任务状态。', nextStep: '等待任务状态更新，不要重复提交。' })
+    else if (result.status === 'restart-required') setFeedback(needsRecheckActionFeedback('AI 方案确认', '方案已执行，但 DSH 需要重启后才能确认最终状态。', '保存当前工作并重启 DSH，回来后重新读取任务和插件状态。', false))
+    else if (result.status === 'applied') setFeedback(completedActionFeedback('AI 方案确认', 'AI 方案已执行，后台已返回提交结果。', '打开任务面板核对真实任务状态；不要根据 AI 文案猜测最终库存。'))
+    else if (result.status === 'unknown') setFeedback(needsRecheckActionFeedback('AI 方案确认', '请求已提交，但后台没有返回可确认的最终结果。', '重新读取任务和插件状态，不要重复确认。', false))
+    else setFeedback(failedActionFeedback('AI 方案确认', result.error ?? 'AI 方案未执行。', '查看任务记录和官方插件状态后，再重新分析。'))
     if (result.status !== 'requires-confirmation') onRefresh?.()
   }
   async function cancel(): Promise<void> {
     if (!remote.cancelTask) return
-    onChanged(await boundedRequest(remote.cancelTask({ taskId: task.taskId, idempotencyKey: createIdempotencyKey('market-cancel') }), '取消请求'))
+    const next = await boundedRequest(remote.cancelTask({ taskId: task.taskId, idempotencyKey: createIdempotencyKey('market-cancel') }), '取消请求')
+    onChanged(next)
+    setFeedback(taskActionFeedback(next, '取消任务'))
   }
   async function approve(): Promise<void> {
     if (!remote.approveTask || !task.approval) return
-    onChanged(await boundedRequest(remote.approveTask({ taskId: task.taskId, attemptId: task.approval.attemptId, challengeId: task.approval.id, pendingBuildsDigest: task.approval.digest, approvedBuilds: task.approval.packages, idempotencyKey: createIdempotencyKey('market-approve') }), '脚本授权'))
+    const next = await boundedRequest(remote.approveTask({ taskId: task.taskId, attemptId: task.approval.attemptId, challengeId: task.approval.id, pendingBuildsDigest: task.approval.digest, approvedBuilds: task.approval.packages, idempotencyKey: createIdempotencyKey('market-approve') }), '脚本授权')
+    onChanged(next)
+    setFeedback(taskActionFeedback(next, '脚本授权'))
   }
   async function resume(): Promise<void> {
     if (!remote.resumeTask || !task.resume) return
-    onChanged(await boundedRequest(remote.resumeTask({ taskId: task.taskId, challengeId: task.resume.id, resumeDigest: task.resume.digest, idempotencyKey: createIdempotencyKey('market-resume') }), '重启状态检查'))
+    const next = await boundedRequest(remote.resumeTask({ taskId: task.taskId, challengeId: task.resume.id, resumeDigest: task.resume.digest, idempotencyKey: createIdempotencyKey('market-resume') }), '重启状态检查')
+    onChanged(next)
+    setFeedback(taskActionFeedback(next, '重启状态检查'))
   }
   const proposal = analysis?.proposal
   const challenge = applied?.status === 'requires-confirmation' ? applied.challenge : undefined
@@ -170,6 +191,7 @@ function TaskCard({ task, remote, onChanged, onRefresh, onOpenOfficialPlugins }:
       {['failed', 'partial', 'needs-attention', 'unknown', 'interrupted'].includes(task.status) && remote.aiAnalyze && <Button size="sm" variant="outline" disabled={!!busy} onClick={() => void run('AI 分析', askAi)}>AI 分析本任务</Button>}
       {onOpenOfficialPlugins && <Button size="sm" variant="outline" onClick={onOpenOfficialPlugins}>打开官方插件页</Button>}
     </div>
+    <ActionFeedback state={feedback} onRefresh={onRefresh} />
     <TaskFailureSummary task={task} />
     {task.approval && task.status === 'awaiting-approval' && <section className="eac-market__notice"><strong>待运行的安装脚本</strong><ul>{task.approval.packages.map((name) => <li key={name}>{name}</li>)}</ul><Button disabled={!!busy || !remote.approveTask} onClick={() => void run('授权', approve)}>同意运行清单内脚本并继续</Button></section>}
     {task.resume && task.status === 'awaiting-resume' && <Button variant="primary" disabled={!!busy || !remote.resumeTask} onClick={() => void run('核对重启', resume)}>已重启，重新核对</Button>}
@@ -189,7 +211,7 @@ function TaskCard({ task, remote, onChanged, onRefresh, onOpenOfficialPlugins }:
       <p>受影响的插件：{challenge.impact.affectedPackages.join('、') || '后台未列出'}</p>
       <p>{challenge.impact.dataBehavior}</p>
       {challenge.impact.unknowns.length > 0 && <ul>{challenge.impact.unknowns.map((item, index) => <li key={index}>尚不能确认：{item}</li>)}</ul>}
-      <div className="eac-market__button-row"><Button variant="outline" disabled={!!busy} onClick={() => { setApplied(undefined); setAnalysis(undefined) }}>取消此方案</Button><Button variant="primary" disabled={!!busy} onClick={() => void run('确认影响', () => applyAi(true))}>已了解影响，再次确认执行</Button></div>
+      <div className="eac-market__button-row"><Button variant="outline" disabled={!!busy} onClick={() => { setApplied(undefined); setAnalysis(undefined); confirmationKeys.current = { first: '', second: '' }; setFeedback(idleActionFeedback()) }}>取消此方案</Button><Button variant="primary" disabled={!!busy} onClick={() => void run('确认影响', () => applyAi(true))}>已了解影响，再次确认执行</Button></div>
     </section>}
     {applied && <p role="status">{applyNames[applied.status]}{applied.error ? `：${applied.error}` : ''}</p>}
     <details><summary>查看任务记录（最近 {Math.min(task.events.length, 12)} 条）</summary><p>任务编号：{task.taskId} · 后台下一步：{task.nextAction}</p><ul className="eac-market__event-list">{task.events.slice(-12).map((event) => <li key={`${event.sequence}-${event.at}`} data-level={event.level}>{event.message}</li>)}</ul></details>

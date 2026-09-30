@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import type { CatalogPlugin, InventoryItem } from '../types.ts'
 import { Button, Input, Pill } from './ui.tsx'
+import { ActionFeedback } from './action-feedback.tsx'
+import { completedActionFeedback, failedActionFeedback, idleActionFeedback, needsRecheckActionFeedback, preparingActionFeedback, runningActionFeedback, type ActionFeedbackState } from './action-state.ts'
 import { EmptyState, InventoryCard, PluginCard, Status, errorMessage } from './components.tsx'
 import { browseSortPlugins, filterPlugins, EMPTY_FILTERS, latestCompatiblePlugin, installabilityLabel, verificationLabel } from './model.ts'
 import type { CatalogSnapshot } from '../types.ts'
@@ -85,9 +87,11 @@ export function SkinCenter({ catalog, inventory, skinService, onBack, onOpen, on
   const [tab, setTab] = useState<'browse' | 'installed'>('browse')
   const [query, setQuery] = useState('')
   const [notice, setNotice] = useState('')
+  const [feedback, setFeedback] = useState<ActionFeedbackState>(idleActionFeedback())
   const [busy, setBusy] = useState(false)
   const [retry, setRetry] = useState<string>()
   const lock = useRef(false)
+  const lastSwitch = useRef<string | undefined>(undefined)
   const { snapshot, lifetime, refresh } = useSkinRuntime(skinService)
   const skins = catalog.plugins.filter(isSkinPlugin)
   const installed = inventory.filter((item) => item.installed && skinCatalogForInventory(item, catalog.plugins))
@@ -105,39 +109,56 @@ export function SkinCenter({ catalog, inventory, skinService, onBack, onOpen, on
   const latestEligibility = useRef(eligibility)
   latestEligibility.current = eligibility
 
-  useEffect(() => { lock.current = false; setBusy(false); setRetry(undefined); setNotice('') }, [snapshot.runtime, snapshot.generation, eligibility])
+  useEffect(() => { lock.current = false; setBusy(false); setRetry(undefined); setNotice(''); setFeedback(idleActionFeedback()) }, [snapshot.runtime, snapshot.generation, eligibility])
 
   async function switchSkin(id: string): Promise<void> {
     const runtime = snapshot.runtime
     if (!runtime || !canSwitch || lock.current) return
     // Recheck at the click boundary; never trust a stale rendered button.
     try {
-      if (skinService?.getRuntime() !== runtime) { refresh.current(); return }
+      if (skinService?.getRuntime() !== runtime) { setFeedback(needsRecheckActionFeedback('切换皮肤', '皮肤运行时已经变化，当前按钮状态可能过期。', '重新读取皮肤状态后再试。')); refresh.current(); return }
       if (id !== DEFAULT_SKIN_ID) {
         const item = installed.find((entry) => skinCatalogForInventory(entry, catalog.plugins)?.skinId === id)
         const plugin = item && skinCatalogForInventory(item, catalog.plugins)
         const info = runtime.list().find((entry) => entry.id === id)
-        if (!item || !plugin || skinSwitchBlockReason(item, plugin, info)) { setNotice('皮肤状态已变化，请重新读取状态后再试。'); refresh.current(); return }
+        if (!item || !plugin || skinSwitchBlockReason(item, plugin, info)) { setFeedback(needsRecheckActionFeedback('切换皮肤', '皮肤状态已变化，当前目标不能直接切换。', '重新读取状态，确认皮肤仍已安装且兼容。')); refresh.current(); return }
       }
-    } catch (error) { setNotice(`无法核对切换条件：${errorMessage(error)}`); refresh.current(); return }
+    } catch (error) { setFeedback(failedActionFeedback('切换皮肤', error, '重新读取皮肤运行时后再试。')); refresh.current(); return }
     const generation = lifetime.current
-    lock.current = true; setBusy(true); setNotice(''); setRetry(undefined)
+    lastSwitch.current = id
+    lock.current = true; setBusy(true); setFeedback(preparingActionFeedback('切换皮肤')); setRetry(undefined)
+    await Promise.resolve()
+    if (generation === lifetime.current && eligibility === latestEligibility.current) setFeedback(runningActionFeedback('切换皮肤'))
     try {
       const result = await boundedRequest(runtime.switchTo(id), '切换皮肤', 20_000)
       if (generation !== lifetime.current || eligibility !== latestEligibility.current || skinService?.getRuntime() !== runtime) return
       refresh.current()
       const current = runtime.current()
       const active = id === DEFAULT_SKIN_ID || runtime.list().some((skin) => skin.id === id && skin.status === 'active')
-      if (!result.ok) setNotice(`切换未完成：${result.error}。加载器回报回退到 ${result.rolledBackTo === DEFAULT_SKIN_ID ? '默认外观' : result.rolledBackTo}。${result.warning ?? ''}`)
-      else if (current === id && active) setNotice(`${id === DEFAULT_SKIN_ID ? '已恢复默认外观。' : '加载器已确认使用此皮肤。'}${result.warning ?? ''}`)
-      else setNotice(`切换请求已返回，但当前状态未确认目标生效，请重新读取状态。${result.warning ?? ''}`)
+      if (!result.ok) {
+        const message = `切换未完成：${result.error}。加载器回报回退到 ${result.rolledBackTo === DEFAULT_SKIN_ID ? '默认外观' : result.rolledBackTo}。${result.warning ?? ''}`
+        setNotice(message)
+        setFeedback(failedActionFeedback('切换皮肤', message, '确认当前外观后，再从已安装皮肤中重新尝试。'))
+      } else if (current === id && active) {
+        const message = `${id === DEFAULT_SKIN_ID ? '已恢复默认外观。' : '加载器已确认使用此皮肤。'}${result.warning ?? ''}`
+        setNotice(message)
+        setFeedback(completedActionFeedback('切换皮肤', message, '可以继续浏览市场；再次切换前会重新核对运行时状态。'))
+      } else {
+        const message = `切换请求已返回，但当前状态未确认目标生效，请重新读取状态。${result.warning ?? ''}`
+        setNotice(message)
+        setFeedback(needsRecheckActionFeedback('切换皮肤', message, '点击“重新读取状态”，确认当前外观后再继续。'))
+      }
     } catch (error) {
-      if (generation === lifetime.current && eligibility === latestEligibility.current) { setNotice(`切换结果未确认：${errorMessage(error)}。请重新读取状态。`); refresh.current() }
+      if (generation === lifetime.current && eligibility === latestEligibility.current) {
+        const message = `切换结果未确认：${errorMessage(error)}。请重新读取状态。`
+        setNotice(message)
+        setFeedback(needsRecheckActionFeedback('切换皮肤', message, '重新读取皮肤状态；结果未确认前不要重复切换。', false))
+        refresh.current()
+      }
     } finally {
       if (generation === lifetime.current && eligibility === latestEligibility.current) { lock.current = false; setBusy(false) }
     }
   }
-
   return <section className="eac-market__skin-center" aria-label="皮肤中心">
     <Button variant="ghost" onClick={onBack}>返回市场</Button>
     <header className="eac-market__page-head"><div><h1>皮肤中心</h1><p>先安装，再从已安装皮肤中选择外观。安装不会自动切换皮肤。</p></div></header>
@@ -160,6 +181,7 @@ export function SkinCenter({ catalog, inventory, skinService, onBack, onOpen, on
       {!canInstall && <p className="eac-market__notice">当前市场未提供安装服务，可浏览介绍，暂不能安装。</p>}
       {snapshot.error && <p className="eac-market__notice eac-market__notice--warning" role="status">读取皮肤状态失败：{snapshot.error}</p>}
       {notice && <p className="eac-market__notice" role="status">{notice}</p>}
+      <ActionFeedback state={feedback} onRetry={() => { const id = lastSwitch.current; if (id) void switchSkin(id) }} onRefresh={() => refresh.current()} onDismiss={() => { setFeedback(idleActionFeedback()); setNotice('') }} />
       {busy && <p role="status">正在等待皮肤管理器完成切换…</p>}
     </section>
     <div className="eac-market__toolbar">

@@ -4,6 +4,8 @@ import { boundedRequest } from './data-controller.ts'
 import type { MarketRemote } from './model.ts'
 import { decodeBase64, readTransfer, saveBytes, sha256Hex, uploadBytes } from './transfer.ts'
 import { Button, Input, MarkdownText, Modal } from './ui.tsx'
+import { ActionFeedback } from './action-feedback.tsx'
+import { completedActionFeedback, failedActionFeedback, idleActionFeedback, preparingActionFeedback, runningActionFeedback, type ActionFeedbackState } from './action-state.ts'
 import type { ExtensionDraftChange, ExtensionDraftRef } from './extensions/contract.ts'
 
 const blank = (): AuthorDraftInput => ({ title: '', summary: '', markdown: '', mediaIds: [] })
@@ -16,12 +18,13 @@ type Candidate = { content: AuthorDraftInput; warnings: readonly string[]; readm
 
 /** Local editing has no fallback storage with a fake saved status. A revision from
  * the Host is the sole authority for saved/overwritten state. */
-export function AuthorWorkspace({ remote, supplemental, onDraftSnapshot, draftChange }: { remote: MarketRemote; supplemental?: React.ReactNode; onDraftSnapshot?: ((draft: ExtensionDraftRef | undefined) => void) | undefined; draftChange?: ExtensionDraftChange | undefined }): React.JSX.Element {
+export function AuthorWorkspace({ remote, supplemental, onDraftSnapshot, onDirtyChange, draftChange }: { remote: MarketRemote; supplemental?: React.ReactNode; onDraftSnapshot?: ((draft: ExtensionDraftRef | undefined) => void) | undefined; onDirtyChange?: ((dirty: boolean) => void) | undefined; draftChange?: ExtensionDraftChange | undefined }): React.JSX.Element {
   const [drafts, setDrafts] = useState<readonly AuthorDraft[]>([])
   const [saved, setSaved] = useState<AuthorDraft>()
   const [form, setForm] = useState<AuthorDraftInput>(blank)
   const [dirty, setDirty] = useState(false)
   const [busy, setBusy] = useState('')
+  const [feedback, setFeedback] = useState<ActionFeedbackState>(idleActionFeedback())
   const [notice, setNotice] = useState('')
   const [repo, setRepo] = useState('')
   const [candidate, setCandidate] = useState<Candidate>()
@@ -29,6 +32,7 @@ export function AuthorWorkspace({ remote, supplemental, onDraftSnapshot, draftCh
   const [media, setMedia] = useState<Readonly<Record<string, string>>>({})
   const generation = useRef(0)
   const lock = useRef(false)
+  const retryRef = useRef<{ readonly label: string; readonly action: () => Promise<void> }>()
 
   async function currentRequest<T>(request: Promise<T>, label: string, timeoutMs?: number): Promise<T> {
     const token = generation.current
@@ -38,6 +42,7 @@ export function AuthorWorkspace({ remote, supplemental, onDraftSnapshot, draftCh
   }
 
   useEffect(() => { onDraftSnapshot?.(saved ? { id: saved.id, revision: saved.revision, title: saved.title, summary: saved.summary, markdown: saved.markdown } : undefined) }, [saved, onDraftSnapshot])
+  useEffect(() => { onDirtyChange?.(dirty) }, [dirty, onDirtyChange])
   useEffect(() => {
     if (!draftChange) return
     if (!saved || draftChange.draftId !== saved.id || draftChange.expectedRevision !== saved.revision) { setNotice('扩展建议引用的草稿已变化，请重新读取。'); return }
@@ -47,7 +52,7 @@ export function AuthorWorkspace({ remote, supplemental, onDraftSnapshot, draftCh
 
   useEffect(() => {
     const token = ++generation.current
-    setSaved(undefined); setForm(blank()); setDirty(false); setCandidate(undefined); setBusy(''); lock.current = false
+    setSaved(undefined); setForm(blank()); setDirty(false); setCandidate(undefined); setBusy(''); setFeedback(idleActionFeedback()); retryRef.current = undefined; lock.current = false
     if (remote.listDrafts) void boundedRequest(remote.listDrafts(), '读取草稿列表').then((list) => { if (token === generation.current) setDrafts(list) }).catch((error: unknown) => { if (token === generation.current) setNotice(String(error instanceof Error ? error.message : error)) })
     return () => { generation.current += 1 }
   }, [remote])
@@ -83,12 +88,21 @@ export function AuthorWorkspace({ remote, supplemental, onDraftSnapshot, draftCh
     setSaved(draft); setForm(draftInput(draft)); setDirty(false)
     setDrafts((current) => [draft, ...current.filter((item) => item.id !== draft.id)])
   }
-  async function run(label: string, action: () => Promise<void>): Promise<void> {
+  async function run(label: string, action: () => Promise<void>, successMessage?: string): Promise<void> {
     if (lock.current) return
-    lock.current = true; setBusy(label); setNotice('')
+    lock.current = true; retryRef.current = { label, action }; setBusy(label); setNotice(''); setFeedback(preparingActionFeedback(label))
     const token = generation.current
-    try { await action() } catch (error) {
-      if (token === generation.current) setNotice(error instanceof Error ? error.message : String(error))
+    await Promise.resolve()
+    if (token === generation.current) setFeedback(runningActionFeedback(label))
+    try {
+      await action()
+      if (token === generation.current) setFeedback(completedActionFeedback(label, successMessage ?? `${label}已完成。`, '后台版本是保存状态的唯一依据；如需继续编辑，请先确认当前草稿版本。'))
+    } catch (error) {
+      if (token === generation.current) {
+        const message = error instanceof Error ? error.message : String(error)
+        setNotice(message)
+        setFeedback(failedActionFeedback(label, error, '保留当前编辑，确认宿主状态后再重试；失败不会伪造为已保存。'))
+      }
     } finally { if (token === generation.current) { lock.current = false; setBusy('') } }
   }
   async function save(): Promise<AuthorDraft> {
@@ -173,7 +187,8 @@ export function AuthorWorkspace({ remote, supplemental, onDraftSnapshot, draftCh
           <div className="eac-market__field"><label htmlFor="repo-url">GitHub README 地址</label><Input id="repo-url" value={repo} disabled={!!busy} placeholder="https://github.com/owner/repository" onChange={(event) => setRepo(event.currentTarget.value)} /><Button variant="outline" disabled={!!busy || !remote.previewReadme || !remote.applyReadmePreview || !repo.trim()} onClick={() => void run('读取 README', previewReadme)}>读取并预览差异</Button>{(!remote.previewReadme || !remote.applyReadmePreview) && <small>当前宿主尚未提供 README 预览，可先导入本地 Markdown。</small>}</div>
           <div className="eac-market__field"><label htmlFor="local-markdown">导入本地 Markdown</label><input id="local-markdown" type="file" accept=".md,text/markdown" disabled={!!busy} onChange={(event) => { const file = event.currentTarget.files?.[0]; event.currentTarget.value = ''; if (file) void run('读取正文', async () => { if (file.size > 512 * 1024) throw new Error('正文超过 512 KiB。'); setCandidate({ content: { ...form, markdown: await file.text() }, warnings: [] }) }) }} /></div>
         </div><section><h2>阅读预览</h2><div className="eac-market__preview eac-market__prose"><h3>{form.title || '未命名介绍'}</h3><p>{form.summary}</p><MarkdownText text={form.markdown} labels={{}} mediaUrls={media} /></div></section></div>
-        {(busy || notice) && <div className="eac-market__notice" role="status">{busy ? `${busy}中…` : notice}</div>}
+        <ActionFeedback state={feedback} onRetry={() => { const retry = retryRef.current; if (retry) void run(retry.label, retry.action) }} onDismiss={() => { setFeedback(idleActionFeedback()); setNotice('') }} />
+        {notice && feedback.status === 'idle' && <div className="eac-market__notice" role="status">{notice}</div>}
       </div>
     </div>
     {supplemental}

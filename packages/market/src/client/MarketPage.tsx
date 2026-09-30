@@ -53,6 +53,18 @@ import {
   type PlanTarget,
 } from './components.tsx'
 import { MARKET_CSS } from './marketStyles.ts'
+import { ActionFeedback } from './action-feedback.tsx'
+import {
+  completedActionFeedback,
+  failedActionFeedback,
+  idleActionFeedback,
+  needsRecheckActionFeedback,
+  partialActionFeedback,
+  pluginActionFeedbackState,
+  preparingActionFeedback,
+  runningActionFeedback,
+  type ActionFeedbackState,
+} from './action-state.ts'
 import { useMarketData, boundedRequest } from './data-controller.ts'
 import { AuthorWorkspace } from './AuthorWorkspace.tsx'
 import { SkinCenter, SkinCenterEntry } from './SkinCenter.tsx'
@@ -157,8 +169,9 @@ export function MarketPage({ remote, skinService, onOpenOfficialPlugins, homeSup
   const [moreMenu, setMoreMenu] = useState(false)
   const [planTarget, setPlanTarget] = useState<PlanTarget | undefined>(undefined)
   const [removeTarget, setRemoveTarget] = useState<InventoryItem | undefined>(undefined)
-  const [actionNotice, setActionNotice] = useState('')
+  const [actionFeedback, setActionFeedback] = useState<ActionFeedbackState>(idleActionFeedback())
   const [diagnostic, setDiagnostic] = useState<DiagnosticExport | undefined>(undefined)
+  const [diagnosticBusy, setDiagnosticBusy] = useState(false)
   const [tutorialOpen, setTutorialOpen] = useState(false)
   const [browseSort, setBrowseSort] = useState<BrowseSortMode>('rules')
   const [systemOpen, setSystemOpen] = useState(false)
@@ -171,6 +184,8 @@ export function MarketPage({ remote, skinService, onOpenOfficialPlugins, homeSup
   const [extensionPage, setExtensionPage] = useState<string>()
   const [extensionDraft, setExtensionDraft] = useState<ExtensionDraftRef>()
   const [draftChange, setDraftChange] = useState<ExtensionDraftChange>()
+  const [authorDirty, setAuthorDirty] = useState(false)
+  const [authorLeaveIntent, setAuthorLeaveIntent] = useState<'return' | PrimaryView | 'help' | 'settings'>()
   const extensionLifetime = useRef(new AbortController())
   const detailReturnFocus = useRef<HTMLElement | null>(null)
   const navigationIntent = useRef(0)
@@ -203,6 +218,18 @@ export function MarketPage({ remote, skinService, onOpenOfficialPlugins, homeSup
   const activeCount = state.status === 'ready' ? activeTasks(state.tasks).length : 0
   const activeTab = view === 'detail' ? detailTab(previousView) : undefined
 
+  function clearActionFeedback(): void {
+    setActionFeedback(idleActionFeedback())
+  }
+
+  function beginAction(label: string): void {
+    setActionFeedback(preparingActionFeedback(label))
+  }
+
+  async function markActionRunning(label: string): Promise<void> {
+    await Promise.resolve()
+    setActionFeedback(runningActionFeedback(label))
+  }
   function navigationSnapshot(source: NavigationSnapshot['source'], targetView: MarketView = view): NavigationSnapshot {
     return { view: targetView, source, filters, availableOnly, sort: browseSort, page, scrollTop: scrollRef.current?.scrollTop ?? 0 }
   }
@@ -219,14 +246,18 @@ export function MarketPage({ remote, skinService, onOpenOfficialPlugins, homeSup
     runAfterNextFrame(() => scrollRef.current?.scrollTo({ top: snapshot.scrollTop }))
   }
 
-  function returnFromSecondary(): void {
+  function completeReturnFromSecondary(): void {
     const snapshot = secondaryOrigin.current
     secondaryOrigin.current = undefined
     if (snapshot) restoreNavigation(snapshot)
     else restoreNavigation({ view: 'discover', source: 'secondary', filters: EMPTY_FILTERS, availableOnly, sort: browseSort, page: 1, scrollTop: 0 })
   }
 
-  function navigate(next: PrimaryView): void {
+  function returnFromSecondary(): void {
+    if (view === 'author' && authorDirty) { setAuthorLeaveIntent('return'); return }
+    completeReturnFromSecondary()
+  }
+  function performNavigate(next: PrimaryView): void {
     const intent = ++navigationIntent.current
     const currentView = pageTab(view)
     const currentScrollTop = scrollRef.current?.scrollTop ?? 0
@@ -238,7 +269,7 @@ export function MarketPage({ remote, skinService, onOpenOfficialPlugins, homeSup
     setView(next)
     setPreviousView(next)
     setPage(1)
-    setActionNotice('')
+    clearActionFeedback()
     if (next === 'all' && currentView !== 'all') setFilters(EMPTY_FILTERS)
     setBrowseContext(next === 'all' ? { source: 'top-nav', page: 1, scrollTop: 0 } : undefined)
     runAfterNextFrame(() => scrollRef.current?.scrollTo({ top: 0 }))
@@ -249,10 +280,27 @@ export function MarketPage({ remote, skinService, onOpenOfficialPlugins, homeSup
     if (next === 'mine') void controller.sync(true)
   }
 
+  function navigate(next: PrimaryView): void {
+    if (view === 'author' && authorDirty) { setAuthorLeaveIntent(next); return }
+    performNavigate(next)
+  }
+
   function navigateSecondary(next: 'help' | 'settings' | 'author'): void {
+    if ((next === 'help' || next === 'settings') && view === 'author' && authorDirty) { setAuthorLeaveIntent(next); return }
     secondaryOrigin.current = navigationSnapshot('secondary')
     setMoreMenu(false)
     setView(next)
+  }
+
+  function confirmAuthorLeave(): void {
+    const intent = authorLeaveIntent
+    setAuthorLeaveIntent(undefined)
+    if (intent === 'return') completeReturnFromSecondary()
+    else if (intent === 'help' || intent === 'settings') {
+      secondaryOrigin.current = navigationSnapshot('secondary')
+      setMoreMenu(false)
+      setView(intent)
+    } else if (intent !== undefined) performNavigate(intent)
   }
 
   function openDetail(plugin: CatalogPlugin): void {
@@ -284,7 +332,7 @@ export function MarketPage({ remote, skinService, onOpenOfficialPlugins, homeSup
     })
     setView('all')
     setPreviousView('all')
-    setActionNotice('')
+    clearActionFeedback()
     runAfterNextFrame(() => {
       if (intent !== navigationIntent.current) return
       scrollRef.current?.scrollTo({ top: 0 })
@@ -312,14 +360,14 @@ export function MarketPage({ remote, skinService, onOpenOfficialPlugins, homeSup
       return
     }
     setPlanTarget({ plugin, plugins: [plugin] })
-    setActionNotice('')
+    clearActionFeedback()
   }
 
   function openPlanForPack(pack: CatalogPack): void {
     if (state.status !== 'ready') return
     const plugins = packPlugins(pack, state.catalog.plugins)
     setPlanTarget({ pack, plugins })
-    setActionNotice('')
+    clearActionFeedback()
   }
 
   function openPlanForCollection(collection: CatalogCollectionView): void {
@@ -329,7 +377,7 @@ export function MarketPage({ remote, skinService, onOpenOfficialPlugins, homeSup
       return plugin === undefined ? [] : [plugin]
     })
     setPlanTarget({ collection, plugins })
-    setActionNotice('')
+    clearActionFeedback()
   }
 
   function updateTask(task: TaskState, reveal = true): void {
@@ -358,19 +406,23 @@ export function MarketPage({ remote, skinService, onOpenOfficialPlugins, homeSup
 
   async function refreshCatalog(): Promise<void> {
     if (catalogBusy) return
-    setCatalogBusy(true); setActionNotice('')
+    setCatalogBusy(true); beginAction('目录刷新')
+    await markActionRunning('目录刷新')
     try {
       const result = await controller.refreshCatalog()
-      setActionNotice(result.status === 'refreshed' ? '目录已刷新。插件不会自动安装或更新。' : '目录刷新失败，继续显示上次目录：' + (result.reason ?? '后台未提供原因'))
-    } catch (error) { setActionNotice(errorMessage(error)) }
-    finally { setCatalogBusy(false) }
+      if (result.status === 'refreshed') setActionFeedback(completedActionFeedback('目录刷新', '目录已刷新。插件不会自动安装或更新。', '可以继续浏览；安装和更新仍需单独确认。'))
+      else setActionFeedback(partialActionFeedback('目录刷新', '目录刷新失败，继续显示上次目录：' + (result.reason ?? '后台未提供原因'), '确认网络或来源可用后，再次刷新目录。'))
+    } catch (error) {
+      setActionFeedback(failedActionFeedback('目录刷新', error, '确认宿主连接正常后重新读取目录。'))
+    } finally { setCatalogBusy(false) }
   }
 
   async function toggleInventory(item: InventoryItem, enabled: boolean): Promise<void> {
     if (managementLock.current) return
     if (item.packageName === '@dsh-eac/market') { onOpenOfficialPlugins?.(); return }
     managementLock.current = true; setManagementBusy(true)
-    setActionNotice('')
+    beginAction(enabled ? '启用插件' : '停用插件')
+    await markActionRunning(enabled ? '启用插件' : '停用插件')
     try {
       if (remote.setPluginEnabled === undefined) throw new Error('当前 DSH 运行时未开放启用/停用能力')
       const action = await boundedRequest(remote.setPluginEnabled({
@@ -383,12 +435,12 @@ export function MarketPage({ remote, skinService, onOpenOfficialPlugins, homeSup
       try {
         await controller.refreshInventory()
       } catch (inventoryError) {
-        setActionNotice(`${feedback.message} 库存刷新失败：${errorMessage(inventoryError)}`)
+        setActionFeedback(needsRecheckActionFeedback(enabled ? '启用插件' : '停用插件', `${feedback.message} 库存刷新失败：${errorMessage(inventoryError)}`, '重新读取插件状态，确认官方管理器是否已经完成操作。'))
         return
       }
-      setActionNotice(feedback.message)
+      setActionFeedback(pluginActionFeedbackState(action, enabled ? '启用插件' : '停用插件', feedback.message))
     } catch (error) {
-      setActionNotice(errorMessage(error))
+      setActionFeedback(failedActionFeedback(enabled ? '启用插件' : '停用插件', error, '确认官方插件管理器可用后重试。'))
     } finally { managementLock.current = false; setManagementBusy(false) }
   }
 
@@ -396,7 +448,8 @@ export function MarketPage({ remote, skinService, onOpenOfficialPlugins, homeSup
     if (managementLock.current || !removeStep) return
     if (item.packageName === '@dsh-eac/market') { onOpenOfficialPlugins?.(); return }
     managementLock.current = true; setManagementBusy(true)
-    setActionNotice('')
+    beginAction('卸载插件')
+    await markActionRunning('卸载插件')
     try {
       if (remote.removePlugin === undefined) throw new Error('当前 DSH 运行时未开放卸载能力')
       const action = await boundedRequest(remote.removePlugin({
@@ -405,25 +458,30 @@ export function MarketPage({ remote, skinService, onOpenOfficialPlugins, homeSup
         confirmed: true,
         idempotencyKey: createIdempotencyKey('market-remove'),
       }), '卸载插件', 20_000)
-      await controller.refreshInventory()
+      try { await controller.refreshInventory() }
+      catch (inventoryError) {
+        setActionFeedback(needsRecheckActionFeedback('卸载插件', `卸载请求已返回，但库存刷新失败：${errorMessage(inventoryError)}`, '重新读取插件状态，确认插件是否仍在列表中。'))
+        return
+      }
       setRemoveTarget((current) => current?.packageName === item.packageName ? undefined : current)
-      if (action.status === 'failed') setActionNotice(action.error ? `卸载失败：${action.error}` : '卸载失败，官方结果未变为成功。')
-      else if (action.status === 'unknown') setActionNotice('卸载结果未知，已重新读取库存；请核对后再继续。')
-      else if (action.status === 'restart-required') setActionNotice('卸载请求已保存，需要重启 DSH 后才会完全生效。')
-      else setActionNotice('已调用官方卸载。市场未额外清理独立配置、用户文件或未知目录。')
+      setActionFeedback(pluginActionFeedbackState(action, '卸载插件', '已调用官方卸载。市场未额外清理独立配置、用户文件或未知目录。'))
     } catch (error) {
-      setActionNotice(errorMessage(error))
+      setActionFeedback(failedActionFeedback('卸载插件', error, '确认官方插件管理器可用后重新核对，再决定是否重试。'))
     } finally { managementLock.current = false; setManagementBusy(false) }
   }
 
   async function exportDiagnostic(): Promise<void> {
-    setActionNotice('')
+    if (diagnosticBusy) return
+    setDiagnosticBusy(true)
+    beginAction('生成诊断')
+    await markActionRunning('生成诊断')
     try {
       if (remote.exportDiagnostic === undefined) throw new Error('当前 DSH 运行时未开放诊断导出能力')
       setDiagnostic(await boundedRequest(remote.exportDiagnostic(), '生成诊断'))
+      setActionFeedback(completedActionFeedback('生成诊断', '诊断已生成，可以复制摘要交给维护者。', '诊断内容只用于排查，不会自动修改插件。'))
     } catch (error) {
-      setActionNotice(errorMessage(error))
-    }
+      setActionFeedback(failedActionFeedback('生成诊断', error, '确认宿主仍在运行后重新导出诊断。'))
+    } finally { setDiagnosticBusy(false) }
   }
 
   if (state.status === 'loading') {
@@ -494,7 +552,7 @@ export function MarketPage({ remote, skinService, onOpenOfficialPlugins, homeSup
     requestInstallReview(request) {
       const plugin = state.catalog.plugins.find((item) => item.id === request.pluginId && item.version === request.version && item.artifactDigest === request.artifactDigest)
       if (plugin) openPlanForPlugin(plugin)
-      else setActionNotice('扩展引用的插件版本已变化，请在全部插件中重新选择。')
+      else setActionFeedback(needsRecheckActionFeedback('扩展安装请求', '扩展引用的插件版本已变化。', '打开全部插件，重新选择当前目录中的版本。'))
     },
     previewDraftChange(change) { secondaryOrigin.current = navigationSnapshot('extension'); setDraftChange({ ...change }); setView('author') },
   }
@@ -516,7 +574,7 @@ export function MarketPage({ remote, skinService, onOpenOfficialPlugins, homeSup
         transitionPhase={navigationPhase}
       >
         {syncNotice && <div className="eac-market__notice eac-market__notice--warning" role="status">{syncNotice} <Button variant="outline" onClick={() => void controller.sync(true)}>重新读取</Button></div>}
-        {actionNotice && <div className="eac-market__notice" role="status">{actionNotice}</div>}
+        <ActionFeedback state={actionFeedback} onRefresh={() => void (actionFeedback.label === '目录刷新' ? refreshCatalog() : controller.sync(true))} onDismiss={clearActionFeedback} />
 
         {view === 'discover' && (
           <DiscoverView
@@ -749,7 +807,7 @@ export function MarketPage({ remote, skinService, onOpenOfficialPlugins, homeSup
               </section>
               <section className="eac-market__setting">
                 <div><h3>诊断信息</h3><p>导出只包含环境摘要、目录修订和任务摘要，不包含密钥、绝对路径或会话内容。</p></div>
-                <Button variant="outline" disabled={remote.exportDiagnostic === undefined} onClick={() => void exportDiagnostic()}>导出诊断</Button>
+                <Button variant="outline" disabled={diagnosticBusy || remote.exportDiagnostic === undefined} onClick={() => void exportDiagnostic()}>{diagnosticBusy ? '正在生成…' : '导出诊断'}</Button>
               </section>
             </div>
             {diagnostic !== undefined && (
@@ -761,7 +819,7 @@ export function MarketPage({ remote, skinService, onOpenOfficialPlugins, homeSup
         )}
 
         {view === 'extension' && <section><Button variant="outline" onClick={() => { const snapshot = extensionOrigin.current; extensionOrigin.current = undefined; if (snapshot) restoreNavigation(snapshot); else navigate('discover') }}>返回上一页</Button>{surface(EXTENSION_SLOTS.page)}</section>}
-        <div hidden={view !== 'author'}><Button variant="ghost" onClick={returnFromSecondary}>返回市场</Button><AuthorWorkspace remote={remote} onDraftSnapshot={setExtensionDraft} draftChange={draftChange} supplemental={<>{authorSupplemental}{surface(EXTENSION_SLOTS.author)}</>} /></div>
+        <div hidden={view !== 'author'}><Button variant="ghost" onClick={returnFromSecondary}>返回市场</Button><AuthorWorkspace remote={remote} onDraftSnapshot={setExtensionDraft} onDirtyChange={setAuthorDirty} draftChange={draftChange} supplemental={<>{authorSupplemental}{surface(EXTENSION_SLOTS.author)}</>} /></div>
 
         <p className="eac-market__footer-note">EAC 是社区整合市场，不代表 DeepSeek 官方认证。</p>
       </MarketFrame>
@@ -797,6 +855,10 @@ export function MarketPage({ remote, skinService, onOpenOfficialPlugins, homeSup
         <p>将卸载 <strong>{removeTarget?.packageName}</strong>。只调用必要卸载能力，不额外清理独立配置、用户文件或未知目录。</p>
         {removeStep && <div className="eac-market__notice eac-market__notice--warning"><p>版本：{removeTarget?.version ?? '未能确认'}。受影响成员：{removeTarget?.rows.map((row) => row.name).join('、') || '官方未列出运行成员'}。</p><p>市场没有此插件的完整反向依赖和数据迁移资料。第三方插件自身的卸载行为可能影响数据；请先保存工作。</p></div>}
         <div className="eac-market__button-row"><Button variant="outline" onClick={() => setRemoveTarget(undefined)}>取消</Button><Button variant="primary" disabled={managementBusy} onClick={() => { if (!removeStep) setRemoveStep(true); else if (removeTarget !== undefined) void removeInventory(removeTarget) }}>{managementBusy ? '正在提交…' : removeStep ? '已了解影响，再次确认卸载' : '继续查看卸载影响'}</Button></div>
+      </Modal>
+      <Modal open={authorLeaveIntent !== undefined} onClose={() => setAuthorLeaveIntent(undefined)} title="当前草稿尚未保存" closeLabel="继续编辑">
+        <p>作者工具中还有未保存修改。离开会暂时隐藏作者工具，但当前编辑会保留在本次市场会话中。</p>
+        <div className="eac-market__button-row"><Button variant="outline" onClick={() => setAuthorLeaveIntent(undefined)}>继续编辑</Button><Button variant="primary" onClick={confirmAuthorLeave}>离开并保留编辑</Button></div>
       </Modal>
       <Modal open={tutorialOpen} onClose={() => setTutorialOpen(false)} title="三步上手" closeLabel="关闭教程">
         <div className="eac-market__help-steps">{HELP_STEPS.map((step, index) => <section className="eac-market__help-step" key={step.title}><Tag tone="info">第 {index + 1} 步</Tag><h3>{step.title}</h3><p>{step.text}</p></section>)}</div>

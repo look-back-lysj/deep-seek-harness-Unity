@@ -741,4 +741,37 @@ export const MARKET_CSS = `
   .eac-market__task-items li { align-items: flex-start; flex-direction: column; gap: 4px; }
 }.eac-market__filter-summary { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 8px 0 14px; padding: 9px 0; border-bottom: 1px solid var(--eac-border); color: var(--eac-text-2); font-size: 12px; }
 .eac-market__filter-summary > span { min-width: 0; overflow-wrap: anywhere; }
-@media (max-width: 719px) { .eac-market__filter-summary { align-items: flex-start; flex-direction: column; } }`
+@media (max-width: 719px) { .eac-market__filter-summary { align-items: flex-start; flex-direction: column; } }
+
+/* Unified async action feedback: one stable block for preparation, execution and recovery. */
+.eac-market__action-feedback {
+  display: grid;
+  gap: 7px;
+  margin: 12px 0;
+  padding: 13px 15px;
+  border: 1px solid var(--eac-border);
+  border-radius: var(--eac-radius-md);
+  color: var(--eac-text-2);
+  background: var(--eac-panel);
+  box-shadow: 0 5px 18px rgba(20, 28, 40, .05);
+}
+.eac-market__action-feedback-head { display: flex; align-items: center; gap: 9px; min-width: 0; }
+.eac-market__action-feedback-head strong { color: var(--eac-text); overflow-wrap: anywhere; }
+.eac-market__action-feedback p { margin: 0; overflow-wrap: anywhere; }
+.eac-market__action-feedback-next { color: var(--eac-text); }
+.eac-market__action-feedback--preparing,
+.eac-market__action-feedback--running { border-color: color-mix(in srgb, var(--eac-link) 35%, var(--eac-border)); background: var(--eac-info-bg); }
+.eac-market__action-feedback--completed { border-color: color-mix(in srgb, var(--eac-success) 35%, var(--eac-border)); background: var(--eac-success-bg); }
+.eac-market__action-feedback--partial,
+.eac-market__action-feedback--needs-recheck { border-color: color-mix(in srgb, var(--eac-warning) 38%, var(--eac-border)); background: var(--eac-warning-bg); }
+.eac-market__action-feedback--failed { border-color: color-mix(in srgb, var(--eac-danger) 38%, var(--eac-border)); background: var(--eac-danger-bg); }
+.eac-market__action-feedback--unknown { border-color: var(--eac-border-strong); background: var(--eac-panel-2); }
+@media (prefers-reduced-motion: no-preference) {
+  .eac-market__action-feedback--preparing,
+  .eac-market__action-feedback--running { animation: eac-action-feedback-in 180ms var(--eac-ease-enter) both; }
+}
+@keyframes eac-action-feedback-in {
+  from { opacity: .7; transform: translateY(2px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+`
