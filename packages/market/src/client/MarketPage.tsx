@@ -336,6 +336,25 @@ export function MarketPage({ remote, skinService, onOpenOfficialPlugins, homeSup
     if (reveal) setTaskDrawer(true)
   }
 
+  function clearBrowseFilters(): void {
+    setFilters(EMPTY_FILTERS)
+    setAvailableOnly(false)
+    setBrowseSort('rules')
+    setAdvanced(false)
+    setBrowseContext(undefined)
+    setPage(1)
+  }
+
+  function browseFilterSummary(): string[] {
+    const summary: string[] = []
+    if (filters.query.trim() !== '') summary.push('搜索：' + filters.query.trim())
+    if (filters.category !== 'all') summary.push('用途：' + filters.category)
+    if (filters.verification !== 'all') summary.push('验证：' + verificationLabel(filters.verification))
+    if (filters.installed !== 'all') summary.push(filters.installed === 'yes' ? '已安装' : '未安装')
+    if (availableOnly) summary.push('仅可安装')
+    return summary
+  }
+
   async function refreshCatalog(): Promise<void> {
     if (catalogBusy) return
     setCatalogBusy(true); setActionNotice('')
@@ -527,13 +546,14 @@ export function MarketPage({ remote, skinService, onOpenOfficialPlugins, homeSup
                 <Button variant="ghost" size="sm" onClick={() => { setBrowseContext({ source: 'top-nav', page: 1, scrollTop: 0 }); setFilters((current) => ({ ...current, category: 'all' })); setPage(1) }}>清除来源筛选</Button>
               </div>
             )}
-            <div className="eac-market__directory-meta"><span>{filtered.length} 个插件符合当前条件</span><span className="eac-market__directory-hint">默认展示全部记录</span></div>
+            <div className="eac-market__directory-meta" aria-live="polite"><span>{filtered.length} 个插件符合当前条件</span><span className="eac-market__directory-hint">默认展示全部记录</span></div>
+            {browseFilterSummary().length > 0 && <div className="eac-market__filter-summary" role="status"><span>当前筛选：{browseFilterSummary().join(' · ')}</span><Button size="sm" variant="ghost" onClick={clearBrowseFilters}>清除全部筛选</Button></div>}
             <div className="eac-market__filters" aria-label="安装包范围">
               <Pill active={availableOnly} onClick={() => applyBrowseChange(() => setAvailableOnly(true), () => setPage(1))}>可安装</Pill>
               <Pill active={!availableOnly} onClick={() => applyBrowseChange(() => setAvailableOnly(false), () => setPage(1))}>全部记录</Pill>
             </div>
             <div className="eac-market__toolbar">
-              <SearchField value={filters.query} onChange={(query) => applyBrowseChange(() => setFilters({ ...filters, query }), () => setPage(1))} />
+              <SearchField value={filters.query} onChange={(query) => applyBrowseChange(() => setFilters((current) => ({ ...current, query })), () => setPage(1))} />
               <div className="eac-market__filters">
                 <label className="eac-market__sr-only" htmlFor="eac-category">用途分类</label>
                 <select id="eac-category" value={filters.category} onChange={(event) => applyBrowseChange(() => setFilters({ ...filters, category: event.currentTarget.value }), () => setPage(1))}>
@@ -561,14 +581,14 @@ export function MarketPage({ remote, skinService, onOpenOfficialPlugins, homeSup
                     <option value="all">全部</option><option value="yes">已安装</option><option value="no">未安装</option>
                   </select>
                 </label>
-                <Button variant="ghost" onClick={() => applyBrowseChange(() => setFilters(EMPTY_FILTERS), () => setPage(1))}>清除筛选</Button>
+                <Button variant="ghost" onClick={clearBrowseFilters}>清除全部筛选</Button>
               </div>
             )}
             {visible.length === 0 ? (
               <EmptyState
                 title="没有匹配的插件"
                 description="目录里没有满足当前搜索和筛选条件的项目。可以清除筛选，或查看全部插件。"
-                action={<Button variant="outline" onClick={() => applyBrowseChange(() => setFilters(EMPTY_FILTERS), () => setPage(1))}>清除筛选</Button>}
+                action={<Button variant="outline" onClick={clearBrowseFilters}>清除全部筛选</Button>}
               />
             ) : (
               <div className="eac-market__grid eac-market__directory-grid">

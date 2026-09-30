@@ -63,3 +63,10 @@ interface NavigationSnapshot {
 - 旧节点消失时继续使用已有标题/内容区焦点回退；Remote、Core 和安装协议未修改。
 - 定向导航、状态、Modal 测试和 browser-check 通过。
 
+
+## 阶段 2 目录筛选
+
+- 全部插件页显示当前结果数量和当前筛选摘要。
+- 搜索、用途、验证、安装状态和可安装范围统一通过 clearBrowseFilters 清理。
+- 来源筛选不会无声消失，用户可以明确清除来源条件。
+- 筛选变更仍只影响目录结果，不触发 Remote 或页面跳转。
