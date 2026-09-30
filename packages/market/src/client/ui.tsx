@@ -51,6 +51,7 @@ export function Modal({ open, onClose, title, description, children, footer, clo
   const closeRef = useRef(onClose)
   closeRef.current = onClose
   const titleId = useId()
+  const descriptionId = useId()
   useEffect(() => {
     if (!open) return
     returnFocus.current = document.activeElement instanceof HTMLElement ? document.activeElement : null
@@ -86,9 +87,9 @@ export function Modal({ open, onClose, title, description, children, footer, clo
   if (!open) return null
   return (
     <div className="eac-modal-overlay" role="presentation" onMouseDown={(event) => { if (event.currentTarget === event.target) onClose() }}>
-      <div className={`eac-modal ${className}`.trim()} role="dialog" aria-modal="true" aria-labelledby={titleId} tabIndex={-1} ref={cardRef}>
+      <div className={`eac-modal ${className}`.trim()} role="dialog" aria-modal="true" aria-labelledby={titleId} {...(description === undefined ? {} : { 'aria-describedby': descriptionId })} tabIndex={-1} ref={cardRef}>
         <div className="eac-modal__head">
-          <div><h2 id={titleId}>{title}</h2>{description !== undefined && <p>{description}</p>}</div>
+          <div><h2 id={titleId}>{title}</h2>{description !== undefined && <p id={descriptionId}>{description}</p>}</div>
           <Button variant="ghost" aria-label={closeLabel} onClick={onClose}>关闭</Button>
         </div>
         <div className={`eac-modal__content ${contentClassName}`.trim()}>{children}</div>
