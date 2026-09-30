@@ -129,7 +129,7 @@ function PlanSession({ target, inventory, remote, onClose, onStarted }: Props & 
   }
   const blocked = !review?.canConfirm || (!group && consentRequired && !consent)
   const unsafeReady = result?.status === 'ready' && review !== undefined && review.unsafe.length > 0
-  return <Modal open onClose={onClose} title={riskStep ? '第 2 步：再次确认降级影响' : target.collection ? `安装确认：${target.collection.name}` : target.pack ? `安装确认：${target.pack.name}` : `安装确认：${target.plugin?.name ?? '所选插件'}`} closeLabel="关闭安装确认" description={riskStep ? '只有完成这次专门影响确认后，才会提交降级安装。' : '预检不会安装插件。请核对目标版本、风险和操作层级后再确认。'}>
+  return <Modal open onClose={() => { if (busy !== 'starting') onClose() }} title={riskStep ? '第 2 步：再次确认降级影响' : target.collection ? `安装确认：${target.collection.name}` : target.pack ? `安装确认：${target.pack.name}` : `安装确认：${target.plugin?.name ?? '所选插件'}`} closeLabel="关闭安装确认" description={riskStep ? '只有完成这次专门影响确认后，才会提交降级安装。' : '预检不会安装插件。请核对目标版本、风险和操作层级后再确认。'}>
     <div className="eac-market__form">
       {busy === 'preflight' && <p role="status">正在核对版本、安装条件和当前状态…</p>}
       {consentRequired && <label className="eac-market__notice eac-market__notice--warning"><input type="checkbox" checked={consent} disabled={busy === 'starting'} onChange={(event) => {
