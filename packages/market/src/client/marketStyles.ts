@@ -20,7 +20,20 @@ export const MARKET_CSS = `
   --eac-info-bg: var(--dsw-alias-state-business-tertiary, #eaf1ff);
   --eac-radius-sm: var(--dsw-radius-sm, 8px);
   --eac-radius-md: var(--dsw-radius-md, 12px);
-  --eac-radius-lg: var(--dsw-radius-lg, 16px);
+  --eac-radius-lg: var(--dsw-radius-lg, 16px);  --eac-space-1: 4px;
+  --eac-space-2: 8px;
+  --eac-space-3: 12px;
+  --eac-space-4: 16px;
+  --eac-space-5: 24px;
+  --eac-space-6: 32px;
+  --eac-space-7: 40px;
+  --eac-shadow-popover: var(--dsw-shadow-lv2, 0 12px 30px rgba(20, 28, 40, .14));
+  --eac-shadow-modal: var(--dsw-shadow-lv3, 0 22px 70px rgba(20, 28, 40, .20));
+  --eac-duration-fast: 120ms;
+  --eac-duration-standard: 180ms;
+  --eac-duration-panel: 240ms;
+  --eac-ease-enter: cubic-bezier(.2, .8, .2, 1);
+  --eac-ease-exit: cubic-bezier(.4, 0, 1, 1);
   box-sizing: border-box; padding: 8px;
   container-type: inline-size;
   container-name: eac-market;
@@ -426,7 +439,20 @@ export const MARKET_CSS = `
   --eac-info-bg: var(--dsw-alias-state-business-tertiary, #eaf1ff);
   --eac-radius-sm: var(--dsw-radius-sm, 8px);
   --eac-radius-md: var(--dsw-radius-md, 12px);
-  --eac-radius-lg: var(--dsw-radius-lg, 16px);
+  --eac-radius-lg: var(--dsw-radius-lg, 16px);  --eac-space-1: 4px;
+  --eac-space-2: 8px;
+  --eac-space-3: 12px;
+  --eac-space-4: 16px;
+  --eac-space-5: 24px;
+  --eac-space-6: 32px;
+  --eac-space-7: 40px;
+  --eac-shadow-popover: var(--dsw-shadow-lv2, 0 12px 30px rgba(20, 28, 40, .14));
+  --eac-shadow-modal: var(--dsw-shadow-lv3, 0 22px 70px rgba(20, 28, 40, .20));
+  --eac-duration-fast: 120ms;
+  --eac-duration-standard: 180ms;
+  --eac-duration-panel: 240ms;
+  --eac-ease-enter: cubic-bezier(.2, .8, .2, 1);
+  --eac-ease-exit: cubic-bezier(.4, 0, 1, 1);
 }
 /* Dialogs share the official palette and keyboard affordances even outside main. */
 .eac-modal-overlay, .eac-modal-overlay * { box-sizing: border-box; }
@@ -628,4 +654,30 @@ export const MARKET_CSS = `
   .eac-market__directory-meta { align-items: flex-start; flex-direction: column; gap: 3px; }
   .eac-market__advanced { display: grid; gap: 12px; }
   .eac-market__notice .eac-button { display: block; margin: 9px 0 0; }
+}
+/* Stage 1 foundation: surfaces, typography, rhythm and control states. */
+.eac-market__topbar { min-height: 64px; padding: 12px 28px; background: var(--eac-page); }
+.eac-market__main { width: min(1280px, 100%); padding: 32px 32px 56px; }
+.eac-market__page-head { margin-bottom: 28px; }
+.eac-market__page-head h1 { margin: 0; color: var(--eac-text); font-weight: 740; }
+.eac-market__page-head p:not(.eac-market__eyebrow) { margin: var(--eac-space-2) 0 0; color: var(--eac-text-2); }
+.eac-market__section { margin: var(--eac-space-7) 0; }
+.eac-market__section-head { margin-bottom: var(--eac-space-4); }
+.eac-market__section-head h2 { color: var(--eac-text); font-weight: 720; }
+.eac-market__section-head p { color: var(--eac-text-2); }
+.eac-market__button-row { gap: var(--eac-space-2); }
+.eac-market__card { border-radius: var(--eac-radius-md); box-shadow: none; transition: transform var(--eac-duration-standard) var(--eac-ease-enter), border-color var(--eac-duration-standard) ease, background-color var(--eac-duration-standard) ease; }
+.eac-market__card:hover { border-color: var(--eac-border-strong); background: var(--eac-panel); }
+.eac-market__card:focus-within { border-color: var(--eac-accent); }
+.eac-button { transition: background-color var(--eac-duration-fast) ease, border-color var(--eac-duration-fast) ease, color var(--eac-duration-fast) ease, transform var(--eac-duration-fast) var(--eac-ease-enter); }
+.eac-button:active:not(:disabled) { transform: scale(.985); }
+.eac-pill { transition: background-color var(--eac-duration-fast) ease, border-color var(--eac-duration-fast) ease, color var(--eac-duration-fast) ease; }
+.eac-market__status { transition: background-color var(--eac-duration-fast) ease, border-color var(--eac-duration-fast) ease, color var(--eac-duration-fast) ease; }
+.eac-market__nav button, .eac-market__top-action { transition: background-color var(--eac-duration-fast) ease, color var(--eac-duration-fast) ease; }
+.eac-market__section + .eac-market__section { padding-top: var(--eac-space-6); }
+@media (max-width: 719px) {
+  .eac-market__topbar { min-height: 56px; padding: 8px 16px; }
+  .eac-market__main { padding: 24px 16px 40px; }
+  .eac-market__section { margin: 32px 0; }
+  .eac-market__section + .eac-market__section { padding-top: 24px; }
 }`
