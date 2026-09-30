@@ -33,6 +33,8 @@ import {
   verificationLabel,
   type MarketRemote,
   type MarketView,
+  type BrowseNavigationContext,
+  type DiscoverNavigationSection,
   type PluginFilters,
   type PrimaryView,
 } from './model.ts'
@@ -136,6 +138,7 @@ export function MarketPage({ remote, skinService, onOpenOfficialPlugins, homeSup
   const { state, notice: syncNotice, controller } = useMarketData(remote)
   const [view, setView] = useState<MarketView>('discover')
   const [previousView, setPreviousView] = useState<PrimaryView | 'skins'>('discover')
+  const [browseContext, setBrowseContext] = useState<BrowseNavigationContext>()
   const [skinOrigin, setSkinOrigin] = useState<PrimaryView>('discover')
   const [skinVisited, setSkinVisited] = useState(false)
   const [skinInstallGuide, setSkinInstallGuide] = useState<CatalogPlugin>()
@@ -164,6 +167,16 @@ export function MarketPage({ remote, skinService, onOpenOfficialPlugins, homeSup
   const [draftChange, setDraftChange] = useState<ExtensionDraftChange>()
   const extensionLifetime = useRef(new AbortController())
   const detailReturnFocus = useRef<HTMLElement | null>(null)
+  const navigationIntent = useRef(0)
+  const [navigationPhase, setNavigationPhase] = useState<'idle' | 'entering'>('idle')
+  const navigationTimer = useRef<number | undefined>(undefined)
+  useEffect(() => {
+    setNavigationPhase('entering')
+    if (navigationTimer.current !== undefined) window.clearTimeout(navigationTimer.current)
+    navigationTimer.current = window.setTimeout(() => setNavigationPhase('idle'), 240)
+    return () => { if (navigationTimer.current !== undefined) window.clearTimeout(navigationTimer.current) }
+  }, [view])
+
   useEffect(() => { const lifetime = new AbortController(); extensionLifetime.current = lifetime; return () => lifetime.abort() }, [remote])
 
   useEffect(() => {
@@ -185,12 +198,31 @@ export function MarketPage({ remote, skinService, onOpenOfficialPlugins, homeSup
   const activeTab = view === 'detail' ? detailTab(previousView) : undefined
 
   function navigate(next: PrimaryView): void {
+    const intent = ++navigationIntent.current
+    const currentView = pageTab(view)
+    const currentScrollTop = scrollRef.current?.scrollTop ?? 0
+    if (currentView !== undefined) {
+      scrollPositions.current.set(`${currentView}:${filters.category}:${filters.query}:${page}`, currentScrollTop)
+    }
     setView(next)
     setPreviousView(next)
     setPage(1)
     setActionNotice('')
+    if (next === 'all' && currentView !== 'all') setFilters(EMPTY_FILTERS)
+    setBrowseContext(next === 'all' ? { source: 'top-nav', page: 1, scrollTop: 0 } : undefined)
     runAfterNextFrame(() => scrollRef.current?.scrollTo({ top: 0 }))
+    runAfterNextFrame(() => {
+      if (intent !== navigationIntent.current) return
+      if (next === 'all' && typeof document !== 'undefined') document.getElementById('eac-market-search')?.focus()
+    })
     if (next === 'mine') void controller.sync(true)
+  }
+
+  function navigateSecondary(next: 'help' | 'settings' | 'author'): void {
+    const from = pageTab(view) ?? (view === 'skins' ? skinOrigin : 'discover')
+    scrollPositions.current.set(`${from}:${filters.category}:${filters.query}:${page}`, scrollRef.current?.scrollTop ?? 0)
+    setMoreMenu(false)
+    setView(next)
   }
 
   function openDetail(plugin: CatalogPlugin): void {
@@ -204,13 +236,29 @@ export function MarketPage({ remote, skinService, onOpenOfficialPlugins, homeSup
     setView('detail')
   }
 
-  function browse(category?: string): void {
-    scrollPositions.current.set(`${pageTab(view)}:${filters.category}:${filters.query}:${page}`, scrollRef.current?.scrollTop ?? 0)
-    setFilters((current) => ({ ...current, category: category ?? 'all' }))
+  function browse(category?: string, section: DiscoverNavigationSection = 'rules'): void {
+    const intent = ++navigationIntent.current
+    const scrollTop = scrollRef.current?.scrollTop ?? 0
+    const normalizedCategory = category === undefined || category === 'all' ? undefined : category
+    scrollPositions.current.set(`discover:${filters.category}:${filters.query}:${page}`, scrollTop)
+    setFilters((current) => ({ ...current, category: normalizedCategory ?? 'all' }))
     setPage(1)
+    setBrowseContext({
+      source: 'discover',
+      ...(normalizedCategory === undefined ? {} : { category: normalizedCategory }),
+      section,
+      ...(filters.query.trim() === '' ? {} : { query: filters.query }),
+      page: 1,
+      scrollTop,
+    })
     setView('all')
     setPreviousView('all')
-    window.requestAnimationFrame(() => { scrollRef.current?.scrollTo({ top: 0 }) })
+    setActionNotice('')
+    runAfterNextFrame(() => {
+      if (intent !== navigationIntent.current) return
+      scrollRef.current?.scrollTo({ top: 0 })
+      if (typeof document !== 'undefined') document.getElementById('eac-market-search')?.focus()
+    })
   }
 
   function backFromDetail(): void {
@@ -334,7 +382,7 @@ export function MarketPage({ remote, skinService, onOpenOfficialPlugins, homeSup
         onTasks={() => setTaskDrawer(true)}
         onMore={() => setMoreMenu((value) => !value)}
         moreMenu={moreMenu}
-        onSecondary={(next) => { setMoreMenu(false); setView(next) }}
+        onSecondary={navigateSecondary}
         activeTab={activeTab}
       >
         <div className="eac-market__loading" aria-busy="true" aria-live="polite">
@@ -354,7 +402,7 @@ export function MarketPage({ remote, skinService, onOpenOfficialPlugins, homeSup
         onTasks={() => setTaskDrawer(true)}
         onMore={() => setMoreMenu((value) => !value)}
         moreMenu={moreMenu}
-        onSecondary={(next) => { setMoreMenu(false); setView(next) }}
+        onSecondary={navigateSecondary}
         activeTab={activeTab}
       >
         <section className="eac-market__error" role="alert">
@@ -409,8 +457,9 @@ export function MarketPage({ remote, skinService, onOpenOfficialPlugins, homeSup
         moreMenu={moreMenu}
         activeTab={activeTab}
         scrollRef={scrollRef}
-        onSecondary={(next) => { setMoreMenu(false); setView(next) }}
+        onSecondary={navigateSecondary}
         moreSupplemental={surface(EXTENSION_SLOTS.more)}
+        transitionPhase={navigationPhase}
       >
         {syncNotice && <div className="eac-market__notice eac-market__notice--warning" role="status">{syncNotice} <Button variant="outline" onClick={() => void controller.sync(true)}>重新读取</Button></div>}
         {actionNotice && <div className="eac-market__notice" role="status">{actionNotice}</div>}
@@ -424,8 +473,8 @@ export function MarketPage({ remote, skinService, onOpenOfficialPlugins, homeSup
             onPack={openPlanForPack}
             onCollection={openPlanForCollection}
             onBrowse={browse}
-            onHelp={() => setView('help')}
-            onSettings={() => setView('settings')}
+            onHelp={() => navigateSecondary('help')}
+            onSettings={() => navigateSecondary('settings')}
             onManage={() => navigate('mine')}
             skinEntry={skinEntry}
             supplemental={<>{homeSupplemental}{surface(EXTENSION_SLOTS.home)}</>}
@@ -438,6 +487,12 @@ export function MarketPage({ remote, skinService, onOpenOfficialPlugins, homeSup
               <div><h1>全部插件</h1><p>默认展示有安装包的功能。待适配、缺少文件的条目可在“全部记录”查看。</p></div>
               <Button variant="outline" onClick={() => setAdvanced((value) => !value)} aria-expanded={advanced}>高级筛选</Button>
             </header>
+            {browseContext?.source === 'discover' && (
+              <div className="eac-market__notice" role="status" data-navigation-source="discover">
+                来自发现页{browseContext.category === undefined ? '' : ` · ${browseContext.category}`}
+                <Button variant="ghost" size="sm" onClick={() => { setBrowseContext({ source: 'top-nav', page: 1, scrollTop: 0 }); setFilters((current) => ({ ...current, category: 'all' })); setPage(1) }}>清除来源筛选</Button>
+              </div>
+            )}
             {skinEntry}
             <div className="eac-market__filters" aria-label="安装包范围">
               <Pill active={availableOnly} onClick={() => applyBrowseChange(() => setAvailableOnly(true), () => setPage(1))}>可安装</Pill>
@@ -694,7 +749,7 @@ export function MarketPage({ remote, skinService, onOpenOfficialPlugins, homeSup
   )
 }
 
-export function MarketFrame({ view, activeCount, onNavigate, onTasks, onMore, moreMenu, onSecondary, activeTab, scrollRef, children, moreSupplemental }: {
+export function MarketFrame({ view, activeCount, onNavigate, onTasks, onMore, moreMenu, onSecondary, activeTab, scrollRef, children, moreSupplemental, transitionPhase = 'idle' }: {
   readonly view: MarketView
   readonly activeCount: number
   readonly onNavigate: (view: PrimaryView) => void
@@ -704,6 +759,7 @@ export function MarketFrame({ view, activeCount, onNavigate, onTasks, onMore, mo
   readonly onSecondary: (view: 'help' | 'settings' | 'author') => void
   readonly activeTab?: PrimaryView | undefined
   readonly moreSupplemental?: React.ReactNode
+  readonly transitionPhase?: 'idle' | 'entering'
   readonly scrollRef?: React.Ref<HTMLDivElement>
   readonly children: React.ReactNode
 }): React.JSX.Element {
@@ -752,7 +808,7 @@ export function MarketFrame({ view, activeCount, onNavigate, onTasks, onMore, mo
               </div>
             </div>
           </header>
-          <main className="eac-market__main">{children}</main>
+          <main className={`eac-market__main eac-market__main--${transitionPhase}`} data-navigation-phase={transitionPhase}>{children}</main>
         </div>
       </div>
     </div>
@@ -883,6 +939,8 @@ export function DiscoverView({ catalog, inventory, onOpen, onInstall, onPack, on
   const ruleSorted = browseSortPlugins(catalog.plugins.filter(plugin => plugin.installability === 'bundle-installable' && plugin.verification !== 'hard-incompatible'), 'rules')
   const scored = discoveryScoreItems(discovery?.highScorePlugins, allPlugins)
   const scoredSkills = discoveryScoreItems(discovery?.highScoreSkills, allPlugins)
+  const [selectedCategory, setSelectedCategory] = useState('all')
+  const visibleRuleSorted = selectedCategory === 'all' ? ruleSorted : ruleSorted.filter((plugin) => plugin.categories.includes(selectedCategory))
   return (
     <>
       <header className="eac-market__page-head eac-market__discover-head">
@@ -909,12 +967,21 @@ export function DiscoverView({ catalog, inventory, onOpen, onInstall, onPack, on
               <div><h2>规则发现</h2><p>仅展示已有安装包的功能。排序依据：兼容状态、用途和发布时间；待适配内容在全部插件中保留。</p></div>
             </div>
             {categories.length > 0 && (
-              <div className="eac-market__filters" aria-label="按用途进入全部插件">
-                {categories.map((category) => <Pill key={category} onClick={() => onBrowse(category)}>{category}</Pill>)}
-              </div>
+              <>
+                <div className="eac-market__filters" aria-label="按用途筛选发现内容">
+                  <Pill active={selectedCategory === 'all'} onClick={() => setSelectedCategory('all')}>全部用途</Pill>
+                  {categories.map((category) => <Pill key={category} active={selectedCategory === category} onClick={() => setSelectedCategory(category)}>{category}</Pill>)}
+                </div>
+                <div className="eac-market__button-row">
+                  <Button variant="outline" onClick={() => onBrowse(selectedCategory === 'all' ? undefined : selectedCategory)}>
+                    {selectedCategory === 'all' ? '浏览全部插件' : `查看“${selectedCategory}”全部插件`}
+                  </Button>
+                  {selectedCategory !== 'all' && <Button variant="ghost" onClick={() => setSelectedCategory('all')}>清除用途筛选</Button>}
+                </div>
+              </>
             )}
-            <div className="eac-market__grid">
-              {ruleSorted.slice(0, 6).map((plugin) => <PluginCard key={plugin.id + ":" + plugin.version} plugin={plugin} inventory={inventory} onOpen={onOpen} onInstall={onInstall} onManage={onManage} />)}
+            <div key={selectedCategory} className="eac-market__grid eac-market__discover-results">
+              {visibleRuleSorted.slice(0, 6).map((plugin) => <PluginCard key={plugin.id + ":" + plugin.version} plugin={plugin} inventory={inventory} onOpen={onOpen} onInstall={onInstall} onManage={onManage} />)}
             </div>
           </section>
 

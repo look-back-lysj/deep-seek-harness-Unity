@@ -113,6 +113,22 @@ export interface MarketRemote {
 export type PrimaryView = 'discover' | 'all' | 'mine'
 export type SecondaryView = 'help' | 'settings' | 'author' | 'skins'
 export type MarketView = PrimaryView | SecondaryView | 'detail' | 'extension'
+
+/**
+ * 记录进入完整插件目录时的用户意图。它只属于前端导航状态，
+ * 不参与目录、安装或评分协议，方便返回时恢复上下文。
+ */
+export type BrowseNavigationSource = 'top-nav' | 'discover' | 'detail' | 'skins' | 'secondary'
+export type DiscoverNavigationSection = 'featured' | 'skins' | 'high-score-plugin' | 'high-score-skill' | 'rules'
+
+export interface BrowseNavigationContext {
+  readonly source: BrowseNavigationSource
+  readonly category?: string
+  readonly section?: DiscoverNavigationSection
+  readonly query?: string
+  readonly page: number
+  readonly scrollTop: number
+}
 export type LoadState =
   | { readonly status: 'loading' }
   | {

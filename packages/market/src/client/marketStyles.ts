@@ -508,4 +508,20 @@ export const MARKET_CSS = `
   .eac-market__nav button[aria-current="page"], .eac-button--primary, .eac-pill--active { color: HighlightText; background: Highlight; forced-color-adjust: none; }
   .eac-market__status, .eac-market__card, .eac-market__notice, .eac-button, .eac-pill { border: 1px solid CanvasText; }
   .eac-market__status--success, .eac-market__status--warning, .eac-market__status--danger, .eac-market__status--info { color: CanvasText; background: Canvas; border-color: CanvasText; }
-}`
+}
+/* Navigation transitions: one bounded content motion, safe to disable. */
+.eac-market__main { will-change: opacity, transform; }
+.eac-market__main--entering { animation: eac-market-main-enter 240ms cubic-bezier(.2,.8,.2,1) both; }
+@keyframes eac-market-main-enter {
+  from { opacity: .76; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .eac-market__main { animation: none !important; transition: none !important; transform: none !important; }
+}
+.eac-market__discover-results { animation: eac-market-results-enter 180ms cubic-bezier(.2,.8,.2,1) both; }
+@keyframes eac-market-results-enter {
+  from { opacity: .72; transform: translateY(3px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+`
