@@ -48,5 +48,6 @@ export {
   type CatalogSourceRefreshInput,
 } from './store.ts'
 export { parseCollection, parseRelease, parseReleaseStatus, releaseIdFor } from './releases.ts'
+export { buildCatalogDiscovery, filterCatalogDiscovery } from './discovery.ts'
 export { validateBuildRecipe, validateAuthorSubmission, validateProductionCatalog, type BuildRecipe, type SubmissionValidation } from './submission.ts'
 export { collectionPlanInput, collectionView, type CollectionPlanInput, type CatalogCollectionView } from './collections.ts'

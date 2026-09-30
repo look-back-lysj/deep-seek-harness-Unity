@@ -9,6 +9,7 @@ import { join } from 'node:path'
 import type { CatalogSnapshot } from '../contracts/types.ts'
 import type { CatalogPublication, ReleaseRecord, ReleaseStatusRecord, ValidatedCatalog } from './model.ts'
 import { hash, invalid, object } from './input.ts'
+import { filterCatalogDiscovery } from './discovery.ts'
 
 export interface CatalogAcceptance {
   readonly schemaVersion: '1'
@@ -103,6 +104,7 @@ export function applyKnownLifecycle(snapshot: CatalogSnapshot, acceptance?: Cata
     return release ? `${release.pluginId}@${release.version}:${release.artifactDigest}` : ''
   }))
   const plugins = snapshot.plugins.map(plugin => withdrawn.has(`${plugin.id}@${plugin.version}:${plugin.artifactDigest}`) ? { ...plugin, installability: 'hard-blocked' as const } : plugin)
-  const available = new Set(plugins.filter(plugin => plugin.installability !== 'hard-blocked').map(plugin => plugin.id))
-  return { ...snapshot, plugins, recommendations: snapshot.recommendations?.filter(item => available.has(item.pluginId)) ?? [] }
+  const available = new Set(plugins.filter(plugin => plugin.installability !== 'hard-blocked').map(plugin => `${plugin.id}@${plugin.version}`))
+  const recommendations = snapshot.recommendations?.filter(item => available.has(`${item.pluginId}@${item.version ?? ''}`) || [...available].some(key => key.startsWith(`${item.pluginId}@`))) ?? []
+  return { ...snapshot, plugins, recommendations, discovery: filterCatalogDiscovery(snapshot.discovery, plugins.filter(plugin => plugin.installability !== 'hard-blocked')) }
 }

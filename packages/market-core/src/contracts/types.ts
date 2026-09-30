@@ -68,10 +68,22 @@ export interface CatalogMedia {
 export interface CatalogRecommendation {
   readonly pluginId: string
   readonly version?: string
-  readonly placement: 'featured' | 'category' | 'guide'
+  /** 首页展示位；旧的 category/guide 仍保留兼容。 */
+  readonly placement: 'featured' | 'recommended-skin' | 'top-plugin' | 'top-skill' | 'category' | 'guide'
   readonly order: number
   readonly reason: string
   readonly evidence?: string | undefined
+  /** 仅在 source=score 时存在；未知评分不能填 0 或其他占位值。 */
+  readonly source?: 'curated' | 'score'
+  readonly score?: CatalogScore | undefined
+}
+
+export interface CatalogScore {
+  /** 统一为 0..5，来源负责记录具体口径。 */
+  readonly value: number
+  readonly scale: 5
+  readonly source: string
+  readonly measuredAt?: string | undefined
 }
 
 export interface CatalogPlugin {
@@ -80,7 +92,7 @@ export interface CatalogPlugin {
   readonly packageName: string
   readonly version: string
   /** A navigation category only; derived from package metadata, never an execution grant. */
-  readonly kind?: 'plugin' | 'skin' | undefined
+  readonly kind?: 'plugin' | 'skin' | 'skill' | undefined
   readonly skinId?: string | undefined
   readonly summary: string
   readonly author: string
@@ -222,7 +234,29 @@ export interface CatalogSnapshot {
   readonly presentations: readonly CatalogPresentation[]
   readonly deliveries: readonly CatalogDelivery[]
   readonly recommendations?: readonly CatalogRecommendation[] | undefined
+  /** 发现页的稳定投影；缺少评分数据的高分分区会省略。 */
+  readonly discovery?: CatalogDiscovery | undefined
   readonly collections?: readonly CatalogCollectionView[] | undefined
+}
+
+export interface CatalogDiscoveryCard {
+  readonly pluginId: string
+  readonly version: string
+  readonly title: string
+  readonly summary: string
+  readonly reason: string
+  readonly source: 'curated' | 'score'
+  readonly order: number
+  readonly score?: CatalogScore | undefined
+  /** 有图时取首张截图/演示图；没有时由 title+summary 渲染默认海报卡。 */
+  readonly poster?: CatalogMedia | undefined
+}
+
+export interface CatalogDiscovery {
+  readonly featured: readonly CatalogDiscoveryCard[]
+  readonly recommendedSkins: readonly CatalogDiscoveryCard[]
+  readonly highScorePlugins?: readonly CatalogDiscoveryCard[] | undefined
+  readonly highScoreSkills?: readonly CatalogDiscoveryCard[] | undefined
 }
 
 export interface CatalogRefreshRequest {

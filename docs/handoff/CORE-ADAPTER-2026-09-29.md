@@ -23,7 +23,9 @@
 
 证据目录：D:/eac-market-verify/core-adapter-20260929。最终日志 final-check.log；实际安装 install-final/result.json、install.log；UI证据来自install-02，截图已纳入 [author-save.png](../evidence/core-adapter-2026-09-29/author-save.png)。测试Web进程和本工具打开的标签已关闭，未修改日常DSH profile。
 
-最终候选包在 install-final/packages，模式registry-core、published=false（core尚未发布registry，不能将此候选当现成公网安装入口）：
+最终候选包在 install-final/packages，模式registry-core、published=false（core尚未发布registry，不能将此候选当现成公网安装入口）。
+
+以下摘要对应原批次封存测试包；本轮 README、升级指南与发现页合同更新后尚未重新打包，因此不能把这些摘要当作本轮最终制品摘要：
 
 | 包 | 字节数 | SHA256 |
 | --- | ---: | --- |
@@ -50,10 +52,10 @@
 5. TUI 是预留方向，不是本批已交付产品。先验证无桌面环境下的宿主与通信，再做终端 UI。
 6. 不触碰官方源、EAC 组织仓及用户日常 profile；安装验收用 `D:/eac-market-verify` 新目录。
 
-当前未上传新双包；README 继续保留已发布 mvp.9 安装入口，不能让普通用户误装未发布候选。
+当前未上传新双包；README 统一说明源码候选 mvp.10 与正式安装版 mvp.9 的区别，普通用户从 Gitee 当前发行入口安装，不使用未发布候选。
 
 ## 源码交付
 
-实现提交 `1765008` 已推送到个人 GitHub 与 Gitee 的 `refactor/market-core-adapter` 协作分支。GitHub main 与 Gitee master 的正式发行入口未改；此分支不是 Gitee 默认发行站，不要将其整体覆盖 master。
+双包实现最初以提交 `1765008` 推送到个人 GitHub 与 Gitee 的 `refactor/market-core-adapter` 协作分支。默认入口随后按用户授权同步当前文档，实际分支提交须查询远端。GitHub main 承载源码，Gitee master 承载发行资料；源码分支不是 Gitee 默认发行站，不能将其整体覆盖 master。
 
 后续先在该分支继续隔离 Desktop 新装/升级验收，再选择发布 core 的真实 registry 或固定 HTTPS 制品地址。`install-final/packages/release.json` 创建于提交前，source.dirty=true 已如实保留；不得声称该报告来自一个干净发布提交。

@@ -38,6 +38,7 @@ import {
 } from './public-format.ts'
 import { parseMetadata } from './metadata.ts'
 import { parseRecommendations } from './recommendations.ts'
+import { buildCatalogDiscovery } from './discovery.ts'
 import { parseCollection, parseRelease, parseReleaseStatus } from './releases.ts'
 import { exactVersion, integer, string, timestamp } from './input.ts'
 import { parseManagementEvidence } from './management-evidence.ts'
@@ -132,6 +133,8 @@ function parseMedia(value: unknown, field: string, maxTextBytes: number): Catalo
 
 function parsePlugin(value: unknown, field: string, maxTextBytes: number, now: Date): MarketPluginRecord {
   if (!isRecord(value)) fail('catalog/invalid-field', `${field} 必须是对象`)
+  const declaredKind = value.kind === undefined ? undefined : requiredString(value.kind, `${field}.kind`, 20)
+  if (declaredKind !== undefined && !['plugin', 'skin', 'skill'].includes(declaredKind)) fail('catalog/invalid-field', `${field}.kind 必须是 plugin、skin 或 skill`)
   const authorUrl = optionalString(value.authorUrl, `${field}.authorUrl`, 4_096)
   const sourceUrl = optionalString(value.sourceUrl, `${field}.sourceUrl`, 4_096)
   const license = optionalString(value.license, `${field}.license`, 200)
@@ -140,6 +143,7 @@ function parsePlugin(value: unknown, field: string, maxTextBytes: number, now: D
     name: requiredString(value.name, `${field}.name`, 200),
     packageName: requiredString(value.packageName, `${field}.packageName`, 214),
     version: parseVersion(value.version, `${field}.version`),
+    ...(declaredKind === undefined ? {} : { kind: declaredKind as CatalogPlugin['kind'] }),
     summary: requiredString(value.summary, `${field}.summary`, maxTextBytes),
     author: requiredString(value.author, `${field}.author`, 200),
     ...(authorUrl === undefined ? {} : { authorUrl }),
@@ -170,6 +174,7 @@ function parsePlugin(value: unknown, field: string, maxTextBytes: number, now: D
       if (skin !== undefined) {
         if (typeof skin !== 'object' || skin === null || skin.apiVersion !== 'dsh.ecosystem.ui-skin-loader/v1'
           || typeof skin.id !== 'string' || skin.id.length > 200 || !/^[a-z0-9]+(?:[.-][a-z0-9]+)*$/.test(skin.id)) fail('catalog/skin-metadata', '皮肤声明缺少受支持的公约版本或稳定ID')
+        if (declaredKind !== undefined && declaredKind !== 'skin') fail('catalog/skin-metadata', '皮肤元数据与目录 kind 不一致')
         skinView = { kind: 'skin', skinId: skin.id }
       }
     }
@@ -485,6 +490,7 @@ export function validateMarketIndex(
   if (new Set(collections.map(item => `${item.id}@${item.version}`)).size !== collections.length) fail('catalog/duplicate-collection', '私有组合重复')
   const projectedPlugins = plugins.map(({ manifest: _manifest, manifestDigest: _manifestDigest, metadata: _metadata, releaseId, evidence: _evidence, ...plugin }) => ({ ...plugin, verification: verificationByKey.get(`${plugin.id}@${plugin.version}`) ?? plugin.verification, ...(isV2 && releaseId ? { releasedAt: releasesById.get(releaseId)?.publishedAt } : {}), ...(releaseId && latestStatuses.get(releaseId)?.status === 'withdrawn' ? { installability: 'hard-blocked' as const } : {}) }))
 
+  const recommendations = parseRecommendations(input.recommendations, projectedPlugins, options.now ?? new Date(), isV2)
   const snapshot: CatalogSnapshot = {
     schemaVersion: input.schemaVersion,
     revision,
@@ -496,7 +502,8 @@ export function validateMarketIndex(
     packs: packs.map(({ pack: _pack, packDigest: _packDigest, lock: _lock, ...pack }) => pack),
     presentations,
     deliveries,
-    recommendations: parseRecommendations(input.recommendations, projectedPlugins, options.now ?? new Date(), isV2),
+    recommendations,
+    discovery: buildCatalogDiscovery({ plugins: projectedPlugins, presentations, recommendations }),
   }
   if (snapshot.listings && (new Set(snapshot.listings.map(item => item.id)).size !== snapshot.listings.length || snapshot.listings.some(item => projectedPlugins.some(plugin => plugin.id === item.id)))) fail('catalog/duplicate-listing', '清点记录ID重复或与插件记录冲突')
   return { snapshot, manifestBytes, packBytes, lockBytes, evidenceBytes, metadataBytes, releases, releaseStatuses, collections, ...(publication === undefined ? {} : { publication }) }
