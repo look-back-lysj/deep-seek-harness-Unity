@@ -136,3 +136,15 @@ await ctx.remote.$mount(TYPERT_REMOTE)
 - 新增 `navigation.test.tsx`、`visual-polish.test.tsx`、`dialogs.test.tsx`。
 - 本批 `pnpm check`、`pnpm typecheck`、Client 86 项测试、browser-check 26 项及 `impeccable detect` 均通过。
 - 官方 Desktop、真实读屏、真实缩放和真实网络截图重试仍未验证，详见 [UI 升级记录](docs/handoff/UI-UPGRADE-2026-09-29.md)。
+
+## 10. 2026-09-30 视觉与兼容性基础优化
+
+本轮继续采用“官方 DSH 原生增强 + 编辑型发现页”的方向，只修改 Client、Client 测试和设计记录，不修改 Host、Core、公共合同、依赖或锁文件。
+
+- 发现页首推轮播监听 `prefers-reduced-motion` 变化；后台页面暂停自动轮换；目录项目变化时限制当前索引；自动切换不触发持续读屏播报，手动切换保留可读提示。
+- 首推海报与普通插件卡片保持一致的真实状态边界：已安装条目进入管理，不兼容或缺少制品时禁用安装，并显示真实原因。
+- CSS 先提供安全基础样式，再使用容器查询、动态视口高度、主题增强和渐变作为可选增强。没有容器查询时使用单列安全布局，避免嵌入式窄面板出现三列挤压。
+- 增加旧引擎焦点环、主题颜色 fallback、强制颜色模式、触控尺寸、`100vh` 基础高度和 `100dvh` 增强覆盖。
+- 视觉证据由当前源码重新生成，当前批次输出位于 `D:/eac-market-verify/implementation-20260928/C-UI`；不再把 9 月 28 日旧截图当作当前视觉基线。
+
+当前仍需真实官方 Desktop 验证：DSH 容器中 fixed Modal/overlay 的覆盖范围、真实主题 token 值、读屏、120–200% 缩放、强制颜色模式和真实网络图片失败重试。合成 browser-check 通过不能替代这些验收。
