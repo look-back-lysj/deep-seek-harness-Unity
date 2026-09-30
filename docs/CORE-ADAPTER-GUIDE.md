@@ -99,9 +99,9 @@ pnpm pack:release --out-dir D:/eac-market-verify/release-candidate --core-url "h
 | 用途 | core 返回的条件 | adapter 展示 |
 | --- | --- | --- |
 | 首推海报 | placement=featured、有效期限内、引用精确插件版本、理由非空 | 海报轮播；媒体可用就显示图片，缺图或图片加载失败就降级为插件名＋简介文字卡 |
-| 推荐皮肤 | placement=skin 且插件 kind=skin、可安装或明确研究状态 | 推荐皮肤横向卡；无条目时隐藏整块，入口仍指向皮肤中心 |
-| 高分插件 | placement=high-score-plugin、有来源的 score、非 skill/skin | 按 score 降序展示；未知分数、硬不兼容或撤回条目不进入 |
-| 高分 skill | placement=high-score-skill、有来源的 score、条目标记为 skill | 按 score 降序展示；没有有效条目时隐藏整块 |
+| 推荐皮肤 | `placement=recommended-skin` 且插件 `kind=skin`、可安装或明确研究状态 | 推荐皮肤横向卡；无条目时隐藏整块，入口仍指向皮肤中心 |
+| 高分插件 | `placement=top-plugin`、有来源的 `score`、非 skill/skin | 按 score 降序展示；未知分数、硬不兼容或撤回条目不进入 |
+| 高分 skill | `placement=top-skill`、有来源的 `score`、条目标记为 skill | 按 score 降序展示；没有有效条目时隐藏整块 |
 
 评分是维护者目录事实，不是用户评价系统。score 只用于排序和说明，不能改变安装验证、依赖检查或用户确认。所有推荐仍受 catalog 的撤回、生效/过期、版本和来源校验；来源失败时保留旧缓存并标 stale，不能把旧推荐伪装成最新。
 

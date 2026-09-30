@@ -52,7 +52,9 @@ export function buildCatalogDiscovery(snapshot: Pick<CatalogSnapshot, 'plugins' 
       .sort((a, b) => a.order - b.order || a.pluginId.localeCompare(b.pluginId))
 
   const highScore = (placement: 'top-plugin' | 'top-skill'): readonly CatalogDiscoveryCard[] =>
-    byPlacement(placement).filter(item => item.source === 'score' && item.score !== undefined)
+    byPlacement(placement)
+      .filter(item => item.source === 'score' && item.score !== undefined)
+      .sort((a, b) => (b.score?.value ?? -1) - (a.score?.value ?? -1) || a.order - b.order || a.pluginId.localeCompare(b.pluginId))
 
   const highScorePlugins = highScore('top-plugin')
   const highScoreSkills = highScore('top-skill')
