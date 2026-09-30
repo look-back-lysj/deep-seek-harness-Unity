@@ -118,7 +118,7 @@ export type MarketView = PrimaryView | SecondaryView | 'detail' | 'extension'
  * 记录进入完整插件目录时的用户意图。它只属于前端导航状态，
  * 不参与目录、安装或评分协议，方便返回时恢复上下文。
  */
-export type BrowseNavigationSource = 'top-nav' | 'discover' | 'detail' | 'skins' | 'secondary'
+export type BrowseNavigationSource = 'top-nav' | 'discover' | 'all' | 'mine' | 'detail' | 'skins' | 'secondary' | 'extension'
 export type DiscoverNavigationSection = 'featured' | 'skins' | 'high-score-plugin' | 'high-score-skill' | 'rules'
 
 export interface BrowseNavigationContext {
@@ -128,6 +128,18 @@ export interface BrowseNavigationContext {
   readonly query?: string
   readonly page: number
   readonly scrollTop: number
+}
+
+/** 完整的 Client 返回快照；不进入 Remote 或 Core 合同。 */
+export interface NavigationSnapshot {
+  readonly view: MarketView
+  readonly source: BrowseNavigationSource
+  readonly filters: PluginFilters
+  readonly availableOnly: boolean
+  readonly sort: BrowseSortMode
+  readonly page: number
+  readonly scrollTop: number
+  readonly section?: string | undefined
 }
 export type LoadState =
   | { readonly status: 'loading' }

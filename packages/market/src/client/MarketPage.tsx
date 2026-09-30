@@ -34,6 +34,7 @@ import {
   type MarketRemote,
   type MarketView,
   type BrowseNavigationContext,
+  type NavigationSnapshot,
   type DiscoverNavigationSection,
   type PluginFilters,
   type PrimaryView,
@@ -139,6 +140,10 @@ export function MarketPage({ remote, skinService, onOpenOfficialPlugins, homeSup
   const [view, setView] = useState<MarketView>('discover')
   const [previousView, setPreviousView] = useState<PrimaryView | 'skins'>('discover')
   const [browseContext, setBrowseContext] = useState<BrowseNavigationContext>()
+  const secondaryOrigin = useRef<NavigationSnapshot>()
+  const detailOrigin = useRef<NavigationSnapshot>()
+  const skinOriginSnapshot = useRef<NavigationSnapshot>()
+  const extensionOrigin = useRef<NavigationSnapshot>()
   const [skinOrigin, setSkinOrigin] = useState<PrimaryView>('discover')
   const [skinVisited, setSkinVisited] = useState(false)
   const [skinInstallGuide, setSkinInstallGuide] = useState<CatalogPlugin>()
@@ -197,6 +202,29 @@ export function MarketPage({ remote, skinService, onOpenOfficialPlugins, homeSup
   const activeCount = state.status === 'ready' ? activeTasks(state.tasks).length : 0
   const activeTab = view === 'detail' ? detailTab(previousView) : undefined
 
+  function navigationSnapshot(source: NavigationSnapshot['source'], targetView: MarketView = view): NavigationSnapshot {
+    return { view: targetView, source, filters, availableOnly, sort: browseSort, page, scrollTop: scrollRef.current?.scrollTop ?? 0 }
+  }
+
+  function restoreNavigation(snapshot: NavigationSnapshot): void {
+    setView(snapshot.view)
+    if (snapshot.view === 'discover' || snapshot.view === 'all' || snapshot.view === 'mine') setPreviousView(snapshot.view)
+    else if (snapshot.view === 'skins') setPreviousView(skinOrigin)
+    setFilters(snapshot.filters)
+    setAvailableOnly(snapshot.availableOnly)
+    setBrowseSort(snapshot.sort)
+    setPage(snapshot.page)
+    setBrowseContext(snapshot.source === 'discover' ? { source: 'discover', ...(snapshot.filters.category === 'all' ? {} : { category: snapshot.filters.category }), page: snapshot.page, scrollTop: snapshot.scrollTop } : undefined)
+    runAfterNextFrame(() => scrollRef.current?.scrollTo({ top: snapshot.scrollTop }))
+  }
+
+  function returnFromSecondary(): void {
+    const snapshot = secondaryOrigin.current
+    secondaryOrigin.current = undefined
+    if (snapshot) restoreNavigation(snapshot)
+    else restoreNavigation({ view: 'discover', source: 'secondary', filters: EMPTY_FILTERS, availableOnly, sort: browseSort, page: 1, scrollTop: 0 })
+  }
+
   function navigate(next: PrimaryView): void {
     const intent = ++navigationIntent.current
     const currentView = pageTab(view)
@@ -204,6 +232,8 @@ export function MarketPage({ remote, skinService, onOpenOfficialPlugins, homeSup
     if (currentView !== undefined) {
       scrollPositions.current.set(`${currentView}:${filters.category}:${filters.query}:${page}`, currentScrollTop)
     }
+    secondaryOrigin.current = undefined
+    extensionOrigin.current = undefined
     setView(next)
     setPreviousView(next)
     setPage(1)
@@ -219,8 +249,7 @@ export function MarketPage({ remote, skinService, onOpenOfficialPlugins, homeSup
   }
 
   function navigateSecondary(next: 'help' | 'settings' | 'author'): void {
-    const from = pageTab(view) ?? (view === 'skins' ? skinOrigin : 'discover')
-    scrollPositions.current.set(`${from}:${filters.category}:${filters.query}:${page}`, scrollRef.current?.scrollTop ?? 0)
+    secondaryOrigin.current = navigationSnapshot('secondary')
     setMoreMenu(false)
     setView(next)
   }
@@ -228,6 +257,7 @@ export function MarketPage({ remote, skinService, onOpenOfficialPlugins, homeSup
   function openDetail(plugin: CatalogPlugin): void {
     if (state.status !== 'ready') return
     const active = typeof document === 'undefined' ? undefined : document.activeElement
+    detailOrigin.current = navigationSnapshot('detail')
     detailReturnFocus.current = active instanceof HTMLElement ? active : null
     const from = view === 'skins' ? 'skins' : pageTab(view) ?? 'discover'
     scrollPositions.current.set(`${from}:${filters.category}:${filters.query}:${page}`, scrollRef.current?.scrollTop ?? 0)
@@ -262,14 +292,17 @@ export function MarketPage({ remote, skinService, onOpenOfficialPlugins, homeSup
   }
 
   function backFromDetail(): void {
-    const key = `${previousView}:${filters.category}:${filters.query}:${page}`
+    const snapshot = detailOrigin.current
+    detailOrigin.current = undefined
     const returnFocus = detailReturnFocus.current
     detailReturnFocus.current = null
-    setView(previousView)
-    runAfterNextFrame(() => {
-      scrollRef.current?.scrollTo({ top: scrollPositions.current.get(key) ?? 0 })
-      restoreDetailReturnFocus(returnFocus, scrollRef.current, previousView)
-    })
+    if (snapshot) {
+      restoreNavigation(snapshot)
+      runAfterNextFrame(() => restoreDetailReturnFocus(returnFocus, scrollRef.current, pageTab(snapshot.view) ?? (snapshot.view === 'skins' ? 'skins' : previousView)))
+    } else {
+      setView(previousView)
+      runAfterNextFrame(() => restoreDetailReturnFocus(returnFocus, scrollRef.current, previousView))
+    }
   }
 
   function openPlanForPlugin(plugin: CatalogPlugin): void {
@@ -422,7 +455,7 @@ export function MarketPage({ remote, skinService, onOpenOfficialPlugins, homeSup
   const loaderPlugin = latestCompatiblePlugin(state.catalog, SKIN_LOADER_PACKAGE) ?? functionalPlugins.find((plugin) => plugin.packageName === SKIN_LOADER_PACKAGE)
   const openSkins = () => {
     const from = pageTab(view) ?? 'discover'
-    scrollPositions.current.set(`${from}:${filters.category}:${filters.query}:${page}`, scrollRef.current?.scrollTop ?? 0)
+    skinOriginSnapshot.current = navigationSnapshot('skins', from)
     setSkinOrigin(from); setSkinVisited(true); setView('skins')
     window.requestAnimationFrame(() => scrollRef.current?.scrollTo({ top: 0 }))
   }
@@ -437,13 +470,13 @@ export function MarketPage({ remote, skinService, onOpenOfficialPlugins, homeSup
     plugin: selectedPlugin === undefined ? undefined : { id: selectedPlugin.id, name: selectedPlugin.name, packageName: selectedPlugin.packageName, version: selectedPlugin.version, artifactDigest: selectedPlugin.artifactDigest },
     draft: extensionDraft === undefined ? undefined : { ...extensionDraft },
     openDetail(id) { const plugin = findPlugin(state.catalog, id); if (plugin) openDetail(plugin) },
-    openOwnPage(id) { setExtensionPage(id); setView('extension'); setMoreMenu(false) },
+    openOwnPage(id) { extensionOrigin.current = navigationSnapshot('extension'); setExtensionPage(id); setView('extension'); setMoreMenu(false) },
     requestInstallReview(request) {
       const plugin = state.catalog.plugins.find((item) => item.id === request.pluginId && item.version === request.version && item.artifactDigest === request.artifactDigest)
       if (plugin) openPlanForPlugin(plugin)
       else setActionNotice('扩展引用的插件版本已变化，请在全部插件中重新选择。')
     },
-    previewDraftChange(change) { setDraftChange({ ...change }); setView('author') },
+    previewDraftChange(change) { secondaryOrigin.current = navigationSnapshot('extension'); setDraftChange({ ...change }); setView('author') },
   }
   const surface = (slot: ExtensionSlot): React.ReactNode => extensions && renderExtensionSurface ? renderExtensionSurface({ host: extensions, slot, context: extensionContext, pageId: extensionPage }) : null
 
@@ -619,7 +652,7 @@ export function MarketPage({ remote, skinService, onOpenOfficialPlugins, homeSup
 
         {skinVisited && <div hidden={view !== 'skins'}><SkinCenter
           catalog={state.catalog} inventory={state.inventory.items} skinService={skinService}
-          onBack={() => { setView(skinOrigin); window.requestAnimationFrame(() => scrollRef.current?.scrollTo({ top: scrollPositions.current.get(`${skinOrigin}:${filters.category}:${filters.query}:${page}`) ?? 0 })) }}
+          onBack={() => { const snapshot = skinOriginSnapshot.current; skinOriginSnapshot.current = undefined; if (snapshot) restoreNavigation(snapshot); else setView(skinOrigin) }}
           onOpen={openDetail} onInstall={openPlanForPlugin}
           onToggle={(item, enabled) => void toggleInventory(item, enabled)}
           onRemove={(item) => { setRemoveStep(false); setRemoveTarget(item) }}
@@ -647,6 +680,7 @@ export function MarketPage({ remote, skinService, onOpenOfficialPlugins, homeSup
 
         {view === 'help' && (
           <>
+            <Button variant="ghost" onClick={returnFromSecondary}>返回市场</Button>
             <header className="eac-market__page-head"><div><h1>上手帮助</h1><p>第一次使用只需要三步。安装不是教程完成条件。</p></div></header>
             <div className="eac-market__help-steps">
               {HELP_STEPS.map((step, index) => (
@@ -669,6 +703,7 @@ export function MarketPage({ remote, skinService, onOpenOfficialPlugins, homeSup
 
         {view === 'settings' && (
           <>
+            <Button variant="ghost" onClick={returnFromSecondary}>返回市场</Button>
             <header className="eac-market__page-head"><div><h1>设置</h1><p>查看目录、外观和诊断信息。</p></div></header>
             <div className="eac-market__settings-list">
               <section className="eac-market__setting">
@@ -704,8 +739,8 @@ export function MarketPage({ remote, skinService, onOpenOfficialPlugins, homeSup
           </>
         )}
 
-        {view === 'extension' && <section><Button variant="outline" onClick={() => navigate('discover')}>返回发现</Button>{surface(EXTENSION_SLOTS.page)}</section>}
-        <div hidden={view !== 'author'}><AuthorWorkspace remote={remote} onDraftSnapshot={setExtensionDraft} draftChange={draftChange} supplemental={<>{authorSupplemental}{surface(EXTENSION_SLOTS.author)}</>} /></div>
+        {view === 'extension' && <section><Button variant="outline" onClick={() => { const snapshot = extensionOrigin.current; extensionOrigin.current = undefined; if (snapshot) restoreNavigation(snapshot); else navigate('discover') }}>返回上一页</Button>{surface(EXTENSION_SLOTS.page)}</section>}
+        <div hidden={view !== 'author'}><Button variant="ghost" onClick={returnFromSecondary}>返回市场</Button><AuthorWorkspace remote={remote} onDraftSnapshot={setExtensionDraft} draftChange={draftChange} supplemental={<>{authorSupplemental}{surface(EXTENSION_SLOTS.author)}</>} /></div>
 
         <p className="eac-market__footer-note">EAC 是社区整合市场，不代表 DeepSeek 官方认证。</p>
       </MarketFrame>
