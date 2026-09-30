@@ -1,64 +1,68 @@
 # Deep Seek Harness Unity · EAC 插件市场
 
-运行在官方 DeepSeek Harness 内的 EAC 社区插件市场。当前源码最新版是 Core / Desktop Adapter 双包底座：桌面适配器保留原包名，业务逻辑拆成独立 core，方便后续维护和接入其他界面。
+运行在官方 DeepSeek Harness 内的 EAC 社区插件市场。当前源码采用 Core / Desktop Adapter 双包结构：桌面适配器保留原安装身份，业务规则放在独立 Core，Client 只消费 Remote 和公开合同。
 
-## 当前源码与发行状态
+> **当前唯一有效入口**：先读 [当前接手入口](docs/handoff/START-HERE.md)。旧阶段报告、旧计划和旧 UI 记录已经移到 `docs/handoff/archive/2026-09-legacy/`，只能追溯，不能作为当前操作指南。
 
-- 桌面适配器：`@dsh-eac/market@0.1.0-mvp.10`
-- 核心包：`@dsh-eac/market-core@0.1.0`
+## 当前状态
+
+- 源码候选：`@dsh-eac/market@0.1.0-mvp.10`
+- 源码候选：`@dsh-eac/market-core@0.1.0`
 - Core API：`1.0.0`
-- 页面协议：`2.0.0`
+- 页面通信协议：`2.0.0`
 - 目标宿主：官方 DSH `0.2.0-rc.1` / Windows x64
+- 当前正式可安装版：`0.1.0-mvp.9` 单包
 
-上述版本是当前源码候选，尚未正式发布。已完成本地测试源下的空缓存安装、官方 Web 加载和作者草稿保存验证；公网 core 获取、Desktop 全新安装及从旧版升级仍待验证。当前正式安装包是 `0.1.0-mvp.9`，它是单包版本，不会安装独立 core。
+`mvp.10` 和 Core `0.1.0` 仍是源码候选，不是用户下载地址。双包已经完成本地测试源空缓存安装、官方 Web 加载和作者草稿保存验证；公网 Core 来源、官方 Desktop 全新安装、旧版升级和跨平台仍需独立验收。
 
-本页和 [升级指南](docs/UPGRADE-GUIDE.md) 仅保留当前有效说明。历史证据只用于追溯，不能替代当前版本验收。
-## 后端协作者从这里开始
+## 协作者从这里开始
 
-如果你负责 Core、Host、目录、DSH 适配器或公共业务接口，请先读 [后端协作者指南](docs/handoff/BACKEND-CONTRIBUTOR-GUIDE-2026-09-30.md)。它说明当前 mvp.10/core.0.1.0 候选状态、前端已经完成的 UI 合同、Core / Adapter 文件边界、失败语义、测试命令和禁止修改范围。
+| 角色 | 必读入口 |
+| --- | --- |
+| 所有维护者 | [当前接手入口](docs/handoff/START-HERE.md) → [最新版升级指南](docs/UPGRADE-GUIDE.md) |
+| Core / Host / 目录 / DSH 适配器 | [后端协作者指南](docs/handoff/BACKEND-CONTRIBUTOR-GUIDE-2026-09-30.md) |
+| Client / UI | [Client 维护边界](packages/market/src/client/README.md) → [DESIGN.md](DESIGN.md) → [当前交互审查](docs/handoff/INTERACTION-AUDIT-2026-09-30.md) |
+| 包合同与发布 | [Core / Desktop Adapter 底座指南](docs/CORE-ADAPTER-GUIDE.md) |
+| 插件作者 | [作者 / Agent 投稿指南](docs/contributing/AGENT-SUBMISSION.md) |
 
-后端协作的关键约束：Core 不依赖 React/DOM；前端不重复实现目录和安装规则；`CatalogSnapshot.discovery` 是可选投影，没有推荐或评分数据就不填；所有未验证的公网、Desktop 和发行结论必须如实保留。
+后端协作必须遵守：Core 不依赖 React/DOM；Client 不重复实现目录、安装计划或官方管理器；`CatalogSnapshot.discovery` 是可选投影，缺少真实推荐、评分或媒体数据时不生成假数据；`failed`、`unknown`、`restart-required` 等结果必须保留。
 
-## 新手安装
+## 正式安装
 
-从 Gitee 发行站复制当前正式版本的固定 `.tgz` 地址，粘贴到官方 DSH 的「插件 → 添加插件」中的「包名或地址」。目前应安装 `0.1.0-mvp.9`；不要仅填写未发布到 npm 的包名，也不要把源码候选或仓库首页当安装包。
+普通用户只安装正式发行版，不使用源码候选、协作分支或仓库首页地址。当前正式包为 `0.1.0-mvp.9`：
 
 [打开 Gitee 最新发行说明](https://gitee.com/flowing-shadows-like-scenes/deep-seek-harness-unity-mirror)
 
-当前正式安装包固定地址（mvp.9）：
-
+```text
 https://gitee.com/flowing-shadows-like-scenes/deep-seek-harness-unity-mirror/raw/dbeb4b7f0e655f7bdd299a8e40d59af83f0e7da0/artifacts/sha256/a8856180264fea4ba949ac6505c10a71bbf512cfa0dda253992994711904be7c/dsh-eac-market-0.1.0-mvp.9.tgz
+```
 
-安装完成后点击「立即启用」，然后完整退出并重新启动 DSH。打开侧边栏 EAC，使用「发现 / 全部插件 / 我的插件」三个主导航。
+把固定地址粘贴到官方 DSH 的「插件 → 添加插件」中的「包名或地址」，安装后点击「立即启用」，再完整退出并重新启动 DSH。市场主导航为「发现 / 全部插件 / 我的插件」。双包正式发布前，不要把 `@dsh-eac/market-core` 单独填入官方插件安装框。
 
-双包正式发布后，用户仍只安装桌面适配器，官方包管理器负责取得 core。首次获取依赖仍需联网，本地 `.tgz` 不等于完整离线包。
-
-## 结构和维护入口
+## 代码边界
 
 | 路径 | 职责 |
 | --- | --- |
-| `packages/market` | DSH bundle、桌面 UI、Remote、协议协商和随包目录 |
-| `packages/market-core` | 业务规则、安装计划、任务恢复、目录、交付、作者资料和 DSH 适配门面 |
-| `docs/CORE-ADAPTER-GUIDE.md` | 两包职责、公开 API、版本协商、发布和后续 TUI 边界 |
-| `docs/UPGRADE-GUIDE.md` | 当前版本唯一升级指南 |
-| `docs/handoff/CORE-ADAPTER-2026-09-29.md` | 本批真实测试、包摘要和未验范围 |
-| `docs/handoff/START-HERE.md` | 下一位维护者接手入口 |
-| `docs/handoff/BACKEND-CONTRIBUTOR-GUIDE-2026-09-30.md` | Core、Host、目录和适配器协作者指南 |
+| `packages/market` | DSH bundle、Client UI、Remote、协议协商和随包目录 |
+| `packages/market-core` | 目录、预检、安装计划、任务恢复、作者资料、AI 提案和官方适配门面 |
+| `packages/market/src/client` | 发现页、全部插件、详情、任务、皮肤和作者工具；只消费现有 Remote |
+| `docs/handoff/START-HERE.md` | 当前接手顺序、禁止事项和验证入口 |
+| `docs/UPGRADE-GUIDE.md` | 当前唯一升级、构建、发布和回退指南 |
 
-普通用户不需要接触源码、Node、pnpm 或 core 包。维护者只使用包 `exports` 中的公开入口；不要直接导入 `lib` 或跨包源码路径。
+普通用户不需要安装 Node、pnpm 或 Core。维护者只能使用包 `exports` 中的公开入口，不直接导入 `lib` 或跨包源码路径。
 
 ## 当前能力
 
-- 浏览、搜索、筛选、详情和我的插件。
+- 发现页首推海报、推荐皮肤、高分插件、高分 Skill；缺少真实数据的区块自动隐藏。
+- 全部插件目录支持搜索、用途、安装状态、验证状态和排序。
 - 通过官方 pluginManager 执行预检、安装、启用、停用、卸载和重启等待。
-- 皮肤中心、作者本地图文编辑、README 导入、资料 ZIP 导出和受限 AI 提案。
-- Core 与桌面 UI 分开维护；以后可以在同一业务接口上增加 TUI adapter。
+- 任务、皮肤切换、作者草稿、README 导入、资料 ZIP 和受限 AI 提案均保留真实失败语义。
 
 市场不代表 DeepSeek 官方认证，不包含在线作者投稿、自动 Star、任意命令执行或 TUI 成品。没有真实验证的第三方业务和未来 DSH 版本不会被标记为已支持。
 
 ## 从源码构建
 
-维护环境：Node.js 24+、pnpm 11.7.0。普通用户不需要安装这些开发工具。
+维护环境：Node.js 24+、pnpm 11.7.0。
 
 ```powershell
 pnpm install --frozen-lockfile
@@ -66,16 +70,14 @@ pnpm check
 pnpm typecheck
 ```
 
-双包发行必须明确 core 的真实来源：
+双包候选必须通过隔离发行脚本准备，并明确 Core 的固定来源：
 
 ```powershell
 pnpm pack:release --out-dir D:/eac-market-verify/release-candidate --core-url "https://发行主机/固定提交/artifacts/sha256/{sha256}/{filename}"
 ```
 
-发行脚本只准备本地候选，不上传、不修改 npm 配置，也不把 `workspace:*` 官方 DSH peer 固化为开发机版本。完整流程见 [最新版升级指南](docs/UPGRADE-GUIDE.md)。
+完整流程以 [最新版升级指南](docs/UPGRADE-GUIDE.md) 为准。脚本只准备候选，不上传、不修改 npm 配置，也不把 `workspace:*` 固化成开发机版本。
 
-## 许可和协作
+## 文档与协作
 
-插件作者先读 [作者 / Agent 投稿指南](docs/contributing/AGENT-SUBMISSION.md)，维护者先读 [文档总目录](docs/index.md)。投稿范围、审核规则和固定制品要求不因拆包改变。
-
-市场代码按仓库许可证发布；目录中的插件和皮肤继续遵循各自 LICENSE/NOTICE。协作前先读 [接力入口](docs/handoff/START-HERE.md) 和 [Core / Adapter 底座指南](docs/CORE-ADAPTER-GUIDE.md)。
+[文档总目录](docs/index.md) 只列当前有效文档和历史归档入口。任何日期较早的报告都不能覆盖当前接手入口的版本、路径和未验证边界。协作前先读 [接手入口](docs/handoff/START-HERE.md) 和 [Core / Adapter 底座指南](docs/CORE-ADAPTER-GUIDE.md)。

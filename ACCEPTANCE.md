@@ -99,7 +99,7 @@
 - 0.1.7 当前机器缺少独立 Desktop 可执行包，真实 Desktop 项记 `not-run`，不能由 peer gate 替代。
 - 未来 DSH 若改变 manager/ChangeResult/atomic-write API，只能保证不伪造成功，不保证免改直接运行。
 
-详细根因、方案与边界见 [DSH 核心宽泛兼容阶段一](docs/handoff/DSH-CORE-COMPAT-2026-09-29.md)。
+详细根因、方案与边界见 [DSH 核心宽泛兼容阶段一](docs/handoff/archive/2026-09-legacy/DSH-CORE-COMPAT-2026-09-29.md)。
 
 ## 7. README 与发行元数据修正 · 2026-09-29
 
@@ -115,4 +115,4 @@ mvp.9 未重复真实 Desktop 安装；它只应被表述为“基于已验证 m
 
 ## Core / Adapter 双包底座（2026-09-29）
 
-构建/类型/包边界通过；534测试通过、2跳过。官方0.2.0-rc.1 CLI本地制品源、空store安装通过；官方Web亲自操作与作者保存通过。整体验收partial，未验Desktop升级、公网core部署或TUI。精确包摘要、UI与最终包差异和后续接手事项见 [本批接力](docs/handoff/CORE-ADAPTER-2026-09-29.md)。
+构建/类型/包边界通过；534测试通过、2跳过。官方0.2.0-rc.1 CLI本地制品源、空store安装通过；官方Web亲自操作与作者保存通过。整体验收partial，未验Desktop升级、公网core部署或TUI。精确包摘要、UI与最终包差异和后续接手事项见 [本批接力](docs/handoff/archive/2026-09-legacy/CORE-ADAPTER-2026-09-29.md)。

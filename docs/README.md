@@ -1,24 +1,35 @@
 # EAC 市场文档入口
 
-当前工程已经进入 Core / Desktop Adapter 双包底座阶段。继续维护前先读：
+当前文档只保留一套可执行入口。任何带日期的旧报告、旧计划和旧验收登记都在 [历史接力归档](handoff/archive/2026-09-legacy/README.md)，只能追溯，不能覆盖当前状态。
 
-1. [当前接力入口](handoff/START-HERE.md)：当前分支、实际验证边界和阅读顺序。
-2. [最新版升级指南](UPGRADE-GUIDE.md)：当前用户升级、维护者构建、目录维护和发布门槛。
-3. [Core / Desktop Adapter 底座指南](CORE-ADAPTER-GUIDE.md)：两个包的职责、公开接口、发现页合同和扩展边界。
-4. [后端协作者指南](handoff/BACKEND-CONTRIBUTOR-GUIDE-2026-09-30.md)：Core、Host、目录、适配器、失败语义和验证入口。
-5. [产品约束](PRODUCT.md)：已经确认的产品方向与范围。
-6. [工程总目录](index.md)：按主题查找验证、作者投稿、协议和历史证据。
+## 协作者阅读顺序
+
+1. [当前接手入口](handoff/START-HERE.md)：分支、版本、范围、禁止事项和验证顺序。
+2. [最新版升级指南](UPGRADE-GUIDE.md)：用户升级、维护者构建、发布和回退。
+3. [Core / Desktop Adapter 底座指南](CORE-ADAPTER-GUIDE.md)：两包职责、公开 API、协议和发现页合同。
+4. [后端协作者指南](handoff/BACKEND-CONTRIBUTOR-GUIDE-2026-09-30.md)：Core、Host、目录、适配器和失败语义。
+5. [当前交互审查](handoff/INTERACTION-AUDIT-2026-09-30.md)：Client 动作状态、导航、任务、皮肤和作者工具。
+6. [UI 重构合同](handoff/UI-REBUILD-CONTRACT-2026-09-30.md)：发现页、全部插件、视觉和兼容性边界。
+7. [Client 维护边界](../packages/market/src/client/README.md)：前端文件职责和 Remote 使用规则。
 
 ## 当前事实
 
-- 源码候选：@dsh-eac/market@0.1.0-mvp.10 + @dsh-eac/market-core@0.1.0。
-- 当前正式可安装发行版：0.1.0-mvp.9，仍是单包版本。
+- 源码候选：`@dsh-eac/market@0.1.0-mvp.10` + `@dsh-eac/market-core@0.1.0`。
+- 当前正式可安装发行版：`0.1.0-mvp.9` 单包。
 - 双包已经通过本地测试源空缓存安装、官方 Web 加载和作者草稿保存验证。
-- 双包公网 core 来源、官方 Desktop 全新安装和旧版升级仍需独立验收，不能把源码候选当成已发布安装包。
-- 发现页同时支持团队精选、推荐皮肤和有来源的高分分区；没有真实资料的分区自动隐藏。
+- 双包公网 Core 来源、官方 Desktop 全新安装和旧版升级仍需独立验收。
+- 发现页和全部插件页消费同一目录投影；没有真实推荐、评分或媒体时自动隐藏或降级。
 
-## 协作规则
+## 专题入口
 
-代码位于 D:/eac-market。先核对当前工作树和远端，再按接力入口冻结文件 owner。公共合同、构建、打包和官方 Desktop 验收由主控串行处理；官方源码、组织仓库和真实用户 profile 只读。
+- [产品要求](PRODUCT.md)
+- [测试与证据](testing.md)
+- [协议](protocol.md)
+- [官方能力](host-capabilities.md)
+- [作者投稿指南](contributing/AGENT-SUBMISSION.md)
+- [目录内容维护](contributing/CATALOG-CONTENT.md)
+- [发行维护](contributing/DISTRIBUTION.md)
+- [AI 辅助操作守则](AI-ASSIST-RULES.md)
+- [多智能体协作约定](handoff/NEXT-AGENT-PLAYBOOK.md)
 
-旧的实施计划、审查报告和验收记录仍保留，用于追溯当时事实。它们不再是当前操作入口，也不能覆盖最新版升级指南中的版本、路径和未验证边界。插件作者请直接阅读 [作者投稿指南](contributing/AGENT-SUBMISSION.md)。
+`PRODUCT.md` 是需求事实源，`ACCEPTANCE.md` 是实际验证记录，`UPGRADE-GUIDE.md` 是当前操作指南。三者职责不同，不能互相替代。

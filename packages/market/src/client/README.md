@@ -1,13 +1,42 @@
 # Client 维护边界
 
-本目录将页面组装、读取状态、安装确认、任务确认和作者编辑分开；通过 `MarketRemote` 消费 JSON 服务，不直接导入 Host 服务。`core/semver.ts` 是共享的无副作用版本比较函数。
+本目录是 EAC Market 的桌面 Client。它通过 `MarketRemote` 消费 JSON 服务，负责页面展示、用户确认、导航恢复和失败后的下一步；不直接导入 Host、Node 文件系统或 Core 内部实现。
 
-- `MarketPage` 保留发现／全部插件／我的插件三个主导航；次级页面和扩展位置不能覆盖核心操作。
-- `data-controller` 控制读取代次、环境、轮询和库存同步。任务终态刷新不能写在每次 render 都会销毁的 effect 内。
-- `InstallPlanDialog` 只消费 Host 计划；每个目标有独立会话；试装变更使旧计划失效。
-- `plan-review` 只投影 Host 已封存计划的可执行／跳过／依赖暂停范围，不更改计划或替核心重排执行。私有组合使用 collection 身份，不能伪装公共 Pack。
-- `TaskDrawer` 每任务保存 AI 提案。风险第二次确认必须使用 Host challenge，不能按 action.kind 自动填同意。
-- `AuthorWorkspace` 的已保存状态只来自 Host revision；README 差异确认消费后台候选；媒体使用受控读取，ZIP 使用真实出站字节。
-- `extensions/` 合同归主控，实现归 E；主页面只提供受限快照和预检／差异入口。
+## 文件职责
 
-本轮证据、完整接线请求和未验证项见 `docs/UI-IMPLEMENTATION-2026-09-28.md`。测试产物写 `D:/eac-market-verify/implementation-20260928/C-UI`。全局构建、打包和官方 Desktop 留给主控。
+- `MarketPage.tsx`：发现、全部插件、我的插件、详情、设置、帮助、作者和扩展页面的导航与组合。
+- `data-controller.ts`：读取代次、环境校验、轮询、任务合并和库存刷新。
+- `InstallPlanDialog.tsx`：只消费 Host 计划；目标变化会使旧计划失效。
+- `TaskDrawer.tsx`：任务状态、授权、重启核对、AI 提案和真实失败下一步。
+- `SkinCenter.tsx`：皮肤管理器状态、切换前复核、失败回退和重试。
+- `AuthorWorkspace.tsx`：草稿 revision、README 差异、媒体传输和资料 ZIP。
+- `action-state.ts` / `action-feedback.tsx`：把已有 Remote 结果映射成准备中、执行中、完成、部分完成、失败、未知和重新核对；不改变后端合同。
+- `extensions/`：受限扩展合同和宿主提供的上下文；扩展不能绕过安装计划或作者 revision。
+
+## 不变边界
+
+- 不修改 `packages/market-core`、Core contracts、Host、Remote、安装协议、`package.json` 或锁文件来解决纯 UI 问题。
+- 不重复实现目录排序、安装计划、任务执行、官方 pluginManager 或作者资料规则。
+- `CatalogSnapshot.discovery` 缺少真实数据时隐藏区块；图片失败时降级为标题和简介文字卡。
+- `failed`、`unknown`、`restart-required`、`partial` 和 revision 冲突必须保留真实语义，不能统一成成功或普通 loading。
+- 旧 DSH、窄面板、暗色、forced-colors、reduced-motion 和图片失败时仍要有可读静态 fallback。
+
+## 开发与验证
+
+在 `D:/eac-market` 执行：
+
+```powershell
+pnpm typecheck
+pnpm lint
+pnpm test -- tests/client
+node tests/client/browser-check.mjs
+```
+
+真实官方 Desktop 的读屏、120%–200% 缩放、forced-colors、嵌入式 Modal 覆盖范围和官方 pluginManager 长链路仍需独立验收。合成 browser-check 不能替代这些验收。
+
+当前设计和交接入口：
+
+- [DESIGN.md](../../DESIGN.md)
+- [当前交互审查](../../docs/handoff/INTERACTION-AUDIT-2026-09-30.md)
+- [UI 重构合同](../../docs/handoff/UI-REBUILD-CONTRACT-2026-09-30.md)
+- [当前接手入口](../../docs/handoff/START-HERE.md)

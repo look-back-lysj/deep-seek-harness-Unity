@@ -43,7 +43,7 @@ core 的安全入口不会启动 Node、React 或 DSH 服务。需要官方运�
 
 ## 维护者升级
 
-先读取当前工作树、官方 DSH 版本和 [本批接力记录](handoff/CORE-ADAPTER-2026-09-29.md)，再修改对应层：
+先读取当前工作树、官方 DSH 版本和 [当前接手入口](handoff/START-HERE.md)，再修改对应层：
 
 - UI、导航、作者工具和皮肤中心：`packages/market/src/client`。
 - DSH 服务注册和协议协商：`packages/market/src/index.ts`、`session-gate.ts`、`version.ts`。

@@ -135,7 +135,7 @@ await ctx.remote.$mount(TYPERT_REMOTE)
 - 安装 unsafe 预检提供真实“重新预检”按钮。
 - 新增 `navigation.test.tsx`、`visual-polish.test.tsx`、`dialogs.test.tsx`。
 - 本批 `pnpm check`、`pnpm typecheck`、Client 86 项测试、browser-check 26 项及 `impeccable detect` 均通过。
-- 官方 Desktop、真实读屏、真实缩放和真实网络截图重试仍未验证，详见 [UI 升级记录](docs/handoff/UI-UPGRADE-2026-09-29.md)。
+- 官方 Desktop、真实读屏、真实缩放和真实网络截图重试仍未验证，详见 [当前交互审查](docs/handoff/INTERACTION-AUDIT-2026-09-30.md) 和 [UI 重构合同](docs/handoff/UI-REBUILD-CONTRACT-2026-09-30.md)。
 
 ## 10. 2026-09-30 视觉与兼容性基础优化
 
