@@ -524,4 +524,61 @@ export const MARKET_CSS = `
   from { opacity: .72; transform: translateY(3px); }
   to { opacity: 1; transform: translateY(0); }
 }
-`
+
+/* Editorial marketplace pass: stronger hierarchy, fewer repeated cards, quieter motion. */
+.eac-market__eyebrow {
+  margin: 0 0 7px;
+  color: var(--eac-link);
+  font-size: 11px;
+  font-weight: 750;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.eac-market__page-head { padding-bottom: 20px; border-bottom: 1px solid var(--eac-border); }
+.eac-market__page-head h1 { max-width: 18ch; font-size: clamp(27px, 3.4vw, 44px); line-height: 1.08; letter-spacing: -.045em; }
+.eac-market__page-head p:not(.eac-market__eyebrow) { max-width: 56ch; }
+.eac-market__section { margin: 40px 0; }
+.eac-market__section + .eac-market__section { padding-top: 28px; border-top: 1px solid var(--eac-border); }
+.eac-market__section-head { margin-bottom: 18px; }
+.eac-market__section-head h2 { font-size: 20px; letter-spacing: -.025em; }
+.eac-market__section-head p { max-width: 62ch; }
+.eac-market__poster { min-height: 330px; grid-template-columns: minmax(0, 1.35fr) minmax(300px, .65fr); border-radius: var(--eac-radius-lg); border-color: var(--eac-border-strong); box-shadow: var(--dsw-shadow-lv1, 0 12px 32px rgba(20, 28, 40, .08)); }
+.eac-market__poster-art { min-height: 330px; background: var(--eac-panel-2); }
+.eac-market__poster-art img { min-height: 330px; }
+.eac-market__poster-fallback-copy { max-width: 74%; gap: 11px; padding: 30px; }
+.eac-market__poster-fallback-copy strong { font-size: clamp(25px, 3.8vw, 48px); letter-spacing: -.045em; }
+.eac-market__poster-fallback-copy small { font-size: 15px; line-height: 1.65; }
+.eac-market__poster-copy { padding: 32px; }
+.eac-market__poster-copy h3 { max-width: 18ch; font-size: clamp(23px, 2.6vw, 34px); letter-spacing: -.04em; }
+.eac-market__poster-kicker { letter-spacing: .08em; text-transform: uppercase; }
+.eac-market__poster-controls { gap: 6px; }
+.eac-market__poster-controls button { border-radius: 999px; }
+.eac-market__skin-strip { margin-top: 34px; }
+.eac-market__skin-grid { grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); }
+.eac-market__skin-grid .eac-market__plugin-card { min-height: 172px; }
+.eac-market__score-section .eac-market__grid { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+.eac-market__score-section .eac-market__plugin-card { min-height: 194px; }
+.eac-market__score-section .eac-market__ranked-item { display: grid; grid-template-columns: 42px minmax(0, 1fr); gap: 12px; align-items: stretch; }
+.eac-market__score-section .eac-market__score { position: static; display: flex; min-width: 42px; height: 42px; align-items: center; justify-content: center; border-radius: 12px; }
+.eac-market__grid { grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); gap: 16px; }
+.eac-market__grid--two { grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); }
+.eac-market__card { padding: 18px; border-radius: 14px; transition: transform 180ms cubic-bezier(.2,.8,.2,1), border-color 180ms ease, background-color 180ms ease; }
+.eac-market__card:hover { transform: translateY(-2px); }
+.eac-market__plugin-icon { width: 42px; height: 42px; flex-basis: 42px; border-radius: 12px; }
+.eac-market__plugin-title h3 { font-size: 17px; }
+.eac-market__plugin-summary { max-width: 48ch; }
+.eac-market__plugin-bottom { padding-top: 14px; border-top: 1px solid var(--eac-border); }
+.eac-market__button-row { gap: 7px; }
+
+@media (max-width: 719px) {
+  .eac-market__page-head h1 { max-width: none; font-size: 30px; }
+  .eac-market__poster { min-height: 0; }
+  .eac-market__poster-art, .eac-market__poster-art img { min-height: 210px; max-height: 280px; }
+  .eac-market__poster-copy { padding: 22px; }
+  .eac-market__poster-fallback-copy { max-width: 90%; padding: 22px; }
+  .eac-market__score-section .eac-market__ranked-item { grid-template-columns: 34px minmax(0, 1fr); gap: 8px; }
+  .eac-market__score-section .eac-market__score { min-width: 34px; height: 34px; border-radius: 10px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .eac-market__card, .eac-market__main--entering, .eac-market__discover-results { transform: none !important; animation: none !important; transition: none !important; }
+}`

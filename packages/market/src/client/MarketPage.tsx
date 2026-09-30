@@ -145,7 +145,7 @@ export function MarketPage({ remote, skinService, onOpenOfficialPlugins, homeSup
   const [detailSelection, setDetailSelection] = useState<{ readonly id: string; readonly version: string }>()
   const [filters, setFilters] = useState<PluginFilters>(EMPTY_FILTERS)
   const [advanced, setAdvanced] = useState(false)
-  const [availableOnly, setAvailableOnly] = useState(true)
+  const [availableOnly, setAvailableOnly] = useState(false)
   const [page, setPage] = useState(1)
   const [taskDrawer, setTaskDrawer] = useState(false)
   const [moreMenu, setMoreMenu] = useState(false)
@@ -426,7 +426,8 @@ export function MarketPage({ remote, skinService, onOpenOfficialPlugins, homeSup
     setSkinOrigin(from); setSkinVisited(true); setView('skins')
     window.requestAnimationFrame(() => scrollRef.current?.scrollTo({ top: 0 }))
   }
-  const skinEntry = <SkinCenterEntry plugins={state.catalog.plugins} inventory={state.inventory.items} onOpen={openSkins} />
+  const hasSkinContent = state.catalog.plugins.some(isSkinPlugin) || state.inventory.items.some((item) => item.installed && skinCatalogForInventory(item, state.catalog.plugins) !== undefined)
+  const skinEntry = hasSkinContent ? <SkinCenterEntry plugins={state.catalog.plugins} inventory={state.inventory.items} onOpen={openSkins} /> : null
   const perPage = 24
   const pageCount = Math.max(1, Math.ceil(filtered.length / perPage))
   const visible = filtered.slice((page - 1) * perPage, page * perPage)
@@ -484,7 +485,7 @@ export function MarketPage({ remote, skinService, onOpenOfficialPlugins, homeSup
         {view === 'all' && (
           <>
             <header className="eac-market__page-head">
-              <div><h1>全部插件</h1><p>默认展示有安装包的功能。待适配、缺少文件的条目可在“全部记录”查看。</p></div>
+              <div><h1>全部插件</h1><p>内核目录中的全部插件都在这里。你可以按用途、安装状态和验证状态整理浏览。</p></div>
               <Button variant="outline" onClick={() => setAdvanced((value) => !value)} aria-expanded={advanced}>高级筛选</Button>
             </header>
             {browseContext?.source === 'discover' && (
@@ -493,7 +494,7 @@ export function MarketPage({ remote, skinService, onOpenOfficialPlugins, homeSup
                 <Button variant="ghost" size="sm" onClick={() => { setBrowseContext({ source: 'top-nav', page: 1, scrollTop: 0 }); setFilters((current) => ({ ...current, category: 'all' })); setPage(1) }}>清除来源筛选</Button>
               </div>
             )}
-            {skinEntry}
+            <div className="eac-market__directory-meta"><span>{filtered.length} 个插件符合当前条件</span><span className="eac-market__directory-hint">默认展示全部记录</span></div>
             <div className="eac-market__filters" aria-label="安装包范围">
               <Pill active={availableOnly} onClick={() => applyBrowseChange(() => setAvailableOnly(true), () => setPage(1))}>可安装</Pill>
               <Pill active={!availableOnly} onClick={() => applyBrowseChange(() => setAvailableOnly(false), () => setPage(1))}>全部记录</Pill>
@@ -911,7 +912,7 @@ function DiscoveryScoreSection({ title, items, inventory, onOpen, onInstall, onM
   readonly onInstall: (plugin: CatalogPlugin) => void
   readonly onManage?: (() => void) | undefined
 }): React.JSX.Element {
-  return <section className="eac-market__section" aria-label={title}><div className="eac-market__section-head"><div><h2>{title}</h2><p>按目录提供的评分排序。</p></div></div><div className="eac-market__grid">{items.slice(0, 6).map(({ plugin, card }) => <div key={plugin.id + ':' + plugin.version} className="eac-market__ranked-item">{card.score !== undefined && <span className="eac-market__score" aria-label={`评分 ${card.score.value}`}>{card.score.value.toFixed(1)}</span>}<PluginCard plugin={plugin} inventory={inventory} onOpen={onOpen} onInstall={onInstall} onManage={onManage} /></div>)}</div></section>
+  return <section className="eac-market__section eac-market__score-section" aria-label={title}><div className="eac-market__section-head"><div><h2>{title}</h2><p>按目录提供的评分排序。</p></div></div><div className="eac-market__grid eac-market__score-grid">{items.slice(0, 6).map(({ plugin, card }) => <div key={plugin.id + ':' + plugin.version} className="eac-market__ranked-item">{card.score !== undefined && <span className="eac-market__score" aria-label={`评分 ${card.score.value}`}>{card.score.value.toFixed(1)}</span>}<PluginCard plugin={plugin} inventory={inventory} onOpen={onOpen} onInstall={onInstall} onManage={onManage} /></div>)}</div></section>
 }
 
 export function DiscoverView({ catalog, inventory, onOpen, onInstall, onPack, onCollection, onBrowse, onHelp, onSettings, onManage, skinEntry, supplemental }: {
@@ -944,7 +945,7 @@ export function DiscoverView({ catalog, inventory, onOpen, onInstall, onPack, on
   return (
     <>
       <header className="eac-market__page-head eac-market__discover-head">
-        <div><h1>发现适合你的插件</h1><p>浏览用途和安装条件，按需扩展 DSH。</p></div>
+        <div><p className="eac-market__eyebrow">EAC / 精选目录</p><h1>发现适合你的插件</h1><p>从精选海报、皮肤和高分内容开始，再进入完整目录。</p></div>
         <div className="eac-market__button-row"><Button variant="primary" onClick={() => onBrowse()}>搜索全部插件</Button><Button variant="ghost" onClick={onHelp}>使用帮助</Button></div>
       </header>
       {skinEntry}
@@ -954,9 +955,9 @@ export function DiscoverView({ catalog, inventory, onOpen, onInstall, onPack, on
         <>
           {featured.length > 0 && <FeaturedPoster title="团队精选" items={featured} inventory={inventory} onOpen={onOpen} onInstall={onInstall} onManage={onManage} />}
 
-          {skinRecommended.length > 0 && <section className="eac-market__section" aria-labelledby="skin-recommendations-title">
+          {skinRecommended.length > 0 && <section className="eac-market__section eac-market__skin-strip" aria-labelledby="skin-recommendations-title">
             <div className="eac-market__section-head"><div><h2 id="skin-recommendations-title">皮肤推荐</h2><p>只显示目录中有明确推荐记录的皮肤；更多皮肤请从皮肤中心进入。</p></div></div>
-            <div className="eac-market__grid">{skinRecommended.slice(0, 6).map(({ plugin, card }) => <div key={plugin.id + ":" + plugin.version}><p className="eac-market__recommendation">推荐理由：{card.reason || '目录推荐'}</p><PluginCard plugin={plugin} inventory={inventory} onOpen={onOpen} onInstall={onInstall} onManage={onManage} /></div>)}</div>
+            <div className="eac-market__grid eac-market__skin-grid">{skinRecommended.slice(0, 6).map(({ plugin, card }) => <div key={plugin.id + ":" + plugin.version}><p className="eac-market__recommendation">推荐理由：{card.reason || '目录推荐'}</p><PluginCard plugin={plugin} inventory={inventory} onOpen={onOpen} onInstall={onInstall} onManage={onManage} /></div>)}</div>
           </section>}
 
           {scored.length > 0 && <DiscoveryScoreSection title="高分插件" items={scored} inventory={inventory} onOpen={onOpen} onInstall={onInstall} onManage={onManage} />}
