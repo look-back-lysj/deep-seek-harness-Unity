@@ -75,9 +75,9 @@ export function SkinCenterEntry({ plugins, inventory, onOpen }: {
 }): React.JSX.Element {
   const count = new Set(plugins.filter(isSkinPlugin).map((plugin) => plugin.packageName)).size
   const installed = inventory.filter((item) => item.installed && skinCatalogForInventory(item, plugins)).length
-  return <section className="eac-market__setting eac-market__skin-entry" aria-label="皮肤管理器入口">
-    <div><h2>皮肤管理器</h2><p>在皮肤中心浏览外观、安装和切换。{count} 款已收录 · {installed} 款已安装</p></div>
-    <Button variant="outline" onClick={onOpen}>打开皮肤中心</Button>
+  return <section className="eac-market__skin-entry" aria-label="皮肤中心入口">
+    <div className="eac-market__skin-entry-meta"><span className="eac-market__skin-entry-mark" aria-hidden="true">SKIN</span><div><h2>皮肤中心</h2><p>{count} 款外观已收录 · {installed} 款已安装。进入后浏览、安装和切换。</p></div></div>
+    <Button variant="outline" onClick={onOpen}>进入皮肤中心</Button>
   </section>
 }
 

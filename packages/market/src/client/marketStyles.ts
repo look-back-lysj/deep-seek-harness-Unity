@@ -581,4 +581,27 @@ export const MARKET_CSS = `
 }
 @media (prefers-reduced-motion: reduce) {
   .eac-market__card, .eac-market__main--entering, .eac-market__discover-results { transform: none !important; animation: none !important; transition: none !important; }
+}.eac-market__skin-entry {
+  display: flex; align-items: center; justify-content: space-between; gap: 18px;
+  margin: 24px 0 6px; padding: 14px 0;
+  border-top: 1px solid var(--eac-border); border-bottom: 1px solid var(--eac-border);
+}
+.eac-market__skin-entry-meta { display: flex; min-width: 0; align-items: center; gap: 12px; }
+.eac-market__skin-entry-meta h2 { margin: 0; font-size: 15px; letter-spacing: -.01em; }
+.eac-market__skin-entry-meta p { margin: 2px 0 0; color: var(--eac-text-2); font-size: 12px; }
+.eac-market__skin-entry-mark { display: inline-flex; width: 42px; height: 42px; align-items: center; justify-content: center; border: 1px solid var(--eac-border-strong); border-radius: 50%; color: var(--eac-link); font-size: 9px; font-weight: 800; letter-spacing: .08em; }
+.eac-market__skin-grid { display: flex; overflow-x: auto; overscroll-behavior-inline: contain; scroll-snap-type: x proximity; scrollbar-width: thin; }
+.eac-market__skin-grid > div { flex: 0 0 min(320px, 82%); scroll-snap-align: start; }
+.eac-market__skin-grid .eac-market__plugin-card { min-height: 168px; }
+.eac-market__score-section .eac-market__grid { display: grid; grid-template-columns: 1fr; gap: 0; }
+.eac-market__score-section .eac-market__ranked-item { grid-template-columns: 46px minmax(0, 1fr); padding: 12px 0; border-top: 1px solid var(--eac-border); }
+.eac-market__score-section .eac-market__ranked-item:last-child { border-bottom: 1px solid var(--eac-border); }
+.eac-market__score-section .eac-market__plugin-card { min-height: 0; padding: 8px 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; }
+.eac-market__score-section .eac-market__plugin-card:hover { transform: none; }
+.eac-market__score-section .eac-market__plugin-bottom { border-top: 0; padding-top: 8px; }
+.eac-market__score-section .eac-market__score { width: 38px; min-width: 38px; height: 38px; border: 0; border-radius: 50%; color: var(--eac-text-2); background: var(--eac-panel-2); font-size: 13px; }
+@media (max-width: 719px) {
+  .eac-market__skin-entry { align-items: flex-start; flex-direction: column; }
+  .eac-market__skin-entry .eac-button { width: 100%; }
+  .eac-market__score-section .eac-market__ranked-item { grid-template-columns: 36px minmax(0, 1fr); }
 }`
