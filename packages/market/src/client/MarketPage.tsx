@@ -4,6 +4,8 @@ import type {
   CatalogPack,
   CatalogCollectionView,
   CatalogPlugin,
+  CatalogMedia,
+  CatalogDiscoveryCard,
   CatalogPresentation,
   CatalogSnapshot,
   DiagnosticExport,
@@ -757,6 +759,72 @@ export function MarketFrame({ view, activeCount, onNavigate, onTasks, onMore, mo
   )
 }
 
+type DiscoveryCard = CatalogDiscoveryCard
+type DiscoverySnapshot = NonNullable<CatalogSnapshot['discovery']>
+type FeaturedItem = { readonly plugin: CatalogPlugin; readonly card: DiscoveryCard }
+
+function discoveryOf(catalog: CatalogSnapshot): DiscoverySnapshot | undefined {
+  return catalog.discovery
+}
+
+function posterSource(poster: CatalogMedia | undefined): CatalogMedia | undefined {
+  return poster !== undefined && poster.sourceUrl.trim() !== '' ? poster : undefined
+}
+
+function FeaturedPoster({ title, items, onOpen, onInstall }: {
+  readonly title: string
+  readonly items: readonly FeaturedItem[]
+  readonly onOpen: (plugin: CatalogPlugin) => void
+  readonly onInstall: (plugin: CatalogPlugin) => void
+}): React.JSX.Element {
+  const [active, setActive] = useState(0)
+  const [paused, setPaused] = useState(false)
+  const [failed, setFailed] = useState<ReadonlySet<string>>(new Set())
+  const pluginItem = (items[active] ?? items[0])!
+  const plugin = pluginItem.plugin
+  const reason = pluginItem.card.reason ?? ''
+  const media = [posterSource(pluginItem.card.poster)].filter((item): item is CatalogMedia => item !== undefined)
+  useEffect(() => {
+    if (items.length < 2 || paused || window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return
+    const timer = window.setInterval(() => setActive((value) => (value + 1) % items.length), 6500)
+    return () => window.clearInterval(timer)
+  }, [items.length, paused])
+  const current = media[0]
+  const hasImage = current !== undefined && !failed.has(current.id)
+  const move = (delta: number) => setActive((value) => (value + delta + items.length) % items.length)
+  return <section className="eac-market__section eac-market__featured" aria-labelledby="featured-title" onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)} onFocusCapture={() => setPaused(true)} onBlurCapture={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) setPaused(false) }}>
+    <div className="eac-market__section-head"><div><h2 id="featured-title">{title}</h2><p>推荐内容会在多个插件之间轮换展示。</p></div>{items.length > 1 && <div className="eac-market__poster-controls"><button type="button" aria-label="上一项首推" onClick={() => move(-1)}>上一项</button><span aria-live="polite">{active + 1} / {items.length}</span><button type="button" aria-label={paused ? '继续轮播' : '暂停轮播'} onClick={() => setPaused((value) => !value)}>{paused ? '继续' : '暂停'}</button><button type="button" aria-label="下一项首推" onClick={() => move(1)}>下一项</button></div>}</div>
+    <article className={`eac-market__poster${hasImage ? '' : ' eac-market__poster--fallback'}`}>
+      <button type="button" className="eac-market__poster-art" onClick={() => onOpen(plugin)} aria-label={`查看 ${plugin.name} 详情`}>
+        {hasImage ? <img src={current.sourceUrl} alt={current.alt || plugin.name} width={current.width ?? 1200} height={current.height ?? 675} onError={() => setFailed((value) => new Set(value).add(current.id))} /> : <span className="eac-market__poster-fallback-copy"><strong>{pluginItem.card.title || plugin.name}</strong><small>{pluginItem.card.summary || plugin.summary || '作者尚未提供一句话简介。'}</small></span>}
+      </button>
+      <div className="eac-market__poster-copy"><p className="eac-market__poster-kicker">推荐理由</p><h3>{pluginItem.card.title || plugin.name}</h3><p>{pluginItem.card.summary || plugin.summary || '作者尚未提供一句话简介。'}</p>{reason && <p className="eac-market__recommendation">{reason}</p>}<div className="eac-market__button-row"><Button size="sm" variant="outline" onClick={() => onOpen(plugin)}>查看详情</Button><Button size="sm" variant="primary" onClick={() => onInstall(plugin)}>查看安装方案</Button></div></div>
+    </article>
+  </section>
+}
+
+function discoveryItems(cards: readonly DiscoveryCard[] | undefined, plugins: readonly CatalogPlugin[]): readonly FeaturedItem[] {
+  return (cards ?? []).slice().sort((a, b) => (a.order ?? 0) - (b.order ?? 0)).flatMap((card) => {
+    const plugin = plugins.find((item) => item.id === card.pluginId && item.version === card.version)
+    return plugin === undefined ? [] : [{ plugin, card }]
+  })
+}
+
+function discoveryScoreItems(cards: readonly DiscoveryCard[] | undefined, plugins: readonly CatalogPlugin[]): readonly FeaturedItem[] {
+  return discoveryItems(cards, plugins).filter(({ card }) => card.score !== undefined && Number.isFinite(card.score.value))
+}
+
+function DiscoveryScoreSection({ title, items, inventory, onOpen, onInstall, onManage }: {
+  readonly title: string
+  readonly items: readonly FeaturedItem[]
+  readonly inventory: readonly InventoryItem[]
+  readonly onOpen: (plugin: CatalogPlugin) => void
+  readonly onInstall: (plugin: CatalogPlugin) => void
+  readonly onManage?: (() => void) | undefined
+}): React.JSX.Element {
+  return <section className="eac-market__section" aria-label={title}><div className="eac-market__section-head"><div><h2>{title}</h2><p>按目录提供的评分排序。</p></div></div><div className="eac-market__grid">{items.slice(0, 6).map(({ plugin, card }) => <div key={plugin.id + ':' + plugin.version} className="eac-market__ranked-item">{card.score !== undefined && <span className="eac-market__score" aria-label={`评分 ${card.score.value}`}>{card.score.value.toFixed(1)}</span>}<PluginCard plugin={plugin} inventory={inventory} onOpen={onOpen} onInstall={onInstall} onManage={onManage} /></div>)}</div></section>
+}
+
 export function DiscoverView({ catalog, inventory, onOpen, onInstall, onPack, onCollection, onBrowse, onHelp, onSettings, onManage, skinEntry, supplemental }: {
   readonly catalog: CatalogSnapshot
   readonly inventory: readonly InventoryItem[]
@@ -771,10 +839,17 @@ export function DiscoverView({ catalog, inventory, onOpen, onInstall, onPack, on
   readonly skinEntry?: React.ReactNode
   readonly supplemental?: React.ReactNode
 }): React.JSX.Element {
-  catalog = { ...catalog, plugins: catalog.plugins.filter((plugin) => !isSkinPlugin(plugin) && plugin.packageName !== SKIN_LOADER_PACKAGE) }
+  const allPlugins = catalog.plugins
+  catalog = { ...catalog, plugins: allPlugins.filter((plugin) => !isSkinPlugin(plugin) && plugin.packageName !== SKIN_LOADER_PACKAGE) }
   const categories = categoriesOf(catalog.plugins)
-  const recommended = (catalog.recommendations ?? []).filter((record) => record.placement === 'featured' && record.reason.trim() !== '').sort((a, b) => a.order - b.order || a.pluginId.localeCompare(b.pluginId)).flatMap((record) => { const plugin = catalog.plugins.find((item) => recommendationMatches(record, item)); return plugin ? [{ plugin, reason: record.reason }] : [] })
+  const discovery = discoveryOf(catalog)
+  const legacyFeatured = (catalog.recommendations ?? []).filter((record) => record.placement === 'featured' && record.reason.trim() !== '').sort((a, b) => a.order - b.order || a.pluginId.localeCompare(b.pluginId)).flatMap((record) => { const plugin = allPlugins.find((item) => recommendationMatches(record, item)); return plugin ? [{ plugin, card: { pluginId: plugin.id, version: plugin.version, reason: record.reason, title: plugin.name, summary: plugin.summary, source: 'curated' as const, order: record.order } }] : [] })
+  const recommended = discoveryItems(discovery?.featured, allPlugins)
+  const featured = discovery === undefined ? legacyFeatured : recommended
+  const skinRecommended = discoveryItems(discovery?.recommendedSkins, allPlugins).filter(({ plugin }) => isSkinPlugin(plugin))
   const ruleSorted = browseSortPlugins(catalog.plugins.filter(plugin => plugin.installability === 'bundle-installable' && plugin.verification !== 'hard-incompatible'), 'rules')
+  const scored = discoveryScoreItems(discovery?.highScorePlugins, allPlugins)
+  const scoredSkills = discoveryScoreItems(discovery?.highScoreSkills, allPlugins)
   return (
     <>
       <header className="eac-market__page-head eac-market__discover-head">
@@ -786,10 +861,15 @@ export function DiscoverView({ catalog, inventory, onOpen, onInstall, onPack, on
         <section className="eac-market__notice"><strong>目录暂无功能插件</strong><p>可到设置刷新目录，或在「我的插件」查看已有功能。外观集中在皮肤中心。</p>{onSettings && <Button variant="outline" onClick={onSettings}>查看目录设置</Button>}</section>
       ) : (
         <>
-          {recommended.length > 0 && <section className="eac-market__section">
-            <div className="eac-market__section-head"><h2>团队精选</h2><p>每项推荐都有对应理由。</p></div>
-            <div className="eac-market__grid">{recommended.slice(0, 6).map(({ plugin, reason }) => <div key={plugin.id + ":" + plugin.version}><p className="eac-market__recommendation">推荐理由：{reason}</p><PluginCard plugin={plugin} inventory={inventory} onOpen={onOpen} onInstall={onInstall} onManage={onManage} /></div>)}</div>
+          {featured.length > 0 && <FeaturedPoster title="团队精选" items={featured} onOpen={onOpen} onInstall={onInstall} />}
+
+          {skinRecommended.length > 0 && <section className="eac-market__section" aria-labelledby="skin-recommendations-title">
+            <div className="eac-market__section-head"><div><h2 id="skin-recommendations-title">皮肤推荐</h2><p>只显示目录中有明确推荐记录的皮肤；更多皮肤请从皮肤中心进入。</p></div></div>
+            <div className="eac-market__grid">{skinRecommended.slice(0, 6).map(({ plugin, card }) => <div key={plugin.id + ":" + plugin.version}><p className="eac-market__recommendation">推荐理由：{card.reason || '目录推荐'}</p><PluginCard plugin={plugin} inventory={inventory} onOpen={onOpen} onInstall={onInstall} onManage={onManage} /></div>)}</div>
           </section>}
+
+          {scored.length > 0 && <DiscoveryScoreSection title="高分插件" items={scored} inventory={inventory} onOpen={onOpen} onInstall={onInstall} onManage={onManage} />}
+          {scoredSkills.length > 0 && <DiscoveryScoreSection title="高分 skill" items={scoredSkills} inventory={inventory} onOpen={onOpen} onInstall={onInstall} onManage={onManage} />}
 
           <section className="eac-market__section">
             <div className="eac-market__section-head">

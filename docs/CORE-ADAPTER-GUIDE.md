@@ -92,6 +92,21 @@ pnpm pack:release --out-dir D:/eac-market-verify/release-candidate --core-url "h
 
 禁止覆盖同版本旧 tgz。输出 `release.json` 记录两个包摘要、依赖来源、源码提交和 dirty 状态；test-only 产物不能公开当正式包。固定版本更新时可只改 adapter 依赖声明、不改 UI 源码，但仍需新 adapter 版本和完整重启验收。
 
+## 7A. 发现页与全部插件的最小合同
+
+发现页不自己猜推荐。Core 目录返回同一份版本绑定的插件、Presentation、媒体和推荐投影；Desktop adapter 只负责把投影排成页面。推荐投影至少包含：
+
+| 用途 | core 返回的条件 | adapter 展示 |
+| --- | --- | --- |
+| 首推海报 | placement=featured、有效期限内、引用精确插件版本、理由非空 | 海报轮播；媒体可用就显示图片，缺图或图片加载失败就降级为插件名＋简介文字卡 |
+| 推荐皮肤 | placement=skin 且插件 kind=skin、可安装或明确研究状态 | 推荐皮肤横向卡；无条目时隐藏整块，入口仍指向皮肤中心 |
+| 高分插件 | placement=high-score-plugin、有来源的 score、非 skill/skin | 按 score 降序展示；未知分数、硬不兼容或撤回条目不进入 |
+| 高分 skill | placement=high-score-skill、有来源的 score、条目标记为 skill | 按 score 降序展示；没有有效条目时隐藏整块 |
+
+评分是维护者目录事实，不是用户评价系统。score 只用于排序和说明，不能改变安装验证、依赖检查或用户确认。所有推荐仍受 catalog 的撤回、生效/过期、版本和来源校验；来源失败时保留旧缓存并标 stale，不能把旧推荐伪装成最新。
+
+全部插件页消费同一 CatalogSnapshot.plugins 投影：默认网格展示可安装条目，用户可以切换到全部记录查看缺制品或未验证条目；任何不可安装条目必须显示原因并禁用安装动作。adapter 不维护第二份插件列表，也不复制 core 的排序算法，只把筛选条件传给本地纯函数并保留结果解释。
+
 ## 7. 后续扩展与最小验收
 
 - 新业务：先改合同/失败分支与测试，再接 core，最后接 UI；保持各端相同确认规则。
