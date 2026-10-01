@@ -169,6 +169,16 @@ describe('视觉与组件回归', () => {
     expect(html).toContain('需要重启')
   })
 
+  it('编辑型视觉合同保留主题 fallback、首推舞台和窄面板降级', () => {
+    expect(MARKET_CSS).toContain('--eac-content-max: 1160px')
+    expect(MARKET_CSS).toContain('.eac-market__poster-stage')
+    expect(MARKET_CSS).toContain('.eac-market__brand-mark')
+    expect(MARKET_CSS).toContain('@media (forced-colors: active)')
+    expect(MARKET_CSS).toContain('@media (prefers-reduced-motion: reduce)')
+    expect(MARKET_CSS).toContain('@media (max-width: 719px)')
+    expect(MARKET_CSS).not.toContain('@media (prefers-color-scheme: dark)')
+  })
+
   it('窄面板关键结构约束长名称且使用容器查询单列', () => {
     const html = renderToStaticMarkup(createElement(PluginCard as never, {
       plugin: { ...plugin, name: '很长的中文与 English 混排名称'.repeat(5), packageName: '@example/' + 'long-package-name-'.repeat(8) },

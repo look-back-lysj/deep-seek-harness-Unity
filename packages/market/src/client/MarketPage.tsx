@@ -891,9 +891,9 @@ export function MarketFrame({ view, activeCount, onNavigate, onTasks, onMore, mo
       <style dangerouslySetInnerHTML={{ __html: MARKET_CSS }} />
       <div className="eac-market__scroll" ref={scrollRef} tabIndex={0} role="region" aria-label="市场内容">
         <div className="eac-market__shell">
-          <header className="eac-market__topbar">
-            <div className="eac-market__brand"><strong>EAC</strong><span>插件市场</span></div>
-            <nav className="eac-market__nav" aria-label="市场主导航">
+          <header className="eac-market__topbar eac-market__topbar--editorial">
+            <div className="eac-market__brand"><span className="eac-market__brand-mark" aria-hidden="true">E</span><div className="eac-market__brand-copy"><strong>EAC</strong><span>插件市场</span></div></div>
+            <nav className="eac-market__nav" aria-label="市场主导航" data-navigation="primary">
               <button type="button" aria-current={currentTab === 'discover' ? 'page' : undefined} onClick={() => onNavigate('discover')}>发现</button>
               <button type="button" aria-current={currentTab === 'all' ? 'page' : undefined} onClick={() => onNavigate('all')}>全部插件</button>
               <button type="button" aria-current={currentTab === 'mine' ? 'page' : undefined} onClick={() => onNavigate('mine')}>我的插件</button>
@@ -999,9 +999,9 @@ function FeaturedPoster({ title, items, inventory, onOpen, onInstall, onManage }
     setActive(next)
     setAnnouncement((items[next]?.plugin.name ?? '') + '，第 ' + (next + 1) + ' 项，共 ' + items.length + ' 项')
   }
-  return <section className="eac-market__section eac-market__featured" aria-labelledby="featured-title" onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)} onFocusCapture={() => setPaused(true)} onBlurCapture={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) setPaused(false) }}>
+  return <section className="eac-market__section eac-market__featured eac-market__featured-stage" aria-labelledby="featured-title" onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)} onFocusCapture={() => setPaused(true)} onBlurCapture={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) setPaused(false) }}>
     <div className="eac-market__section-head"><div><h2 id="featured-title">{title}</h2><p>推荐内容会在多个插件之间轮换展示。</p></div>{items.length > 1 && <div className="eac-market__poster-controls"><button type="button" aria-label="上一项首推" onClick={() => move(-1)}>上一项</button><span aria-hidden="true">{active + 1} / {items.length}</span><span className="eac-market__sr-only" aria-live="polite">{announcement}</span><button type="button" aria-label={paused ? '继续轮播' : '暂停轮播'} onClick={() => setPaused((value) => !value)}>{paused ? '继续' : '暂停'}</button><button type="button" aria-label="下一项首推" onClick={() => move(1)}>下一项</button></div>}</div>
-    <article className={`eac-market__poster${hasImage ? '' : ' eac-market__poster--fallback'}`}>
+    <article className={`eac-market__poster eac-market__poster-stage${hasImage ? '' : ' eac-market__poster--fallback'}`}>
       <button type="button" className="eac-market__poster-art" onClick={() => onOpen(plugin)} aria-label={`查看 ${plugin.name} 详情`}>
         {hasImage ? <img src={current.sourceUrl} alt={current.alt || plugin.name} width={current.width ?? 1200} height={current.height ?? 675} onError={() => setFailed((value) => new Set(value).add(current.id))} /> : <span className="eac-market__poster-fallback-copy"><strong>{pluginItem.card.title || plugin.name}</strong><small>{pluginItem.card.summary || plugin.summary || '作者尚未提供一句话简介。'}</small></span>}
       </button>
@@ -1071,9 +1071,9 @@ export function DiscoverView({ catalog, inventory, onOpen, onInstall, onPack, on
   const [selectedCategory, setSelectedCategory] = useState('all')
   const visibleRuleSorted = selectedCategory === 'all' ? ruleSorted : ruleSorted.filter((plugin) => plugin.categories.includes(selectedCategory))
   return (
-    <>
+    <div className="eac-market__discover-page">
       <header className="eac-market__page-head eac-market__discover-head">
-        <div><p className="eac-market__eyebrow">EAC / 精选目录</p><h1>发现适合你的插件</h1><p>从精选海报、皮肤和高分内容开始，再进入完整目录。</p></div>
+        <div><h1>发现适合你的插件</h1><p>从精选海报、皮肤和高分内容开始，再进入完整目录。</p></div>
         <div className="eac-market__button-row"><Button variant="primary" onClick={() => onBrowse()}>搜索全部插件</Button><Button variant="ghost" onClick={onHelp}>使用帮助</Button></div>
       </header>
       {skinEntry}
@@ -1143,7 +1143,7 @@ export function DiscoverView({ catalog, inventory, onOpen, onInstall, onPack, on
         </article>)}</div>
       </section>}
       {supplemental}
-    </>
+    </div>
   )
 }
 
