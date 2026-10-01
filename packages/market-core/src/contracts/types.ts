@@ -269,6 +269,113 @@ export interface CatalogRefreshView {
   readonly reason?: string
 }
 
+/** Agent Forge v2 source registration. `value` is a controlled source value,
+ * never an arbitrary path supplied directly by a client. */
+export interface MarketCatalogSource {
+  readonly id: string
+  readonly kind: 'agent-forge'
+  readonly location: { readonly mode: 'https' | 'local-file' | 'offline-pack'; readonly value: string }
+  readonly expectedRevision?: string
+  readonly enabled: boolean
+  readonly priority: number
+  readonly refreshPolicy: 'manual' | 'on-open' | 'periodic'
+}
+
+export interface UpdatePolicy {
+  /** Defaults to true when omitted by a persisted settings migration. */
+  readonly automaticChecksEnabled: boolean
+  /** Both download and install remain opt-in and default to false. */
+  readonly automaticDownloadsEnabled: boolean
+  readonly automaticInstallsEnabled: boolean
+  readonly intervalMinutes?: number
+}
+
+export interface OfflinePackArtifact {
+  readonly digest: string
+  readonly filename: string
+  readonly size: number
+  readonly relativePath: string
+}
+
+export interface OfflinePackManifest {
+  readonly schemaVersion: '1'
+  readonly packId: string
+  readonly sourceRevision: string
+  readonly targetAgent: string
+  readonly packages: readonly { readonly pluginId: string; readonly packageName: string; readonly version: string; readonly artifactDigest: string; readonly optional: true }[]
+  readonly artifacts: readonly OfflinePackArtifact[]
+}
+
+export type SelectionNodeKind = 'bundle' | 'plugin' | 'dependency'
+
+export interface BundleSelectionNode {
+  readonly id: string
+  readonly kind: SelectionNodeKind
+  readonly parentId?: string
+  readonly pluginId?: string
+  readonly packageName?: string
+  readonly version?: string
+  /** Every Bundle member and dependency is optional in this phase. */
+  readonly optional: true
+  readonly selected: boolean
+  readonly dependencies: readonly string[]
+}
+
+export interface BundleSelectionGraph {
+  readonly revision: string
+  readonly rootId: string
+  readonly nodes: readonly BundleSelectionNode[]
+  readonly edges: readonly PackExecutionEdge[]
+}
+
+export type CancellationPreservationReason =
+  | 'has-selected-dependent'
+  | 'has-installed-dependent'
+  | 'explicitly-installed'
+  | 'selected-in-parallel-task'
+  | 'selected-in-other-bundle'
+  | 'completed-outside-current-task'
+  | 'unknown-state'
+  | 'official-protected'
+
+export interface PreservedCancellationItem {
+  readonly packageName: string
+  readonly reasons: readonly CancellationPreservationReason[]
+  readonly dependentPackages: readonly string[]
+}
+
+export interface CancelSelectionResult {
+  readonly status: 'cancelled' | 'blocked' | 'partial' | 'not-found'
+  readonly dependentPackages: readonly string[]
+  readonly cascadedCancelled: readonly string[]
+  readonly preservedPackages: readonly PreservedCancellationItem[]
+  readonly reasons: readonly string[]
+}
+
+export interface MaintenancePackageState {
+  readonly pluginId?: string
+  readonly packageName: string
+  readonly installedVersion?: string
+  readonly targetVersion?: string
+  readonly installState: 'not-installed' | 'installed' | 'installing' | 'updating' | 'uninstalling' | 'failed' | 'unknown'
+  readonly enabledState: 'enabled' | 'disabled' | 'pending-restart' | 'unknown'
+  readonly explicitState: 'explicit' | 'implicit' | 'none' | 'unknown'
+  readonly dependencyState: { readonly dependencyOf: readonly string[]; readonly requiredByCount: number; readonly releasable: boolean }
+  readonly effectiveState: 'retain' | 'install' | 'update' | 'remove' | 'blocked' | 'unknown'
+  readonly reasons: readonly string[]
+}
+
+export interface CoreMaintenanceSnapshot {
+  readonly schemaVersion: '1'
+  readonly revision: string
+  readonly environmentId: string
+  readonly generatedAt: string
+  readonly updatePolicy: UpdatePolicy
+  readonly packages: readonly MaintenancePackageState[]
+  readonly activeTaskIds: readonly string[]
+  readonly pendingRestart: boolean
+}
+
 export type InventoryRowState = 'enabled' | 'disabled' | 'load-error' | 'unknown'
 export interface InventoryRow {
   readonly id: string

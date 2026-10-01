@@ -26,3 +26,9 @@ export {
   type DeliveryAttempt,
   type DownloadArtifactOptions,
 } from './cache.ts'
+export {
+  OfflineArtifactError,
+  describeOfflineArtifact,
+  materializeOfflineArtifacts,
+  type MaterializedOfflineArtifact,
+} from './offline-pack.ts'

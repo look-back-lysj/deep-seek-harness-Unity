@@ -27,6 +27,7 @@ import type {
   AuthorMediaReadResult,
   CatalogRefreshRequest,
   CatalogRefreshView,
+  CoreMaintenanceSnapshot,
   DiagnosticExport,
   PlanCreateRequest,
   PlanResult,
@@ -64,6 +65,9 @@ import { ArtifactCache } from '../delivery/cache.ts'
 import { createPlanBundle } from '../core/planner.ts'
 import type { CollectionExecutionContext, PackExecutionContext, PlanBundle, PlanCatalogContext } from '../core/ports.ts'
 import { InstallTaskManager } from '../core/task-manager.ts'
+import { buildMaintenanceSnapshot } from '../core/maintenance-state.ts'
+import type { PackageDependencyEdge } from '../core/sync-state.ts'
+import { compareInstalledUpdates, type UpdateCheckResult } from '../core/update-check.ts'
 import {
   AtomicProfileLocks,
   NodePersistenceFiles,
@@ -134,6 +138,9 @@ export class MarketRuntime {
   private readonly aiProposals: AiProposalStore
   private readonly context: Context
   private readonly marketVersion: string
+  /** Core-owned intent; adapters must not infer this from inventory provenance. */
+  private readonly explicitPackages = new Set<string>()
+  private readonly dependencyEdges = new Map<string, PackageDependencyEdge>()
 
   constructor(ctx: Context, readonly identity: RuntimeIdentity, dataDirectory: string, options: RuntimeOptions = {}) {
     if (options.embeddedCatalogBytes !== undefined && !(options.embeddedCatalogBytes instanceof Uint8Array)) {
@@ -214,7 +221,22 @@ export class MarketRuntime {
       },
     })
     this.recovery = this.tasks.reconcileInterrupted(identity.environmentId)
-      .then(() => undefined)
+      .then(async () => {
+        // Rebuild Core-owned intent from durable task records after restart;
+        // inventory provenance alone is never treated as Explicit intent.
+        const records = await this.taskStore.list(identity.environmentId)
+        for (const record of records) {
+          for (const item of record.task.items) {
+            if (['installed', 'enabled', 'disabled', 'restart-required'].includes(item.status)) this.explicitPackages.add(item.packageName)
+          }
+          const packageByPlugin = new Map(record.bundle.plan.items.map(item => [item.pluginId, item.packageName]))
+          for (const edge of record.bundle.dependencies) {
+            const prerequisite = packageByPlugin.get(edge.prerequisiteId)
+            const consumer = packageByPlugin.get(edge.consumerId)
+            if (prerequisite !== undefined && consumer !== undefined) this.dependencyEdges.set(`${prerequisite}->${consumer}`, { prerequisite, consumer })
+          }
+        }
+      })
       .catch((error: unknown) => {
         this.recoveryError = error
         console.error('[eac-market/host] interrupted task recovery failed', error)
@@ -331,7 +353,16 @@ export class MarketRuntime {
         localIdentityByPackage,
       }
       const result = await createPlanBundle(context, pack)
-      if (result.status === 'ready' && result.bundle !== undefined) await this.savePlan(result.bundle, callerId)
+      if (result.status === 'ready' && result.bundle !== undefined) {
+        await this.savePlan(result.bundle, callerId)
+        for (const selection of request.selections) this.explicitPackages.add(selection.packageName)
+        const packageByPlugin = new Map(result.bundle.plan.items.map(item => [item.pluginId, item.packageName]))
+        for (const edge of result.bundle.dependencies) {
+          const prerequisite = packageByPlugin.get(edge.prerequisiteId)
+          const consumer = packageByPlugin.get(edge.consumerId)
+          if (prerequisite !== undefined && consumer !== undefined) this.dependencyEdges.set(`${prerequisite}->${consumer}`, { prerequisite, consumer })
+        }
+      }
       if (result.status === 'ready' && result.bundle !== undefined) return { status: 'ready', plan: result.bundle.plan }
       if (result.status === 'stale') return { status: 'stale', reason: result.reason ?? 'stale', details: result.details ?? [] }
       return { status: 'blocked', reason: result.reason ?? 'blocked', blockers: result.blockers ?? [] }
@@ -394,7 +425,9 @@ export class MarketRuntime {
         action: request.enabled ? 'enable' : 'disable',
         idempotencyKey: request.idempotencyKey,
       }, () => this.host.setEnabled(request.packageName, request.enabled))
-      return resultFromOutcome(result)
+      const output = resultFromOutcome(result)
+      if (output.status === 'applied' || output.status === 'restart-required') this.explicitPackages.add(request.packageName)
+      return output
     } catch (error) {
       return { status: 'failed', changed: false, error: errorText(error), permissionChanges: [] }
     }
@@ -411,10 +444,43 @@ export class MarketRuntime {
         action: 'remove',
         idempotencyKey: request.idempotencyKey,
       }, async () => mapOfficialChange(await this.host.remove(request.packageName)))
-      return resultFromOutcome(result)
+      const output = resultFromOutcome(result)
+      if (output.status === 'applied' || output.status === 'restart-required') this.explicitPackages.delete(request.packageName)
+      return output
     } catch (error) {
       return { status: 'failed', changed: false, error: errorText(error), permissionChanges: [] }
     }
+  }
+
+  /**
+   * Produces the Core-owned maintenance state consumed by an Adapter. The
+   * snapshot deliberately combines host facts with Core intent and dependency
+   * edges; it does not ask the Adapter to recalculate either sync dimension.
+   */
+  readonly maintenanceStatus = async (): Promise<CoreMaintenanceSnapshot> => {
+    await this.recovery
+    const state = await this.host.readState()
+    const tasks = await this.taskStore.list(this.identity.environmentId)
+    const taskStates = tasks.map(record => record.task)
+    const catalogRevision = this.catalog.load().snapshot.revision
+    return buildMaintenanceSnapshot({
+      environmentId: this.identity.environmentId,
+      inventory: state.inventory,
+      revision: `maintenance:${catalogRevision}:${state.sessionRevision}:${taskStates.map(task => `${task.taskId}:${task.updatedAt}`).join('|')}`,
+      tasks: taskStates,
+      explicitPackages: [...this.explicitPackages],
+      selectedPackages: [...this.explicitPackages],
+      dependencyEdges: [...this.dependencyEdges.values()],
+      unknownPackages: state.inventory.unknownItems,
+    })
+  }
+
+  /** Read-only inventory/catalog comparison for manual or scheduled checks. */
+  readonly checkUpdates = async (): Promise<UpdateCheckResult> => {
+    await this.recovery
+    const state = await this.host.readState()
+    const snapshot = this.catalog.load().snapshot
+    return compareInstalledUpdates(state.inventory, snapshot.plugins, snapshot.revision)
   }
 
   authorDraftList(): readonly AuthorDraft[] {

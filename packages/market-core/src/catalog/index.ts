@@ -51,3 +51,35 @@ export { parseCollection, parseRelease, parseReleaseStatus, releaseIdFor } from 
 export { buildCatalogDiscovery, filterCatalogDiscovery } from './discovery.ts'
 export { validateBuildRecipe, validateAuthorSubmission, validateProductionCatalog, type BuildRecipe, type SubmissionValidation } from './submission.ts'
 export { collectionPlanInput, collectionView, type CollectionPlanInput, type CatalogCollectionView } from './collections.ts'
+export {
+  AgentForgeSourceError,
+  AgentForgeSourceCache,
+  readAgentForgeSource,
+  type AgentForgeCatalog,
+  type AgentForgeRefreshResult,
+  type AgentForgeSourceOptions,
+} from './agent-forge.ts'
+export {
+  OfflinePackError,
+  createOfflinePack,
+  readOfflinePack,
+  readOfflinePackFile,
+  type OfflinePackContents,
+  type OfflinePackBuildInput,
+  type OfflinePackLimits,
+} from './offline-pack.ts'
+export {
+  canCancelSelection,
+  buildBundleSelectionGraph,
+  cancelSelection,
+  indexSelectionGraph,
+  selectionDependencies,
+  selectionDependents,
+  validateSelectionGraph,
+  type CancellationSelectionContext,
+  type AgentForgeBundleMemberInput,
+  type AgentForgeBundleRecordInput,
+  type BuildSelectionGraphResult,
+  type SelectionGraphIndex,
+  type SelectionGraphValidation,
+} from './bundle-selection.ts'
