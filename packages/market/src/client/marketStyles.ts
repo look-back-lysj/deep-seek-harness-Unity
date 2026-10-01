@@ -889,8 +889,8 @@ export const MARKET_CSS = `
 .eac-market__plugin-summary { color: var(--eac-text-2); line-height: 1.58; }
 .eac-market__plugin-bottom { gap: 12px; padding-top: 16px; border-top-color: var(--eac-border); }
 .eac-market__button-row { gap: 8px; }
-.eac-button--primary { box-shadow: 0 5px 14px rgba(36, 99, 232, .16); }
-.eac-button--primary:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 8px 18px rgba(36, 99, 232, .2); }
+.eac-button--primary { box-shadow: none; border: 1px solid color-mix(in srgb, var(--eac-accent) 72%, transparent); font-weight: 720; }
+.eac-button--primary:hover:not(:disabled) { transform: none; box-shadow: none; filter: brightness(1.035); }
 .eac-button--outline:hover:not(:disabled), .eac-button--ghost:hover:not(:disabled) { border-color: var(--eac-border-strong); }
 .eac-market__filter-summary { margin: 14px 0 18px; padding: 12px 0; border-bottom-color: var(--eac-border); }
 .eac-market__action-feedback { border-radius: 14px; box-shadow: 0 7px 20px rgba(21, 29, 25, .05); }
