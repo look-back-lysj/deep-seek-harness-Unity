@@ -96,3 +96,12 @@ interface NavigationSnapshot {
 - 真实官方 DSH Desktop 中的主题 token、读屏、Windows forced-colors、120%–200% 缩放和嵌入式 Modal 覆盖范围。
 - 真实网络图片加载失败、恢复和官方插件管理器状态变化。
 - 合成 browser-check 只能证明 Client 逻辑和静态兼容分支，不能代替上述真实宿主验收。
+## 2026-10-01 视觉系统实施进度
+
+- Phase 1：页面壳、顶栏、品牌标记、内容轨道、字体层级和 surface 体系已落地。
+- Phase 2：首推舞台、推荐皮肤、高分区和规则发现的密度已分离；无图 fallback 改为平面文字海报，避免用明显纹理伪造媒体。
+- Phase 3：目录工具栏、结果摘要、draft/applied 高级筛选、详情事实栏和目录卡层级已落地。
+- Phase 4：任务、皮肤中心、作者工具共享新的工作台 surface；作者工具在 480px 下切换为单列。
+- Phase 5：主视图、结果区、首推舞台、控件和浮层动效预算已收敛，并保留 reduced-motion / forced-colors fallback。
+- 当前证据：完整 `pnpm check`、Client 定向测试、browser-check 和 Impeccable detect 均通过。
+- 仍待真实 DSH Desktop：主题 token、读屏、120%–200% 缩放、forced-colors、嵌入式 Modal 覆盖和官方 pluginManager 长链路。

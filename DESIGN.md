@@ -170,3 +170,28 @@ await ctx.remote.$mount(TYPERT_REMOTE)
 - 发现页与全部插件页不共享同一套密度：发现页偏编辑与展示，全部插件页偏目录与筛选。
 
 本轮视觉基线由当前源码重新生成，合成 browser-check 26 项通过；真实 DSH Desktop、读屏、强制颜色和 120–200% 缩放仍需独立验收。
+
+## 13. 2026-10-01 编辑型视觉系统实施阶段
+
+本轮按照 [视觉与交互方向合同](docs/handoff/VISUAL-INTERACTION-DIRECTION-2026-10-01.md) 和 [实施计划](docs/handoff/VISUAL-INTERACTION-EXECUTION-PLAN-2026-10-01.md) 开始落地，不修改 Core、Remote、Host 或安装协议。
+
+已完成的第一批实现：
+
+- 页面壳、顶栏、品牌标记、主导航 active indicator 和内容轨道重新分层；
+- 发现页去掉旧 eyebrow 依赖，调整页面标题、首推舞台、内容留白和区块节奏；
+- 首推舞台使用不等宽媒体/信息关系，图片和文字降级保持同一布局；
+- 推荐皮肤、高分区和规则发现使用不同密度，不再全部套同一张卡片；
+- 目录工具栏、结果数量、筛选摘要、详情事实栏、任务面板、皮肤中心和作者工作台使用新的 surface/spacing 体系；
+- 高级筛选改为 draft → apply，应用后才更新结果和分页，清除筛选仍会恢复第一页；
+- 480px 窄面板下作者工具改为单列工作台；
+- 动效预算收敛到 120–260ms 的局部反馈，并保留 reduced-motion / forced-colors fallback。
+
+当前阶段证据：
+
+- `pnpm typecheck` 通过；
+- Client 定向测试通过；
+- browser-check 27 项通过；
+- `impeccable detect --json packages/market/src/client` 无问题；
+- 完整 `pnpm check` 通过，包含构建、lint、测试和包验证。
+
+仍未完成的真实宿主项目：DSH Desktop 真实主题 token、读屏、120%–200% 缩放、forced-colors、嵌入式 Modal 覆盖范围、真实网络图片加载和官方 pluginManager 长链路。

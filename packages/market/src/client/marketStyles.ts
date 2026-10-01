@@ -856,6 +856,8 @@ export const MARKET_CSS = `
   background: var(--eac-panel); box-shadow: 0 18px 45px rgba(21, 29, 25, .08);
 }
 .eac-market__poster-stage .eac-market__poster-art { min-height: 360px; background: var(--eac-panel-2); }
+.eac-market__poster-stage.eac-market__poster--fallback .eac-market__poster-art { background: var(--eac-panel-2); }
+.eac-market__poster-stage.eac-market__poster--fallback .eac-market__poster-art::after { display: none; }
 .eac-market__poster-stage .eac-market__poster-art img { min-height: 360px; filter: saturate(.88) contrast(1.02); transition: transform 360ms cubic-bezier(.2,.8,.2,1), filter 360ms ease; }
 .eac-market__poster-stage .eac-market__poster-art:hover img,
 .eac-market__poster-stage .eac-market__poster-art:focus-visible img { transform: scale(1.018); filter: saturate(1) contrast(1.03); }
