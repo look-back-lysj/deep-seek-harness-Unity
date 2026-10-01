@@ -129,3 +129,7 @@ interface NavigationSnapshot {
 - 120% / 200% 页面缩放：通过，确认长内容和目录不产生横向溢出。
 - 证据目录：`D:/eac-market-verify/implementation-20260928/C-UI/compatibility`。
 - 这组检查仍然是合成 Edge，不替代官方 DeepSeek Harness Desktop 的真实宿主验收。
+## 2026-10-01 官方根目录兼容脚本修正
+
+- `scripts/verify-official-compat.mjs` 现在识别官方安装/解包常见的 `resources/app.asar.unpacked/dsh/node_modules/@deepseek-ai/dsh-app-boot` 和 `dsh/node_modules/@deepseek-ai/dsh-app-boot` 路径。
+- 官方包兼容检查仍是只读 peer gate，不会修改 profile 或登录状态。
