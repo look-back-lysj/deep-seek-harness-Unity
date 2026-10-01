@@ -111,3 +111,9 @@ interface NavigationSnapshot {
 - 进程创建成功但窗口在等待期间持续 `Responding = false`，没有进入可交互的 DSH Desktop 页面。
 - 已停止该隔离进程；没有修改日常 profile、凭据或用户数据。
 - 因此真实主题 token、读屏、缩放、forced-colors、嵌入式 Modal 和官方 pluginManager 长链路仍为未验收，不能用合成 browser-check 代替。
+## 2026-10-01 官方版宿主测试约束
+
+- 真实宿主验收只允许使用官方 DeepSeek Harness Desktop `0.2.0-rc.1` Windows x64。
+- `DSHEAC AIO`、Lite、社区壳、合成 browser-check 和本地 fixture 都不能作为官方宿主通过证据。
+- 本机当前发现官方 `deepseek-harness-0.2.0-rc.1-win-x64.exe` 位于 updater pending 目录，但没有确认已安装并可交互的官方 Desktop 主程序。
+- 后续必须先安装/启动官方版本，并使用独立、明确授权的测试 profile；在此之前只能报告 Client 合成检查通过。
