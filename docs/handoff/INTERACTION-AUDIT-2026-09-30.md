@@ -105,3 +105,9 @@ interface NavigationSnapshot {
 - Phase 5：主视图、结果区、首推舞台、控件和浮层动效预算已收敛，并保留 reduced-motion / forced-colors fallback。
 - 当前证据：完整 `pnpm check`、Client 定向测试、browser-check 和 Impeccable detect 均通过。
 - 仍待真实 DSH Desktop：主题 token、读屏、120%–200% 缩放、forced-colors、嵌入式 Modal 覆盖和官方 pluginManager 长链路。
+## 2026-10-01 真实宿主尝试
+
+- 使用 `D:\eac-market-verify\dsh-home-visual` 作为隔离 `DSH_HOME` 尝试启动本机 `DSHEAC AIO.exe`。
+- 进程创建成功但窗口在等待期间持续 `Responding = false`，没有进入可交互的 DSH Desktop 页面。
+- 已停止该隔离进程；没有修改日常 profile、凭据或用户数据。
+- 因此真实主题 token、读屏、缩放、forced-colors、嵌入式 Modal 和官方 pluginManager 长链路仍为未验收，不能用合成 browser-check 代替。
