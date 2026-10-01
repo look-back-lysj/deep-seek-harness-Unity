@@ -162,6 +162,7 @@ export function MarketPage({ remote, skinService, onOpenOfficialPlugins, homeSup
   const [skinInstallGuide, setSkinInstallGuide] = useState<CatalogPlugin>()
   const [detailSelection, setDetailSelection] = useState<{ readonly id: string; readonly version: string }>()
   const [filters, setFilters] = useState<PluginFilters>(EMPTY_FILTERS)
+  const [advancedDraft, setAdvancedDraft] = useState<PluginFilters>(EMPTY_FILTERS)
   const [advanced, setAdvanced] = useState(false)
   const [availableOnly, setAvailableOnly] = useState(false)
   const [page, setPage] = useState(1)
@@ -387,6 +388,7 @@ export function MarketPage({ remote, skinService, onOpenOfficialPlugins, homeSup
 
   function clearBrowseFilters(): void {
     setFilters(EMPTY_FILTERS)
+    setAdvancedDraft(EMPTY_FILTERS)
     setAvailableOnly(false)
     setBrowseSort('rules')
     setAdvanced(false)
@@ -402,6 +404,21 @@ export function MarketPage({ remote, skinService, onOpenOfficialPlugins, homeSup
     if (filters.installed !== 'all') summary.push(filters.installed === 'yes' ? '已安装' : '未安装')
     if (availableOnly) summary.push('仅可安装')
     return summary
+  }
+
+  function toggleAdvanced(): void {
+    setAdvanced((current) => {
+      const next = !current
+      if (next) setAdvancedDraft(filters)
+      return next
+    })
+  }
+
+  function applyAdvancedFilters(): void {
+    setFilters(advancedDraft)
+    setPage(1)
+    setAdvanced(false)
+    clearActionFeedback()
   }
 
   async function refreshCatalog(): Promise<void> {
@@ -597,7 +614,7 @@ export function MarketPage({ remote, skinService, onOpenOfficialPlugins, homeSup
           <>
             <header className="eac-market__page-head">
               <div><h1>全部插件</h1><p>内核目录中的全部插件都在这里。你可以按用途、安装状态和验证状态整理浏览。</p></div>
-              <Button variant="outline" onClick={() => setAdvanced((value) => !value)} aria-expanded={advanced}>高级筛选</Button>
+              <Button variant="outline" onClick={toggleAdvanced} aria-expanded={advanced}>高级筛选</Button>
             </header>
             {browseContext?.source === 'discover' && (
               <div className="eac-market__notice" role="status" data-navigation-source="discover">
@@ -628,19 +645,23 @@ export function MarketPage({ remote, skinService, onOpenOfficialPlugins, homeSup
               </div>
             </div>
             {advanced && (
-              <div className="eac-market__advanced">
+              <div className="eac-market__advanced" aria-label="高级筛选">
                 <label>验证状态
-                  <select id="eac-verification" value={filters.verification} onChange={(event) => applyBrowseChange(() => setFilters({ ...filters, verification: event.currentTarget.value as PluginFilters['verification'] }), () => setPage(1))}>
+                  <select id="eac-verification" value={advancedDraft.verification} onChange={(event) => setAdvancedDraft((current) => ({ ...current, verification: event.currentTarget.value as PluginFilters['verification'] }))}>
                     <option value="all">全部</option><option value="verified">已验证</option><option value="unverified">未验证</option>
                     <option value="hard-incompatible">已知不兼容</option><option value="unknown">状态未知</option>
                   </select>
                 </label>
                 <label>安装状态
-                  <select id="eac-installation" value={filters.installed} onChange={(event) => applyBrowseChange(() => setFilters({ ...filters, installed: event.currentTarget.value as PluginFilters['installed'] }), () => setPage(1))}>
+                  <select id="eac-installation" value={advancedDraft.installed} onChange={(event) => setAdvancedDraft((current) => ({ ...current, installed: event.currentTarget.value as PluginFilters['installed'] }))}>
                     <option value="all">全部</option><option value="yes">已安装</option><option value="no">未安装</option>
                   </select>
                 </label>
-                <Button variant="ghost" onClick={clearBrowseFilters}>清除全部筛选</Button>
+                <div className="eac-market__advanced-actions">
+                  <Button variant="primary" onClick={applyAdvancedFilters}>应用筛选</Button>
+                  <Button variant="ghost" onClick={() => setAdvanced(false)}>取消</Button>
+                  <Button variant="ghost" onClick={clearBrowseFilters}>清除全部</Button>
+                </div>
               </div>
             )}
             {visible.length === 0 ? (

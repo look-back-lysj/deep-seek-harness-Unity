@@ -61,11 +61,15 @@ describe('EAC 市场交互与导航回归', () => {
     expect(source).toContain('id="eac-sort"')
     expect(source).toContain('id="eac-verification"')
     expect(source).toContain('id="eac-installation"')
-    for (const marker of ['eac-sort', 'eac-verification', 'eac-installation', 'eac-category']) {
+    for (const marker of ['eac-sort', 'eac-category']) {
       const start = source.indexOf(`id="${marker}"`)
       const control = source.slice(start, start + 320)
       expect(control).toContain('applyBrowseChange')
     }
+    expect(source).toContain('value={advancedDraft.verification}')
+    expect(source).toContain('value={advancedDraft.installed}')
+    expect(source).toContain('function applyAdvancedFilters')
+    expect(source).toContain('onClick={applyAdvancedFilters}')
     expect(source).toContain('onChange={(query) => applyBrowseChange')
     expect(source).toContain('function clearBrowseFilters')
     expect(source).toContain('onClick={clearBrowseFilters}')

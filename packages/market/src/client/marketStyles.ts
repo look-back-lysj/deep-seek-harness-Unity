@@ -960,6 +960,7 @@ export const MARKET_CSS = `
   padding: 16px; border: 1px solid var(--eac-border); border-radius: 14px; background: var(--eac-panel-2);
 }
 .eac-market__advanced label { display: grid; gap: 5px; color: var(--eac-text-2); font-size: 12px; font-weight: 700; }
+.eac-market__advanced-actions { display: flex; flex-wrap: wrap; align-items: end; justify-content: flex-end; gap: 8px; }
 .eac-market__advanced select { width: 100%; color: var(--eac-text); }
 .eac-market__directory-grid { align-items: stretch; }
 .eac-market__directory-grid .eac-market__plugin-card { min-height: 208px; }
@@ -1012,6 +1013,7 @@ export const MARKET_CSS = `
   .eac-market__toolbar { grid-template-columns: 1fr; padding: 10px; }
   .eac-market__toolbar .eac-market__filters { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .eac-market__advanced { grid-template-columns: 1fr; }
+  .eac-market__advanced-actions { align-items: stretch; justify-content: flex-start; }
   .eac-market__directory-meta { align-items: flex-start; flex-direction: column; gap: 5px; }
   .eac-market__detail-side { box-shadow: none; }
   .eac-market__author-layout { grid-template-columns: 1fr; gap: 18px; }
@@ -1026,4 +1028,19 @@ export const MARKET_CSS = `
 .eac-market__discover-results { animation-duration: 160ms; animation-timing-function: cubic-bezier(.2, .8, .2, 1); }
 .eac-market__poster-stage .eac-market__poster-copy,
 .eac-market__poster-stage .eac-market__poster-art { transition: border-color 180ms ease, background-color 180ms ease; }
+
+/* Phase 5 overlay finish. */
+.eac-modal-overlay { background: rgba(17, 23, 19, .44); }
+.eac-modal {
+  border-color: var(--eac-border-strong); border-radius: 20px; background: var(--eac-panel); box-shadow: var(--eac-shadow-modal);
+}
+.eac-modal__head { padding: 20px 24px; }
+.eac-modal__head h2 { font-size: 21px; font-weight: 760; letter-spacing: -.035em; }
+.eac-modal__content { padding: 22px 24px; }
+.eac-modal__footer { padding: 16px 24px; }
+.eac-market__task-dialog .eac-modal { width: min(720px, 100%); }
+@media (max-width: 719px) {
+  .eac-modal__head, .eac-modal__content, .eac-modal__footer { padding-inline: 16px; }
+  .eac-market__task-dialog .eac-modal { width: 100%; }
+}
 `
