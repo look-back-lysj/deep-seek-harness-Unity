@@ -195,3 +195,15 @@ await ctx.remote.$mount(TYPERT_REMOTE)
 - 完整 `pnpm check` 通过，包含构建、lint、测试和包验证。
 
 仍未完成的真实宿主项目：DSH Desktop 真实主题 token、读屏、120%–200% 缩放、forced-colors、嵌入式 Modal 覆盖范围、真实网络图片加载和官方 pluginManager 长链路。
+
+## 14. 2026-10-01 Phase 6 合成兼容矩阵
+
+新增 `node tests/client/browser-check.mjs --compatibility-only`，覆盖：
+
+- forced-colors + reduced-motion；
+- 120% 页面缩放；
+- 200% 页面缩放；
+- 长内容和目录横向溢出检查；
+- 当前证据目录 `D:/eac-market-verify/implementation-20260928/C-UI/compatibility`。
+
+该矩阵只证明 Client 在合成 Edge 中的静态兼容分支，官方 DeepSeek Harness Desktop 仍须在登录/API Key 可用后单独验收。

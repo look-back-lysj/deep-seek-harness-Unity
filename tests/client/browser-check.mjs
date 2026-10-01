@@ -11,7 +11,8 @@ const versionsOnly = process.argv.includes('--versions-only')
 const scrollOnly = process.argv.includes('--scroll-only')
 const skinsOnly = process.argv.includes('--skins-only')
 const listingsOnly = process.argv.includes('--listings-only')
-const output = listingsOnly || skinsOnly ? `D:/eac-market-verify/distribution-20260928/ui/${listingsOnly ? 'listings' : 'skins'}-${Date.now()}` : scrollOnly ? 'D:/eac-market-verify/skin-market-20260928/ui' : 'D:/eac-market-verify/implementation-20260928/C-UI' + (versionsOnly ? '/versions' : collectionsOnly ? '/collections' : '')
+const compatibilityOnly = process.argv.includes('--compatibility-only')
+const output = compatibilityOnly ? 'D:/eac-market-verify/implementation-20260928/C-UI/compatibility' : listingsOnly || skinsOnly ? `D:/eac-market-verify/distribution-20260928/ui/${listingsOnly ? 'listings' : 'skins'}-${Date.now()}` : scrollOnly ? 'D:/eac-market-verify/skin-market-20260928/ui' : 'D:/eac-market-verify/implementation-20260928/C-UI' + (versionsOnly ? '/versions' : collectionsOnly ? '/collections' : '')
 console.log(`Evidence: ${output}`)
 mkdirSync(output, { recursive: true })
 await build({ entryPoints: ['tests/client/browser-fixture.tsx'], bundle: true, format: 'iife', platform: 'browser', jsx: 'automatic', outfile: join(output, 'browser-fixture.js'), alias: { react: resolve('packages/market/node_modules/react'), 'react-dom': resolve('packages/market/node_modules/react-dom') }, define: { 'process.env.NODE_ENV': '"development"' } })
@@ -26,7 +27,7 @@ const pause = (ms) => new Promise((done) => setTimeout(done, ms))
 const results = []
 let ws
 let send
-async function check(name, operation) { if (listingsOnly && !name.startsWith('登记：') || skinsOnly && !name.startsWith('皮肤：') && !name.startsWith('滚动：') || collectionsOnly && !name.startsWith('组合：') || versionsOnly && !name.startsWith('版本：') || scrollOnly && !name.startsWith('滚动：')) return; try { await operation(); results.push({ name, status: 'passed' }) } catch (error) { results.push({ name, status: 'failed', error: error.message }) } }
+async function check(name, operation) { if (compatibilityOnly && !name.startsWith('兼容：') || listingsOnly && !name.startsWith('登记：') || skinsOnly && !name.startsWith('皮肤：') && !name.startsWith('滚动：') || collectionsOnly && !name.startsWith('组合：') || versionsOnly && !name.startsWith('版本：') || scrollOnly && !name.startsWith('滚动：')) return; try { await operation(); results.push({ name, status: 'passed' }) } catch (error) { results.push({ name, status: 'failed', error: error.message }) } }
 try {
   for (let i = 0; i < 150 && !existsSync(join(profile, 'DevToolsActivePort')); i++) await pause(100)
   const port = readFileSync(join(profile, 'DevToolsActivePort'), 'utf8').split('\n')[0]
@@ -348,6 +349,29 @@ try {
       writeFileSync(join(output, `mine-collapsed-${width}.png`), Buffer.from(shot.data, 'base64'))
     })
   }
+  if (compatibilityOnly) {
+    await check('兼容：forced-colors 与 reduced-motion', async () => {
+      await send('Emulation.setDeviceMetricsOverride', { width: 1280, height: 900, deviceScaleFactor: 1, mobile: false })
+      await send('Emulation.setEmulatedMedia', { features: [{ name: 'forced-colors', value: 'active' }, { name: 'prefers-reduced-motion', value: 'reduce' }] })
+      await theme(false); await render('home')
+      await expect('document.documentElement.scrollWidth <= innerWidth + 1', 'forced-colors layout overflows horizontally')
+      await expect('getComputedStyle(document.querySelector(".eac-market__main")).animationName === "none" || getComputedStyle(document.querySelector(".eac-market__main")).animationDuration === "0s"', 'reduced-motion did not disable main transition')
+      const shot = await send('Page.captureScreenshot', { format: 'png', captureBeyondViewport: false })
+      writeFileSync(join(output, 'forced-colors-reduced-motion.png'), Buffer.from(shot.data, 'base64'))
+    })
+    await check('兼容：120% 与 200% 页面缩放', async () => {
+      await send('Emulation.setEmulatedMedia', { features: [] }); await theme(false)
+      await send('Emulation.setDeviceMetricsOverride', { width: 1280, height: 900, deviceScaleFactor: 1, mobile: false })
+      for (const scale of [1.2, 2]) {
+        await send('Emulation.setPageScaleFactor', { pageScaleFactor: scale }); await render('long')
+        await expect('document.documentElement.scrollWidth <= innerWidth + 1', `page scale ${scale} overflows horizontally`)
+        const shot = await send('Page.captureScreenshot', { format: 'png', captureBeyondViewport: false })
+        writeFileSync(join(output, `page-scale-${String(scale).replace('.', '-')}.png`), Buffer.from(shot.data, 'base64'))
+      }
+      await send('Emulation.setPageScaleFactor', { pageScaleFactor: 1 })
+    })
+  }
+
   for (const [name, width, dark] of [['home', 1280, false], ['home', 480, true], ['long', 480, false], ['empty', 480, false], ['author', 480, true], ['ai', 480, true]]) {
     await check(`布局与截图 ${name}-${width}-${dark ? 'dark' : 'light'}`, async () => {
       await send('Emulation.setDeviceMetricsOverride', { width, height: 900, deviceScaleFactor: 1, mobile: false }); await theme(dark); await render(name)

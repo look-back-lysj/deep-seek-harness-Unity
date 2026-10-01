@@ -122,3 +122,10 @@ interface NavigationSnapshot {
 - 使用官方提取目录中的 `@deepseek-ai/dsh-app-boot@0.2.0-rc.1`：`D:\eac-market-verify\official-0.2.0-rc.1-extracted-20260929-162929\dsh\node_modules\@deepseek-ai\dsh-app-boot`。
 - `node scripts/verify-official-compat.mjs --official-app-boot <path>` 已通过 runtime `0.1.7-rc.2`、`0.2.0-rc.1` 和 `0.3.0-unknown` 的官方 peer gate。
 - 这只证明官方包合同兼容，不证明未知未来 API、真实 UI 页面或官方 pluginManager 长链路运行兼容。
+## 2026-10-01 合成兼容矩阵
+
+- 新增 `node tests/client/browser-check.mjs --compatibility-only`。
+- forced-colors + reduced-motion：通过，确认无横向溢出且主视图动效关闭。
+- 120% / 200% 页面缩放：通过，确认长内容和目录不产生横向溢出。
+- 证据目录：`D:/eac-market-verify/implementation-20260928/C-UI/compatibility`。
+- 这组检查仍然是合成 Edge，不替代官方 DeepSeek Harness Desktop 的真实宿主验收。
