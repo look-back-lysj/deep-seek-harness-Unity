@@ -63,7 +63,9 @@ async function resolveAppBootRoot(input) {
     join(root, 'node_modules', '@deepseek-ai', 'dsh-app-boot'),
     join(root, 'packages', 'boot', 'app-boot'),
     join(root, 'resources', 'app.asar.unpacked', 'node_modules', '@deepseek-ai', 'dsh-app-boot'),
+    join(root, 'resources', 'app.asar.unpacked', 'dsh', 'node_modules', '@deepseek-ai', 'dsh-app-boot'),
     join(root, 'resources', 'app', 'node_modules', '@deepseek-ai', 'dsh-app-boot'),
+    join(root, 'dsh', 'node_modules', '@deepseek-ai', 'dsh-app-boot'),
   ]
   for (const candidate of candidates) {
     const manifest = await readPackageManifest(candidate)
