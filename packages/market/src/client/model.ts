@@ -11,6 +11,7 @@ import type {
   CatalogPresentation,
   CatalogSnapshot,
   CatalogRefreshView,
+  CatalogSourceView, CoreMaintenanceSnapshot, UpdateCheckResult, UpdatePolicySnapshot, UpdatePolicySaveRequest,
   CatalogRecommendation,
   ClientHandshakeRequest,
   ClientHandshakeResult,
@@ -105,6 +106,12 @@ export interface MarketRemote {
   transferRead?(request: TransferChunkReadRequest): Promise<TransferChunkReadResult>
   transferDispose?(request: TransferDisposeRequest): Promise<boolean>
   refreshCatalog?(): Promise<CatalogRefreshView>
+  catalogSources?(): Promise<readonly CatalogSourceView[]>
+  agentForgeRefresh?(request: { readonly sourceId: string }): Promise<CatalogRefreshView>
+  maintenanceStatus?(): Promise<CoreMaintenanceSnapshot>
+  checkUpdates?(request?: { readonly sourceId?: string; readonly refreshFirst?: boolean }): Promise<UpdateCheckResult>
+  updatePolicyGet?(): Promise<UpdatePolicySnapshot>
+  updatePolicySave?(request: UpdatePolicySaveRequest): Promise<UpdatePolicySnapshot>
   exportDiagnostic?(): Promise<DiagnosticExport>
   aiAnalyze?(request: AiAnalyzeRequest): Promise<AiAnalysisResult>
   aiConfirm?(request: AiConfirmRequest): Promise<AiApplyResult>

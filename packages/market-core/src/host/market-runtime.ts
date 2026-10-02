@@ -27,6 +27,11 @@ import type {
   AuthorMediaReadResult,
   CatalogRefreshRequest,
   CatalogRefreshView,
+  CatalogSourceView,
+  CoreMaintenanceSnapshot,
+  MarketCatalogSource,
+  UpdatePolicySnapshot,
+  UpdatePolicySaveRequest,
   DiagnosticExport,
   PlanCreateRequest,
   PlanResult,
@@ -64,12 +69,22 @@ import { ArtifactCache } from '../delivery/cache.ts'
 import { createPlanBundle } from '../core/planner.ts'
 import type { CollectionExecutionContext, PackExecutionContext, PlanBundle, PlanCatalogContext } from '../core/ports.ts'
 import { InstallTaskManager } from '../core/task-manager.ts'
+import { buildMaintenanceSnapshot } from '../core/maintenance-state.ts'
+import { MaintenanceIntentStore } from '../core/maintenance-intent-store.ts'
+import { compareInstalledUpdates } from '../core/update-check.ts'
+import { UpdatePolicyStore } from '../core/update-policy-store.ts'
+import { readAgentForgeSource, projectAgentForgeCatalog, type AgentForgeSourceOptions, type AgentForgeVerifiedArtifact } from '../catalog/agent-forge.ts'
+import { encodeJson } from '../persistence/files.ts'
 import {
   AtomicProfileLocks,
   NodePersistenceFiles,
 } from '../adapters/dsh/persistence-adapter.ts'
 import { OfficialHostPort, mapOfficialChange } from '../adapters/dsh/host-port.ts'
 import { CatalogArtifactPort } from '../adapters/dsh/artifact-adapter.ts'
+import { materializeOfflineArtifacts } from '../delivery/offline-pack.ts'
+import { verifyTgzFile } from '../delivery/tgz.ts'
+import type { RemoteSecurityOptions } from '../delivery/security.ts'
+type RuntimeNetworkOptions = Pick<RemoteSecurityOptions, 'proxy' | 'dispatcherForProxy' | 'headersTimeoutMs' | 'bodyIdleTimeoutMs' | 'timeoutMs' | 'maxRedirects' | 'lookup'> & { readonly fetch?: typeof fetch }
 import { JsonTaskStore } from '../persistence/task-store.ts'
 import { SegmentedEventLog } from '../persistence/event-log.ts'
 import {
@@ -87,6 +102,12 @@ export interface RuntimeIdentity {
 
 export interface RuntimeOptions {
   readonly catalogSources?: readonly CatalogSourceIdentity[]
+  /** Host-maintained Agent Forge sources; source URLs are never accepted from Remote input. */
+  readonly agentForgeSources?: readonly MarketCatalogSource[]
+  /** Host-only transport, trust and authorized local import roots. */
+  readonly agentForgeSourceOptions?: AgentForgeSourceOptions
+  /** Host-only network transport settings; never accepted from Client or catalog data. */
+  readonly network?: RuntimeNetworkOptions
   /** Adapter 读取其随包 data/index.json 后提供原始字节；core 不猜资源路径。 */
   readonly embeddedCatalogBytes?: Uint8Array
   /** 兼容合成测试的对象注入；生产 adapter 应使用 embeddedCatalogBytes。 */
@@ -129,11 +150,19 @@ export class MarketRuntime {
   private recovery: Promise<void>
   private recoveryError: unknown
   private readonly sources: CatalogSourceRegistry
+  private readonly agentForgeSources = new Map<string, MarketCatalogSource>()
+  private readonly agentForgeCatalogs = new Map<string, CatalogRepository>()
+  private readonly agentForgeStatus = new Map<string, CatalogSourceView['status']>()
+  private readonly updatePolicy: UpdatePolicyStore
+  private readonly agentForgeSourceOptions: AgentForgeSourceOptions
   private readonly files: NodePersistenceFiles
   private readonly taskStore: JsonTaskStore
   private readonly aiProposals: AiProposalStore
   private readonly context: Context
   private readonly marketVersion: string
+  private readonly artifactCacheDir: string
+  private readonly network: RuntimeNetworkOptions | undefined
+  private readonly maintenanceIntents: MaintenanceIntentStore
 
   constructor(ctx: Context, readonly identity: RuntimeIdentity, dataDirectory: string, options: RuntimeOptions = {}) {
     if (options.embeddedCatalogBytes !== undefined && !(options.embeddedCatalogBytes instanceof Uint8Array)) {
@@ -147,10 +176,14 @@ export class MarketRuntime {
     }
     const embeddedCatalog = embeddedRaw === undefined ? options.embeddedCatalog : JSON.parse(Buffer.from(embeddedRaw).toString('utf8')) as unknown
     this.context = ctx
+    this.agentForgeSourceOptions = options.agentForgeSourceOptions ?? {}
     this.marketVersion = options.marketVersion ?? 'development'
+    this.artifactCacheDir = join(dataDirectory, 'artifacts')
+    this.network = options.network
     this.host = new OfficialHostPort(ctx, identity.environmentId, { hostVersion: identity.hostVersion, profileName: identity.profileName })
     this.files = new NodePersistenceFiles(join(dataDirectory, 'state'))
     const locks = new AtomicProfileLocks(dataDirectory)
+    this.maintenanceIntents = new MaintenanceIntentStore(this.files, locks)
     this.aiProposals = new AiProposalStore(this.files, locks, identity.environmentId)
     this.catalog = new CatalogRepository(embeddedCatalog, join(dataDirectory, 'catalog'), {
       host: {
@@ -161,12 +194,33 @@ export class MarketRuntime {
         runtime: `node${process.versions.node.split('.')[0]}`,
       },
     }, embeddedRaw)
-    this.sources = new CatalogSourceRegistry(options.catalogSources ?? DEFAULT_CATALOG_SOURCES)
+    this.sources = new CatalogSourceRegistry(options.catalogSources ?? DEFAULT_CATALOG_SOURCES, options.network === undefined ? {} : { security: options.network })
+    for (const source of options.agentForgeSources ?? []) {
+      if (!/^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/u.test(source.id)) throw new Error('Agent Forge source ID 必须是安全的单路径段')
+      if (this.sources.list().some(item => item.id === source.id) || this.agentForgeSources.has(source.id)) throw new Error(`重复目录来源 ID: ${source.id}`)
+      if (!source.enabled) { this.agentForgeSources.set(source.id, source); this.agentForgeStatus.set(source.id, 'not-checked'); continue }
+      if (source.location.mode === 'https') {
+        const url = new URL(source.location.value)
+        if (url.protocol !== 'https:' || url.username || url.password || url.hash) throw new Error(`Agent Forge source ${source.id} must use credential-free HTTPS`)
+      } else {
+        const roots = options.agentForgeSourceOptions?.localRoots ?? []
+        if (roots.length === 0) throw new Error(`Agent Forge local source ${source.id} has no Host-authorized import root`)
+      }
+      this.agentForgeSources.set(source.id, structuredClone(source))
+      this.agentForgeStatus.set(source.id, 'not-checked')
+      const emptyCatalog = {
+        schemaVersion: '1', revision: `agent-forge-unloaded-${source.id}`.slice(0, 200),
+        generatedAt: new Date(0).toISOString(), plugins: [], listings: [], packs: [], presentations: [], deliveries: [],
+      }
+      this.agentForgeCatalogs.set(source.id, new CatalogRepository(emptyCatalog, join(dataDirectory, 'catalog-sources', source.id)))
+    }
+    this.updatePolicy = new UpdatePolicyStore(this.files, locks)
     const testLocalSources = (process.env.EAC_MARKET_TEST_ALLOW_LOCAL_SOURCES ?? '')
       .split(';').map((value) => value.trim()).filter((value) => value.length > 0)
     const cache = new ArtifactCache({
-      cacheDir: join(dataDirectory, 'artifacts'),
+      cacheDir: this.artifactCacheDir,
       ...(testLocalSources.length === 0 ? {} : { allowLocalFileSources: testLocalSources }),
+      ...(options.network === undefined ? {} : options.network),
     })
     this.artifacts = new CatalogArtifactPort(cache, () => this.catalog.load().snapshot.deliveries, testLocalSources)
     this.taskStore = new JsonTaskStore(this.files, locks, `market-${identity.environmentId}`)
@@ -179,7 +233,7 @@ export class MarketRuntime {
         const item = bundle.plan.items.find(candidate => candidate.pluginId === pluginId)
         if (!item) throw new Error('当前步骤不在已确认方案中')
         this.catalog.assertReleaseActive(item.pluginId, item.targetVersion, item.targetDigest)
-        const current = this.catalog.load().snapshot.plugins.find(plugin => plugin.id === item.pluginId && plugin.version === item.targetVersion)
+        const current = this.catalogView().plugins.find(plugin => plugin.id === item.pluginId && plugin.version === item.targetVersion)
         if (current?.verification === 'hard-incompatible' || current?.installability === 'hard-blocked') throw new Error('制品在执行前已撤回或确认不兼容')
       },
       locks,
@@ -214,7 +268,11 @@ export class MarketRuntime {
       },
     })
     this.recovery = this.tasks.reconcileInterrupted(identity.environmentId)
-      .then(() => undefined)
+      .then(async () => {
+        // Restore only checksum-protected Core-owned intent. Historical success
+        // is evidence of the past, not a user's explicit selection.
+        await this.maintenanceIntents.load()
+      })
       .catch((error: unknown) => {
         this.recoveryError = error
         console.error('[eac-market/host] interrupted task recovery failed', error)
@@ -251,23 +309,123 @@ export class MarketRuntime {
     return saved.bundle
   }
 
-  async catalogRefresh(request?: CatalogRefreshRequest): Promise<CatalogRefreshView> {
+  catalogView(): import('../contracts/types.ts').CatalogSnapshot {
+    const base = this.catalog.load().snapshot
+    const extras = [...this.agentForgeCatalogs.values()].map(repository => repository.load().snapshot)
+    const plugins = [...new Map([...base.plugins, ...extras.flatMap(snapshot => snapshot.plugins)].map(item => [`${item.id}:${item.version}`, item])).values()]
+    const listings = [...new Map([...(base.listings ?? []), ...extras.flatMap(snapshot => snapshot.listings ?? [])].map(item => [`${item.id}:${item.requestedVersion ?? ''}`, item])).values()]
+    const deliveries = [...new Map([...base.deliveries, ...extras.flatMap(snapshot => snapshot.deliveries)].map(item => [`${item.pluginId}:${item.version}:${item.artifactDigest}`, item])).values()]
+    const presentations = [...base.presentations, ...extras.flatMap(snapshot => snapshot.presentations)]
+    const extraRevisions = extras.map(snapshot => snapshot.revision).sort()
+    const revision = extraRevisions.length === 0 ? base.revision : [base.revision, ...extraRevisions].join('|').slice(0, 200)
+    return { ...base, revision, plugins, listings, deliveries, presentations, stale: base.stale || extras.some(snapshot => snapshot.stale) }
+  }
+  capabilities(): readonly import('../contracts/types.ts').CapabilityName[] {
+    const result = new Set(this.host.capabilities())
+    result.add('catalog-source-list')
+    result.add('core-maintenance')
+    result.add('update-check')
+    result.add('update-policy')
+    if (this.agentForgeSources.size > 0) result.add('agent-forge-refresh')
+    return [...result]
+  }
+
+  async catalogSources(): Promise<readonly CatalogSourceView[]> {
+    const base = this.catalog.load()
+    const marketSources = this.sources.list().map(source => ({
+      id: source.id, kind: 'market-index' as const, mode: 'https' as const, enabled: true, priority: 0,
+      refreshPolicy: 'manual' as const, status: base.snapshot.stale ? 'stale' as const : base.cacheUsable ? 'ready' as const : 'not-checked' as const,
+      revision: base.snapshot.revision, ...(base.reason === undefined ? {} : { reason: base.reason }),
+    }))
+    const agentSources = [...this.agentForgeSources.values()].map(source => {
+      const snapshot = this.agentForgeCatalogs.get(source.id)?.load()
+      const status = snapshot?.snapshot.stale
+        ? 'stale' as const
+        : snapshot?.cacheUsable
+          ? 'ready' as const
+          : this.agentForgeStatus.get(source.id) ?? 'not-checked'
+      this.agentForgeStatus.set(source.id, status)
+      return {
+        id: source.id, kind: 'agent-forge' as const, mode: source.location.mode, enabled: source.enabled,
+        priority: source.priority, refreshPolicy: source.refreshPolicy,
+        status,
+        ...(snapshot?.cacheUsable ? { revision: snapshot.snapshot.revision } : {}),
+        ...(snapshot?.reason === undefined ? {} : { reason: snapshot.reason }),
+      }
+    })
+    return [...marketSources, ...agentSources].sort((a, b) => a.priority - b.priority || a.id.localeCompare(b.id))
+  }
+
+  async agentForgeRefresh(request: { readonly sourceId: string }): Promise<CatalogRefreshView> {
+    const source = this.agentForgeSources.get(request?.sourceId)
+    if (!source || !source.enabled) return { status: 'failed', current: this.catalogView(), reason: 'Agent Forge source is not registered or is disabled' }
+    const repository = this.agentForgeCatalogs.get(source.id)
+    if (!repository) return { status: 'failed', current: this.catalogView(), reason: 'Agent Forge source repository is unavailable' }
     try {
-      const result = await this.catalog.refreshWithSource(this.sources.connection(request ?? {}))
+      const sourceData = await readAgentForgeSource(source, {
+        ...this.agentForgeSourceOptions,
+        ...(this.network === undefined ? {} : this.network),
+        ...(this.agentForgeSourceOptions.targetAgent === undefined ? {} : { targetAgent: this.agentForgeSourceOptions.targetAgent }),
+        localRoots: this.agentForgeSourceOptions.localRoots ?? [],
+      })
+      let offlineArtifacts: readonly AgentForgeVerifiedArtifact[] | undefined
+      if (sourceData.offline !== undefined) {
+        const materialized = materializeOfflineArtifacts(sourceData.offline, this.artifactCacheDir)
+        const byDigest = new Map(materialized.map(item => [item.digest, item]))
+        const verified: AgentForgeVerifiedArtifact[] = []
+        for (const packageEntry of sourceData.offline.manifest.packages) {
+          const record = sourceData.packages.get(packageEntry.packageName)
+          if (record?.type !== 'plugin') continue
+          const materializedArtifact = byDigest.get(packageEntry.artifactDigest)
+          if (materializedArtifact === undefined) throw new Error(`离线包制品未物化：${packageEntry.packageName}@${packageEntry.version}`)
+          const checked = await verifyTgzFile(materializedArtifact.path, {
+            artifactDigest: packageEntry.artifactDigest, packageName: packageEntry.packageName, version: packageEntry.version, requireBundle: true,
+          })
+          verified.push({ pluginId: packageEntry.pluginId, packageName: checked.packageName, version: checked.version,
+            artifactDigest: checked.artifactDigest, size: checked.size, packageJson: checked.packageJson, files: checked.files })
+        }
+        offlineArtifacts = verified
+      }
+      const projected = projectAgentForgeCatalog(sourceData, {
+        revision: `af-${source.id}-${sourceData.sourceRevision}`.slice(0, 200),
+        generatedAt: String(sourceData.index.generatedAt ?? new Date().toISOString()),
+        sourceUrl: String(sourceData.source.baseUrl),
+        ...(offlineArtifacts === undefined ? {} : { offlineArtifacts }),
+      })
+      const result = await repository.refresh(async () => encodeJson(projected))
+      if (result.status !== 'refreshed') {
+        this.agentForgeStatus.set(source.id, result.current.snapshot.stale ? 'stale' : 'unavailable')
+        return { status: 'failed', current: this.catalogView(), ...(result.reason === undefined ? {} : { reason: result.reason }) }
+      }
+      this.agentForgeStatus.set(source.id, 'ready')
+      return { status: 'refreshed', current: this.catalogView() }
+    } catch (error) {
+      const previous = repository.load()
+      this.agentForgeStatus.set(source.id, previous.cacheUsable ? 'stale' : 'unavailable')
+      return { status: 'failed', current: this.catalogView(), reason: errorText(error) }
+    }
+  }
+
+  async catalogRefresh(request?: CatalogRefreshRequest): Promise<CatalogRefreshView> {
+    if (request?.sourceId && this.agentForgeSources.has(request.sourceId)) return this.agentForgeRefresh({ sourceId: request.sourceId })
+    try {
+      const source = request?.sourceId ? this.sources.list().find(item => item.id === request.sourceId) : undefined
+      if (request?.sourceId && !source) throw new Error(`目录来源未登记：${request.sourceId}`)
+      const result = await this.catalog.refreshWithSource(this.sources.connection(source ? { sourceUrl: source.indexUrl } : request ?? {}))
       return {
         status: result.status,
-        current: { ...result.current.snapshot, collections: this.catalog.collectionViews() },
+        current: { ...this.catalogView(), collections: this.catalog.collectionViews() },
         ...(result.reason === undefined ? {} : { reason: result.reason }),
       }
     } catch (error) {
-      return { status: 'failed', current: { ...this.catalog.load().snapshot, collections: this.catalog.collectionViews() }, reason: errorText(error) }
+      return { status: 'failed', current: { ...this.catalogView(), collections: this.catalog.collectionViews() }, reason: errorText(error) }
     }
   }
 
   async planCreate(request: PlanCreateRequest, callerId = 'local-operator', preferredSource?: { readonly packageName: string; readonly sourceId: string }): Promise<PlanResult> {
     try {
       await this.ensureWriteReady()
-      const snapshot = this.catalog.load().snapshot
+      const snapshot = this.catalogView()
       const state = await this.host.readState()
       if (!state.activity.stable || state.activity.unknownSharedImpact || state.inventory.unknownItems.length || state.activeRequests.length) {
         return { status: 'blocked', reason: '当前库存或安装活动无法完整核实，请稍后重新预检', blockers: ['inventory:unverified-state'] }
@@ -350,7 +508,30 @@ export class MarketRuntime {
       const current = this.catalog.load().snapshot.plugins.find(plugin => plugin.id === item.pluginId && plugin.version === item.targetVersion)
       if (current?.verification === 'hard-incompatible' || current?.installability === 'hard-blocked') throw new Error('该版本已被撤回或确认不兼容，请重新预检')
     }
-    return (await this.tasks.start(bundle, request, baseline)).task
+    const previousIntent = await this.maintenanceIntents.load()
+    const packageByPlugin = new Map(bundle.plan.items.map(item => [item.pluginId, item.packageName]))
+    const explicitPackages = (bundle.explicitPluginIds ?? [])
+      .map(pluginId => packageByPlugin.get(pluginId))
+      .filter((packageName): packageName is string => packageName !== undefined)
+    const dependencyEdges = bundle.dependencies.flatMap(edge => {
+      const prerequisite = packageByPlugin.get(edge.prerequisiteId)
+      const consumer = packageByPlugin.get(edge.consumerId)
+      return prerequisite === undefined || consumer === undefined ? [] : [{ prerequisite, consumer }]
+    })
+    // Persist the confirmed intent before InstallTaskManager can enqueue writes.
+    await this.maintenanceIntents.recordPlan(explicitPackages, dependencyEdges)
+    try {
+      return (await this.tasks.start(bundle, request, baseline)).task
+    } catch (error) {
+      // Roll back only when no durable task was committed. If commit status is
+      // uncertain, retaining the intent is safer than forgetting a possible write.
+      const existing = await this.taskStore.getByPlan(this.identity.environmentId, request.planId)
+      if (existing === undefined) await this.maintenanceIntents.replace({
+        explicitPackages: previousIntent.explicitPackages,
+        dependencyEdges: previousIntent.dependencyEdges,
+      })
+      throw error
+    }
   }
 
   async taskGet(request: TaskIdRequest): Promise<TaskState> {
@@ -394,7 +575,11 @@ export class MarketRuntime {
         action: request.enabled ? 'enable' : 'disable',
         idempotencyKey: request.idempotencyKey,
       }, () => this.host.setEnabled(request.packageName, request.enabled))
-      return resultFromOutcome(result)
+      const output = resultFromOutcome(result)
+      if (output.status === 'applied' || output.status === 'restart-required') {
+        await this.maintenanceIntents.setExplicit(request.packageName, true)
+      }
+      return output
     } catch (error) {
       return { status: 'failed', changed: false, error: errorText(error), permissionChanges: [] }
     }
@@ -404,6 +589,13 @@ export class MarketRuntime {
     try {
       await this.ensureWriteReady()
       if (request.confirmed !== true) throw new Error('卸载操作尚未确认')
+      const state = await this.host.readState()
+      const intent = await this.maintenanceIntents.load()
+      const installed = new Set(state.inventory.items.filter(item => item.installed).map(item => item.packageName))
+      const protectedDependents = intent.dependencyEdges
+        .filter(edge => edge.prerequisite === request.packageName && (installed.has(edge.consumer) || intent.explicitPackages.includes(edge.consumer)))
+        .map(edge => edge.consumer)
+      if (protectedDependents.length > 0) throw new Error(`仍有已安装或明确保留的插件依赖此包：${[...new Set(protectedDependents)].join('、')}`)
       const result = await this.tasks.manage({
         environmentId: this.identity.environmentId,
         packageName: request.packageName,
@@ -411,10 +603,51 @@ export class MarketRuntime {
         action: 'remove',
         idempotencyKey: request.idempotencyKey,
       }, async () => mapOfficialChange(await this.host.remove(request.packageName)))
-      return resultFromOutcome(result)
+      const output = resultFromOutcome(result)
+      if (output.status === 'applied' || output.status === 'restart-required') {
+        await this.maintenanceIntents.clearPackage(request.packageName)
+      }
+      return output
     } catch (error) {
       return { status: 'failed', changed: false, error: errorText(error), permissionChanges: [] }
     }
+  }
+
+  /** Produces a fresh Core-owned maintenance snapshot after task recovery. */
+  readonly maintenanceStatus = async (): Promise<CoreMaintenanceSnapshot> => {
+    await this.recovery
+    const state = await this.host.readState()
+    const tasks = await this.taskStore.list(this.identity.environmentId)
+    const taskStates = tasks.map(record => record.task)
+    const catalogRevision = this.catalog.load().snapshot.revision
+    const intent = await this.maintenanceIntents.load()
+    return buildMaintenanceSnapshot({
+      environmentId: this.identity.environmentId,
+      revision: `maintenance:${catalogRevision}:${state.inventory.revision}:${intent.revision}:${taskStates.map(task => `${task.taskId}:${task.updatedAt}`).join('|')}`,
+      inventory: state.inventory,
+      tasks: taskStates,
+      explicitPackages: intent.explicitPackages,
+      selectedPackages: intent.explicitPackages,
+      dependencyEdges: intent.dependencyEdges,
+      unknownPackages: state.inventory.unknownItems,
+    })
+  }
+
+  readonly checkUpdates = async (request?: { readonly sourceId?: string; readonly refreshFirst?: boolean }): Promise<import('../contracts/types.ts').UpdateCheckResult> => {
+    await this.recovery
+    if (request?.refreshFirst) await this.catalogRefresh(request.sourceId ? { sourceId: request.sourceId } : undefined)
+    const state = await this.host.readState()
+    const snapshot = this.catalogView()
+    return compareInstalledUpdates(state.inventory, snapshot.plugins, snapshot.revision, { catalogStale: snapshot.stale })
+  }
+
+  async updatePolicyGet(): Promise<UpdatePolicySnapshot> {
+    return this.updatePolicy.get()
+  }
+
+  async updatePolicySave(request: UpdatePolicySaveRequest): Promise<UpdatePolicySnapshot> {
+    await this.ensureWriteReady()
+    return this.updatePolicy.save(request)
   }
 
   authorDraftList(): readonly AuthorDraft[] {
@@ -503,12 +736,12 @@ export class MarketRuntime {
 
   private targetRelease(proposal: AiProposal): CatalogPlugin | undefined {
     const action = proposal.actions[0]!
-    return this.catalog.load().snapshot.plugins.find(item => item.packageName === action.packageName && item.version === action.targetVersion)
+    return this.catalogView().plugins.find(item => item.packageName === action.packageName && item.version === action.targetVersion)
   }
 
   private targetDelivery(plugin: CatalogPlugin | undefined): CatalogDelivery | undefined {
     if (!plugin) return undefined
-    return this.catalog.load().snapshot.deliveries.find(item => item.pluginId === plugin.id && item.version === plugin.version && item.artifactDigest === plugin.artifactDigest)
+    return this.catalogView().deliveries.find(item => item.pluginId === plugin.id && item.version === plugin.version && item.artifactDigest === plugin.artifactDigest)
   }
 
   private riskyImpact(kind: 'remove' | 'downgrade', current: InventoryItem, target: CatalogPlugin | undefined, inventory: InventorySnapshot): AiActionImpact {
@@ -518,7 +751,7 @@ export class MarketRuntime {
       resolveBundleDir(bin: string, name: string, anchor: string, profileDir: string): string
     }
     const impact = assessRiskyAction({ kind, packageName: current.packageName, currentVersion: current.version ?? '', target,
-      current: this.catalog.load().snapshot.plugins.find(item => item.packageName === current.packageName && item.version === current.version), inventory,
+      current: this.catalogView().plugins.find(item => item.packageName === current.packageName && item.version === current.version), inventory,
       readManifest: (name, parent): ManagementManifest | undefined => {
         let directory: string
         if (parent && roots.has(parent)) {
@@ -547,7 +780,7 @@ export class MarketRuntime {
         return { ...value, resolutionKey: directory }
       },
     })
-    const currentRelease = this.catalog.load().snapshot.plugins.find(item => item.packageName === current.packageName && item.version === current.version)
+    const currentRelease = this.catalogView().plugins.find(item => item.packageName === current.packageName && item.version === current.version)
     return current.source === 'market-cache-file' && current.artifactDigest !== undefined
       && current.artifactDigest === currentRelease?.artifactDigest ? impact
       : { ...impact, unknowns: [...impact.unknowns, '当前安装回执摘要与目录审查制品不一致或不可核实'] }

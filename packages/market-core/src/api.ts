@@ -8,6 +8,7 @@ import type {
   AuthorMediaReadRequest, AuthorMediaReadResult, CapabilityName,
   CatalogRefreshRequest, CatalogRefreshView, CatalogSnapshot, DiagnosticExport,
   InventorySnapshot, PlanCreateRequest, PlanResult, PluginActionRequest, PluginActionResult,
+  CoreMaintenanceSnapshot, UpdateCheckResult, CatalogSourceView, UpdatePolicySnapshot, UpdatePolicySaveRequest,
   ReadmeApplyPreviewRequest, ReadmeImportRequest, ReadmeImportResult, ReadmePreviewView,
   RemovePluginRequest, TaskApprovalRequest, TaskCancelRequest, TaskEventPage,
   TaskEventRequest, TaskIdRequest, TaskResumeRequest, TaskStartRequest, TaskState,
@@ -20,6 +21,12 @@ export interface MarketBackend {
   catalog(): CatalogSnapshot
   inventory(): Promise<InventorySnapshot>
   catalogRefresh(request?: CatalogRefreshRequest): Promise<CatalogRefreshView>
+  catalogSources(): Promise<readonly CatalogSourceView[]>
+  agentForgeRefresh(request: { readonly sourceId: string }): Promise<CatalogRefreshView>
+  maintenanceStatus(): Promise<CoreMaintenanceSnapshot>
+  checkUpdates(request?: { readonly sourceId?: string; readonly refreshFirst?: boolean }): Promise<UpdateCheckResult>
+  updatePolicyGet(): Promise<UpdatePolicySnapshot>
+  updatePolicySave(request: UpdatePolicySaveRequest): Promise<UpdatePolicySnapshot>
   planCreate(request: PlanCreateRequest, callerId: string): Promise<PlanResult>
   taskStart(request: TaskStartRequest, callerId: string): Promise<TaskState>
   taskGet(request: TaskIdRequest): Promise<TaskState>

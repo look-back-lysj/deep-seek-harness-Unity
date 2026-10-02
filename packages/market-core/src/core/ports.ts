@@ -34,6 +34,19 @@ export interface ArtifactAcquisition {
   readonly size: number
 }
 
+export type ArtifactDownloadStage = 'connecting' | 'downloading' | 'retrying' | 'verifying' | 'completed' | 'failed' | 'cancelled'
+
+export interface ArtifactDownloadProgress {
+  readonly stage: ArtifactDownloadStage
+  readonly sourceIndex: number
+  readonly sourceCount: number
+  readonly sourceKind: CatalogDelivery['sources'][number]['kind']
+  readonly attempt: number
+  readonly receivedBytes: number
+  readonly totalBytes?: number
+  readonly resumed: boolean
+}
+
 export interface ArtifactAcquireRequest {
   readonly requestId: string
   readonly pluginId: string
@@ -43,6 +56,8 @@ export interface ArtifactAcquireRequest {
   readonly sourceRef: string
   /** Host-private copy of the delivery approved with the plan; never re-resolve a live catalog. */
   readonly delivery?: CatalogDelivery | undefined
+  /** Host-only progress sink; never crosses the browser wire. */
+  readonly onProgress?: ((progress: ArtifactDownloadProgress) => void | Promise<void>) | undefined
 }
 
 export interface ArtifactPort {
@@ -190,6 +205,8 @@ export interface ExpectedItemState {
 
 export interface PlanBundle {
   readonly plan: import('../contracts/types.ts').InstallPlan
+  /** User-selected package identities; dependency prerequisites are stored separately. */
+  readonly explicitPluginIds?: readonly string[]
   readonly steps: readonly PlanStep[]
   readonly dependencies: readonly PackExecutionEdge[]
   readonly expected: readonly ExpectedItemState[]

@@ -236,6 +236,7 @@ export async function createPlanBundle(
     if (structural.length > 0) return { status: 'blocked', reason: 'invalid-pack-execution', details: structural, blockers: structural }
     const bundleWithoutDigest = {
       plan,
+      explicitPluginIds: [...new Set(context.selections.map(selection => selection.pluginId))].sort(),
       steps,
       dependencies: pack.execution.edges.filter((edge) => selectionsById.has(edge.consumerId)),
       expected,
@@ -303,7 +304,14 @@ export async function createPlanBundle(
     if (blockers.length > 0) details.push(`${selection.packageName}:${blockers.join(',')}`)
   }
   const plan = await makePlan(context, items)
-  const bundleWithoutDigest = { plan, steps, dependencies: [], expected, ...frozenDeliveries(context) }
+  const bundleWithoutDigest = {
+    plan,
+    explicitPluginIds: [...new Set(context.selections.map(selection => selection.pluginId))].sort(),
+    steps,
+    dependencies: [],
+    expected,
+    ...frozenDeliveries(context),
+  }
   const bundleDigest = await digestBundle(bundleWithoutDigest)
   return { status: 'ready', bundle: deepFreeze({ ...bundleWithoutDigest, bundleDigest }), details }
 }
@@ -351,6 +359,7 @@ export async function verifyPlanBundle(bundle: PlanBundle): Promise<boolean> {
   if (expectedPlanDigest !== bundle.plan.planDigest) return false
   const expectedBundleDigest = await digestBundle({
     plan: bundle.plan,
+    ...(bundle.explicitPluginIds === undefined ? {} : { explicitPluginIds: bundle.explicitPluginIds }),
     steps: bundle.steps,
     dependencies: bundle.dependencies,
     expected: bundle.expected,

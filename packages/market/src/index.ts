@@ -27,6 +27,11 @@ import {
   type CatalogRefreshRequest,
   type CatalogRefreshView,
   type CatalogSnapshot,
+  type CatalogSourceView,
+  type CoreMaintenanceSnapshot,
+  type UpdateCheckResult,
+  type UpdatePolicySnapshot,
+  type UpdatePolicySaveRequest,
   type DiagnosticExport,
   type EnvironmentHello,
   type InventorySnapshot,
@@ -69,6 +74,15 @@ export interface Config {
     readonly maintainer: string
     readonly fallbackId?: string
   }[]
+  /** Host-maintained Agent Forge sources. Local paths are intentionally not accepted in plugin config. */
+  readonly agentForgeSources?: {
+    readonly id: string
+    readonly locationUrl: string
+    readonly expectedRevision: string
+    readonly enabled: boolean
+    readonly priority: number
+    readonly refreshPolicy: string
+  }[]
 }
 
 const ConfigSchema: z<Config> = z.object({
@@ -78,6 +92,14 @@ const ConfigSchema: z<Config> = z.object({
     indexUrl: z.string().required(),
     maintainer: z.string().required(),
     fallbackId: z.string().default(''),
+  })).default([]),
+  agentForgeSources: z.array(z.object({
+    id: z.string().required(),
+    locationUrl: z.string().required(),
+    expectedRevision: z.string().required().default(''),
+    enabled: z.boolean().required(),
+    priority: z.number().required(),
+    refreshPolicy: z.string().required().default('manual'),
   })).default([]),
 })
 
@@ -129,6 +151,23 @@ export class MarketService extends Service {
         trust: 'team-registered',
         ...(source.fallbackId ? { fallbackId: source.fallbackId } : {}),
       })),
+      agentForgeSources: (config.agentForgeSources ?? []).map(source => {
+        if (!/^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/u.test(source.id)) throw new Error('Agent Forge source ID 格式无效')
+        let url: URL
+        try { url = new URL(source.locationUrl) } catch { throw new Error('Agent Forge source URL 格式无效') }
+        if (url.protocol !== 'https:' || url.username || url.password || url.hash) throw new Error('Agent Forge source 只接受无凭据 HTTPS URL')
+        if (!['manual', 'on-open', 'periodic'].includes(source.refreshPolicy)) throw new Error('Agent Forge refreshPolicy 无效')
+        if (!Number.isInteger(source.priority) || source.priority < 0 || source.priority > 1000) throw new Error('Agent Forge source priority 无效')
+        return {
+          id: source.id,
+          kind: 'agent-forge' as const,
+          location: { mode: 'https' as const, value: url.href },
+          ...(source.expectedRevision === '' ? {} : { expectedRevision: source.expectedRevision }),
+          enabled: source.enabled,
+          priority: source.priority,
+          refreshPolicy: source.refreshPolicy as 'manual' | 'on-open' | 'periodic',
+        }
+      }),
     })
   }
 
@@ -186,6 +225,39 @@ export class MarketService extends Service {
   catalogRefresh(request?: CatalogRefreshRequest): Promise<CatalogRefreshView> {
     this.assertWriteCompatible()
     return this.runtime.catalogRefresh(request)
+  }
+
+  @Remote
+  catalogSources(): Promise<readonly CatalogSourceView[]> {
+    return this.runtime.catalogSources()
+  }
+
+  @Remote
+  agentForgeRefresh(request: { readonly sourceId: string }): Promise<CatalogRefreshView> {
+    this.assertWriteCompatible()
+    return this.runtime.agentForgeRefresh(request)
+  }
+
+  @Remote
+  maintenanceStatus(): Promise<CoreMaintenanceSnapshot> {
+    return this.runtime.maintenanceStatus()
+  }
+
+  @Remote
+  checkUpdates(request?: { readonly sourceId?: string; readonly refreshFirst?: boolean }): Promise<UpdateCheckResult> {
+    if (request?.refreshFirst) this.assertWriteCompatible()
+    return this.runtime.checkUpdates(request)
+  }
+
+  @Remote
+  updatePolicyGet(): Promise<UpdatePolicySnapshot> {
+    return this.runtime.updatePolicyGet()
+  }
+
+  @Remote
+  updatePolicySave(request: UpdatePolicySaveRequest): Promise<UpdatePolicySnapshot> {
+    this.assertWriteCompatible()
+    return this.runtime.updatePolicySave(request)
   }
 
   @Remote

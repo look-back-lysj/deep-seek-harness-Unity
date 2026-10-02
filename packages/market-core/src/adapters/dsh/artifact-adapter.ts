@@ -32,6 +32,10 @@ export class CatalogArtifactPort implements ArtifactPort {
       referenceKind: 'installed',
       requireBundle: true,
       allowLocalFileSources: this.allowLocalFileSources,
+      ...(request.onProgress === undefined ? {} : { onProgress: progress => request.onProgress?.({
+        stage: progress.stage, sourceIndex: progress.sourceIndex, sourceCount: progress.sourceCount, sourceKind: progress.sourceKind,
+        attempt: progress.attempt, receivedBytes: progress.receivedBytes, ...(progress.totalBytes === undefined ? {} : { totalBytes: progress.totalBytes }), resumed: progress.resumed,
+      }) }),
     })
     return {
       pluginId: request.pluginId,

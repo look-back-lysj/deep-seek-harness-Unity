@@ -44,9 +44,12 @@ describe('浏览器安全入口与显式 API', () => {
     const implementation = runtime.statements.find((node): node is ts.ClassDeclaration => ts.isClassDeclaration(node) && node.name?.text === 'MarketRuntime')!
     const names = contract.members.map(node => node.name!.getText(api))
     const methods = implementation.members.filter(node => ts.isMethodDeclaration(node)
-      && !node.modifiers?.some(modifier => modifier.kind === ts.SyntaxKind.PrivateKeyword))
-    expect(names.sort()).toEqual([...methods.map(node => node.name!.getText(runtime)), 'capabilities', 'catalog', 'inventory'].sort())
-    expect(names).toHaveLength(30)
+      && !node.modifiers?.some(modifier => modifier.kind === ts.SyntaxKind.PrivateKeyword)
+      && node.name?.getText(runtime) !== 'catalogView')
+    const runtimeMethods = [...new Set([...methods.map(node => node.name!.getText(runtime)), 'capabilities', 'catalog', 'inventory',
+      'catalogSources', 'agentForgeRefresh', 'maintenanceStatus', 'checkUpdates', 'updatePolicyGet', 'updatePolicySave'])]
+    expect(names.sort()).toEqual(runtimeMethods.sort())
+    expect(names).toHaveLength(36)
     for (const name of ['planCreate', 'taskStart', 'aiAnalyze', 'aiConfirm']) {
       const method = contract.members.find(node => node.name!.getText(api) === name) as ts.MethodSignature
       const caller = method.parameters[1]!

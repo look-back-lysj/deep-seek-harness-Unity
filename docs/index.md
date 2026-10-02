@@ -10,6 +10,7 @@
 | [最新版升级指南](UPGRADE-GUIDE.md) | 用户升级、维护者构建、发布、回退和证据规则 |
 | [Core / Desktop Adapter 底座指南](CORE-ADAPTER-GUIDE.md) | 两包职责、公开 API、通信协商、目录合同和发布边界 |
 | [后端协作者指南](handoff/BACKEND-CONTRIBUTOR-GUIDE-2026-09-30.md) | Core、Host、目录、适配器和失败语义 |
+| [Core 新增能力补齐计划 v1.2](handoff/CORE-NEW-CAPABILITIES-PLAN-2026-10-01.md) | 已选定的后端补齐方案、轻量网络路径及验收门槛 |
 | [当前交互审查](handoff/INTERACTION-AUDIT-2026-09-30.md) | Client 动作状态、导航、任务、皮肤、作者工具和未验宿主 |
 | [UI 重构合同](handoff/UI-REBUILD-CONTRACT-2026-09-30.md) | 发现页、全部插件、视觉层级、动效和兼容性不变边界 |
 | [Client 维护边界](../packages/market/src/client/README.md) | Client 文件职责、Remote 使用和测试入口 |

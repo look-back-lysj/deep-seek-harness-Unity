@@ -31,10 +31,16 @@ export function createDshMarketBackend(
   // 显式列出业务入口并保留接收者；解构调用也不会丢失 this。
   // 不转发内部对象或包装失败结果，审批、持久化和锁仍由原运行时负责。
   const backend: MarketBackend = {
-    capabilities: () => runtime.host.capabilities(),
-    catalog: () => ({ ...runtime.catalog.load().snapshot, collections: runtime.catalog.collectionViews() }),
+    capabilities: () => runtime.capabilities(),
+    catalog: () => ({ ...runtime.catalogView(), collections: runtime.catalog.collectionViews() }),
     inventory: async () => (await runtime.host.readState()).inventory,
     catalogRefresh: request => runtime.catalogRefresh(request),
+    catalogSources: () => runtime.catalogSources(),
+    agentForgeRefresh: request => runtime.agentForgeRefresh(request),
+    maintenanceStatus: () => runtime.maintenanceStatus(),
+    checkUpdates: request => runtime.checkUpdates(request),
+    updatePolicyGet: () => runtime.updatePolicyGet(),
+    updatePolicySave: request => runtime.updatePolicySave(request),
     planCreate: async (request, callerId) => runtime.planCreate(request, requireCallerId(callerId)),
     taskStart: async (request, callerId) => runtime.taskStart(request, requireCallerId(callerId)),
     taskGet: request => runtime.taskGet(request),

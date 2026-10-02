@@ -20,7 +20,7 @@
 | 角色 | 必读入口 |
 | --- | --- |
 | 所有维护者 | [当前接手入口](docs/handoff/START-HERE.md) → [最新版升级指南](docs/UPGRADE-GUIDE.md) |
-| Core / Host / 目录 / DSH 适配器 | [后端协作者指南](docs/handoff/BACKEND-CONTRIBUTOR-GUIDE-2026-09-30.md) |
+| Core / Host / 目录 / DSH 适配器 | [后端协作者指南](docs/handoff/BACKEND-CONTRIBUTOR-GUIDE-2026-09-30.md) → [Core 新增能力补齐计划（方案 A v1.2）](docs/handoff/CORE-NEW-CAPABILITIES-PLAN-2026-10-01.md) |
 | Client / UI | [Client 维护边界](packages/market/src/client/README.md) → [DESIGN.md](DESIGN.md) → [当前交互审查](docs/handoff/INTERACTION-AUDIT-2026-09-30.md) |
 | 包合同与发布 | [Core / Desktop Adapter 底座指南](docs/CORE-ADAPTER-GUIDE.md) |
 | 插件作者 | [作者 / Agent 投稿指南](docs/contributing/AGENT-SUBMISSION.md) |

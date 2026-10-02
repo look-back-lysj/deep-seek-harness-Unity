@@ -745,6 +745,12 @@ export class InstallTaskManager {
             packageName: step.packageName, version: item.targetVersion, artifactDigest: planItem.targetDigest,
             sourceRef: 'catalog:' + record.bundle.plan.catalogRevision + ':' + step.pluginId,
             ...(delivery === undefined ? {} : { delivery }),
+            onProgress: async progress => {
+              const phase: TaskStatus = progress.stage === 'verifying' ? 'verifying' : 'downloading'
+              const total = progress.totalBytes === undefined ? '?' : String(progress.totalBytes)
+              const message = `${progress.stage === 'retrying' ? '重试获取' : phase === 'verifying' ? '校验制品' : '下载制品'}：${progress.receivedBytes}/${total} bytes${progress.resumed ? '（断点续传）' : ''}`
+              record = await this.save(await this.appendEvent(record, phase, message, 'info', step.pluginId))
+            },
           }, abort.signal)
           abort.signal.throwIfAborted()
           if (artifact.packageName !== step.packageName || artifact.pluginId !== step.pluginId || artifact.version !== item.targetVersion || artifact.artifactDigest !== planItem.targetDigest)

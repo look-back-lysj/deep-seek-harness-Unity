@@ -22,6 +22,8 @@
 
 ## 专题入口
 
+- [Core 新增能力补齐计划（方案 A v1.2）](handoff/CORE-NEW-CAPABILITIES-PLAN-2026-10-01.md)：按网络调研选择轻量 Node/Undici 单一路径，明确代理能力边界、动态超时、重试/续传、首次空缓存链路和跨环境验收；P0 后端代码修补已完成并通过回归；官方宿主及真实网络验收尚未完成。
+
 - [产品要求](PRODUCT.md)
 - [测试与证据](testing.md)
 - [协议](protocol.md)

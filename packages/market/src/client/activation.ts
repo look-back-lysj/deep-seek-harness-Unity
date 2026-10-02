@@ -90,6 +90,12 @@ const METHOD_ALIASES: Readonly<Record<string, string>> = {
   exportDraft: 'authorExportDraft',
   readMedia: 'authorMediaRead',
   refreshCatalog: 'catalogRefresh',
+  listCatalogSources: 'catalogSources',
+  refreshAgentForge: 'agentForgeRefresh',
+  getMaintenanceStatus: 'maintenanceStatus',
+  checkUpdates: 'checkUpdates',
+  getUpdatePolicy: 'updatePolicyGet',
+  saveUpdatePolicy: 'updatePolicySave',
   exportDiagnostic: 'diagnosticsExport',
 }
 
@@ -97,7 +103,7 @@ const METHOD_ALIASES: Readonly<Record<string, string>> = {
 // 预览、导出和 AI 分析也会分配后台状态，因此同样需要握手。
 const SIDE_EFFECT_METHODS = new Set([
   'planCreate', 'taskStart', 'taskApproveBuilds', 'taskResume', 'taskCancel',
-  'pluginSetEnabled', 'pluginRemove', 'catalogRefresh',
+  'pluginSetEnabled', 'pluginRemove', 'catalogRefresh', 'agentForgeRefresh', 'checkUpdates', 'updatePolicySave',
   'authorDraftSave', 'authorDraftDelete', 'authorReadmeImport', 'authorReadmePreview', 'authorReadmeApplyPreview',
   'authorTransferBegin', 'authorTransferChunk', 'authorTransferDispose', 'authorExportDraft',
   'aiAnalyze', 'aiConfirm',
