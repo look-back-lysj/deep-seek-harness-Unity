@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "sourceCommit": "8f721279568c65c46e7aa4035728e4ea1f128117",
+  "core": {
+    "name": "@dsh-eac/market-core",
+    "version": "0.1.6",
+    "filename": "dsh-eac-market-core-0.1.6.tgz",
+    "sha256": "e2803c4d092c225d4cd8e203713634977d0b4d2f6675ee0e46704bba534f6c18",
+    "repositoryUrl": "https://raw.githubusercontent.com/look-back-lysj/deep-seek-harness-Unity/8f721279568c65c46e7aa4035728e4ea1f128117/artifacts/sha256/e2803c4d092c225d4cd8e203713634977d0b4d2f6675ee0e46704bba534f6c18/dsh-eac-market-core-0.1.6.tgz"
+  },
+  "channels": {
+    "registry": {
+      "adapterVersion": "0.1.0-mvp.17",
+      "filename": "dsh-eac-market-0.1.0-mvp.17.tgz",
+      "sha256": "a542b11e7854a20677e65d1e5b58e76aad101878ed74fb6791ca27748974c821",
+      "coreDependency": "0.1.6",
+      "published": false
+    },
+    "github": {
+      "adapterVersion": "0.1.0-mvp.17-github.1",
+      "filename": "dsh-eac-market-0.1.0-mvp.17-github.1.tgz",
+      "sha256": "41fb20c8ec070dfa83449eea00c075accc916e352dae4f2c9205574dde7d694f",
+      "coreDependency": "https://raw.githubusercontent.com/look-back-lysj/deep-seek-harness-Unity/8f721279568c65c46e7aa4035728e4ea1f128117/artifacts/sha256/e2803c4d092c225d4cd8e203713634977d0b4d2f6675ee0e46704bba534f6c18/dsh-eac-market-core-0.1.6.tgz",
+      "published": false
+    }
+  },
+  "userInstall": "Download one adapter tgz only; official DeepSeek Harness resolves Core and enables the bundle."
+}
