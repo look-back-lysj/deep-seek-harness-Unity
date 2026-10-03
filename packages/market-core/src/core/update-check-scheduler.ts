@@ -322,4 +322,3 @@ export class UpdateCheckScheduler {
 }
 
 export const UPDATE_CHECK_SCHEDULE_PATH = PATH
-

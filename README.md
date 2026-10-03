@@ -6,14 +6,14 @@
 
 ## 当前状态
 
-- 源码候选：`@dsh-eac/market@0.1.0-mvp.11`
-- 源码候选：`@dsh-eac/market-core@0.1.1`
+- 源码候选：`@dsh-eac/market@0.1.0-mvp.17`
+- 源码候选：`@dsh-eac/market-core@0.1.6`
 - Core API：`1.0.0`
 - 页面通信协议：`2.0.0`
 - 目标宿主：官方 DSH `0.2.0-rc.1` / Windows x64
 - 当前正式可安装版：`0.1.0-mvp.9` 单包
 
-`mvp.11` 和 Core `0.1.1` 仍是源码候选，不是用户下载地址。双包已经完成本地测试源空缓存安装、官方 Web 加载和作者草稿保存验证；公网 Core 来源、官方 Desktop 全新安装、旧版升级和跨平台仍需独立验收。
+`mvp.17` 和 Core `0.1.6` 已生成 Registry / GitHub 双通道候选；Registry 通道仍需发布 Core 后才能供普通用户安装。双包已经完成本地测试源空缓存安装、官方 Web 加载和作者草稿保存验证；公网 Core 来源、官方 Desktop 全新安装、旧版升级和跨平台仍需独立验收。
 
 ## 协作者从这里开始
 
@@ -27,17 +27,23 @@
 
 后端协作必须遵守：Core 不依赖 React/DOM；Client 不重复实现目录、安装计划或官方管理器；`CatalogSnapshot.discovery` 是可选投影，缺少真实推荐、评分或媒体数据时不生成假数据；`failed`、`unknown`、`restart-required` 等结果必须保留。
 
-## 正式安装
+## 双通道候选安装
 
-普通用户只安装正式发行版，不使用源码候选、协作分支或仓库首页地址。当前正式包为 `0.1.0-mvp.9`：
+普通用户只下载一个前端插件包。官方 DeepSeek Harness 会根据包内依赖自动下载 Core，并在安装后启用前端 bundle。
 
-[打开 Gitee 最新发行说明](https://gitee.com/flowing-shadows-like-scenes/deep-seek-harness-unity-mirror)
+### A：npm Registry 通道
 
-```text
-https://gitee.com/flowing-shadows-like-scenes/deep-seek-harness-unity-mirror/raw/dbeb4b7f0e655f7bdd299a8e40d59af83f0e7da0/artifacts/sha256/a8856180264fea4ba949ac6505c10a71bbf512cfa0dda253992994711904be7c/dsh-eac-market-0.1.0-mvp.9.tgz
-```
+- 前端：`@dsh-eac/market@0.1.0-mvp.17`
+- 自动依赖：`@dsh-eac/market-core@0.1.6`
+- 状态：候选包已生成；Core 发布到 npm Registry 后才能正式使用。
 
-把固定地址粘贴到官方 DSH 的「插件 → 添加插件」中的「包名或地址」，安装后点击「立即启用」，再完整退出并重新启动 DSH。市场主导航为「发现 / 全部插件 / 我的插件」。双包正式发布前，不要把 `@dsh-eac/market-core` 单独填入官方插件安装框。
+### B：GitHub 固定地址通道
+
+- 前端：`@dsh-eac/market@0.1.0-mvp.17-github.1`
+- 自动依赖：GitHub 固定 commit 中的 Core `0.1.6` 内容寻址文件
+- 前端包：`releases/0.1.0-mvp.17-dual/dsh-eac-market-0.1.0-mvp.17-github.1.tgz`
+
+两个通道都只需要把一个前端 `.tgz` 填入官方 DSH 的「插件 → 添加插件」。不要单独安装 Core。安装后完整退出并重新启动 DSH。
 
 ## 代码边界
 
@@ -70,7 +76,7 @@ pnpm check
 pnpm typecheck
 ```
 
-双包候选必须通过隔离发行脚本准备，并明确 Core 的固定来源：
+Registry / GitHub 双通道候选必须分别通过隔离发行脚本准备，并明确 Core 的固定来源：
 
 ```powershell
 pnpm pack:release --out-dir D:/eac-market-verify/release-candidate --core-url "https://发行主机/固定提交/artifacts/sha256/{sha256}/{filename}"

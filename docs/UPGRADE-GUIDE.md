@@ -1,10 +1,10 @@
 # EAC 市场最新版升级指南
 
-当前源码候选：桌面适配器 `@dsh-eac/market@0.1.0-mvp.11`，核心包 `@dsh-eac/market-core@0.1.1`。双包尚未正式发布；当前可安装发行版仍为 `0.1.0-mvp.9`。本文件是当前唯一升级操作指南，历史报告用于追溯，不作为当前安装说明。
+当前源码候选：桌面适配器 `@dsh-eac/market@0.1.0-mvp.17`，核心包 `@dsh-eac/market-core@0.1.6`；同时提供 Registry 与 GitHub 固定地址双通道候选。双包尚未正式发布；当前可安装发行版仍为 `0.1.0-mvp.9`。本文件是当前唯一升级操作指南，历史报告用于追溯，不作为当前安装说明。
 
 ## 2026-10-02 本机方案 A 修复候选
 
-market mvp.11 / Core 0.1.1 已通过串行构建、736 项测试（另 2 项固定协议跳过）、类型与包边界；合成浏览器 48 项通过。此次未增加公开 Remote/G0 合同，也未授权旧皮肤兼容或改变其他用户插件。
+market mvp.17 / Core 0.1.6 已通过串行构建、736 项测试（另 2 项固定协议跳过）、类型与包边界；合成浏览器 48 项通过。此次未增加公开 Remote/G0 合同，也未授权旧皮肤兼容或改变其他用户插件。
 
 本机包已准备在 D:/eac-market-user-trial/20261002-175408-fixA/packages/，已按用户确认覆盖并正常重启：真实官方首页海报/读取通过，但实际安装预检仍被四个旧皮肤相关身份阻断，不能算完整修复验收。adapter 绑定此目录的 Core tgz，安装后试用期间不得移动/删除该目录；它不是公网发行包。官方 desktop Profile 必须通过 Electron 插件管理器安装，不可用 CLI 绕过 desktop guard。正式用户入口仍是下文 mvp.9，不以本机候选替换。
 
@@ -71,7 +71,7 @@ pnpm pack:release --out-dir D:/eac-market-verify/release-candidate --core-url "h
 
 上面的 HTTPS 地址是参数示例，必须替换为实际固定地址。也可用 `--registry-core` 生成精确版本依赖候选，但该参数不检查公网包仓库是否已发布 core。发行脚本只准备候选，不上传文件、不修改 npm 配置，也不证明远端可用。官方 DSH 的 `workspace:*` peer 必须保留，只有本地 core 依赖会在隔离 staging 中转换。
 
-实际官方安装可使用：
+双通道候选位于 `releases/0.1.0-mvp.17-dual/`。A 通道使用 `--registry-core`，B 通道使用固定 GitHub commit 的 `--core-url`；用户始终只安装 adapter。实际官方安装可使用：
 
 ```powershell
 node scripts/verify-split-install.mjs "D:/实际官方解包runtime目录" "D:/eac-market-verify/全新输出目录"
