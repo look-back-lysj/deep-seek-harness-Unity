@@ -17,13 +17,14 @@
 
 ## 必读顺序
 
-1. [最新版升级指南](../UPGRADE-GUIDE.md)：当前版本、构建、发布、回退和证据规则。
-2. [Core / Desktop Adapter 底座指南](../CORE-ADAPTER-GUIDE.md)：两包职责、公开 API、协议和所有权边界。
-3. [后端协作者指南](BACKEND-CONTRIBUTOR-GUIDE-2026-09-30.md)：Core、Host、目录、适配器的可执行接入规则。
-4. [Client 维护边界](../../packages/market/src/client/README.md)：前端只能消费现有 Remote，不重复实现业务规则。
-5. [当前交互审查](INTERACTION-AUDIT-2026-09-30.md)：已完成的交互收口、统一动作状态和未验宿主边界。
-6. [UI 重构合同](UI-REBUILD-CONTRACT-2026-09-30.md)：发现页、全部插件、动效、兼容性和不变边界。
-7. [协作约定](NEXT-AGENT-PLAYBOOK.md)：文件 owner、合同先行、验证串行和交接格式。
+1. [近期改动与协作总结](COLLABORATION-SUMMARY-2026-10-03.md)：2026-09-28 至 2026-10-03 的改动、问题根因、发行状态和交接优先级。
+2. [最新版升级指南](../UPGRADE-GUIDE.md)：当前版本、构建、发布、回退和证据规则。
+3. [Core / Desktop Adapter 底座指南](../CORE-ADAPTER-GUIDE.md)：两包职责、公开 API、协议和所有权边界。
+4. [后端协作者指南](BACKEND-CONTRIBUTOR-GUIDE-2026-09-30.md)：Core、Host、目录、适配器的可执行接入规则。
+5. [Client 维护边界](../../packages/market/src/client/README.md)：前端只能消费现有 Remote，不重复实现业务规则。
+6. [当前交互审查](INTERACTION-AUDIT-2026-09-30.md)：已完成的交互收口、统一动作状态和未验宿主边界。
+7. [UI 重构合同](UI-REBUILD-CONTRACT-2026-09-30.md)：发现页、全部插件、动效、兼容性和不变边界。
+8. [协作约定](NEXT-AGENT-PLAYBOOK.md)：文件 owner、合同先行、验证串行和交接格式。
 
 ## 安装策略（2026-10-02 本轮调整）
 

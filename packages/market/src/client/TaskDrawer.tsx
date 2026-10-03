@@ -274,7 +274,7 @@ function TaskCard({ task, remote, onChanged, onRefresh, onOpenOfficialPlugins }:
       <div className="eac-market__button-row"><Button variant="outline" disabled={!!busy} onClick={() => { setApplied(undefined); setAnalysis(undefined); confirmationKeys.current = { first: '', second: '' }; setFeedback(idleActionFeedback()) }}>取消此方案</Button><Button variant="primary" disabled={!!busy} onClick={() => void run('确认影响', () => applyAi(true))}>已了解影响，再次确认执行</Button></div>
     </section>}
     {applied && <p role="status">{applyNames[applied.status]}{applied.error ? `：${applied.error}` : ''}</p>}
-    <details onToggle={(event) => { if (event.currentTarget.open && eventLog.status === 'idle') void loadTaskEvents() }}>
+    <details className="eac-market__task-history" aria-label="任务记录" onToggle={(event) => { if (event.currentTarget.open && eventLog.status === 'idle') void loadTaskEvents() }}>
       <summary>查看任务记录（已载入 {visibleEvents.length} 条）</summary>
       <p>任务编号：{task.taskId} · 后台下一步：{task.nextAction}</p>
       {eventLog.status === 'loading' && <p role="status">正在读取任务记录…</p>}
