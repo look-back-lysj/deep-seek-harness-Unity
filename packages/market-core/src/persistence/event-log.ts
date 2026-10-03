@@ -112,9 +112,10 @@ export class SegmentedEventLog implements TaskEventLogPort {
     events.sort((left, right) => left.sequence - right.sequence)
     const metaData = await this.files.read(`${this.paths(taskId)}/event-log-meta.json`)
     const truncated = torn || (metaData !== undefined && parseMeta(decodeJson(metaData)).truncated)
+    const pageEvents = events.slice(0, Math.max(0, limit))
     return {
-      events: events.slice(0, Math.max(0, limit)),
-      nextSequence: (events.at(-1)?.sequence ?? afterSequence) + 1,
+      events: pageEvents,
+      nextSequence: (pageEvents.at(-1)?.sequence ?? afterSequence) + 1,
       truncated,
     }
   }

@@ -14,6 +14,8 @@ import type {
 export interface HostWriteActivity {
   readonly stable: boolean
   readonly unknownSharedImpact: boolean
+  /** A real writer/run-record barrier. Inventory uncertainty alone is not a write barrier. */
+  readonly writeBarrier?: boolean
   readonly reason?: string
 }
 

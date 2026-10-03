@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { InstallTaskManager } from '../../packages/market-core/src/core/task-manager.ts'
+import { SegmentedEventLog } from '../../packages/market-core/src/persistence/event-log.ts'
+import { event, InMemoryFiles, makeTaskRecord } from '../persistence/helpers.ts'
 import {
   approvalDigest,
   FakeArtifactPort,
@@ -146,14 +148,25 @@ describe('InstallTaskManager', () => {
     expect(host.calls[1]?.approvedBuilds).toEqual(['esbuild', 'sharp'])
   })
 
-  it('rechecks before write and does not treat unstable activity as success', async () => {
+  it('cancels a task safely when a real writer blocks before any install request', async () => {
+    const bundle = await makeBundle({ plugins: [{ packageName: 'a', version: '1.0.0' }] })
+    const host = new FakeHost()
+    host.writeBarrier = true
+    const { manager, taskId } = await makeManager(bundle, host)
+    const task = await waitForTask(manager, taskId, (state) => state.status === 'cancelled')
+    expect(task.items[0]?.installOutcome).toBe('cancelled')
+    expect(host.calls).toHaveLength(0)
+  })
+
+  it('does not let unrelated inventory uncertainty block or poison installation', async () => {
     const bundle = await makeBundle({ plugins: [{ packageName: 'a', version: '1.0.0' }] })
     const host = new FakeHost()
     host.stable = false
+    host.unknownSharedImpact = true
     const { manager, taskId } = await makeManager(bundle, host)
-    const task = await waitForTask(manager, taskId, (state) => state.status === 'needs-attention')
-    expect(task.items[0]?.installOutcome).toBe('unknown')
-    expect(host.calls).toHaveLength(0)
+    const task = await waitForTask(manager, taskId, (state) => state.status === 'completed')
+    expect(task.items[0]?.installOutcome).toBe('applied')
+    expect(host.calls).toHaveLength(1)
   })
 
   it('reports Host unknown as needs-attention, never applied', async () => {
@@ -226,6 +239,62 @@ describe('InstallTaskManager', () => {
     expect(task.items[0]?.status).toBe('failed')
     expect(task.items[0]?.error).toBe('disk-full')
     expect(host.calls).toHaveLength(0)
+  })
+
+  it('keeps the merged event cursor at the page boundary, not the task tail', async () => {
+    const bundle = await makeBundle({ plugins: [{ packageName: 'events', version: '1.0.0' }] })
+    const record = await makeTaskRecord(bundle)
+    const store = new InMemoryTaskStore()
+    const eventLog = new SegmentedEventLog(new InMemoryFiles(), 4096)
+    const history = Array.from({ length: 210 }, (_, sequence) => event(sequence))
+    // The final five events exist only in the summary; the rest overlap the log.
+    for (const item of history.slice(0, 205)) await eventLog.append(record.task.taskId, item)
+    await store.put({
+      ...record,
+      task: { ...record.task, events: history.slice(180) },
+      nextSequence: history.length,
+      eventLogTruncated: true,
+    })
+    const deps = { host: new FakeHost(), artifacts: new FakeArtifactPort(), store, locks: new InMemoryLocks() }
+    const manager = new InstallTaskManager({ ...deps, events: eventLog })
+
+    const pages = []
+    let afterSequence = -1
+    for (let pageIndex = 0; pageIndex < 3; pageIndex += 1) {
+      const page = await manager.events(record.task.taskId, afterSequence, 100)
+      pages.push(page)
+      afterSequence = page.nextSequence - 1
+    }
+
+    expect(pages.map((page) => page.events.map((item) => item.sequence))).toEqual([
+      Array.from({ length: 100 }, (_, index) => index),
+      Array.from({ length: 100 }, (_, index) => index + 100),
+      Array.from({ length: 10 }, (_, index) => index + 200),
+    ])
+    expect(pages.map((page) => page.nextSequence)).toEqual([100, 200, 210])
+    expect(pages.every((page) => page.truncated)).toBe(true)
+    const sequences = pages.flatMap((page) => page.events.map((item) => item.sequence))
+    expect(sequences).toEqual(Array.from({ length: 210 }, (_, index) => index))
+    expect(new Set(sequences).size).toBe(210)
+    expect((await eventLog.read(record.task.taskId, 199, 100)).nextSequence).toBe(205)
+    expect(await manager.events(record.task.taskId, 209, 100)).toEqual({
+      events: [], nextSequence: 210, truncated: true,
+    })
+    expect(await manager.events(record.task.taskId, 99, 0)).toEqual({
+      events: [], nextSequence: 100, truncated: true,
+    })
+
+    // The summary-only fallback obeys the same page-local cursor contract.
+    const fallback = new InstallTaskManager(deps)
+    const fallbackPage = await fallback.events(record.task.taskId, -1, 10)
+    expect(fallbackPage.events.map((item) => item.sequence)).toEqual(Array.from({ length: 10 }, (_, index) => index + 180))
+    expect(fallbackPage.nextSequence).toBe(190)
+    const fallbackNext = await fallback.events(record.task.taskId, fallbackPage.nextSequence - 1, 10)
+    expect(fallbackNext.events.map((item) => item.sequence)).toEqual(Array.from({ length: 10 }, (_, index) => index + 190))
+    expect(fallbackNext.nextSequence).toBe(200)
+    expect(await fallback.events(record.task.taskId, 209, 100)).toEqual({
+      events: [], nextSequence: 210, truncated: true,
+    })
   })
 
   it('keeps a too-late cancellation as running until the Host install conclusion', async () => {

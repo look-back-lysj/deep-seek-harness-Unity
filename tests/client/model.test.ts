@@ -61,7 +61,7 @@ describe('market UI model', () => {
 
   it('统一插件动作状态：已安装、未验证、硬阻断和可安装分别给出下一步', () => {
     expect(pluginActionState(pluginFixtures.verified, [], { canInstall: true, canManage: false })).toMatchObject({ kind: 'install', label: '查看安装方案', disabled: false })
-    expect(pluginActionState(pluginFixtures.unverified, [], { canInstall: true, canManage: false })).toMatchObject({ kind: 'confirm', label: '确认安装条件', disabled: false })
+    expect(pluginActionState(pluginFixtures.unverified, [], { canInstall: true, canManage: false })).toMatchObject({ kind: 'confirm', label: '查看安装方案', disabled: false })
     expect(pluginActionState(pluginFixtures.blocked, [], { canInstall: true, canManage: false })).toMatchObject({ kind: 'blocked', label: '暂不可安装', disabled: true })
     expect(pluginActionState(pluginFixtures.verified, inventoryFixture.items, { canInstall: true, canManage: false })).toMatchObject({ kind: 'manage', label: '已安装', disabled: true })
     expect(pluginActionState(pluginFixtures.verified, [], { canInstall: false, canManage: false })).toMatchObject({ kind: 'runtime-unavailable', label: '暂不可安装', disabled: true })

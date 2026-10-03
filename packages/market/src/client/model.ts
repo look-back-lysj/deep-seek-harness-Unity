@@ -10,6 +10,7 @@ import type {
   CatalogPlugin,
   CatalogPresentation,
   CatalogSnapshot,
+  CatalogRefreshRequest,
   CatalogRefreshView,
   CatalogSourceView, CoreMaintenanceSnapshot, UpdateCheckResult, UpdatePolicySnapshot, UpdatePolicySaveRequest,
   CatalogRecommendation,
@@ -105,7 +106,7 @@ export interface MarketRemote {
   transferChunk?(request: TransferChunkRequest): Promise<TransferResult>
   transferRead?(request: TransferChunkReadRequest): Promise<TransferChunkReadResult>
   transferDispose?(request: TransferDisposeRequest): Promise<boolean>
-  refreshCatalog?(): Promise<CatalogRefreshView>
+  refreshCatalog?(request?: CatalogRefreshRequest): Promise<CatalogRefreshView>
   catalogSources?(): Promise<readonly CatalogSourceView[]>
   agentForgeRefresh?(request: { readonly sourceId: string }): Promise<CatalogRefreshView>
   maintenanceStatus?(): Promise<CoreMaintenanceSnapshot>
@@ -239,9 +240,9 @@ export function pluginActionState(plugin: CatalogPlugin, inventory: readonly Inv
       : { kind: 'manage', label: '已安装', disabled: true, reason: '已安装，请到“我的插件”管理。', installed }
   }
   if (options.canInstall === false) return { kind: 'runtime-unavailable', label: '暂不可安装', disabled: true, reason: '当前市场未提供安装服务。' }
-  if (plugin.verification === 'hard-incompatible') return { kind: 'blocked', label: '暂不可安装', disabled: true, reason: `与当前环境已知不兼容，不能安装。${plugin.installability === 'bundle-installable' ? '' : ' ' + installabilityLabel(plugin.installability) + '。'}` }
+  if (plugin.verification === 'hard-incompatible' && plugin.installability === 'bundle-installable') return { kind: 'confirm', label: '查看安装方案', disabled: false, reason: '已知兼容性风险；安装结果由官方安装器和上游插件负责。' }
   if (plugin.installability !== 'bundle-installable') return { kind: 'blocked', label: '暂不可安装', disabled: true, reason: installabilityLabel(plugin.installability) + '。' }
-  if (plugin.verification === 'unverified' || plugin.verification === 'unknown') return { kind: 'confirm', label: '确认安装条件', disabled: false, reason: '安装前需要明确确认当前验证状态。' }
+  if (plugin.verification === 'unverified' || plugin.verification === 'unknown') return { kind: 'confirm', label: '查看安装方案', disabled: false, reason: '兼容性尚未验证；安装结果由官方安装器和上游插件负责。' }
   return { kind: 'install', label: '查看安装方案', disabled: false }
 }
 

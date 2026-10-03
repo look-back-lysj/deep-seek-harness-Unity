@@ -33,7 +33,7 @@ importers:
   packages/market:
     dependencies:
       '@dsh-eac/market-core':
-        specifier: workspace:0.1.0
+        specifier: workspace:0.1.6
         version: link:../market-core
       zod:
         specifier: ^4.4.3

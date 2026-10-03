@@ -11,12 +11,9 @@ export interface PlanReview {
 /** Projects a Host plan for confirmation, without editing the sealed plan or
  * choosing a subset to execute. Partial execution requires the Host to mark unsafe
  * items blocked. The executor remains the authority for dependency execution. */
-export function reviewInstallPlan(plan: InstallPlan, group: boolean, edges: readonly PackExecutionEdge[], consent: boolean): PlanReview {
+export function reviewInstallPlan(plan: InstallPlan, group: boolean, edges: readonly PackExecutionEdge[], _consent = false): PlanReview {
   const skipped = plan.items.filter((item) => item.action === 'blocked')
-  const unsafe = plan.items.filter((item) => item.action !== 'blocked' && (
-    item.blockers.length > 0 || item.verification === 'hard-incompatible'
-    || (!consent && (item.verification === 'unverified' || item.verification === 'unknown'))
-  ))
+  const unsafe = plan.items.filter((item) => item.action !== 'blocked' && item.blockers.length > 0)
   const blockedIds = new Set(skipped.map((item) => item.pluginId))
   const paused = new Set<string>()
   // Kept items have no install step. Do not invent dependency pauses for them.
@@ -38,8 +35,6 @@ export function reviewInstallPlan(plan: InstallPlan, group: boolean, edges: read
 }
 
 export function blockerExplanation(item: InstallPlanItem): string {
-  if (item.verification === 'hard-incompatible') return '已知不兼容，不会执行。'
-  if (item.blockers.some((reason) => /^verification:.*-not-confirmed$/.test(reason))) return '尚未同意试装，不会执行。'
   if (item.blockers.includes('artifact:not-installable')) return '缺少符合安装条件的制品，不会执行。'
   return '预检已阻止此项，不会执行；可展开查看具体原因。'
 }

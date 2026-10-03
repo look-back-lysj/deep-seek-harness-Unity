@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import type { CatalogRefreshView, InventorySnapshot, TaskState } from '@dsh-eac/market-core/contracts'
+import type { CatalogRefreshRequest, CatalogRefreshView, InventorySnapshot, TaskState } from '@dsh-eac/market-core/contracts'
 import { assertCompatibleHello, ClientCompatibilityError, isTaskSettled, taskStateIsNewer, type LoadState, type MarketRemote } from './model.ts'
 
 export class RequestTimeout extends Error {}
@@ -187,11 +187,11 @@ export class MarketDataController {
     })()
     try { await this.inventoryRun } finally { this.inventoryRun = undefined }
   }
-  async refreshCatalog(): Promise<CatalogRefreshView> {
+  async refreshCatalog(request?: CatalogRefreshRequest): Promise<CatalogRefreshView> {
     if (this.remote.refreshCatalog === undefined) throw new Error('当前宿主没有目录刷新能力。')
     const version = ++this.refreshVersion
     const epoch = this.epoch
-    const result = await this.read(this.remote.refreshCatalog(), '目录刷新')
+    const result = await this.read(request === undefined ? this.remote.refreshCatalog() : this.remote.refreshCatalog(request), '目录刷新')
     const ready = this.ready()
     if (this.stopped || epoch !== this.epoch || version !== this.refreshVersion || ready === undefined) throw new Error('目录请求已失效，请重新读取。')
     this.publish({ state: { ...ready, catalog: result.current } })

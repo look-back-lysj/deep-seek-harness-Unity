@@ -34,7 +34,8 @@ const writes = [
   ['planCreate', 'createPlan'], ['taskStart', 'startTask'], ['taskApproveBuilds', 'approveTask'],
   ['taskResume', 'resumeTask'], ['taskCancel', 'cancelTask'], ['pluginSetEnabled', 'setPluginEnabled'],
   ['pluginRemove', 'removePlugin'], ['catalogRefresh', 'refreshCatalog'],
-  ['authorDraftSave', 'saveDraft'], ['authorDraftDelete', 'authorDraftDelete'],
+  ['agentForgeRefresh', 'refreshAgentForge'], ['updatePolicySave', 'saveUpdatePolicy'],
+  ['authorDraftSave', 'saveDraft'], ['authorDraftDelete', 'deleteDraft'],
   ['authorReadmeImport', 'importReadme'], ['authorReadmePreview', 'previewReadme'],
   ['authorReadmeApplyPreview', 'applyReadmePreview'], ['authorTransferBegin', 'transferBegin'],
   ['authorTransferChunk', 'transferChunk'], ['authorTransferDispose', 'transferDispose'],
@@ -252,6 +253,7 @@ describe('真实客户端 facade：每次副作用之前协商当前连接', () 
 describe('真实客户端 facade：读取不会误触写入防护', () => {
   const reads = [
     ['catalog', 'catalog'], ['inventory', 'inventory'], ['taskList', 'listTasks'],
+    ['catalogSources', 'listCatalogSources'], ['maintenanceStatus', 'getMaintenanceStatus'], ['updatePolicyGet', 'getUpdatePolicy'], ['checkUpdates', 'checkUpdates'],
     ['taskGet', 'getTask'], ['taskEvents', 'taskEvents'], ['authorDraftList', 'listDrafts'],
     ['authorDraftGet', 'getDraft'], ['authorMediaRead', 'readMedia'],
     ['authorTransferRead', 'transferRead'], ['diagnosticsExport', 'exportDiagnostic'],
@@ -264,6 +266,34 @@ describe('真实客户端 facade：读取不会误触写入防护', () => {
       expect(raw.hello).not.toHaveBeenCalled()
       expect(raw.clientConnect).not.toHaveBeenCalled()
       expect(read).toHaveBeenCalledExactlyOnceWith({ test: 'read' })
+    }
+  })
+
+  it('仅在 checkUpdates 要刷新来源时执行写入握手；当前目录只读比较不握手', async () => {
+    const read = vi.fn(async (value?: unknown) => ({ ok: true, value: value ?? 'read-only-check' }))
+    const raw = connection({ checkUpdates: read })
+    const remote = facade(raw)
+    await expect(remote.checkUpdates!({ sourceId: 'configured-source', refreshFirst: false })).resolves.toEqual({ sourceId: 'configured-source', refreshFirst: false })
+    expect(raw.hello).not.toHaveBeenCalled()
+    expect(raw.clientConnect).not.toHaveBeenCalled()
+    await expect(remote.checkUpdates!({ sourceId: 'configured-source', refreshFirst: true })).resolves.toEqual({ sourceId: 'configured-source', refreshFirst: true })
+    expect(raw.hello).toHaveBeenCalledOnce()
+    expect(raw.clientConnect).toHaveBeenCalledOnce()
+    expect(read).toHaveBeenCalledTimes(2)
+  })
+
+  it.each([
+    ['catalogSources', 'listCatalogSources'],
+    ['maintenanceStatus', 'getMaintenanceStatus'],
+    ['updatePolicyGet', 'getUpdatePolicy'],
+  ] as const)('%s 及设置别名可在旧后台读取且不带多余参数', async (wire, alias) => {
+    for (const name of new Set([wire, alias])) {
+      const read = vi.fn(async () => ({ ok: true, value: 'test-read' }))
+      const raw = connection({ [wire]: read })
+      await expect(facade(raw)[name]!()).resolves.toBe('test-read')
+      expect(read).toHaveBeenCalledExactlyOnceWith()
+      expect(raw.hello).not.toHaveBeenCalled()
+      expect(raw.clientConnect).not.toHaveBeenCalled()
     }
   })
 

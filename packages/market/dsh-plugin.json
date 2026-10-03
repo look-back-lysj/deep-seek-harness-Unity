@@ -3,7 +3,7 @@
   "manifestVersion": "0.15",
   "id": "dev.dsh-eac.market",
   "name": "@dsh-eac/market",
-  "version": "0.1.0-mvp.10",
+  "version": "0.1.0-mvp.17",
   "facets": {
     "host": {
       "entry": "lib/index.js",

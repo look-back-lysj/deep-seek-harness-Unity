@@ -72,6 +72,7 @@ import { InstallTaskManager } from '../core/task-manager.ts'
 import { buildMaintenanceSnapshot } from '../core/maintenance-state.ts'
 import { MaintenanceIntentStore } from '../core/maintenance-intent-store.ts'
 import { compareInstalledUpdates } from '../core/update-check.ts'
+import { UpdateCheckScheduler } from '../core/update-check-scheduler.ts'
 import { UpdatePolicyStore } from '../core/update-policy-store.ts'
 import { readAgentForgeSource, projectAgentForgeCatalog, type AgentForgeSourceOptions, type AgentForgeVerifiedArtifact } from '../catalog/agent-forge.ts'
 import { encodeJson } from '../persistence/files.ts'
@@ -154,6 +155,7 @@ export class MarketRuntime {
   private readonly agentForgeCatalogs = new Map<string, CatalogRepository>()
   private readonly agentForgeStatus = new Map<string, CatalogSourceView['status']>()
   private readonly updatePolicy: UpdatePolicyStore
+  private readonly updateCheckScheduler: UpdateCheckScheduler
   private readonly agentForgeSourceOptions: AgentForgeSourceOptions
   private readonly files: NodePersistenceFiles
   private readonly taskStore: JsonTaskStore
@@ -215,6 +217,13 @@ export class MarketRuntime {
       this.agentForgeCatalogs.set(source.id, new CatalogRepository(emptyCatalog, join(dataDirectory, 'catalog-sources', source.id)))
     }
     this.updatePolicy = new UpdatePolicyStore(this.files, locks)
+    this.updateCheckScheduler = new UpdateCheckScheduler({
+      files: this.files,
+      locks,
+      getPolicy: () => this.updatePolicy.get(),
+      checkUpdates: request => this.checkUpdates(request),
+      onError: error => console.error('[eac-market/host] automatic update check failed', error),
+    })
     const testLocalSources = (process.env.EAC_MARKET_TEST_ALLOW_LOCAL_SOURCES ?? '')
       .split(';').map((value) => value.trim()).filter((value) => value.length > 0)
     const cache = new ArtifactCache({
@@ -277,6 +286,16 @@ export class MarketRuntime {
         this.recoveryError = error
         console.error('[eac-market/host] interrupted task recovery failed', error)
       })
+
+    // Cordis binds effects to the owning plugin Fiber and awaits the disposer
+    // during Fiber disposal. Minimal non-Cordis unit-test contexts do not own
+    // lifecycle effects, so they must not start an orphan background timer.
+    if (typeof this.context.effect === 'function') {
+      this.context.effect(async () => {
+        await this.updateCheckScheduler.start()
+        return () => this.updateCheckScheduler.stop()
+      }, 'eac-market:auto-update-check')
+    }
   }
 
   private async ensureWriteReady(): Promise<void> {
@@ -427,9 +446,10 @@ export class MarketRuntime {
       await this.ensureWriteReady()
       const snapshot = this.catalogView()
       const state = await this.host.readState()
-      if (!state.activity.stable || state.activity.unknownSharedImpact || state.inventory.unknownItems.length || state.activeRequests.length) {
-        return { status: 'blocked', reason: '当前库存或安装活动无法完整核实，请稍后重新预检', blockers: ['inventory:unverified-state'] }
-      }
+      // Native-like installation policy: unrelated inventory uncertainty is an
+      // advisory condition, not a global preflight blocker. Target identity,
+      // frozen delivery and actual write safety are checked by the planner/task
+      // manager and the official installer.
       const facts = snapshot.plugins.filter(plugin => request.selections.some(selection => selection.pluginId === plugin.id && selection.targetVersion === plugin.version)).map((plugin) => ({
         pluginId: plugin.id,
         packageName: plugin.packageName,
@@ -647,7 +667,9 @@ export class MarketRuntime {
 
   async updatePolicySave(request: UpdatePolicySaveRequest): Promise<UpdatePolicySnapshot> {
     await this.ensureWriteReady()
-    return this.updatePolicy.save(request)
+    const saved = await this.updatePolicy.save(request)
+    await this.updateCheckScheduler.refresh()
+    return saved
   }
 
   authorDraftList(): readonly AuthorDraft[] {
@@ -801,7 +823,8 @@ export class MarketRuntime {
       const allowed = new Set(request.packageName ? [request.packageName] : selectedTask?.items.map(item => item.packageName))
       if (!allowed.has(action.packageName) || isProtectedMarketPackage(action.packageName)) return { status: 'blocked', reason: '建议不属于本次所选目标，或目标是市场自身' }
       const state = await this.host.readState()
-      if (!state.activity.stable || state.activity.unknownSharedImpact || state.inventory.unknownItems.length || state.activeRequests.length) return { status: 'blocked', reason: '当前安装状态尚未核实，暂不能生成可执行建议' }
+      const targetUnknown = state.inventory.unknownItems.some(issue => issue === `bundle-version:${action.packageName}` || issue.startsWith(`bundle:${action.packageName}:`))
+      if (state.activity.writeBarrier === true || state.activeRequests.length > 0 || targetUnknown) return { status: 'blocked', reason: '目标或活动写入状态尚未核实，暂不能生成可执行建议' }
       const current = this.targetState(state.inventory, action.packageName)
       if (this.fingerprint(current) !== this.fingerprint(this.targetState(before.inventory, action.packageName))) return { status: 'blocked', reason: '分析期间插件状态变化，请重新分析' }
       if (current?.readOnlyReason) return { status: 'blocked', reason: '该项目应通过官方管理入口处理' }
@@ -874,7 +897,8 @@ export class MarketRuntime {
         if (proposal.actions.length !== 1 || isProtectedMarketPackage(action.packageName)) return { status: 'blocked', changed: false, error: '动作清单无效' }
         const state = await this.host.readState()
         const current = this.targetState(state.inventory, action.packageName)
-        if (!state.activity.stable || state.activity.unknownSharedImpact || state.inventory.unknownItems.length || state.activeRequests.length
+        const targetUnknown = state.inventory.unknownItems.some(issue => issue === `bundle-version:${action.packageName}` || issue.startsWith(`bundle:${action.packageName}:`))
+        if (state.activity.writeBarrier === true || state.activeRequests.length > 0 || targetUnknown
           || this.fingerprint(current) !== saved.inventoryDigest
           || this.fingerprint(this.targetDelivery(this.targetRelease(proposal))) !== saved.deliveryDigest) return { status: 'blocked', changed: false, error: '确认前环境、版本、启停或来源已变化，请重新分析' }
         if (action.requiresSecondConfirmation) {

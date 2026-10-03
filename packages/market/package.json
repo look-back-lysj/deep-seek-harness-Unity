@@ -1,6 +1,6 @@
 {
   "name": "@dsh-eac/market",
-  "version": "0.1.0-mvp.10",
+  "version": "0.1.0-mvp.17",
   "description": "EAC desktop market adapter for official DeepSeek Harness",
   "type": "module",
   "main": "./lib/index.js",
@@ -78,7 +78,7 @@
   },
   "dependencies": {
     "zod": "^4.4.3",
-    "@dsh-eac/market-core": "workspace:0.1.0"
+    "@dsh-eac/market-core": "workspace:0.1.6"
   },
   "peerDependencies": {
     "@deepseek-ai/cordis": "~4.0.4",

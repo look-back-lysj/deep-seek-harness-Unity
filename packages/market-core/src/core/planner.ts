@@ -35,12 +35,6 @@ let planSequence = 0
 import { compareVersions, validVersion } from './semver.ts'
 export { compareVersions } from './semver.ts'
 
-function verificationBlockers(verification: string | undefined, consent: boolean): string[] {
-  if (verification === 'hard-incompatible') return ['verification:hard-incompatible']
-  if (verification !== 'verified' && consent !== true) return [`verification:${verification ?? 'unknown'}-not-confirmed`]
-  return []
-}
-
 function frozenDeliveries(context: PlanCatalogContext): Pick<PlanBundle, 'deliveries'> {
   const selected = new Set(context.selections.map(item => item.pluginId))
   const deliveries = context.plugins.filter(fact => selected.has(fact.pluginId) && fact.delivery !== undefined)
@@ -185,7 +179,6 @@ export async function createPlanBundle(
       if (fact === undefined || fact.packageName !== selection.packageName || fact.version !== selection.targetVersion || fact.artifactDigest !== selection.targetDigest) {
         blockers.push('catalog:selection-fact-mismatch')
       }
-      blockers.push(...verificationBlockers(fact?.verification, selection.tryUnverified))
       if (fact?.installable === false) blockers.push('artifact:not-installable')
       const localIdentity = context.localIdentityByPackage?.[selection.packageName]
       const managed = context.marketManagedPackageNames?.includes(selection.packageName) === true
@@ -264,7 +257,6 @@ export async function createPlanBundle(
     if (fact === undefined || fact.packageName !== selection.packageName || fact.version !== selection.targetVersion || fact.artifactDigest !== selection.targetDigest) {
       blockers.push('catalog:selection-fact-mismatch')
     }
-    blockers.push(...verificationBlockers(fact?.verification, selection.tryUnverified))
     if (fact?.installable === false) blockers.push('artifact:not-installable')
     const localIdentity = context.localIdentityByPackage?.[selection.packageName]
     const managed = context.marketManagedPackageNames?.includes(selection.packageName) === true

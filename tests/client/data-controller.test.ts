@@ -161,6 +161,15 @@ describe('REV-10 bounded client data lifecycle', () => {
     expect(await data.refreshCatalog()).toEqual(failure)
     expect(ready(data).catalog.revision).toBe('cached')
   })
+  it('目录刷新可按已登记来源指定sourceId，并用后端返回快照更新页面', async () => {
+    const current = { ...catalogFixture, revision: 'agent-forge:source-revision' }
+    const refreshCatalog = vi.fn(async (_request?: { readonly sourceId?: string }) => ({ status: 'refreshed' as const, current }))
+    const data = controller({ ...readOnlyRemote(), refreshCatalog })
+    await data.start()
+    await expect(data.refreshCatalog({ sourceId: 'agent-forge-main' })).resolves.toMatchObject({ status: 'refreshed' })
+    expect(refreshCatalog).toHaveBeenCalledExactlyOnceWith({ sourceId: 'agent-forge-main' })
+    expect(ready(data).catalog.revision).toBe('agent-forge:source-revision')
+  })
   it('相同轮询只发一个请求，达到上限停止并可显式恢复', async () => {
     vi.useFakeTimers()
     const data = controller(readOnlyRemote(), { idleMs: 10, maxPolls: 2 }); await data.start()

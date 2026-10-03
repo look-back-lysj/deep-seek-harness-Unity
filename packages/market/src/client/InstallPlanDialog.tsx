@@ -27,7 +27,7 @@ export function planRequestFor(target: PlanTarget, inventory: readonly Inventory
       selections: collection.components.flatMap((component) => {
         const plugin = target.plugins.find((item) => item.id === component.pluginId && item.version === component.version && item.artifactDigest === component.artifactDigest)
         if (!plugin) return [] // Host rejects missing required components; never substitute a newer release.
-        return [{ ...planSelectionFor(plugin, inventory, consent), enabledIntent: isInstalled(inventory, plugin)?.bundleEnabled ?? component.enabled }]
+        return [{ ...planSelectionFor(plugin, inventory, false), enabledIntent: isInstalled(inventory, plugin)?.bundleEnabled ?? component.enabled }]
       }),
     }
   }
@@ -42,6 +42,38 @@ interface Props {
   readonly open: boolean
   readonly onClose: () => void
   readonly onStarted: (task: TaskState, reveal?: boolean) => void
+  readonly onOpenOfficialPlugins?: (() => void) | undefined
+  readonly inventoryIssues?: readonly string[] | undefined
+}
+
+/** Only safe package identities are exposed; unknown diagnostic text may contain local paths. */
+export function inventoryIssueLabel(issue: string): string {
+  const version = new RegExp('^bundle-version:((?:@[a-z0-9._-]+/)?[a-z0-9._-]+)$', 'i').exec(issue)
+  if (version?.[1]) return version[1] + '：已安装版本尚未核实。'
+  return '还有宿主状态未能核实，请到官方插件页查看。'
+}
+
+export function isEnvironmentPreflightBlock(result: PlanResult | undefined): boolean {
+  return result?.status === 'blocked' && result.blockers.includes('inventory:unverified-state')
+}
+
+/** A blocked plan is about the selected target; unrelated inventory issues are advisory. */
+export function PreflightBlockNotice({ result, onOpenOfficialPlugins, inventoryIssues = [] }: {
+  readonly result: Extract<PlanResult, { readonly status: 'blocked' }>
+  readonly onOpenOfficialPlugins?: (() => void) | undefined
+  readonly inventoryIssues?: readonly string[] | undefined
+}): React.JSX.Element {
+  const environmentBlocked = isEnvironmentPreflightBlock(result)
+  return <section role="alert" className="eac-market__notice eac-market__notice--warning">
+    <strong>{environmentBlocked ? '安装目标状态待核对' : '暂不能安装'}</strong>
+    {environmentBlocked ? <>
+      <p>市场暂时无法完整确认本次目标插件的安装状态。这不是对无关插件的风险判定。</p>
+      <p>请确认目标插件没有正在安装或卸载，然后重新预检。安装结果由官方安装器和上游插件负责，目标包身份校验仍会执行。</p>
+      {inventoryIssues.length > 0 && <ul aria-label="待核对的已安装状态">{[...new Set(inventoryIssues.map(inventoryIssueLabel))].map(label => <li key={label}>{label}</li>)}</ul>}
+      {onOpenOfficialPlugins && <Button variant="outline" onClick={onOpenOfficialPlugins}>查看官方插件页</Button>}
+    </> : <p>{result.reason}</p>}
+    <details><summary>查看预检详情</summary><p>{result.reason}</p>{result.blockers.join('；')}</details>
+  </section>
 }
 
 export function nextPreflightRetry(value: number): number {
@@ -57,7 +89,7 @@ export function UnsafePlanReview({ consentRequired, onRetry }: {
     <strong>暂不能确认安装</strong>
     <p>{consentRequired
       ? '勾选上方选项后会自动重新预检；也可以点击下方“重新预检”立即重试。'
-      : '预检仍包含未获同意或不安全的项目。请重新预检；硬性不兼容和校验失败不能绕过。'}</p>
+      : '预检仍包含实际安装问题。请重新预检；缺少制品和校验失败不能绕过。'}</p>
     <Button variant="outline" onClick={onRetry}>重新预检</Button>
   </section>
 }
@@ -68,7 +100,7 @@ export function InstallPlanDialog(props: Props): React.JSX.Element | null {
   if (!props.open || props.target === undefined) return null
   return <PlanSession key={planTargetSignature(props.target)} {...props} target={props.target} />
 }
-function PlanSession({ target, inventory, remote, onClose, onStarted }: Props & { target: PlanTarget }): React.JSX.Element {
+function PlanSession({ target, inventory, remote, onClose, onStarted, onOpenOfficialPlugins, inventoryIssues }: Props & { target: PlanTarget }): React.JSX.Element {
   const [consent, setConsent] = useState(false)
   const [result, setResult] = useState<PlanResult>()
   const [busy, setBusy] = useState<'preflight' | 'starting' | undefined>('preflight')
@@ -82,8 +114,10 @@ function PlanSession({ target, inventory, remote, onClose, onStarted }: Props & 
   const startKey = useRef('')
   const group = target.pack !== undefined || target.collection !== undefined
   const edges = target.collection?.execution.edges ?? target.pack?.execution.edges ?? []
-  const consentRequired = target.plugins.some((plugin) => ['unknown', 'unverified'].includes(plugin.verification))
-    || (result?.status === 'ready' && result.plan.items.some((item) => ['unknown', 'unverified'].includes(item.verification)))
+  // Native-like install policy: catalog verification is advisory. The final
+  // install button remains the explicit confirmation; upstream compatibility is
+  // evaluated by DeepSeek Harness/plugin authors.
+  const consentRequired = false
   const review = result?.status === 'ready' ? reviewInstallPlan(result.plan, group, edges, consent) : undefined
   const downgrades = review?.executable.filter((item) => item.action === 'downgrade') ?? []
   const missingComponents = target.collection?.components.filter((component) => !target.plugins.some((plugin) => plugin.id === component.pluginId && plugin.version === component.version && plugin.artifactDigest === component.artifactDigest)) ?? []
@@ -129,12 +163,13 @@ function PlanSession({ target, inventory, remote, onClose, onStarted }: Props & 
   }
   const blocked = !review?.canConfirm || (!group && consentRequired && !consent)
   const unsafeReady = result?.status === 'ready' && review !== undefined && review.unsafe.length > 0
-  return <Modal open onClose={() => { if (busy !== 'starting') onClose() }} title={riskStep ? '第 2 步：再次确认降级影响' : target.collection ? `安装确认：${target.collection.name}` : target.pack ? `安装确认：${target.pack.name}` : `安装确认：${target.plugin?.name ?? '所选插件'}`} closeLabel="关闭安装确认" description={riskStep ? '只有完成这次专门影响确认后，才会提交降级安装。' : '预检不会安装插件。请核对目标版本、风险和操作层级后再确认。'}>
+  const environmentBlocked = isEnvironmentPreflightBlock(result)
+  return <Modal open onClose={() => { if (busy !== 'starting') onClose() }} title={riskStep ? '第 2 步：再次确认降级影响' : target.collection ? `安装确认：${target.collection.name}` : target.pack ? `安装确认：${target.pack.name}` : `安装确认：${target.plugin?.name ?? '所选插件'}`} closeLabel="关闭安装确认" description={riskStep ? '只有完成这次专门影响确认后，才会提交降级安装。' : '先核对版本、来源和安装条件；你确认后才会安装。'}>
     <div className="eac-market__form">
       {busy === 'preflight' && <p role="status">正在核对版本、安装条件和当前状态…</p>}
-      {consentRequired && <label className="eac-market__notice eac-market__notice--warning"><input type="checkbox" checked={consent} disabled={busy === 'starting'} onChange={(event) => {
+      {consentRequired && !environmentBlocked && <label className="eac-market__notice eac-market__install-consent"><input type="checkbox" checked={consent} disabled={busy === 'starting'} onChange={(event) => {
         generation.current += 1; setResult(undefined); setRiskStep(false); setConsent(event.currentTarget.checked)
-      }} /> 仍然尝试安装未验证内容。已知不兼容或校验失败仍会阻止安装。</label>}
+      }} /> 我了解此版本尚未验证兼容性，同意尝试安装。<span className="eac-market__integration-note">此确认不会绕过已知不兼容、缺包或校验失败。</span></label>}
       {missingComponents.length > 0 && <p role="status">以下条目缺少匹配的目录版本，未提交安装：{missingComponents.map((item) => `${item.pluginId}@${item.version}`).join('、')}。必选项缺失时，后台会阻止整份预检。</p>}
       {group && review && <section className="eac-market__notice" aria-label="组合执行范围"><strong>本次确认范围</strong><p>可执行 {review.executable.length} 项（含已安装的保持项）；跳过 {review.skipped.length} 项；依赖暂停 {review.dependencyPaused.length} 项。</p><p>只执行预检允许的项目。成功项会保留，失败或暂停会逐项显示，不代表整套成功。</p></section>}
       {unsafeReady && <UnsafePlanReview consentRequired={consentRequired} onRetry={() => setRetry(nextPreflightRetry)} />}
@@ -151,16 +186,16 @@ function PlanSession({ target, inventory, remote, onClose, onStarted }: Props & 
         <p>新版本产生的配置或数据可能不兼容。市场没有此插件的数据迁移保证；请先保存工作并确认作者的降级说明。</p>
         <Button variant="outline" onClick={() => setRiskStep(false)}>返回安装方案</Button>
       </section>}
-      {result?.status === 'blocked' && <div role="alert" className="eac-market__notice eac-market__notice--warning">暂不能安装：{result.reason}<details><summary>查看原因</summary>{result.blockers.join('；')}</details></div>}
+      {result?.status === 'blocked' && <PreflightBlockNotice result={result} onOpenOfficialPlugins={onOpenOfficialPlugins} inventoryIssues={inventoryIssues} />}
       {result?.status === 'stale' && <p role="alert">状态已变化，请重新预检。{result.reason}</p>}
-      <section className="eac-market__notice" aria-label="确认边界">
-        <strong>确认边界</strong>
+      <details className="eac-market__notice" aria-label="确认边界">
+        <summary>安装保护说明</summary>
         <ul>
-          <li>硬性不兼容、缺少可安装制品和校验失败不会被“仍然尝试安装”绕过。</li>
-          <li>降级必须在方案确认后再看专门影响卡，并点击第二次确认。</li>
+          <li>缺少可安装制品、摘要或版本校验失败不会被绕过；上游兼容性由官方安装器和插件作者负责。</li>
+          {downgrades.length > 0 && <li>降级必须在方案确认后再看专门影响卡，并点击第二次确认。</li>}
           <li>提交结果未知时先到任务面板核对，不自动重放安装。</li>
         </ul>
-      </section>
+      </details>
       {notice && <p role="alert">{notice}</p>}
       {uncertain && <p>请关闭此窗口，到任务面板核对。已经提交的任务可能仍在运行。</p>}
       <div className="eac-market__button-row">

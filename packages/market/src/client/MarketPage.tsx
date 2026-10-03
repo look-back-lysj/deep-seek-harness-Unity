@@ -8,6 +8,7 @@ import type {
   CatalogDiscoveryCard,
   CatalogPresentation,
   CatalogSnapshot,
+  CatalogRefreshView,
   DiagnosticExport,
   InventoryItem,
   TaskState,
@@ -68,6 +69,7 @@ import {
 import { useMarketData, boundedRequest } from './data-controller.ts'
 import { AuthorWorkspace } from './AuthorWorkspace.tsx'
 import { SkinCenter, SkinCenterEntry } from './SkinCenter.tsx'
+import { SettingsRemotePanel } from './SettingsRemotePanel.tsx'
 import { PendingListings } from './PendingListings.tsx'
 import { isSkinPlugin, skinCatalogForInventory } from './skin-model.ts'
 import { SKIN_LOADER_PACKAGE, type SkinServiceBridge } from './skin-service.ts'
@@ -182,6 +184,7 @@ export function MarketPage({ remote, skinService, onOpenOfficialPlugins, homeSup
   const [managementBusy, setManagementBusy] = useState(false)
   const managementLock = useRef(false)
   const [catalogBusy, setCatalogBusy] = useState(false)
+  const catalogLock = useRef(false)
   const [extensionPage, setExtensionPage] = useState<string>()
   const [extensionDraft, setExtensionDraft] = useState<ExtensionDraftRef>()
   const [draftChange, setDraftChange] = useState<ExtensionDraftChange>()
@@ -421,17 +424,20 @@ export function MarketPage({ remote, skinService, onOpenOfficialPlugins, homeSup
     clearActionFeedback()
   }
 
-  async function refreshCatalog(): Promise<void> {
-    if (catalogBusy) return
+  async function refreshCatalog(sourceId?: string): Promise<CatalogRefreshView | undefined> {
+    if (catalogLock.current || remote.refreshCatalog === undefined) return undefined
+    catalogLock.current = true
     setCatalogBusy(true); beginAction('目录刷新')
     await markActionRunning('目录刷新')
     try {
-      const result = await controller.refreshCatalog()
+      const result = await controller.refreshCatalog(sourceId === undefined ? undefined : { sourceId })
       if (result.status === 'refreshed') setActionFeedback(completedActionFeedback('目录刷新', '目录已刷新。插件不会自动安装或更新。', '可以继续浏览；安装和更新仍需单独确认。'))
-      else setActionFeedback(partialActionFeedback('目录刷新', '目录刷新失败，继续显示上次目录：' + (result.reason ?? '后台未提供原因'), '确认网络或来源可用后，再次刷新目录。'))
+      else setActionFeedback(partialActionFeedback('目录刷新', '目录刷新失败，仍保留上次可用目录。为避免泄露本机路径或来源凭据，详细错误不直接显示。', '确认宿主预先配置的来源或网络可用后，可手动重试。'))
+      return result
     } catch (error) {
-      setActionFeedback(failedActionFeedback('目录刷新', error, '确认宿主连接正常后重新读取目录。'))
-    } finally { setCatalogBusy(false) }
+      setActionFeedback(failedActionFeedback('目录刷新', new Error('目录刷新请求未能完成；后台结果尚未确认。'), '先重新读取来源状态；确认宿主连接后再决定是否手动重试。'))
+      return undefined
+    } finally { catalogLock.current = false; setCatalogBusy(false) }
   }
 
   async function toggleInventory(item: InventoryItem, enabled: boolean): Promise<void> {
@@ -810,10 +816,13 @@ export function MarketPage({ remote, skinService, onOpenOfficialPlugins, homeSup
                 <div><h3>目录状态</h3><p>目录来源：{{ embedded: '随包目录', online: '在线目录', cache: '本地缓存' }[state.catalog.origin]}{state.catalog.stale ? '（缓存已过期）' : ''} · 目录生成时间：{new Date(state.catalog.generatedAt).toLocaleString('zh-CN')}。刷新目录不会安装或更新插件。</p></div>
                 <Button variant="outline" disabled={catalogBusy || remote.refreshCatalog === undefined} onClick={() => void refreshCatalog()}>刷新目录</Button>
               </section>
-              <section className="eac-market__setting">
-                <div><h3>下载来源</h3><p>自动使用已登记并通过文件校验的同版本来源。</p></div>
-                <Status tone="neutral">自动优先</Status>
-              </section>
+              <SettingsRemotePanel
+                remote={remote}
+                capabilities={state.hello.capabilities}
+                environmentId={state.hello.environmentId}
+                refreshBusy={catalogBusy}
+                onRefreshSource={(sourceId) => refreshCatalog(sourceId)}
+              />
               <section className="eac-market__setting">
                 <div><h3>缓存清理</h3><p>当前版本暂不提供缓存清理。</p></div>
                 <Button variant="outline" disabled title="当前 DSH 运行时未提供缓存清理能力">暂不可用</Button>
@@ -856,6 +865,8 @@ export function MarketPage({ remote, skinService, onOpenOfficialPlugins, homeSup
       />
       <InstallPlanDialog
         target={planTarget}
+        onOpenOfficialPlugins={onOpenOfficialPlugins}
+        inventoryIssues={state.inventory.unknownItems}
         inventory={state.inventory.items}
         remote={remote}
         open={planTarget !== undefined}
@@ -958,6 +969,8 @@ export function MarketFrame({ view, activeCount, onNavigate, onTasks, onMore, mo
 type DiscoveryCard = CatalogDiscoveryCard
 type DiscoverySnapshot = NonNullable<CatalogSnapshot['discovery']>
 type FeaturedItem = { readonly plugin: CatalogPlugin; readonly card: DiscoveryCard }
+/** A directory spotlight is not a fabricated curated recommendation. */
+type PosterItem = { readonly plugin: CatalogPlugin; readonly card?: DiscoveryCard }
 
 function discoveryOf(catalog: CatalogSnapshot): DiscoverySnapshot | undefined {
   return catalog.discovery
@@ -967,9 +980,10 @@ function posterSource(poster: CatalogMedia | undefined): CatalogMedia | undefine
   return poster !== undefined && poster.sourceUrl.trim() !== '' ? poster : undefined
 }
 
-function FeaturedPoster({ title, items, inventory, onOpen, onInstall, onManage }: {
+function FeaturedPoster({ title, description, items, inventory, onOpen, onInstall, onManage }: {
   readonly title: string
-  readonly items: readonly FeaturedItem[]
+  readonly description: string
+  readonly items: readonly PosterItem[]
   readonly inventory: readonly InventoryItem[]
   readonly onOpen: (plugin: CatalogPlugin) => void
   readonly onInstall: (plugin: CatalogPlugin) => void
@@ -977,10 +991,12 @@ function FeaturedPoster({ title, items, inventory, onOpen, onInstall, onManage }
 }): React.JSX.Element {
   const [active, setActive] = useState(0)
   const [paused, setPaused] = useState(false)
+  const [hovered, setHovered] = useState(false)
+  const [focused, setFocused] = useState(false)
   const [reducedMotion, setReducedMotion] = useState(false)
   const [failed, setFailed] = useState<ReadonlySet<string>>(new Set())
   const [announcement, setAnnouncement] = useState('')
-  const [documentHidden, setDocumentHidden] = useState(false)
+  const [documentHidden, setDocumentHidden] = useState(() => typeof document !== 'undefined' && document.hidden)
 
   useEffect(() => {
     if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return
@@ -996,37 +1012,36 @@ function FeaturedPoster({ title, items, inventory, onOpen, onInstall, onManage }
   }, [items.length])
 
   useEffect(() => {
-    if (items.length < 2 || paused || reducedMotion || documentHidden) return
-    const timer = window.setInterval(() => setActive((value) => (value + 1) % items.length), 6500)
-    const onVisibilityChange = () => {
-      setDocumentHidden(document.hidden)
-    }
+    const onVisibilityChange = () => setDocumentHidden(document.hidden)
     document.addEventListener('visibilitychange', onVisibilityChange)
-    return () => {
-      window.clearInterval(timer)
-      document.removeEventListener('visibilitychange', onVisibilityChange)
-    }
-  }, [items.length, paused, reducedMotion, documentHidden])
+    return () => document.removeEventListener('visibilitychange', onVisibilityChange)
+  }, [])
+
+  useEffect(() => {
+    if (items.length < 2 || paused || hovered || focused || reducedMotion || documentHidden) return
+    const timer = window.setInterval(() => setActive((value) => (value + 1) % items.length), 6500)
+    return () => window.clearInterval(timer)
+  }, [items.length, paused, hovered, focused, reducedMotion, documentHidden])
 
   const pluginItem = (items[active] ?? items[0])!
   const plugin = pluginItem.plugin
-  const reason = pluginItem.card.reason ?? ''
+  const reason = pluginItem.card?.reason ?? ''
   const action = pluginActionState(plugin, inventory, { canInstall: true, canManage: onManage !== undefined })
-  const media = [posterSource(pluginItem.card.poster)].filter((item): item is CatalogMedia => item !== undefined)
+  const media = [posterSource(pluginItem.card?.poster ?? plugin.screenshots[0])].filter((item): item is CatalogMedia => item !== undefined)
   const current = media[0]
-  const hasImage = current !== undefined && !failed.has(current.id)
+  const hasImage = current !== undefined && !failed.has(current.id + current.sourceUrl)
   const move = (delta: number) => {
     const next = (active + delta + items.length) % items.length
     setActive(next)
     setAnnouncement((items[next]?.plugin.name ?? '') + '，第 ' + (next + 1) + ' 项，共 ' + items.length + ' 项')
   }
-  return <section className="eac-market__section eac-market__featured eac-market__featured-stage" aria-labelledby="featured-title" onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)} onFocusCapture={() => setPaused(true)} onBlurCapture={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) setPaused(false) }}>
-    <div className="eac-market__section-head"><div><h2 id="featured-title">{title}</h2><p>推荐内容会在多个插件之间轮换展示。</p></div>{items.length > 1 && <div className="eac-market__poster-controls"><button type="button" aria-label="上一项首推" onClick={() => move(-1)}>上一项</button><span aria-hidden="true">{active + 1} / {items.length}</span><span className="eac-market__sr-only" aria-live="polite">{announcement}</span><button type="button" aria-label={paused ? '继续轮播' : '暂停轮播'} onClick={() => setPaused((value) => !value)}>{paused ? '继续' : '暂停'}</button><button type="button" aria-label="下一项首推" onClick={() => move(1)}>下一项</button></div>}</div>
-    <article className={`eac-market__poster eac-market__poster-stage${hasImage ? '' : ' eac-market__poster--fallback'}`}>
+  return <section className="eac-market__section eac-market__featured eac-market__featured-stage" aria-labelledby="featured-title" onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)} onFocusCapture={() => setFocused(true)} onBlurCapture={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) setFocused(false) }}>
+    <div className="eac-market__section-head"><div><h2 id="featured-title">{title}</h2><p>{description}</p></div>{items.length > 1 && <div className="eac-market__poster-controls"><button type="button" aria-label="上一项首推" onClick={() => move(-1)}>上一项</button><span aria-hidden="true">{active + 1} / {items.length}</span><span className="eac-market__sr-only" aria-live="polite">{announcement}</span><button type="button" aria-label={paused ? '继续轮播' : '暂停轮播'} onClick={() => setPaused((value) => !value)}>{paused ? '继续' : '暂停'}</button><button type="button" aria-label="下一项首推" onClick={() => move(1)}>下一项</button></div>}</div>
+    <article key={plugin.id + ":" + plugin.version} className={`eac-market__poster eac-market__poster-stage${hasImage ? '' : ' eac-market__poster--fallback'}`}>
       <button type="button" className="eac-market__poster-art" onClick={() => onOpen(plugin)} aria-label={`查看 ${plugin.name} 详情`}>
-        {hasImage ? <img src={current.sourceUrl} alt={current.alt || plugin.name} width={current.width ?? 1200} height={current.height ?? 675} onError={() => setFailed((value) => new Set(value).add(current.id))} /> : <span className="eac-market__poster-fallback-copy"><strong>{pluginItem.card.title || plugin.name}</strong><small>{pluginItem.card.summary || plugin.summary || '作者尚未提供一句话简介。'}</small></span>}
+        {hasImage ? <img src={current.sourceUrl} alt={current.alt || plugin.name} width={current.width ?? 1200} height={current.height ?? 675} onError={() => setFailed((value) => new Set(value).add(current.id + current.sourceUrl))} /> : <span className="eac-market__poster-fallback-copy"><strong>{pluginItem.card?.title || plugin.name}</strong><small>{pluginItem.card?.summary || plugin.summary || '作者尚未提供一句话简介。'}</small></span>}
       </button>
-      <div className="eac-market__poster-copy"><p className="eac-market__poster-kicker">推荐理由</p><h3>{pluginItem.card.title || plugin.name}</h3><p>{pluginItem.card.summary || plugin.summary || '作者尚未提供一句话简介。'}</p>{reason && <p className="eac-market__recommendation">{reason}</p>}<div className="eac-market__button-row"><Button size="sm" variant="outline" onClick={() => onOpen(plugin)}>查看详情</Button>{action.kind === 'manage' && onManage ? <Button size="sm" variant="primary" onClick={onManage}>管理</Button> : <Button size="sm" variant="primary" disabled={action.disabled} title={action.reason} onClick={() => onInstall(plugin)}>{action.label}</Button>}</div>{action.reason && <p className="eac-market__action-reason">{action.reason}</p>}</div>
+      <div className="eac-market__poster-copy"><h3>{pluginItem.card?.title || plugin.name}</h3><p>{pluginItem.card?.summary || plugin.summary || '作者尚未提供一句话简介。'}</p>{reason && <p className="eac-market__recommendation">{reason}</p>}<div className="eac-market__button-row"><Button size="sm" variant="outline" onClick={() => onOpen(plugin)}>查看详情</Button>{action.kind === 'manage' && onManage ? <Button size="sm" variant="primary" onClick={onManage}>管理</Button> : <Button size="sm" variant="primary" disabled={action.disabled} title={action.reason} onClick={() => onInstall(plugin)}>{action.label}</Button>}</div>{action.reason && <p className="eac-market__action-reason">{action.reason}</p>}</div>
     </article>
   </section>
 }
@@ -1087,6 +1102,7 @@ export function DiscoverView({ catalog, inventory, onOpen, onInstall, onPack, on
   const featured = discovery === undefined ? legacyFeatured : recommended
   const skinRecommended = discoveryItems(discovery?.recommendedSkins, allPlugins).filter(({ plugin }) => isSkinPlugin(plugin))
   const ruleSorted = browseSortPlugins(catalog.plugins.filter(plugin => plugin.installability === 'bundle-installable' && plugin.verification !== 'hard-incompatible'), 'rules')
+  const posterItems: readonly PosterItem[] = featured.length > 0 ? featured : ruleSorted.slice(0, 6).map(plugin => ({ plugin }))
   const scored = discoveryScoreItems(discovery?.highScorePlugins, allPlugins)
   const scoredSkills = discoveryScoreItems(discovery?.highScoreSkills, allPlugins)
   const [selectedCategory, setSelectedCategory] = useState('all')
@@ -1094,16 +1110,15 @@ export function DiscoverView({ catalog, inventory, onOpen, onInstall, onPack, on
   return (
     <div className="eac-market__discover-page">
       <header className="eac-market__page-head eac-market__discover-head">
-        <div><h1>发现适合你的插件</h1><p>从精选海报、皮肤和高分内容开始，再进入完整目录。</p></div>
+        <div><h1>发现适合你的插件</h1><p>{featured.length > 0 ? '从团队精选开始，了解插件与皮肤，再探索完整目录。' : '从插件海报了解功能与安装条件，再探索完整目录。'}</p></div>
         <div className="eac-market__button-row"><Button variant="primary" onClick={() => onBrowse()}>搜索全部插件</Button><Button variant="ghost" onClick={onHelp}>使用帮助</Button></div>
       </header>
+      {posterItems.length > 0 && <FeaturedPoster title={featured.length > 0 ? "团队精选" : "插件探索"} description={featured.length > 0 ? "查看真实推荐理由，了解功能与安装条件。" : "按现有目录规则展示已有安装包的插件，不代表团队精选或评分。"} items={posterItems} inventory={inventory} onOpen={onOpen} onInstall={onInstall} onManage={onManage} />}
       {skinEntry}
       {catalog.plugins.length === 0 ? (
         <section className="eac-market__notice"><strong>目录暂无功能插件</strong><p>可到设置刷新目录，或在「我的插件」查看已有功能。外观集中在皮肤中心。</p>{onSettings && <Button variant="outline" onClick={onSettings}>查看目录设置</Button>}</section>
       ) : (
         <>
-          {featured.length > 0 && <FeaturedPoster title="团队精选" items={featured} inventory={inventory} onOpen={onOpen} onInstall={onInstall} onManage={onManage} />}
-
           {skinRecommended.length > 0 && <section className="eac-market__section eac-market__skin-strip" aria-labelledby="skin-recommendations-title">
             <div className="eac-market__section-head"><div><h2 id="skin-recommendations-title">皮肤推荐</h2><p>只显示目录中有明确推荐记录的皮肤；更多皮肤请从皮肤中心进入。</p></div></div>
             <div className="eac-market__grid eac-market__skin-grid">{skinRecommended.slice(0, 6).map((item) => <SkinRecommendation key={item.plugin.id + ":" + item.plugin.version} item={item} inventory={inventory} onOpen={onOpen} onInstall={onInstall} onManage={onManage} />)}</div>
@@ -1212,7 +1227,7 @@ export function DetailView({ plugin, presentation, inventory, onBack, backLabel,
           )}
           {(plugin.verification !== 'verified' || plugin.installability !== 'bundle-installable') && (
             <div className={`eac-market__notice ${plugin.verification === 'hard-incompatible' ? 'eac-market__notice--danger' : 'eac-market__notice--warning'}`} style={{ marginTop: 18 }}>
-              {plugin.verification === 'hard-incompatible' ? '此版本与当前环境已知不兼容，不能用“仍然尝试安装”绕过。' : `${verificationLabel(plugin.verification)}。${installabilityLabel(plugin.installability)}。未验证内容只有在可安装时才能进入明确确认流程。`}
+              {plugin.verification === 'hard-incompatible' ? '此版本存在已知兼容性风险；是否能正常使用由官方安装器和上游插件负责。' : `${verificationLabel(plugin.verification)}。${installabilityLabel(plugin.installability)}。未验证内容仍可进入安装方案，最终以官方安装结果为准。`}
             </div>
           )}
           <ScreenshotGallery screenshots={plugin.screenshots} />

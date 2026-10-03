@@ -36,7 +36,7 @@ export function Status({ tone = 'neutral', children }: {
 }
 
 export function VerificationStatus({ value }: { readonly value: CatalogPlugin['verification'] }): React.JSX.Element {
-  const tone = value === 'verified' ? 'success' : value === 'hard-incompatible' ? 'danger' : value === 'unverified' ? 'warning' : 'neutral'
+  const tone = value === 'verified' ? 'success' : value === 'hard-incompatible' ? 'danger' : 'neutral'
   return <Status tone={tone}>{verificationLabel(value)}</Status>
 }
 
@@ -80,7 +80,7 @@ export function PluginCard({ plugin, inventory, onOpen, onInstall, onManage, can
       </div>
       <p className="eac-market__plugin-summary">{plugin.summary || '作者尚未提供一句话简介。'}</p>
       {plugin.kind === 'skin' && !action.disabled && plugin.verification === 'unknown' && (
-        <p className="eac-market__usage-guidance">兼容状态未知，需要在完整安装方案中明确确认试装。</p>
+        <p className="eac-market__usage-guidance">兼容状态未知；安装结果由官方安装器和上游插件负责。</p>
       )}
       <div className="eac-market__plugin-bottom">
         <div className="eac-market__tags">

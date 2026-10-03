@@ -31,7 +31,7 @@ describe('浏览器安全入口与显式 API', () => {
     visit(resolve(sourceRoot, 'index.ts'))
     visit(resolve(sourceRoot, 'api.ts'))
     expect(visited.size).toBeGreaterThanOrEqual(4)
-    expect(root.CORE_VERSION).toBe('0.1.0')
+    expect(root.CORE_VERSION).toBe('0.1.6')
     expect(root.supportsApiVersion(root.CORE_API_VERSION, '1.0.0')).toBe(true)
     expect(root).not.toHaveProperty('MarketRuntime')
     expect(root).not.toHaveProperty('createDshMarketBackend')

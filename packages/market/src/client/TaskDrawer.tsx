@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import type { AiAnalysisResult, AiApplyResult, AiConfirmRequest, TaskItemResult, TaskItemStatus, TaskState } from '../types.ts'
+import type { AiAnalysisResult, AiApplyResult, AiConfirmRequest, TaskEvent, TaskEventPage, TaskItemResult, TaskItemStatus, TaskState } from '../types.ts'
 import { boundedRequest } from './data-controller.ts'
 import { createIdempotencyKey, isTaskSettled, taskItemStatusLabel, taskNextStep, taskStatusLabel, taskTone, type MarketRemote } from './model.ts'
 import { Button, Modal } from './ui.tsx'
@@ -35,42 +35,62 @@ function isCompletedItem(item: TaskItemResult): boolean {
   return ['installed', 'enabled', 'disabled'].includes(item.status)
 }
 
+function isVerifiedInstallSuccess(item: TaskItemResult): boolean {
+  return ['installed', 'enabled', 'disabled', 'restart-required'].includes(item.status)
+    && ['applied', 'restart-required'].includes(item.installOutcome)
+}
+
 function hasFailureEvidence(item: TaskItemResult): boolean {
+  if (isVerifiedInstallSuccess(item)) return false
   return ['failed', 'blocked-by-dependency', 'blocked-on-restart', 'unknown'].includes(item.status) || item.installOutcome === 'failed'
     || item.error !== undefined || item.errorCode !== undefined || item.packageResultCode !== undefined || item.diagnostic !== undefined
 }
 
-/** Recovery copy stays deterministic; raw Host fields remain visible below it. */
+function failureHeadline(item: TaskItemResult): string {
+  if (item.errorCode?.toLowerCase() === 'incompatible-version'
+    || item.error?.toLowerCase().includes('incompatible-version')) return '插件与当前 DeepSeek Harness 版本不兼容'
+  if (item.status === 'unknown' || item.installOutcome === 'unknown') return '安装结果尚未核实'
+  if (item.status === 'blocked-by-dependency') return '前置组件尚未满足'
+  return '安装未完成'
+}
+
+/** Recovery copy stays deterministic; raw Host fields remain visible in a folded report. */
 function failureSuggestion(item: TaskItemResult, task: TaskState): string {
   if (item.status === 'blocked-by-dependency') return '先处理前置组件；前置状态满足后，重新生成安装计划再继续。'
   if (item.installOutcome === 'unknown' || item.status === 'unknown') return '先到官方插件页核对实际状态，不要重复安装；确认失败后再发起新的重试。'
+  if (item.errorCode?.toLowerCase() === 'incompatible-version' || item.error?.toLowerCase().includes('incompatible-version'))
+    return '请安装适配当前 DeepSeek Harness 版本的插件版本；继续使用当前版本前，需要明确接受兼容风险并申请精确版本豁免。'
   if (item.status === 'blocked-on-restart' || item.status === 'restart-required') return '保存当前工作并重启 DSH，再回到任务面板核对剩余项目。'
   if (item.errorCode?.toLowerCase().includes('digest') === true || item.packageResultCode?.toLowerCase().includes('integrity') === true) return '不要使用校验失败的文件；核对已登记来源和摘要后重新预检。'
   return task.nextAction || '查看错误代码与诊断片段；保留现场并从官方插件页核对后，再决定是否重新预检。'
 }
 
 function TaskFailureSummary({ task }: { readonly task: TaskState }): React.JSX.Element | null {
+  if (task.status === 'completed' && task.items.length > 0 && task.items.every(isVerifiedInstallSuccess)) return null
   const failedItems = task.items.filter(hasFailureEvidence)
   const errorEvents = task.events.filter((event) => event.level === 'error' || event.phase === 'failed')
   if (failedItems.length === 0 && errorEvents.length === 0 && !['failed', 'partial', 'needs-attention', 'interrupted', 'unknown'].includes(task.status)) return null
-  return <section className="eac-market__notice eac-market__notice--danger" aria-label="错误摘要">
-    <strong>错误摘要</strong>
+  return <section className="eac-market__notice eac-market__notice--danger" aria-label="安装问题">
+    <strong>安装问题</strong>
     {failedItems.length === 0 && errorEvents.length === 0 && <p><strong>下一步：</strong>{task.nextAction || '先核对官方插件状态，不要重复安装。'}</p>}
     {failedItems.map((item) => <div key={item.pluginId}>
-      <h4>{item.packageName}</h4>
+      <h4>{item.packageName}：{failureHeadline(item)}</h4>
       <p><strong>下一步：</strong>{failureSuggestion(item, task)}</p>
-      <dl>
-        <dt>逐项状态</dt><dd>{taskItemStatusLabel(item.status)}</dd>
-        <dt>安装结果</dt><dd>{item.installOutcome}</dd>
-        <dt>是否产生变更</dt><dd>{item.changed ? '是，保留已完成变更' : '否'}</dd>
-        {item.error !== undefined && <><dt>错误信息</dt><dd>{item.error}</dd></>}
-        {item.errorCode !== undefined && <><dt>错误代码</dt><dd><code>{item.errorCode}</code></dd></>}
-        {item.packageResultCode !== undefined && <><dt>包结果代码</dt><dd><code>{item.packageResultCode}</code></dd></>}
-        {item.diagnostic !== undefined && <><dt>诊断片段</dt><dd>{item.diagnostic}</dd></>}
-        {item.permissionChanges.length > 0 && <><dt>脚本许可变化</dt><dd>{item.permissionChanges.map((change) => `${change.packageName}：${change.decision}`).join('；')}</dd></>}
-      </dl>
+      <details>
+        <summary>查看详细报告</summary>
+        <dl>
+          <dt>逐项状态</dt><dd>{taskItemStatusLabel(item.status)}</dd>
+          <dt>安装结果</dt><dd>{item.installOutcome}</dd>
+          <dt>是否产生变更</dt><dd>{item.changed ? '是，保留已完成变更' : '否'}</dd>
+          {item.error !== undefined && <><dt>错误信息</dt><dd>{item.error}</dd></>}
+          {item.errorCode !== undefined && <><dt>错误代码</dt><dd><code>{item.errorCode}</code></dd></>}
+          {item.packageResultCode !== undefined && <><dt>包结果代码</dt><dd><code>{item.packageResultCode}</code></dd></>}
+          {item.diagnostic !== undefined && <><dt>诊断片段</dt><dd>{item.diagnostic}</dd></>}
+          {item.permissionChanges.length > 0 && <><dt>脚本许可变化</dt><dd>{item.permissionChanges.map((change) => `${change.packageName}：${change.decision}`).join('；')}</dd></>}
+        </dl>
+        {errorEvents.length > 0 && <ul className="eac-market__event-list">{errorEvents.slice(-6).map((event) => <li key={`${event.sequence}-${event.at}`} data-level={event.level}>{event.message}</li>)}</ul>}
+      </details>
     </div>)}
-    {errorEvents.length > 0 && <ul className="eac-market__event-list">{errorEvents.slice(-6).map((event) => <li key={`${event.sequence}-${event.at}`} data-level={event.level}>{event.message}</li>)}</ul>}
   </section>
 }
 
@@ -93,6 +113,9 @@ function TaskCard({ task, remote, onChanged, onRefresh, onOpenOfficialPlugins }:
   const [busy, setBusy] = useState('')
   const [error, setError] = useState('')
   const [feedback, setFeedback] = useState<ActionFeedbackState>(idleActionFeedback())
+  const [eventLog, setEventLog] = useState<{ readonly events: readonly TaskEvent[]; readonly nextSequence: number; readonly hasMore: boolean; readonly truncated: boolean; readonly status: 'idle' | 'loading' | 'ready' | 'failed' }>({ events: task.events, nextSequence: -1, hasMore: true, truncated: false, status: 'idle' })
+  const eventRequest = useRef(false)
+  const eventGeneration = useRef(0)
   const generation = useRef(0)
   const busyRef = useRef(false)
   const confirmationKeys = useRef({ first: '', second: '' })
@@ -100,6 +123,42 @@ function TaskCard({ task, remote, onChanged, onRefresh, onOpenOfficialPlugins }:
     generation.current += 1; setAnalysis(undefined); setApplied(undefined); setBusy(''); setError(''); setFeedback(idleActionFeedback()); confirmationKeys.current = { first: '', second: '' }; busyRef.current = false
     return () => { generation.current += 1 }
   }, [task.taskId, task.environmentId, task.updatedAt, remote])
+  useEffect(() => {
+    eventGeneration.current += 1
+    eventRequest.current = false
+    setEventLog({ events: task.events, nextSequence: -1, hasMore: true, truncated: false, status: 'idle' })
+    return () => { eventGeneration.current += 1; eventRequest.current = false }
+  }, [task.taskId, task.environmentId, remote])
+
+  async function loadTaskEvents(more = false): Promise<void> {
+    const readEvents = remote.taskEvents
+    if (!readEvents || eventRequest.current || (more && !eventLog.hasMore)) return
+    const ticket = eventGeneration.current
+    const afterSequence = more ? Math.max(-1, eventLog.nextSequence - 1) : -1
+    eventRequest.current = true
+    setEventLog(current => ({ ...current, status: 'loading' }))
+    try {
+      const page: TaskEventPage = await boundedRequest(readEvents({ taskId: task.taskId, afterSequence, limit: 100 }), '读取完整任务记录')
+      if (ticket !== eventGeneration.current) return
+      setEventLog(current => {
+        const merged = new Map<number, TaskEvent>(current.events.map(event => [event.sequence, event]))
+        for (const event of page.events) merged.set(event.sequence, event)
+        for (const event of task.events) merged.set(event.sequence, event)
+        return {
+          events: [...merged.values()].sort((a, b) => a.sequence - b.sequence),
+          // Use the returned page, not an old Host's global tail cursor.
+          nextSequence: (page.events.at(-1)?.sequence ?? afterSequence) + 1,
+          hasMore: page.events.length === 100 && (page.events.at(-1)?.sequence ?? afterSequence) > afterSequence,
+          truncated: current.truncated || page.truncated,
+          status: 'ready',
+        }
+      })
+    } catch {
+      if (ticket === eventGeneration.current) setEventLog(current => ({ ...current, status: 'failed' }))
+    } finally {
+      if (ticket === eventGeneration.current) eventRequest.current = false
+    }
+  }
 
   async function run(label: string, operation: () => Promise<void>): Promise<void> {
     if (busyRef.current) return
@@ -173,6 +232,7 @@ function TaskCard({ task, remote, onChanged, onRefresh, onOpenOfficialPlugins }:
   const challenge = applied?.status === 'requires-confirmation' ? applied.challenge : undefined
   const done = task.items.filter(isCompletedItem).length
   const title = task.items.length > 1 ? `${task.items[0]?.packageName ?? '安装任务'} 等 ${task.items.length} 项` : task.items[0]?.packageName ?? '安装任务'
+  const visibleEvents = [...new Map([...eventLog.events, ...task.events].map(event => [event.sequence, event])).values()].sort((left, right) => left.sequence - right.sequence)
   return <article className="eac-market__task" aria-label={`任务 ${task.taskId}`}>
     <div className="eac-market__task-head">
       <h3>{title}</h3>
@@ -214,6 +274,16 @@ function TaskCard({ task, remote, onChanged, onRefresh, onOpenOfficialPlugins }:
       <div className="eac-market__button-row"><Button variant="outline" disabled={!!busy} onClick={() => { setApplied(undefined); setAnalysis(undefined); confirmationKeys.current = { first: '', second: '' }; setFeedback(idleActionFeedback()) }}>取消此方案</Button><Button variant="primary" disabled={!!busy} onClick={() => void run('确认影响', () => applyAi(true))}>已了解影响，再次确认执行</Button></div>
     </section>}
     {applied && <p role="status">{applyNames[applied.status]}{applied.error ? `：${applied.error}` : ''}</p>}
-    <details><summary>查看任务记录（最近 {Math.min(task.events.length, 12)} 条）</summary><p>任务编号：{task.taskId} · 后台下一步：{task.nextAction}</p><ul className="eac-market__event-list">{task.events.slice(-12).map((event) => <li key={`${event.sequence}-${event.at}`} data-level={event.level}>{event.message}</li>)}</ul></details>
+    <details onToggle={(event) => { if (event.currentTarget.open && eventLog.status === 'idle') void loadTaskEvents() }}>
+      <summary>查看任务记录（已载入 {visibleEvents.length} 条）</summary>
+      <p>任务编号：{task.taskId} · 后台下一步：{task.nextAction}</p>
+      {eventLog.status === 'loading' && <p role="status">正在读取任务记录…</p>}
+      {eventLog.status === 'failed' && <p role="alert">完整记录读取失败；仍可查看当前任务摘要中的最近记录。</p>}
+      {eventLog.truncated && <p role="status">后台提示部分历史记录已被清理或不完整，以下内容不代表完整时间线。</p>}
+      <ul className="eac-market__event-list">{visibleEvents.map((event) => <li key={`${event.sequence}-${event.at}`} data-level={event.level}>{event.message}</li>)}</ul>
+      {remote.taskEvents === undefined && <p>当前宿主不支持读取完整历史，仅显示任务摘要中的记录。</p>}
+      {eventLog.status === 'failed' && remote.taskEvents !== undefined && <Button variant="ghost" disabled={!!busy || eventRequest.current} onClick={() => void loadTaskEvents(eventLog.nextSequence > 0)}>重新读取任务记录</Button>}
+      {eventLog.hasMore && remote.taskEvents !== undefined && <Button variant="outline" disabled={!!busy || eventRequest.current || eventLog.status === 'loading'} onClick={() => void loadTaskEvents(true)}>{eventLog.status === 'loading' ? '正在读取…' : '加载更多记录'}</Button>}
+    </details>
   </article>
 }

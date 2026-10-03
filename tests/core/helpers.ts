@@ -127,6 +127,8 @@ export class FakeHost implements HostPort {
   sessionRevision = 'session-1'
   stable = true
   unknownSharedImpact = false
+  writeBarrier = false
+  unknownItems: string[] = []
   cancelOutcome: HostCancelOutcome = { kind: 'too-late' }
   installGate: Promise<void> | undefined
   constructor(items: readonly InventoryItem[] = []) {
@@ -135,13 +137,14 @@ export class FakeHost implements HostPort {
   setOutcome(packageName: string, outcome: HostInstallOutcome): void { this.outcomes.set(packageName, [outcome]) }
   async readState(): Promise<HostReadState> {
     return {
-      inventory: snapshot([...this.items.values()].map((item) => ({ ...item, rows: item.rows.map((row) => ({ ...row })) }))),
+      inventory: { ...snapshot([...this.items.values()].map((item) => ({ ...item, rows: item.rows.map((row) => ({ ...row })) }))), unknownItems: [...this.unknownItems] },
       sessionRevision: this.sessionRevision,
       activeRequests: [],
       activity: {
         stable: this.stable,
         unknownSharedImpact: this.unknownSharedImpact,
-        ...(this.stable ? {} : { reason: 'old writer still active' }),
+        writeBarrier: this.writeBarrier,
+        ...(this.stable || !this.writeBarrier ? {} : { reason: 'old writer still active' }),
       },
     }
   }

@@ -203,8 +203,14 @@ export class InstallTaskManager {
         await this.flushEvents(stored)
         if (isTerminal(stored.task.status) && !hasUncertainWrite(stored)) continue
         let record = cloneRecord(stored)
+        if (this.provenNoWrite(record)) {
+          await this.cancelUnstarted(record, '旧任务在写入前停止，已自动关闭')
+          changed++
+          continue
+        }
+        const packageNames = [...new Set(record.task.items.map(item => item.packageName))]
         let state = await this.deps.host.readState()
-        if (!this.stateStable(state) || state.inventory.environmentId !== environmentId) { await this.pause(record, '恢复时无法证明旧写入停止且库存完整', true); changed++; continue }
+        if (!this.installStateSettled(state, packageNames) || state.inventory.environmentId !== environmentId) { await this.pause(record, '恢复时仍有活动写入或目标状态未核实', true); changed++; continue }
         const wasUncertain = hasUncertainWrite(record)
         let unresolved = false
         let accounted = false
@@ -217,7 +223,7 @@ export class InstallTaskManager {
             ? savedOutcome : await this.deps.host.reconcileInstall?.(attempt.requestId)
           if (outcome === undefined || outcome.kind === 'unknown' || (outcome.kind === 'failed' && outcome.unknownSharedImpact)) { unresolved = true; continue }
           state = await this.deps.host.readState()
-          if (!this.stateStable(state)) { unresolved = true; continue }
+          if (!this.installStateSettled(state, packageNames)) { unresolved = true; continue }
           const index = record.task.items.findIndex(item => item.pluginId === attempt.pluginId)
           record = this.applyOutcome(record, index, attempt, outcome, state.inventory)
           if (record.task.items[index]?.status === 'unknown') { unresolved = true; continue }
@@ -326,6 +332,9 @@ export class InstallTaskManager {
     if (request.planId !== bundle.plan.planId || request.planDigest !== bundle.plan.planDigest) {
       throw new MarketCoreError('plan/confirmation-mismatch', '确认的计划与 Host 保存的计划不一致', { nextAction: 'review-plan' })
     }
+    const preexisting = await this.deps.store.list(bundle.plan.environmentId)
+    const activeBeforeStart = preexisting.find(record => !isTerminal(record.task.status) && !['needs-attention', 'unknown'].includes(record.task.status))
+    if (activeBeforeStart === undefined) await this.reconcileInterrupted(bundle.plan.environmentId)
     return this.withLock(bundle.plan.environmentId, async () => {
       const existing = await this.deps.store.getByPlan(bundle.plan.environmentId, bundle.plan.planId)
       if (existing !== undefined) {
@@ -432,7 +441,7 @@ export class InstallTaskManager {
   }
 
   private managementVerified(record: ManagementRecord, state: HostReadState, receipt: HostInstallOutcome): boolean {
-    if (!this.stateStable(state) || state.inventory.environmentId !== record.request.environmentId
+    if (!this.installStateSettled(state, [record.request.packageName]) || state.inventory.environmentId !== record.request.environmentId
       || receipt.kind === 'unknown' || receipt.kind === 'awaiting-approval'
       || (receipt.kind === 'failed' && receipt.unknownSharedImpact)) return false
     const target = packageItem(state.inventory, record.request.packageName)
@@ -473,6 +482,9 @@ export class InstallTaskManager {
       throw new MarketCoreError('management/invalid-request', '管理请求缺少目标版本、动作或幂等键')
     const path = 'management/' + await sha256Hex(request.environmentId + ':' + request.idempotencyKey) + '.json'
     const fingerprint = await sha256Hex(canonicalJson(request))
+    const existing = await this.deps.store.list(request.environmentId)
+    const activeBeforeManagement = existing.find(record => !isTerminal(record.task.status) && !['needs-attention', 'unknown'].includes(record.task.status))
+    if (activeBeforeManagement === undefined) await this.reconcileInterrupted(request.environmentId)
     const handle = await this.deps.locks.acquire('execution:' + request.environmentId, this.owner)
     try {
       const bytes = await files.read(path)
@@ -486,7 +498,7 @@ export class InstallTaskManager {
       const active = (await this.deps.store.list(request.environmentId)).find(record => !isTerminal(record.task.status) && !['needs-attention', 'unknown'].includes(record.task.status))
       if (active !== undefined) throw new MarketCoreError('task/environment-busy', '安装任务仍占用当前环境：' + active.task.taskId)
       const before = await this.deps.host.readState()
-      if (!this.stateStable(before) || before.inventory.environmentId !== request.environmentId) throw new MarketCoreError('management/state-unknown', '库存或活动写入状态无法核实')
+      if (!this.installStateSettled(before, [request.packageName]) || before.inventory.environmentId !== request.environmentId) throw new MarketCoreError('management/state-unknown', '目标或活动写入状态无法核实')
       const item = packageItem(before.inventory, request.packageName)
       if (isProtectedMarketPackage(request.packageName) || item === undefined || item.readOnlyReason !== undefined)
         throw new MarketCoreError('management/protected-target', '目标不存在、受保护或需使用官方管理入口')
@@ -510,8 +522,41 @@ export class InstallTaskManager {
     } finally { await handle.release() }
   }
 
-  private stateStable(state: HostReadState): boolean {
-    return state.activity.stable && !state.activity.unknownSharedImpact && state.activeRequests.length === 0 && state.inventory.unknownItems.length === 0
+  /** Native-like installation gate: unrelated inventory uncertainty must not
+   * prevent a target install. Real active writers and official run records still
+   * block; target identity/drift checks remain in findDrift and applyOutcome. */
+  private installStateSettled(state: HostReadState, packageNames: readonly string[] = []): boolean {
+    if (state.activeRequests.length > 0 || state.activity.writeBarrier === true) return false
+    return !state.inventory.unknownItems.some(issue => packageNames.some(name => this.inventoryIssueAffectsPackage(issue, name)))
+  }
+
+  private inventoryIssueAffectsPackage(issue: string, packageName: string): boolean {
+    return issue === `bundle-version:${packageName}` || issue.startsWith(`bundle:${packageName}:`)
+  }
+
+  /** Explicit execution state proves that no official install request was dispatched. */
+  private provenNoWrite(record: TaskRecord): boolean {
+    const execution = executionOf(record)
+    if (execution === undefined || record.activeRequestId !== undefined) return false
+    return record.attempts.every(attempt => {
+      const stage = execution.attempts[attempt.id]?.stage
+      return stage === 'prepared' || (stage === undefined && !['installing', 'applying'].includes(attempt.phase))
+    }) && !record.task.items.some(item => ['installing', 'unknown'].includes(item.status))
+  }
+
+  private async cancelUnstarted(record: TaskRecord, message: string): Promise<void> {
+    const next = withExecution(this.clearActiveRequest(record), { writeUncertain: false })
+    const cancelled: TaskRecord = {
+      ...next,
+      task: {
+        ...cloneState(next.task),
+        status: 'cancelled',
+        items: next.task.items.map(item => SUCCESS_ITEM_STATUS.has(item.status) || item.status === 'failed'
+          ? item : { ...item, status: 'cancelled', installOutcome: 'cancelled', changed: false, error: message }),
+        nextAction: 'review-cancelled-items',
+      },
+    }
+    await this.save(await this.appendEvent(cancelled, 'cancelled', message + '；未调用官方安装器，可重新预检。', 'warning'))
   }
 
   async get(taskId: string): Promise<TaskState | undefined> {
@@ -525,12 +570,14 @@ export class InstallTaskManager {
       const page = await this.deps.events.read(taskId, afterSequence, limit)
       const events = new Map(page.events.map(event => [event.sequence, event]))
       for (const event of record?.task.events ?? []) if (event.sequence > afterSequence) events.set(event.sequence, event)
-      return { events: [...events.values()].sort((a, b) => a.sequence - b.sequence).slice(0, limit),
-        nextSequence: Math.max(page.nextSequence, record?.nextSequence ?? 0), truncated: page.truncated || record?.eventLogTruncated === true }
+      const pageEvents = [...events.values()].sort((a, b) => a.sequence - b.sequence).slice(0, Math.max(0, limit))
+      return { events: pageEvents,
+        nextSequence: (pageEvents.at(-1)?.sequence ?? afterSequence) + 1, truncated: page.truncated || record?.eventLogTruncated === true }
     }
+    const pageEvents = record?.task.events.filter((event) => event.sequence > afterSequence).slice(0, Math.max(0, limit)) ?? []
     return {
-      events: record?.task.events.filter((event) => event.sequence > afterSequence).slice(0, limit) ?? [],
-      nextSequence: record?.nextSequence ?? 0,
+      events: pageEvents,
+      nextSequence: (pageEvents.at(-1)?.sequence ?? afterSequence) + 1,
       truncated: record?.eventLogTruncated ?? false,
     }
   }
@@ -610,7 +657,7 @@ export class InstallTaskManager {
   private async prepareResumeLocked(record: TaskRecord): Promise<TaskState> {
     if (!['awaiting-resume', 'interrupted'].includes(record.task.status)) return cloneState(record.task)
     const state = await this.deps.host.readState()
-    if (!this.stateStable(state) || hasUncertainWrite(record)) {
+    if (!this.installStateSettled(state, record.bundle.plan.items.map(item => item.packageName)) || hasUncertainWrite(record)) {
       await this.pause(record, '旧写入停止或库存状态仍未核实', true)
       return (await this.deps.store.get(record.task.taskId))!.task
     }
@@ -694,8 +741,11 @@ export class InstallTaskManager {
     let record = cloneRecord(startRecord)
     if (['needs-attention', 'unknown', 'awaiting-approval', 'awaiting-resume'].includes(record.task.status) && !record.cancellationRequested) return
     const hostState = await this.deps.host.readState()
-    if (!this.stateStable(hostState)) {
-      await this.pause(record, hostState.activity.reason ?? 'Host 库存或旧写入状态未知', true); return
+    if (!this.installStateSettled(hostState, record.bundle.plan.items.map(item => item.packageName))) {
+      const message = hostState.activity.reason ?? 'Host 仍有活动写入或目标状态未知'
+      if (this.provenNoWrite(record)) await this.cancelUnstarted(record, message)
+      else await this.pause(record, message, true)
+      return
     }
     if (hasUncertainWrite(record)) { await this.pause(record, '旧尝试尚未核对，不能重放'); return }
     const drift = this.findDrift(record, hostState)
@@ -789,7 +839,7 @@ export class InstallTaskManager {
       }
       // Acquisition and approval can take minutes. This is the actual write-point check.
       const beforeWrite = await this.deps.host.readState()
-      if (!this.stateStable(beforeWrite)) { await this.pause(record, '写入前关键库存或旧写入状态无法核实', true); return }
+      if (!this.installStateSettled(beforeWrite, [planItem.packageName])) { await this.pause(record, '写入前仍有安装写入活动，稍后重试', true); return }
       const beforeDrift = this.findDrift(record, beforeWrite)
       if (beforeDrift.length > 0) { await this.pause(record, '写入前状态漂移：' + beforeDrift.join(', ')); return }
       record = await this.deps.store.get(record.task.taskId) ?? record
@@ -815,7 +865,7 @@ export class InstallTaskManager {
       record = await this.save(record)
       const after = await this.deps.host.readState()
       record = this.applyOutcome(record, itemIndex, attempt, outcome, after.inventory)
-      const uncertain = !this.stateStable(after) || outcome.kind === 'unknown'
+      const uncertain = !this.installStateSettled(after, [item.packageName]) || outcome.kind === 'unknown'
         || (outcome.kind === 'failed' && outcome.unknownSharedImpact === true) || record.task.items[itemIndex]?.status === 'unknown'
       const observed = packageItem(after.inventory, item.packageName)
       const barriers = { ...executionOf(record)?.restartBarriers }
@@ -861,6 +911,9 @@ export class InstallTaskManager {
         status: current.bundleEnabled ? 'enabled' : 'disabled',
         changed: false,
         installOutcome: 'applied',
+        error: undefined,
+        errorCode: undefined,
+        diagnostic: undefined,
       })
       next = {
         ...next,
@@ -876,7 +929,8 @@ export class InstallTaskManager {
     const permissionChanges = outcome.permissionChanges.map((change) => ({ ...change }))
     if (outcome.kind === 'applied') {
       const current = packageItem(inventory, item.packageName)
-      if (inventory.unknownItems.length > 0 || current?.installed !== true || current.source !== 'market-cache-file' || current.version !== item.targetVersion || current.bundleEnabled !== record.bundle.plan.items.find(target => target.pluginId === item.pluginId)?.requestedEnabled) {
+      const targetUnknown = inventory.unknownItems.some(issue => this.inventoryIssueAffectsPackage(issue, item.packageName))
+      if (targetUnknown || current?.installed !== true || current.source !== 'market-cache-file' || current.version !== item.targetVersion || current.bundleEnabled !== record.bundle.plan.items.find(target => target.pluginId === item.pluginId)?.requestedEnabled) {
         return this.updateItem(record, itemIndex, {
           status: 'unknown',
           changed: outcome.changed,
@@ -891,6 +945,9 @@ export class InstallTaskManager {
           status,
           changed: outcome.changed,
           installOutcome: outcome.restartRequired ? 'restart-required' : 'applied',
+          error: undefined,
+          errorCode: undefined,
+          diagnostic: undefined,
           permissionChanges,
           ...(outcome.packageResultCode === undefined ? {} : { packageResultCode: outcome.packageResultCode }),
         }),

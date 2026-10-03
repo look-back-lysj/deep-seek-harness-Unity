@@ -83,7 +83,7 @@ describe('client state rendering', () => {
     const html = frame(detail)
     expect(html).toContain('已知不兼容')
     expect(html).toContain('待作者提供可安装包')
-    expect(html).toContain('不能用“仍然尝试安装”绕过')
+    expect(html).toContain('是否能正常使用由官方安装器和上游插件负责')
   })
 
   it('任务抽屉覆盖部分完成、待授权、等待重启、取消中和 unknown 文案', () => {

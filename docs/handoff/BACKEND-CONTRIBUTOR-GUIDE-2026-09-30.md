@@ -46,7 +46,7 @@ Core 可以在 `CatalogSnapshot` 上返回可选的 `discovery` 投影：
 
 前端固定行为：
 
-- `discovery` 缺失时隐藏相应区块；旧 `featured` 数据只做兼容读取。
+- 2026-10-02 用户选择方案 A 后，首推无真实精选时由 Client 将现有目录条目组织成明确标记的“插件探索”海报；不伪造 CatalogRecommendation/评分，不写回目录。旧 `featured` 数据仍只做兼容读取；皮肤和高分分区继续依赖真实数据。
 - 推荐皮肤、高分插件、高分 skill 没有真实数据时整块隐藏。
 - `poster` 缺失、图片失败或来源不可达时降级为标题和简介文字卡。
 - 全部插件页消费同一 `CatalogSnapshot.plugins`，不维护第二份目录。

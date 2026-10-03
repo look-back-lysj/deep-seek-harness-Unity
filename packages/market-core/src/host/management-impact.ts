@@ -93,7 +93,7 @@ export function assessRiskyAction(input: {
     }
   }
   if (cursor < queue.length) unknowns.push('依赖图超过检查上限')
-  if (input.inventory.unknownItems.length) unknowns.push('官方库存有未核实项目')
+  if (input.inventory.unknownItems.some(issue => issue === `bundle-version:${input.packageName}` || issue.startsWith(`bundle:${input.packageName}:`))) unknowns.push('目标库存有未核实项目')
   const installed = input.inventory.items.find(item => item.packageName === input.packageName)
   if (!installed?.installed || installed.version !== input.currentVersion || !validVersion(input.currentVersion)) unknowns.push('当前安装身份或版本无法核实')
   if (dependents.size) unknowns.push(`以下组件依赖当前插件：${[...dependents].sort().join('、')}`)

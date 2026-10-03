@@ -1,6 +1,12 @@
 # EAC 市场最新版升级指南
 
-当前源码候选：桌面适配器 `@dsh-eac/market@0.1.0-mvp.10`，核心包 `@dsh-eac/market-core@0.1.0`。双包尚未正式发布；当前可安装发行版仍为 `0.1.0-mvp.9`。本文件是当前唯一升级操作指南，历史报告用于追溯，不作为当前安装说明。
+当前源码候选：桌面适配器 `@dsh-eac/market@0.1.0-mvp.11`，核心包 `@dsh-eac/market-core@0.1.1`。双包尚未正式发布；当前可安装发行版仍为 `0.1.0-mvp.9`。本文件是当前唯一升级操作指南，历史报告用于追溯，不作为当前安装说明。
+
+## 2026-10-02 本机方案 A 修复候选
+
+market mvp.11 / Core 0.1.1 已通过串行构建、736 项测试（另 2 项固定协议跳过）、类型与包边界；合成浏览器 48 项通过。此次未增加公开 Remote/G0 合同，也未授权旧皮肤兼容或改变其他用户插件。
+
+本机包已准备在 D:/eac-market-user-trial/20261002-175408-fixA/packages/，已按用户确认覆盖并正常重启：真实官方首页海报/读取通过，但实际安装预检仍被四个旧皮肤相关身份阻断，不能算完整修复验收。adapter 绑定此目录的 Core tgz，安装后试用期间不得移动/删除该目录；它不是公网发行包。官方 desktop Profile 必须通过 Electron 插件管理器安装，不可用 CLI 绕过 desktop guard。正式用户入口仍是下文 mvp.9，不以本机候选替换。
 
 ## 用户当前可用的升级入口
 
@@ -13,7 +19,7 @@ https://gitee.com/flowing-shadows-like-scenes/deep-seek-harness-unity-mirror/raw
 3. 打开 EAC，确认「发现 / 全部插件 / 我的插件」三个主导航可用。
 4. 在「我的插件」确认市场版本与发行站公布的版本一致，且由官方插件管理器管理。
 
-下面的双包流程面向维护者。`mvp.10` 只有在公网 core 依赖、隔离 Desktop 新装和旧版升级均验收并正式发布后，才能替换普通用户的安装入口。历史 Desktop 证据不代表新双包已通过。
+下面的双包流程面向维护者。`mvp.11` 只有在公网 core 依赖、隔离 Desktop 新装和旧版升级均验收并正式发布后，才能替换普通用户的安装入口。历史 Desktop 证据不代表新双包已通过。
 
 双包实现保留当前 profile（DSH 的独立用户环境）的 `eac-market` 数据目录、任务记录、作者草稿、目录接受历史和持久化格式。实际整包升级仍待验收，不可据此推断任意旧版本都可无损升级或降级。
 
@@ -23,8 +29,8 @@ https://gitee.com/flowing-shadows-like-scenes/deep-seek-harness-unity-mirror/raw
 
 | 包 | 当前版本 | 作用 |
 | --- | --- | --- |
-| `@dsh-eac/market` | `0.1.0-mvp.10` | 官方 DSH bundle、桌面 UI、Cordis/Typert 注册、连接协商和随包目录 |
-| `@dsh-eac/market-core` | `0.1.0` | 目录、预检、任务、下载校验、作者资料、AI 提案和官方适配门面 |
+| `@dsh-eac/market` | `0.1.0-mvp.11` | 官方 DSH bundle、桌面 UI、Cordis/Typert 注册、连接协商和随包目录 |
+| `@dsh-eac/market-core` | `0.1.1` | 目录、预检、任务、下载校验、作者资料、AI 提案和官方适配门面 |
 
 正式双包发行采用只安装桌面适配器的方式，由官方包管理器取得 core；core 自身不是独立 DSH bundle，不能单独填入官方插件安装框。发布新 core 不会自动更新用户已有安装，adapter 依赖变化仍需发布匹配版本并重启验证。
 

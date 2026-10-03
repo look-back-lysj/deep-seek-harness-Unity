@@ -12,7 +12,11 @@ const scrollOnly = process.argv.includes('--scroll-only')
 const skinsOnly = process.argv.includes('--skins-only')
 const listingsOnly = process.argv.includes('--listings-only')
 const compatibilityOnly = process.argv.includes('--compatibility-only')
-const output = compatibilityOnly ? 'D:/eac-market-verify/implementation-20260928/C-UI/compatibility' : listingsOnly || skinsOnly ? `D:/eac-market-verify/distribution-20260928/ui/${listingsOnly ? 'listings' : 'skins'}-${Date.now()}` : scrollOnly ? 'D:/eac-market-verify/skin-market-20260928/ui' : 'D:/eac-market-verify/implementation-20260928/C-UI' + (versionsOnly ? '/versions' : collectionsOnly ? '/collections' : '')
+const settingsOnly = process.argv.includes('--settings-only')
+const taskHistoryOnly = process.argv.includes('--task-history-only')
+const trialOnly = process.argv.includes('--trial-only')
+const defaultOutput = compatibilityOnly ? 'D:/eac-market-verify/implementation-20260928/C-UI/compatibility' : listingsOnly || skinsOnly ? `D:/eac-market-verify/distribution-20260928/ui/${listingsOnly ? 'listings' : 'skins'}-${Date.now()}` : scrollOnly ? 'D:/eac-market-verify/skin-market-20260928/ui' : 'D:/eac-market-verify/implementation-20260928/C-UI' + (versionsOnly ? '/versions' : collectionsOnly ? '/collections' : '')
+const output = process.env.EAC_BROWSER_CHECK_OUT ?? defaultOutput
 console.log(`Evidence: ${output}`)
 mkdirSync(output, { recursive: true })
 await build({ entryPoints: ['tests/client/browser-fixture.tsx'], bundle: true, format: 'iife', platform: 'browser', jsx: 'automatic', outfile: join(output, 'browser-fixture.js'), alias: { react: resolve('packages/market/node_modules/react'), 'react-dom': resolve('packages/market/node_modules/react-dom') }, define: { 'process.env.NODE_ENV': '"development"' } })
@@ -27,7 +31,7 @@ const pause = (ms) => new Promise((done) => setTimeout(done, ms))
 const results = []
 let ws
 let send
-async function check(name, operation) { if (compatibilityOnly && !name.startsWith('兼容：') || listingsOnly && !name.startsWith('登记：') || skinsOnly && !name.startsWith('皮肤：') && !name.startsWith('滚动：') || collectionsOnly && !name.startsWith('组合：') || versionsOnly && !name.startsWith('版本：') || scrollOnly && !name.startsWith('滚动：')) return; try { await operation(); results.push({ name, status: 'passed' }) } catch (error) { results.push({ name, status: 'failed', error: error.message }) } }
+async function check(name, operation) { if (trialOnly && !name.startsWith('试用回归：') || taskHistoryOnly && !name.startsWith('任务记录：') || settingsOnly && !name.startsWith('设置：') || compatibilityOnly && !name.startsWith('兼容：') || listingsOnly && !name.startsWith('登记：') || skinsOnly && !name.startsWith('皮肤：') && !name.startsWith('滚动：') || collectionsOnly && !name.startsWith('组合：') || versionsOnly && !name.startsWith('版本：') || scrollOnly && !name.startsWith('滚动：')) return; try { await operation(); results.push({ name, status: 'passed' }) } catch (error) { results.push({ name, status: 'failed', error: error.message }) } }
 try {
   for (let i = 0; i < 150 && !existsSync(join(profile, 'DevToolsActivePort')); i++) await pause(100)
   const port = readFileSync(join(profile, 'DevToolsActivePort'), 'utf8').split('\n')[0]
@@ -42,12 +46,69 @@ try {
   const expect = async (expression, message) => { if (!await evaluate(expression)) throw new Error(message) }
   const until = async (expression) => { for (let i = 0; i < 100; i++) { if (await evaluate(expression)) return; await pause(30) } throw new Error(`DOM timeout: ${expression}`) }
   const click = async (text, scope = 'document') => { await evaluate(`(() => { const button = [...${scope}.querySelectorAll('button')].find(e => e.textContent.trim() === ${JSON.stringify(text)}); if (!button || button.disabled) throw new Error('button missing or disabled: ' + ${JSON.stringify(text)}); button.click() })()`); await pause(50) }
+  const clickSelector = async (selector) => { const encoded = JSON.stringify(selector); await evaluate(`document.querySelector(${encoded}).scrollIntoView({block:'center'})`); await pause(80); const rect = JSON.parse(await evaluate(`(() => { const r=document.querySelector(${encoded}).getBoundingClientRect(); return JSON.stringify({x:r.x,y:r.y,width:r.width,height:r.height}) })()`)); const x=rect.x+rect.width/2, y=rect.y+rect.height/2; await send('Input.dispatchMouseEvent',{type:'mousePressed',x,y,button:'left',clickCount:1}); await send('Input.dispatchMouseEvent',{type:'mouseReleased',x,y,button:'left',clickCount:1}); await pause(80) }
   const render = async (name) => { await evaluate(`fixture.render(${JSON.stringify(name)})`); await pause(100) }
   const input = async (id, text) => { await evaluate(`(() => { const el = document.getElementById(${JSON.stringify(id)}); Object.getOwnPropertyDescriptor(el.tagName === 'TEXTAREA' ? HTMLTextAreaElement.prototype : HTMLInputElement.prototype, 'value').set.call(el, ${JSON.stringify(text)}); el.dispatchEvent(new Event('input', {bubbles:true})); })()`); await pause(30) }
+  const theme = async (dark) => {
+    await evaluate(`document.documentElement.style.cssText=${JSON.stringify(dark ? '--dsw-alias-bg-base:#141414;--dsw-alias-bg-layer-1:#232323;--dsw-alias-bg-layer-2:#303030;--dsw-alias-label-primary:#eeeeee;--dsw-alias-label-secondary:#b8b8b8;--dsw-alias-label-tertiary:#aaaaaa;--dsw-alias-border-l1:#4a4a4a;--dsw-alias-border-l3:#666666;--dsw-alias-link:#8aafff;--dsw-alias-state-business-primary:#386ad9;' : '')}`)
+  }
   await send('Page.enable')
   await send('Emulation.setDeviceMetricsOverride', { width: 1280, height: 900, deviceScaleFactor: 1, mobile: false })
   await send('Page.navigate', { url: `http://127.0.0.1:${server.address().port}` })
   await until('!!window.fixture && document.body.innerText.includes("发现适合你的插件")')
+
+  for (const [width, dark] of [[1280, false], [480, true]]) {
+    await check('试用回归：无推荐无图片的大海报与窄屏 ' + width, async () => {
+      await send('Emulation.setDeviceMetricsOverride', { width, height: 900, deviceScaleFactor: 1, mobile: false }); await theme(dark); await render('trial-fallback')
+      await until('!!document.querySelector(".eac-market__poster--fallback")')
+      await expect('document.querySelector("#featured-title").textContent === "插件探索" && document.body.innerText.includes("不代表团队精选或评分")', 'directory spotlight was missing or falsely curated')
+      await expect('!document.querySelector(".eac-market__score-section") && fixture.stats.plans.length === 0 && fixture.stats.starts.length === 0', 'browsing invented scores or performed installation writes')
+      await expect('document.documentElement.scrollWidth <= innerWidth + 1', 'poster overflows the viewport')
+      await expect('document.querySelector(".eac-market__poster-stage").getBoundingClientRect().height >= 220', 'poster collapsed into a small card')
+      const shot = await send('Page.captureScreenshot', { format: 'png', captureBeyondViewport: false }); writeFileSync(join(output, 'trial-fallback-' + width + (dark ? '-dark' : '-light') + '.png'), Buffer.from(shot.data, 'base64'))
+    })
+  }
+  await check('试用回归：破图仍保留文字海报和详情入口', async () => {
+    await render('trial-broken-poster'); await until('!!document.querySelector(".eac-market__poster--fallback")')
+    await click('查看详情', 'document.querySelector(".eac-market__poster-copy")')
+    await expect('document.querySelector("h1").textContent.includes("目录中的") && fixture.stats.starts.length === 0', 'broken image disabled the detail flow')
+  })
+  await check('试用回归：目标状态阻断不误报无关插件风险、不提供绕过勾选', async () => {
+    await send('Emulation.setDeviceMetricsOverride', { width: 1280, height: 900, deviceScaleFactor: 1, mobile: false }); await theme(false); await render('trial-environment-blocked')
+    await click('查看安装方案', 'document.querySelector(".eac-market__poster-copy")'); await until('document.body.innerText.includes("安装目标状态待核对")')
+    await expect('document.body.innerText.includes("这不是对无关插件的风险判定") && !document.querySelector(".eac-modal input[type=checkbox]")', 'target blocker was conflated with optional risk consent')
+    await expect('[...document.querySelectorAll("button")].find(button => button.textContent === "确认安装").disabled && fixture.stats.starts.length === 0', 'target state could start installation')
+    const shot = await send('Page.captureScreenshot', { format: 'png', captureBeyondViewport: false }); writeFileSync(join(output, 'trial-environment-blocked-1280.png'), Buffer.from(shot.data, 'base64'))
+    await click('查看官方插件页'); await expect('fixture.stats.official > 0', 'official recovery action is not wired')
+    await click('重新预检'); await until('fixture.stats.plans.length === 2'); await expect('fixture.stats.starts.length === 0', 'retry bypassed the target-state barrier')
+  })
+  await check('试用回归：无关库存未知不阻断目标安装', async () => {
+    await render('trial-unrelated-inventory'); await click('查看安装方案', 'document.querySelector(".eac-market__poster-copy")')
+    await until('document.body.innerText.includes("确认安装")')
+    await expect('!document.body.innerText.includes("安装目标状态待核对") && ![...document.querySelectorAll("button")].find(button => button.textContent === "确认安装").disabled', 'unrelated inventory uncertainty blocked the target plan')
+    await click('确认安装'); await until('fixture.stats.starts.length === 1')
+    const shot = await send('Page.captureScreenshot', { format: 'png', captureBeyondViewport: false }); writeFileSync(join(output, 'trial-unrelated-inventory-1280.png'), Buffer.from(shot.data, 'base64'))
+  })
+  await check('试用回归：未验证浏览中性，安装只需最终明确确认', async () => {
+    await render('trial-fallback'); await click('全部插件')
+    await expect('!!document.querySelector(".eac-market__status[data-tone=neutral]") && !!document.querySelector(".eac-market__status[data-tone=danger]")', 'risk-neutral listing removed a hard incompatibility warning')
+    await click('查看安装方案', 'document.querySelector(".eac-market__plugin-card")'); await until('document.body.innerText.includes("确认安装")')
+    await expect('!document.querySelector(".eac-market__install-consent") && fixture.stats.plans[0].selections.every(item => item.tryUnverified === false) && ![...document.querySelectorAll("button")].find(button => button.textContent === "确认安装").disabled', 'native-like install was not ready')
+    await click('确认安装'); await until('fixture.stats.starts.length === 1')
+  })
+  await check('试用回归：手动暂停不被鼠标离开撤销，后台回来恢复可轮播', async () => {
+    await evaluate('window._trialIntervals = new Map(); window._trialSetInterval = window.setInterval; window._trialClearInterval = window.clearInterval; window.setInterval = (fn, delay, ...args) => { const id = window._trialSetInterval(fn, delay, ...args); if (delay === 6500) window._trialIntervals.set(id, fn); return id; }; window.clearInterval = id => { window._trialIntervals.delete(id); window._trialClearInterval(id); };')
+    try {
+      await render('trial-fallback'); await until('window._trialIntervals.size === 1')
+      await evaluate('Object.defineProperty(document, "hidden", { configurable: true, value: true }); document.dispatchEvent(new Event("visibilitychange"))'); await until('window._trialIntervals.size === 0')
+      await evaluate('Object.defineProperty(document, "hidden", { configurable: true, value: false }); document.dispatchEvent(new Event("visibilitychange"))'); await until('window._trialIntervals.size === 1')
+      await click('暂停')
+      await evaluate('const poster = document.querySelector(".eac-market__featured"); poster.dispatchEvent(new MouseEvent("mouseover", { bubbles: true })); poster.dispatchEvent(new MouseEvent("mouseout", { bubbles: true, relatedTarget: document.body }));')
+      await expect('window._trialIntervals.size === 0 && !!document.querySelector("button[aria-label=继续轮播]")', 'manual pause was overwritten by interaction pause')
+    } finally {
+      await evaluate('delete document.hidden; document.dispatchEvent(new Event("visibilitychange")); window.setInterval = window._trialSetInterval; window.clearInterval = window._trialClearInterval;')
+    }
+  })
 
   await check('发现页四区块：首推、推荐皮肤、高分插件、高分skill', async () => {
     await render('all-sections')
@@ -86,12 +147,9 @@ try {
     await expect('document.body.innerText.includes("可执行 1 项") && document.body.innerText.includes("跳过 2 项") && document.body.innerText.includes("依赖暂停 1 项")', 'partial scope is not explicit')
     await click('确认执行可用项'); await expect('fixture.stats.starts.length === 1 && document.body.innerText.includes("部分完成")', 'safe subset was blocked or result falsely shown complete')
   })
-  await check('组合：试装变化重新预检，硬不兼容始终跳过', async () => {
+  await check('组合：上游验证状态不增加安装门槛，硬阻断仍明确跳过', async () => {
     await render('collection-consent'); await click('查看组合变更'); await until('fixture.stats.plans.length === 1')
-    await evaluate("document.querySelector('input[type=checkbox]').click()"); await until('fixture.stats.plans.length === 2')
-    await expect('fixture.stats.plans[1].selections.every(item => item.tryUnverified) && document.body.innerText.includes("可执行 3 项") && document.body.innerText.includes("跳过 1 项") && document.body.innerText.includes("已知不兼容，不会执行")', 'consent did not update the safe scope')
-    await evaluate("document.querySelector('input[type=checkbox]').click()"); await until('fixture.stats.plans.length === 3')
-    await expect('!fixture.stats.plans[2].selections.some(item => item.tryUnverified) && document.body.innerText.includes("可执行 1 项")', 'unchecking consent retained stale executable scope')
+    await expect('!document.querySelector("input[type=checkbox]") && fixture.stats.plans[0].selections.every(item => item.tryUnverified === false) && document.body.innerText.includes("可执行 3 项") && document.body.innerText.includes("跳过 1 项")', 'native-like collection install still demanded consent')
     await send('Emulation.setDeviceMetricsOverride', { width: 480, height: 900, deviceScaleFactor: 1, mobile: false })
     await expect('document.documentElement.scrollWidth <= innerWidth + 1', 'collection preflight overflows at 480px')
     const shot = await send('Page.captureScreenshot', { format: 'png', captureBeyondViewport: false })
@@ -113,19 +171,15 @@ try {
     await expect("document.body.innerText.includes('组合版本或内容已变化') && fixture.stats.starts.length === 0 && [...document.querySelectorAll('button')].find(el => el.textContent === '确认执行可用项').disabled", 'changed collection reused old confirmation')
   })
 
-  await check('未勾选零提交、自动预检、勾选重预检及取消勾选作废', async () => {
+  await check('安装只需一次最终确认，不再要求额外试装勾选', async () => {
     await render('install'); await click('打开安装窗口'); await until('fixture.stats.plans.length === 1')
-    await expect("[...document.querySelectorAll('button')].find(e=>e.textContent==='确认安装').disabled", 'unchecked button must be disabled')
-    await evaluate("document.querySelector('input[type=checkbox]').click()"); await until('fixture.stats.plans.length === 2')
-    await expect('fixture.stats.plans[1].selections[0].tryUnverified === true', 'consent not bound to request')
-    await evaluate("document.querySelector('input[type=checkbox]').click()"); await until('fixture.stats.plans.length === 3')
-    await expect("fixture.stats.starts.length === 0 && [...document.querySelectorAll('button')].find(e=>e.textContent==='确认安装').disabled", 'uncheck must invalidate old consent')
-    await evaluate("document.querySelector('input[type=checkbox]').click()"); await until('fixture.stats.plans.length === 4'); await click('确认安装')
-    await expect('fixture.stats.starts.length === 1', 'explicit confirm must submit once')
+    await expect("!document.querySelector('input[type=checkbox]') && ![...document.querySelectorAll('button')].find(e=>e.textContent==='确认安装').disabled", 'native-like install still demanded an extra checkbox')
+    await click('确认安装'); await until('fixture.stats.starts.length === 1')
+    await expect('fixture.stats.plans.length === 1', 'install preflight was unnecessarily replayed')
   })
   await check('A迟到成功不能关闭B或串用B计划', async () => {
     await render('late'); await click('打开安装窗口'); await until('fixture.stats.plans.length === 1')
-    await evaluate("document.querySelector('input[type=checkbox]').click()"); await until('fixture.stats.plans.length === 2'); await click('确认安装')
+    await click('确认安装')
     await evaluate('fixture.openB()'); await until('document.body.innerText.includes("安装确认：合成插件 B")'); await evaluate('fixture.resolveA()'); await pause(100)
     await expect('fixture.stats.closes === 0 && fixture.stats.started[0] === "A" && document.body.innerText.includes("安装确认：合成插件 B")', 'late A closed B')
   })
@@ -177,7 +231,137 @@ try {
   })
   await check('目录刷新失败显示原因，不报已刷新', async () => {
     await render('home'); await click('更多'); await click('设置'); await click('刷新目录')
-    await expect('document.body.innerText.includes("目录刷新失败") && document.body.innerText.includes("合成来源离线") && !document.body.innerText.includes("目录已刷新。")', 'refresh failure was lost')
+    await expect('document.body.innerText.includes("目录刷新失败") && document.body.innerText.includes("为避免泄露本机路径或来源凭据") && !document.body.innerText.includes("目录已刷新。") && !document.body.innerText.includes("合成来源离线")', 'refresh failure state or safe error guidance was lost')
+  })
+  await check('任务记录：按需读取完整历史并分段加载', async () => {
+    await render('task-events')
+    await until('!!document.querySelector(".eac-market__task details summary")')
+    await evaluate('document.querySelector(".eac-market__task details summary").click()')
+    await until('fixture.stats.taskEventReads === 1 && document.body.innerText.includes("合成历史事件 100")')
+    await expect('fixture.stats.taskEventOffsets[0] === -1 && document.body.innerText.includes("合成历史事件 1")', 'first event page did not include sequence zero')
+    await expect('[...document.querySelectorAll(".eac-market__task button")].some(button => button.textContent.includes("加载更多记录"))', 'task event pagination control missing')
+    await click('加载更多记录'); await until('fixture.stats.taskEventReads === 2 && document.body.innerText.includes("合成历史事件 130")')
+    await expect('fixture.stats.taskEventOffsets[1] === 99 && document.body.innerText.includes("合成历史事件 101")', 'second event page skipped or repeated a sequence')
+    await expect('![...document.querySelectorAll(".eac-market__task button")].some(button => button.textContent.includes("加载更多记录"))', 'task event pagination did not finish')
+  })
+  await check('任务记录：兼容旧 Host 返回全历史末端游标，不跳过未读页', async () => {
+    await render('task-events-legacy-cursor')
+    await until('!!document.querySelector(".eac-market__task details summary")')
+    await evaluate('document.querySelector(".eac-market__task details summary").click()')
+    await until('fixture.stats.taskEventReads === 1 && document.body.innerText.includes("合成历史事件 100")')
+    await click('加载更多记录')
+    await until('fixture.stats.taskEventReads === 2 && document.body.innerText.includes("合成历史事件 130")')
+    await expect('fixture.stats.taskEventOffsets[1] === 99 && document.body.innerText.includes("合成历史事件 101")', 'legacy tail cursor skipped unread event history')
+  })
+  await check('任务记录：截断/读取失败明确提示，保留任务摘要', async () => {
+    await render('task-events-truncated')
+    await until('!!document.querySelector(".eac-market__task details summary")')
+    await evaluate('document.querySelector(".eac-market__task details summary").click()')
+    await until('document.body.innerText.includes("部分历史记录已被清理或不完整")')
+    await render('task-events-failure')
+    await until('!!document.querySelector(".eac-market__task details summary")')
+    await evaluate('document.querySelector(".eac-market__task details summary").click()')
+    await until('document.body.innerText.includes("完整记录读取失败")')
+    await expect('document.body.innerText.includes("开始安装 @example/alpha") && [...document.querySelectorAll("button")].some(button => button.textContent.includes("重新读取任务记录"))', 'history failure removed recent summary or prevented manual read recovery')
+  })
+  await check('任务记录：旧 Host 缺少 taskEvents 时保留最近摘要并明确说明', async () => {
+    await render('task-events-no-api')
+    await until('!!document.querySelector(".eac-market__task details summary")')
+    await evaluate('document.querySelector(".eac-market__task details summary").click()')
+    await until('document.body.innerText.includes("当前宿主不支持读取完整历史")')
+    await expect('document.body.innerText.includes("开始安装 @example/alpha")', 'legacy task fallback did not show the current summary events')
+    await expect('![...document.querySelectorAll(".eac-market__task button")].some(button => button.textContent.includes("加载更多记录"))', 'legacy task fallback exposed an unsupported pagination action')
+  })
+  await check('设置：来源受控刷新、只读版本检查和当前环境维护状态', async () => {
+    await render('settings'); await click('更多'); await click('设置')
+    await until('document.body.innerText.includes("已配置的来源") && document.body.innerText.includes("运行状态")')
+    await expect('document.body.innerText.includes("Agent Forge来源") && document.body.innerText.includes("离线内容需要通过独立导入流程更新")', 'configured source types or offline boundary are missing')
+    await expect('(() => { const row=[...document.querySelectorAll(".eac-market__source-row")].find(item => item.textContent.includes("离线内容需要通过独立导入流程更新")); return !!row && !row.querySelector("button") })()', 'offline-pack source exposed an unsupported refresh control')
+    await expect('!document.body.innerText.includes("fixture-token") && !document.body.innerText.includes("fixture-private") && !document.body.innerText.includes("fixture-user")', 'raw backend source error leaked credentials or a local path')
+    await expect('document.body.innerText.includes("1 个任务进行中") && document.body.innerText.includes("有操作等待重启")', 'maintenance snapshot was not surfaced')
+    await expect('!document.body.innerText.includes("https://example.invalid") && !document.body.innerText.includes("C:" + String.fromCharCode(92)) && !document.querySelector("input[name=sourceUrl]")', 'source URL or local path leaked into Client')
+    await click('刷新此来源'); await until('fixture.stats.sourceRefreshes.length === 1')
+    await until('document.body.innerText.includes("来源已刷新，市场目录已同步")')
+    await expect('fixture.stats.sourceRefreshes[0] === "curated-main"', 'refresh did not target the registered source ID')
+    await until('document.querySelector(".eac-market__source-row .eac-market__source-title")?.textContent.includes("可用")')
+    await click('检查当前目录'); await until('fixture.stats.updateChecks === 1')
+    await until('document.body.innerText.includes("目录已过期或刷新状态不确定")')
+    await expect('document.body.innerText.includes("发现新版本") && document.body.innerText.includes("无法确认") && document.body.innerText.includes("不下载、不安装")', 'manual update result lost stale/unknown/read-only semantics')
+  })
+  await check('设置：读取偏好、保存只读检查策略并保留自动写入关闭', async () => {
+    await render('settings'); await click('更多'); await click('设置')
+    await until('document.querySelector(".eac-market__policy-toggle input") && document.body.innerText.includes("当前接口尚不能显示调度是否已启动")')
+    await evaluate('document.querySelector(".eac-market__policy-toggle input").click()')
+    await click('保存偏好'); await until('fixture.stats.policyWrites.length === 1')
+    await until('document.body.innerText.includes("检查偏好已保存")')
+    await expect('fixture.stats.policyWrites[0].expectedRevision === "policy:r1" && fixture.stats.policyWrites[0].policy.automaticChecksEnabled === false && fixture.stats.policyWrites[0].policy.automaticDownloadsEnabled === false && fixture.stats.policyWrites[0].policy.automaticInstallsEnabled === false', 'saved policy did not use revision or read-only limits')
+    await expect('document.querySelector(".eac-market__policy-toggle input").checked === false', 'saved policy was not reflected in the control')
+  })
+  await check('设置：连续调整开关与周期保存正确值，不读取已释放的事件对象', async () => {
+    await render('settings'); await click('更多'); await click('设置')
+    await until('!!document.querySelector(".eac-market__policy-editor select")')
+    await expect('!document.body.innerText.includes("当前宿主尚未提供版本检查能力") && fixture.stats.updateChecks === 0', 'available update check was mislabeled as unavailable before the first read')
+    await evaluate('(() => { const toggle=document.querySelector(".eac-market__policy-toggle input"); const select=document.querySelector(".eac-market__policy-editor select"); toggle.click(); select.value="180"; select.dispatchEvent(new Event("change",{bubbles:true})); })()')
+    await until('document.querySelector(".eac-market__policy-toggle input")?.checked === false && document.querySelector(".eac-market__policy-editor select")?.value === "180"')
+    await click('保存偏好'); await until('fixture.stats.policyWrites.length === 1')
+    await expect('fixture.stats.policyWrites[0].policy.automaticChecksEnabled === false && fixture.stats.policyWrites[0].policy.intervalMinutes === 180', 'combined policy edits were lost')
+  })
+  await check('设置：如实显示旧偏好的自动写入项，用户保存才关闭', async () => {
+    await render('settings-unsafe-policy'); await click('更多'); await click('设置')
+    await until('document.body.innerText.includes("自动下载开启") && document.body.innerText.includes("自动安装开启")')
+    await expect('fixture.stats.policyWrites.length === 0 && fixture.stats.starts.length === 0', 'reading a legacy policy silently wrote preferences or started a task')
+    await click('保存偏好'); await until('fixture.stats.policyWrites.length === 1 && document.body.innerText.includes("自动下载关闭") && document.body.innerText.includes("自动安装关闭")')
+    await expect('fixture.stats.policyWrites[0].policy.automaticDownloadsEnabled === false && fixture.stats.policyWrites[0].policy.automaticInstallsEnabled === false && fixture.stats.starts.length === 0', 'policy save enabled automatic writes')
+  })
+  await check('设置：revision 冲突后重读当前值、保留用户草稿且不自动覆盖', async () => {
+    await render('settings-conflict'); await click('更多'); await click('设置')
+    await until('!!document.querySelector(".eac-market__policy-toggle input")')
+    await clickSelector('.eac-market__policy-toggle input')
+    await until('!!document.querySelector(".eac-market__policy-toggle input") && document.querySelector(".eac-market__policy-toggle input").checked === false')
+    await until('[...document.querySelectorAll("button")].some(button => button.textContent.includes("保存偏好") && !button.disabled)')
+    await click('保存偏好'); await until('fixture.stats.policyWrites.length === 1 && fixture.stats.policyReads >= 2')
+    await until('document.body.innerText.includes("旧值不会被自动覆盖")')
+    await expect('document.querySelector(".eac-market__policy-toggle input").checked === false && [...document.querySelectorAll("button")].some(button => button.textContent.includes("保存偏好") && !button.disabled)', 'conflict reload discarded the unsaved user choice')
+    await expect('fixture.stats.policyWrites.length === 1', 'conflict was automatically retried')
+  })
+  await check('设置：来源刷新失败不泄露后台 URL/凭据/本机路径', async () => {
+    await render('settings-refresh-failure'); await click('更多'); await click('设置')
+    await until('document.body.innerText.includes("已配置的来源")')
+    await click('刷新此来源'); await until('document.body.innerText.includes("为避免泄露本机路径或来源凭据")')
+    await expect('!document.body.innerText.includes("fixture-token") && !document.body.innerText.includes("fixture-private") && !document.body.innerText.includes("fixture-user")', 'raw backend refresh failure leaked sensitive source details')
+  })
+  await check('设置：拒绝展示属于其他 Profile 的维护状态', async () => {
+    await render('settings-foreign-environment'); await click('更多'); await click('设置')
+    await until('document.body.innerText.includes("后台返回的状态不属于当前环境，已拒绝展示")')
+    await expect('!document.body.innerText.includes("已核对 1 项插件状态") && !document.body.innerText.includes("1 个任务进行中")', 'foreign profile maintenance details leaked into the current market')
+  })
+  await check('设置：能力声明缺失时不调用后端新接口', async () => {
+    await render('settings-capability-missing'); await click('更多'); await click('设置')
+    await until('document.body.innerText.includes("当前宿主版本未提供来源列表") && document.body.innerText.includes("当前宿主版本未提供维护状态接口") && document.body.innerText.includes("当前宿主尚未提供版本检查能力")')
+    await expect('!document.body.innerText.includes("Agent Forge来源") && fixture.stats.policyReads === 0 && fixture.stats.updateChecks === 0 && fixture.stats.maintenanceReads === 0', 'capability negotiation did not prevent unsupported backend calls')
+  })
+  await check('设置：旧宿主缺少新接口时明确降级', async () => {
+    await render('home'); await click('更多'); await click('设置')
+    await until('document.body.innerText.includes("当前宿主版本未提供来源列表") && document.body.innerText.includes("当前宿主版本未提供维护状态接口") && document.body.innerText.includes("当前宿主尚未提供版本检查能力")')
+    await expect('![...document.querySelectorAll("button")].some(button => button.textContent.includes("刷新此来源")) && !document.body.innerText.includes("后台定时调度尚未接入")', 'old-host fallback exposed an unusable or misleading control')
+  })
+  await check('设置：480px/1280px 面板均可用，交互控件不溢出且保持触达尺寸', async () => {
+    for (const width of [480, 1280]) {
+      await send('Emulation.setDeviceMetricsOverride', { width, height: 900, deviceScaleFactor: 1, mobile: false })
+      await render('settings'); await click('更多'); await click('设置')
+      await until('document.body.innerText.includes("已配置的来源") && !!document.querySelector(".eac-market__policy-toggle input")')
+      await until('[...document.querySelectorAll(".eac-market__source-row button")].some(button => button.textContent.includes("刷新此来源") && !button.disabled) && [...document.querySelectorAll("button")].some(button => button.textContent.includes("检查当前目录") && !button.disabled)')
+      await evaluate(`document.documentElement.style.cssText=${JSON.stringify(width === 480 ? '--dsw-alias-bg-base:#141414;--dsw-alias-bg-layer-1:#232323;--dsw-alias-bg-layer-2:#303030;--dsw-alias-label-primary:#eeeeee;--dsw-alias-label-secondary:#b8b8b8;--dsw-alias-label-tertiary:#aaaaaa;--dsw-alias-border-l1:#4a4a4a;--dsw-alias-border-l3:#666666;--dsw-alias-link:#8aafff;--dsw-alias-state-business-primary:#386ad9;' : '')}`)
+      await expect('document.documentElement.scrollWidth <= innerWidth + 1', 'settings viewport overflow')
+      const controlSizes = await evaluate('JSON.stringify({refresh: document.querySelector(".eac-market__source-row .eac-button:not(:disabled)")?.getBoundingClientRect().height, interval: document.querySelector(".eac-market__policy-editor select")?.getBoundingClientRect().height, viewport: innerWidth, document: document.documentElement.scrollWidth})')
+      const parsedSizes = JSON.parse(controlSizes)
+      if (parsedSizes.refresh < 44 || parsedSizes.interval < 44) throw new Error('settings controls are below 44px at ' + width + 'px: ' + controlSizes)
+      const buttonContrast = await evaluate('(() => { const button=document.querySelector(".eac-market__source-row .eac-button:not(:disabled)"); const rgb=value=>value.match(/[\\d.]+/g).slice(0,3).map(Number); const lum=value=>rgb(value).map(channel=>{const c=channel/255;return c<=.04045?c/12.92:((c+.055)/1.055)**2.4}).reduce((total,channel,index)=>total+channel*[.2126,.7152,.0722][index],0); const style=getComputedStyle(button); const values=[lum(style.color),lum(style.backgroundColor)].sort((a,b)=>b-a); return (values[0]+.05)/(values[1]+.05) })()')
+      if (buttonContrast < 4.5) throw new Error('enabled source action contrast is below 4.5:1 at ' + width + 'px: ' + buttonContrast)
+      await evaluate('document.querySelector(".eac-market__scroll").scrollTo({top:0, behavior:"instant"})')
+      const settingsCapture = await send('Page.captureScreenshot', { format: 'png', captureBeyondViewport: true })
+      writeFileSync(join(output, width === 480 ? 'settings-480-dark.png' : 'settings-1280-light.png'), Buffer.from(settingsCapture.data, 'base64'))
+    }
   })
   await check('键盘Tab困于对话框、Escape关闭、焦点返回触发按钮', async () => {
     await render('install'); await evaluate('document.getElementById("launch").focus()'); await click('打开安装窗口')
@@ -196,9 +380,7 @@ try {
     await send('Input.dispatchKeyEvent', { type: 'keyDown', key: 'Escape', code: 'Escape', windowsVirtualKeyCode: 27 }); await pause(40)
     await expect('!document.querySelector("[role=menu]") && document.activeElement.textContent === "更多"', 'menu Escape did not return focus')
   })
-  const theme = async (dark) => {
-    await evaluate(`document.documentElement.style.cssText=${JSON.stringify(dark ? '--dsw-alias-bg-base:#141414;--dsw-alias-bg-layer-1:#232323;--dsw-alias-bg-layer-2:#303030;--dsw-alias-label-primary:#eeeeee;--dsw-alias-label-secondary:#b8b8b8;--dsw-alias-label-tertiary:#aaaaaa;--dsw-alias-border-l1:#4a4a4a;--dsw-alias-border-l3:#666666;--dsw-alias-link:#8aafff;--dsw-alias-state-business-primary:#386ad9;' : '')}`)
-  }
+
   if (listingsOnly) {
     await check('登记：27条默认折叠，位于主列表之后，不混入功能卡片', async () => {
       await render('skins-listings'); await click('全部插件')

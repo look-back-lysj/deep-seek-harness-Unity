@@ -33,7 +33,7 @@ async function start(setup: ReturnType<typeof setup>, bundle: PlanBundle, key = 
 }
 
 describe('REV-01/03/15 immutable planner', () => {
-  it.each([false, true])('both single and pack gate unverified consent (pack=%s)', async pack => {
+  it.each([false, true])('native-like install keeps upstream verification states installable (pack=%s)', async pack => {
     for (const verification of ['unknown', 'unverified', 'hard-incompatible'] as const) {
       for (const consent of [false, true]) {
         const context = { environmentId: 'env-test', hostFingerprint: 'test-host', catalogRevision: 'test', inventory: [], now: new Date(),
@@ -42,9 +42,9 @@ describe('REV-01/03/15 immutable planner', () => {
         const lockBytes = new TextEncoder().encode('test-only-lock')
         const result = await createPlanBundle(context, pack ? { packId: 'test', packVersion: '1.0.0', components: [{ pluginId: 'p0', required: true }], lockBytes,
           execution: { schemaVersion: '1', packId: 'test', packVersion: '1.0.0', lockDigest: await sha256Hex(lockBytes), coverage: 'complete', provenance: 'synthetic-test', edges: [] } } : undefined)
-        const allowed = consent && verification !== 'hard-incompatible'
-        expect(result.bundle?.plan.items[0]?.action).toBe(allowed ? 'add' : 'blocked')
-        expect(result.bundle?.steps).toHaveLength(allowed ? 1 : 0)
+        expect(result.bundle?.plan.items[0]?.action).toBe('add')
+        expect(result.bundle?.steps).toHaveLength(1)
+        expect(result.bundle?.plan.items[0]?.verification).toBe(verification)
       }
     }
   })
@@ -118,7 +118,7 @@ describe('REV-03/04/06/07 production coordination', () => {
     await waitForTask(s.manager, next.task.taskId, task => task.status === 'completed')
   })
 
-  it.each(['version', 'enabled', 'source', 'inventory'] as const)('rechecks %s after acquisition before any write', async change => {
+  it.each(['version', 'enabled', 'source'] as const)('rechecks %s after acquisition before any write', async change => {
     const entered = gate(); const release = gate(); const fallback = new FakeArtifactPort()
     const host = new FakeHost([inventoryItem('a', '1.0.0', false)])
     const s = setup(host, { async acquire(request) { entered.resolve(); await release.promise; return fallback.acquire(request) }, async release() {} })
@@ -127,10 +127,38 @@ describe('REV-03/04/06/07 production coordination', () => {
     if (change === 'version') host.items.set('a', inventoryItem('a', '9.0.0', false))
     if (change === 'enabled') host.items.set('a', inventoryItem('a', '1.0.0', true))
     if (change === 'source') host.items.set('a', { ...inventoryItem('a', '1.0.0', false), source: 'unknown' })
-    if (change === 'inventory') {
+    release.resolve()
+    await waitForTask(s.manager, task.task.taskId, task => task.status === 'needs-attention')
+    expect(host.calls).toHaveLength(0)
+  })
+
+  it('allows unrelated inventory uncertainty after acquisition without failing the target install', async () => {
+    const entered = gate(); const release = gate(); const fallback = new FakeArtifactPort()
+    const host = new FakeHost([inventoryItem('a', '1.0.0', false)])
+    const s = setup(host, { async acquire(request) {
+      entered.resolve(); await release.promise
       const read = host.readState.bind(host)
-      host.readState = async () => { const state = await read(); return { ...state, inventory: { ...state.inventory, unknownItems: ['listBundles:failure'] } } }
-    }
+      host.readState = async () => { const state = await read(); return { ...state, inventory: { ...state.inventory, unknownItems: ['bundle-version:legacy-skin'] } } }
+      return fallback.acquire(request)
+    }, async release() {} })
+    const task = await start(s, await makeBundle({ plugins: [{ packageName: 'a', version: '2.0.0', currentVersion: '1.0.0', currentEnabled: false }] }))
+    await entered.promise
+    release.resolve()
+    await waitForTask(s.manager, task.task.taskId, task => task.status === 'completed')
+    expect(host.calls).toHaveLength(1)
+  })
+
+  it('still blocks a target whose own inventory identity becomes unknown before write', async () => {
+    const entered = gate(); const release = gate(); const fallback = new FakeArtifactPort()
+    const host = new FakeHost([inventoryItem('a', '1.0.0', false)])
+    const s = setup(host, { async acquire(request) {
+      entered.resolve(); await release.promise
+      const read = host.readState.bind(host)
+      host.readState = async () => { const state = await read(); return { ...state, inventory: { ...state.inventory, unknownItems: ['bundle-version:a'] } } }
+      return fallback.acquire(request)
+    }, async release() {} })
+    const task = await start(s, await makeBundle({ plugins: [{ packageName: 'a', version: '2.0.0', currentVersion: '1.0.0', currentEnabled: false }] }))
+    await entered.promise
     release.resolve()
     await waitForTask(s.manager, task.task.taskId, task => task.status === 'needs-attention')
     expect(host.calls).toHaveLength(0)
@@ -219,6 +247,22 @@ describe('REV-03/04/06/07 production coordination', () => {
     expect(completed.retryOfTaskId).toBe(first.task.taskId)
     expect(s.host.calls).toHaveLength(2)
     expect((await s.store.list('env-test')).length).toBe(2)
+  })
+
+  it('auto-closes a proven no-write task and lets the next install proceed', async () => {
+    const host = new FakeHost([inventoryItem('b', '1.0.0', false)])
+    const s = setup(host)
+    const oldBundle = await makeBundle({ plugins: [{ packageName: 'a', version: '1.0.0' }] })
+    const old = await makeTaskRecord(oldBundle, 'no-write-poison')
+    const record = withExecution({
+      ...old,
+      task: { ...old.task, status: 'needs-attention' as const, nextAction: 'reconcile-before-retrying' as const },
+    }, { writeUncertain: true })
+    await s.store.put(record)
+    const next = await start(s, await makeBundle({ plugins: [{ packageName: 'b', version: '2.0.0', currentVersion: '1.0.0', currentEnabled: false }] }))
+    expect((await s.manager.get(record.task.taskId))?.status).toBe('cancelled')
+    await waitForTask(s.manager, next.task.taskId, task => task.status === 'completed')
+    expect(host.calls.map(call => call.packageName)).toEqual(['b'])
   })
 
   it('never replays a legacy unknown request even when disk already has the target', async () => {
@@ -318,6 +362,24 @@ describe('REV-08 shared ordinary management', () => {
     expect((await fresh.manage(request, write)).kind).toBe('applied')
     expect(write).toHaveBeenCalledTimes(1)
   })
+  it('allows target management through unrelated inventory uncertainty and still blocks target-specific uncertainty', async () => {
+    const host = new FakeHost([inventoryItem('managed', '1.0.0', false)])
+    const s = setup(host)
+    host.stable = false
+    host.unknownSharedImpact = true
+    host.unknownItems = ['bundle-version:legacy-skin']
+    const remove = vi.fn(async (): Promise<HostInstallOutcome> => { host.items.delete('managed'); return { kind: 'applied', changed: true, restartRequired: false, permissionChanges: [] } })
+    expect(await s.manager.manage({ environmentId: 'env-test', packageName: 'managed', expectedVersion: '1.0.0', action: 'remove', idempotencyKey: 'remove-unrelated' }, remove)).toMatchObject({ kind: 'applied' })
+    expect(remove).toHaveBeenCalledTimes(1)
+
+    const nextHost = new FakeHost([inventoryItem('managed', '1.0.0', false)])
+    const next = setup(nextHost)
+    nextHost.unknownItems = ['bundle-version:managed']
+    const blockedWrite = vi.fn()
+    await expect(next.manager.manage({ environmentId: 'env-test', packageName: 'managed', expectedVersion: '1.0.0', action: 'remove', idempotencyKey: 'remove-target-unknown' }, blockedWrite)).rejects.toMatchObject({ code: 'management/state-unknown' })
+    expect(blockedWrite).not.toHaveBeenCalled()
+  })
+
   it('persists dedupe across service recreation, rejects version drift and verifies successful enable/remove', async () => {
     const s = setup(new FakeHost([inventoryItem('managed', '1.0.0', false)]))
     const request = { environmentId: 'env-test', packageName: 'managed', expectedVersion: '1.0.0', idempotencyKey: 'enable', action: 'enable' as const }

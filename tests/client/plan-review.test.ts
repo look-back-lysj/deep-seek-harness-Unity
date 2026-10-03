@@ -40,15 +40,15 @@ describe('组合预检的执行范围', () => {
     expect(reviewInstallPlan(plan([blocked, item('B')]), true, [{ prerequisiteId: 'A', consumerId: 'B', milestone: 'installed' }], true).canConfirm).toBe(false)
     expect(reviewInstallPlan(plan([]), true, [], true).canConfirm).toBe(false)
   })
-  it('不能只在UI声称跳过：后台仍把未同意或硬不兼容项列为执行时拒绝整份确认', () => {
-    for (const unsafe of [item('A', { verification: 'unverified' }), item('A', { verification: 'unknown' }), item('A', { blockers: ['artifact:not-installable'] })]) {
-      expect(reviewInstallPlan(plan([unsafe, item('B')]), true, [], false).canConfirm).toBe(false)
+  it('市场只阻止真实制品/计划问题，上游验证状态不拒绝安装', () => {
+    for (const safe of [item('A', { verification: 'unverified' }), item('A', { verification: 'unknown' }), item('A', { verification: 'hard-incompatible' })]) {
+      expect(reviewInstallPlan(plan([safe, item('B')]), true, [], false).canConfirm).toBe(true)
     }
-    expect(reviewInstallPlan(plan([item('A', { verification: 'hard-incompatible' }), item('B')]), true, [], true).canConfirm).toBe(false)
+    expect(reviewInstallPlan(plan([item('A', { blockers: ['artifact:not-installable'] }), item('B')]), true, [], false).canConfirm).toBe(false)
   })
-  it('单插件的试装和硬限制保持不变', () => {
-    expect(reviewInstallPlan(plan([item('A', { verification: 'unverified' })]), false, [], false).canConfirm).toBe(false)
-    expect(reviewInstallPlan(plan([item('A', { verification: 'unverified' })]), false, [], true).canConfirm).toBe(true)
+  it('单插件只按实际计划问题阻止', () => {
+    expect(reviewInstallPlan(plan([item('A', { verification: 'unverified' })]), false, [], false).canConfirm).toBe(true)
+    expect(reviewInstallPlan(plan([item('A', { verification: 'unknown' })]), false, [], true).canConfirm).toBe(true)
     expect(reviewInstallPlan(plan([item('A', { action: 'blocked', verification: 'hard-incompatible' })]), false, [], true).canConfirm).toBe(false)
   })
 })

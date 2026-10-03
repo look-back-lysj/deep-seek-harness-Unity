@@ -83,7 +83,7 @@ describe('任务与安装弹窗回归', () => {
     expect(html).toContain('失败')
     expect(html).toContain('已完成 2 / 2 项')
     expect(html).toContain('不显示未经核实的百分比')
-    expect(html).toContain('错误摘要')
+    expect(html).toContain('安装问题')
     expect(html).toContain('下一步：')
     expect(html).toContain('摘要与已登记制品不一致')
     expect(html).toContain('artifact:digest-mismatch')
@@ -92,6 +92,34 @@ describe('任务与安装弹窗回归', () => {
     expect(html).toContain('@example/failing：already-approved')
     expect(html).toContain('不要使用校验失败的文件')
     expect(html).toMatch(/<details><summary>查看任务记录/)
+  })
+
+  it('版本不兼容只显示简短结论，长报告默认折叠', () => {
+    const base = taskFixture({ taskId: 'incompatible', status: 'failed' })
+    const task: TaskState = { ...base, items: [{ ...base.items[0]!, status: 'failed', installOutcome: 'failed',
+      error: 'incompatible-version', errorCode: 'incompatible-version', packageResultCode: 'unknown',
+      diagnostic: 'long official diagnostic with peerDependencies and rollback details' }] }
+    const html = renderTaskDrawer([task])
+    expect(html).toContain('插件与当前 DeepSeek Harness 版本不兼容')
+    expect(html).toContain('请安装适配当前 DeepSeek Harness 版本的插件版本')
+    expect(html).toContain('<details><summary>查看详细报告</summary>')
+    expect(html).toContain('long official diagnostic')
+  })
+
+  it('成功结算后不继续展示旧 receipt/postcondition 错误摘要', () => {
+    const base = taskFixture({ taskId: 'receipt-success', status: 'completed' })
+    const task: TaskState = {
+      ...base,
+      items: [{ ...base.items[0]!, status: 'disabled', installOutcome: 'applied', changed: true,
+        error: 'official receipt saved but dependency, cache bytes or inventory did not verify',
+        errorCode: 'receipt/postcondition', packageResultCode: 'exit-0' }],
+      events: [...base.events, { at: '2026-10-03T00:00:00.000Z', level: 'error' as const, message: 'Host结果：unknown', phase: 'installing' as const, sequence: 99 }],
+    }
+    const html = renderTaskDrawer([task])
+    expect(html).toContain('已完成')
+    expect(html).toContain('已停用')
+    expect(html).not.toContain('错误摘要')
+    expect(html).not.toContain('receipt/postcondition')
   })
 
   it('没有逐项总数时不编造百分比', () => {

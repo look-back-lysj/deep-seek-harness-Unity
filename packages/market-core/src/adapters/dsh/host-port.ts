@@ -26,6 +26,7 @@ import type {
 } from '../../core/ports.ts'
 import { canonicalJson, pendingBuildsDigest } from '../../core/canonical.ts'
 import { DshManagerAdapter, type InventorySourceEvidence } from './manager.ts'
+import { readIncompatibleBundleEvidence } from './incompatible-evidence.ts'
 
 interface OfficialManager {
   installBundle?(spec: string, options?: {
@@ -167,6 +168,10 @@ function isMarketOutcome(value: unknown): value is HostInstallOutcome {
   if (entry.kind === 'failed') return typeof entry.changed === 'boolean' && typeof entry.error === 'string'
   if (entry.kind === 'cancelled') return typeof entry.changed === 'boolean'
   return entry.kind === 'unknown' && typeof entry.error === 'string'
+}
+
+function inventoryIssueAffectsPackage(issue: string, packageName: string): boolean {
+  return issue === `bundle-version:${packageName}` || issue.startsWith(`bundle:${packageName}:`)
 }
 
 function unknownOutcome(message: string, errorCodeValue: string, result: unknown, permissions: readonly PermissionChange[] = []): HostInstallOutcome {
@@ -361,7 +366,10 @@ export class OfficialHostPort implements HostPort {
     private readonly hostIdentity?: { readonly hostVersion: string; readonly profileName: string },
   ) {
     this.receipts = new NodePersistenceFiles(join(ctx.profileContext.dir, 'eac-market', 'official-receipts'))
-    this.adapter = new DshManagerAdapter(ctx, environmentId, () => this.sourceEvidence())
+    this.adapter = new DshManagerAdapter(ctx, environmentId, () => this.sourceEvidence(), {
+      ...(hostIdentity === undefined ? {} : { hostVersion: hostIdentity.hostVersion }),
+      readIncompatibleEvidence: name => readIncompatibleBundleEvidence(ctx, name),
+    })
   }
 
   /** Resolve at call time: pluginManager may activate after this service. */
@@ -377,6 +385,7 @@ export class OfficialHostPort implements HostPort {
     const inventory = await this.adapter.inventory(this.environmentId)
     let stable = inventory.unknownItems.length === 0 && this.active.size === 0
     let unknownSharedImpact = !stable
+    let writeBarrier = this.active.size > 0
     let reason: string | undefined = stable ? undefined : 'official inventory or active request is not settled'
     try {
       const raw = readFileSync(join(this.ctx.profileContext.dir, '.plugin-manager', 'run.json'), 'utf8')
@@ -387,12 +396,14 @@ export class OfficialHostPort implements HostPort {
       if (alive(pid, grouped)) {
         stable = false
         unknownSharedImpact = true
+        writeBarrier = true
         reason = `official package process ${pid} is still active`
       }
     } catch (error) {
       if ((error as NodeJS.ErrnoException).code !== 'ENOENT') {
         stable = false
         unknownSharedImpact = true
+        writeBarrier = true
         reason = 'official package run record is unreadable'
       }
     }
@@ -401,7 +412,7 @@ export class OfficialHostPort implements HostPort {
       ...(this.hostIdentity === undefined ? {} : { hostFingerprint: canonicalJson({ ...this.hostIdentity, capabilities: [...this.capabilities()].sort() }) }),
       sessionRevision: HOST_SESSION,
       activeRequests: [...this.active],
-      activity: { stable, unknownSharedImpact, ...(reason === undefined ? {} : { reason }) },
+      activity: { stable, unknownSharedImpact, writeBarrier, ...(reason === undefined ? {} : { reason }) },
     }
   }
 
@@ -491,7 +502,8 @@ export class OfficialHostPort implements HostPort {
           const safe = typeof dependency === 'string' && dependency.startsWith('file:')
             && normalize(resolve(this.ctx.profileContext.dir, dependency.slice(5))).toLowerCase() === normalize(resolve(request.artifact.localRef)).toLowerCase()
             && await this.artifactMatches(request)
-            && inventory.unknownItems.length === 0 && target?.version === request.artifact.version && target.source === 'market-cache-file'
+            && !inventory.unknownItems.some(issue => inventoryIssueAffectsPackage(issue, request.artifact.packageName))
+            && target?.version === request.artifact.version && target.source === 'market-cache-file'
           if (!safe || this.manager.setBundleEnabled === undefined) mapped = { kind: 'unknown', error: 'explicit disable prerequisite changed or unavailable', permissionChanges: mapped.permissionChanges }
           else {
             const disabled = await mapOfficialChange(await this.manager.setBundleEnabled(request.artifact.packageName, false))
@@ -503,7 +515,8 @@ export class OfficialHostPort implements HostPort {
       if (mapped.kind === 'applied') {
         const inventory = await this.adapter.inventory(this.environmentId)
         const installed = inventory.items.find(item => item.packageName === request.artifact.packageName)
-        if (inventory.unknownItems.length > 0 || installed?.version !== request.artifact.version || installed.source !== 'market-cache-file' || installed.bundleEnabled !== request.enabled)
+        const targetUnknown = inventory.unknownItems.some(issue => inventoryIssueAffectsPackage(issue, request.artifact.packageName))
+        if (targetUnknown || installed?.version !== request.artifact.version || installed.source !== 'market-cache-file' || installed.bundleEnabled !== request.enabled)
           return { kind: 'unknown', error: 'official receipt saved but dependency, cache bytes or inventory did not verify', errorCode: 'receipt/postcondition', permissionChanges: mapped.permissionChanges }
       }
       return mapped

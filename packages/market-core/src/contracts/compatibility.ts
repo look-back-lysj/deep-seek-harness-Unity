@@ -3,7 +3,7 @@
  * Unknown/prerelease protocol identifiers are rejected rather than guessed.
  */
 export const CORE_API_VERSION = '1.0.0'
-export const CORE_VERSION = '0.1.0'
+export const CORE_VERSION = '0.1.6'
 
 function parseVersion(value: string): readonly number[] | undefined {
   if (!/^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/u.test(value)) return undefined

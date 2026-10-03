@@ -13,7 +13,7 @@ export const helloFixture: EnvironmentHello = {
   environmentId: 'test-environment',
   profileName: 'desktop',
   hostVersion: '0.1.7-rc.2',
-  capabilities: ['browse', 'install', 'enable', 'disable', 'remove', 'restart-handoff'],
+  capabilities: ['browse', 'install', 'enable', 'disable', 'remove', 'restart-handoff', 'core-maintenance', 'update-check', 'catalog-source-list', 'agent-forge-refresh', 'update-policy'],
 }
 
 const basePlugin: CatalogPlugin = {

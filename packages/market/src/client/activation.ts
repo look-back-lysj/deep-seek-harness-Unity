@@ -80,6 +80,7 @@ const METHOD_ALIASES: Readonly<Record<string, string>> = {
   listDrafts: 'authorDraftList',
   getDraft: 'authorDraftGet',
   saveDraft: 'authorDraftSave',
+  deleteDraft: 'authorDraftDelete',
   importReadme: 'authorReadmeImport',
   previewReadme: 'authorReadmePreview',
   applyReadmePreview: 'authorReadmeApplyPreview',
@@ -188,7 +189,9 @@ export function remoteFacade(raw: unknown): MarketRemote {
       const method = target[name]
       if (typeof method !== 'function') return undefined
       return async (...args: readonly unknown[]): Promise<unknown> => {
-        if (SIDE_EFFECT_METHODS.has(name)) await negotiateWrite(source)
+        const updateRequest = args[0] as { readonly refreshFirst?: unknown } | undefined
+        const readOnlyUpdateCheck = name === 'checkUpdates' && updateRequest?.refreshFirst !== true
+        if (SIDE_EFFECT_METHODS.has(name) && !readOnlyUpdateCheck) await negotiateWrite(source)
         const callArgs = property === 'refreshCatalog' && args.length === 0 ? [{}] : [...args]
         const value = unwrap(await (method as (...values: unknown[]) => unknown).apply(target, callArgs))
         // Refresh failure is a domain result with a usable old snapshot. The

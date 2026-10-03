@@ -56,6 +56,29 @@ describe('REV-02/03/05 recoverable official ownership', () => {
     expect(f.manager.installBundle).toHaveBeenCalledTimes(1)
   })
 
+  it('accepts a verified target while unrelated inventory entries remain unknown', async () => {
+    const f = await fixture()
+    f.manager.installBundle.mockImplementationOnce(async (path: string, options: { enabled: boolean }) => {
+      await f.manager.installBundle.getMockImplementation()!(path, options)
+      f.manager.listBundles = async () => [
+        { name: 'legacy-skin', installed: true, enabled: true, removable: false, rows: [] },
+        { name: 'test-package', version: '1.0.0', installed: true, enabled: options.enabled, removable: true, rows: [{ rowId: 'row', moduleName: 'test-package', entryId: 'old-active' }] },
+      ]
+      return { application: 'applied', changed: true, bundle: 'test-package', target: 'test-package', stage: 'install' }
+    })
+    expect(await f.port.install(f.request)).toMatchObject({ kind: 'applied', changed: true })
+  })
+
+  it('still reports postcondition unknown when the target itself cannot be verified', async () => {
+    const f = await fixture()
+    f.manager.installBundle.mockImplementationOnce(async (path: string, options: { enabled: boolean }) => {
+      await f.manager.installBundle.getMockImplementation()!(path, options)
+      f.manager.listBundles = async () => [{ name: 'test-package', version: '9.9.9', installed: true, enabled: options.enabled, removable: true, rows: [] }]
+      return { application: 'applied', changed: true, bundle: 'test-package', target: 'test-package', stage: 'install' }
+    })
+    expect(await f.port.install(f.request)).toMatchObject({ kind: 'unknown', errorCode: 'receipt/postcondition' })
+  })
+
   it.each(['cache', 'reference'] as const)('revokes source proof when %s changes', async change => {
     const f = await fixture()
     await f.port.install(f.request)

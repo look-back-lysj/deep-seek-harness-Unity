@@ -12,6 +12,16 @@
 
 **轻量方案边界：**采用现有 Core / Adapter 加一条统一的 Node 网络传输路径（优先用目标 DSH Runtime 自带的 `fetch`，通过每请求 Undici dispatcher 接入代理；若目标 Runtime 无法提供已验证的 dispatcher，再由 Host 注入与其兼容的实现）。不得设置进程级全局代理或把网络切到多套客户端。本轮不强制 Motrix、aria2、libcurl、CDN、独立下载服务器或新的后台服务。只有在真实网络证据表明“可靠传输已正确接线但特定地区仍不可达”时，才重新评估分发层。市场自己的下载路径也不等于官方包管理器后续依赖的下载路径，两者须分开验收。
 
+## 2026-10-02 增量进度（按当前工作区复核）
+
+- 当前协作基线仍是 `refactor/market-core-adapter` / `d9190bf8d7c09dce4c026a2d47f508ef8c9fc3ff`；本轮实现还在未提交工作区，必须以最终集成 diff 和验证重新判断，不能用 HEAD 标记代替当前源码状态。
+- 既有 `catalogSources / catalogRefresh / agentForgeRefresh / maintenanceStatus / checkUpdates / updatePolicyGet / updatePolicySave` 已在 Backend 与 Adapter Remote；Client 设置页已消费来源、维护、手动只读更新比较和策略保存；TaskDrawer 已接入分页并验证旧 Host 降级；后端 persistence/TaskManager 的游标越过未读事件缺陷已修复，205/210 条多页合并回归通过。已补 `deleteDraft → authorDraftDelete` 映射。
+- G6 的 DSH Fiber 生命周期内只读检查调度已实现：策略变更后排期、关闭面板不中止、Fiber disposal 清理 timer、重启读回最近/下次调度数据；调度不创建计划、不下载、不安装。Core 定向调度测试 24 项通过，覆盖 stop/refresh 异步竞态、失败退避、损坏记录保留和磁盘写失败。
+- 调度器最近结果/下次时间仍未通过公开 Backend/Remote 提供给前端。需要先确认并冻结 G0 的 A/B/C 选择；讨论稿见 [G0 接口冻结提案（待用户确认）](G0-INTERFACE-DECISION-PROPOSAL-2026-10-02.md)。没有确认前，不把提案 DTO 当已授权合同。
+- 离线独立分块导入、Bundle 预览 token/计划消费、任务取消影响预览/确认仍没有公开闭环，保持 G0 待冻结。不可把 `authorTransfer*`、选择图纯函数或 `taskCancel` 单入口充作完成证据。
+- 当前整体验证证据：`pnpm check` 通过，72 个测试文件通过、1 个文件跳过；675 项通过、2 项跳过；包检查报告 37 个 Remote 描述。合成 browser-check 42 场景通过。以上是代码/合成证据，不是官方 DSH Desktop 真实验收。
+- 官方隔离 Desktop `0.2.0-rc.1`、真实网络/代理、空缓存首次安装/后续依赖仍待验证；不擅自发行或推送。
+
 ## 1. 基线、范围与完成含义
 
 ### 1.1 固定基线

@@ -1,6 +1,6 @@
 {
   "name": "@dsh-eac/market-core",
-  "version": "0.1.0",
+  "version": "0.1.6",
   "description": "Headless EAC market business runtime and explicit DSH host binding",
   "type": "module",
   "main": "./lib/index.js",

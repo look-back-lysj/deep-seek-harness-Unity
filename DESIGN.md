@@ -207,3 +207,32 @@ await ctx.remote.$mount(TYPERT_REMOTE)
 - 当前证据目录 `D:/eac-market-verify/implementation-20260928/C-UI/compatibility`。
 
 该矩阵只证明 Client 在合成 Edge 中的静态兼容分支，官方 DeepSeek Harness Desktop 仍须在登录/API Key 可用后单独验收。
+
+
+## 15. 2026-10-02 前后端现有接口接入与设置可用性
+
+本轮遵循既有 [视觉与交互方向合同](docs/handoff/VISUAL-INTERACTION-DIRECTION-2026-10-01.md)，不重新设计整套页面，也不在 Client 内复制 Core 业务逻辑：
+
+- 设置页把已登记来源、维护快照、手动只读版本比较和检查偏好组织成一组可理解的分区；来源列表只读宿主配置，不接收任意 URL 或本机路径。
+- 来源刷新使用已登记 `sourceId`；离线包来源不提供不支持的网络刷新按钮；Agent Forge 行为同时检查宿主 capability、Remote 方法和来源是否启用。
+- 维护快照只在 `environmentId` 与当前 Host 相同才显示，防止跨 Profile 状态串显。来源状态只展示结构化状态和安全的下一步提示，不显示 Host 原始错误文本（可能包含 URL、凭据或本机路径）。
+- `taskEvents` 只在用户展开任务记录后读取，按 100 条一页追加历史，游标按实际返回页末推进（不信任旧 Host 全历史末端值），并合并仍在更新的任务摘要事件；旧 Host 缺方法时保留摘要中的最近事件，失败可手动重读。
+- `checkUpdates` 的 `refreshFirst:false` 是只读比较，不走写入握手；要求刷新已登记来源时仍走写入握手。策略保存发送当前 `expectedRevision`，失败后重新读取但不自动重放。
+- 当前 Core 调度器在 DSH 生命周期运行，面板关闭不停止；DSH 退出则暂停，重启恢复。但旧 Host 的 update-policy capability 只证明策略读写，UI 因此不把保存策略当成调度已启动或已执行的回执；返回的旧自动写入偏好也如实展示，用户保存才关闭。最近/下次后台检查状态还没有公开 Remote 查询合同；待 G0 选择冻结后再增加显示。
+
+验证记录：`pnpm check` 通过（72 个测试文件通过、1 个固定协议文件跳过；675 项通过、2 项跳过；Remote descriptors 37 个）。全量合成 browser-check 当前记录 42 项通过；设置专项还覆盖 480px/1280px、明暗主题、活动按钮对比度/44px 目标、旧宿主/capability 缺失、revision 冲突、offline-pack 按钮边界、来源刷新错误脱敏、跨 Profile 快照拒绝，以及 `taskEvents` 分页读取/旧 Host 无此方法时的降级。截图在 `D:/eac-market-verify/market-client-20261002/integration-cursor-and-scheduler-20261002-1536/` 与专项输出目录。
+
+未验证：官方 DeepSeek Harness Desktop `0.2.0-rc.1` 的真实 Remote/生命周期；真实读屏、主题 token、120%–200% 缩放、forced-colors、嵌入 Modal、网络来源刷新和 pluginManager 长链路。合成 browser-check 不替代这些验收。
+
+
+## 16. 2026-10-02 官方试用反馈：首推与安装提示修复
+
+用户选择方案 A：在既有 Quiet Editorial Utility 方向上修复 Client 和市场宿主适配，不重写官方程序、不自动处理旧皮肤，不批准 G0 新合同。
+
+- 海报优先使用真实精选；没有精选时将现有目录中已有安装包且非硬不兼容的功能条目展示为“插件探索”，明示不是团队精选或评分。只做视觉组织，不构造虚假的 DiscoveryCard/推荐记录。没有图片或图片失败保留同尺寸排版海报；皮肤、高分分区仍无数据不显示。
+- 大海报位于皮肤入口之前，保留详情、安装方案、分页、手动暂停；手动暂停与悬停/焦点暂停独立，后台隐藏监听不依赖轮播 timer，返回后可恢复。减少动态时不自动轮播和淡入。标题使用平衡换行，避免长中文孤字。
+- 列表中 unverified 是中性事实，不等同已知危险；硬不兼容保留 danger。安装仍从真实预检开始，显式试装同意和最终确认都保留，不自动开始任务。
+- inventory:unverified-state 单独解释为环境状态待核对，不宣称目标插件有风险；该状态下隐藏无法解除阻断的试装勾选，提供官方插件页与重新预检。现有库存 unknownItems 仅投影安全包名和通俗类别，不输出原始路径/URL/凭据。
+- 常驻冗长保护说明折叠收纳；降级第二次确认、校验/缺包/硬阻断、未知提交不重放等保护不变。
+
+新增 9 项 Client 回归、Client 全量 244 项、Adapter 定向 68 项通过；主控串行完整检查 736 项通过、2 项固定协议跳过，类型/包边界通过；合成浏览器全量 48 项通过，Impeccable detect 为 []。新包尚未覆盖用户官方版，最终本机重装和安装预检实机边界以最新交接记录为准。
