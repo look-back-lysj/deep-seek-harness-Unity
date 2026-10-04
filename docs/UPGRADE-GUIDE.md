@@ -1,6 +1,6 @@
 # EAC 市场最新版升级指南
 
-当前源码候选：桌面适配器 `@dsh-eac/market@0.1.0-mvp.17`，核心包 `@dsh-eac/market-core@0.1.6`；同时提供 Registry 与 GitHub 固定地址双通道候选。双包尚未正式发布；当前可安装发行版仍为 `0.1.0-mvp.9`。本文件是当前唯一升级操作指南，历史报告用于追溯，不作为当前安装说明。
+当前源码候选：桌面适配器 `@dsh-eac/market@0.1.0-mvp.18`，核心包 `@dsh-eac/market-core@0.1.6`；Registry 与 GitHub 固定地址双通道正式发行包位于 `releases/0.1.0-mvp.18-dual/`。npm Registry 发布与官方 Desktop 对本版的实机验收尚未完成；普通用户的可安装发行版仍为 `0.1.0-mvp.9`。本文件是当前唯一升级操作指南，历史报告用于追溯，不作为当前安装说明。
 
 ## 2026-10-02 本机方案 A 修复候选
 
@@ -71,7 +71,7 @@ pnpm pack:release --out-dir D:/eac-market-verify/release-candidate --core-url "h
 
 上面的 HTTPS 地址是参数示例，必须替换为实际固定地址。也可用 `--registry-core` 生成精确版本依赖候选，但该参数不检查公网包仓库是否已发布 core。发行脚本只准备候选，不上传文件、不修改 npm 配置，也不证明远端可用。官方 DSH 的 `workspace:*` peer 必须保留，只有本地 core 依赖会在隔离 staging 中转换。
 
-双通道候选位于 `releases/0.1.0-mvp.17-dual/`。A 通道使用 `--registry-core`，B 通道使用固定 GitHub commit 的 `--core-url`；用户始终只安装 adapter。实际官方安装可使用：
+双通道发行包位于 `releases/0.1.0-mvp.18-dual/`。A 通道使用 `--registry-core`，B 通道使用固定 GitHub commit 的 `--core-url`；用户始终只安装 adapter。实际官方安装可使用：
 
 ```powershell
 node scripts/verify-split-install.mjs "D:/实际官方解包runtime目录" "D:/eac-market-verify/全新输出目录"

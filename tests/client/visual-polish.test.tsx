@@ -193,6 +193,31 @@ describe('视觉与组件回归', () => {
     expect(MARKET_CSS).toContain('overflow-wrap: anywhere')
   })
 
+  it('触感层提供硬边立体、成功盖章与彩纸降级', () => {
+    expect(MARKET_CSS).toContain('--eac-extrude-mint')
+    expect(MARKET_CSS).toContain('@keyframes eac-stamp')
+    expect(MARKET_CSS).toContain('@keyframes eac-confetti-fall')
+    expect(MARKET_CSS).toContain('@keyframes eac-index-flip')
+    expect(MARKET_CSS).toContain('.eac-market__confetti i')
+    expect(MARKET_CSS).toMatch(/\.eac-button:active:not\(:disabled\)[^{]*\{[^}]*transform: none/)
+    expect(MARKET_CSS).not.toMatch(/\.eac-button:hover:not\(:disabled\)[^{]*\{[^}]*translate/)
+    expect(MARKET_CSS).toContain("grid-template-areas: 'head' 'side' 'body'")
+    expect(MARKET_CSS).toMatch(/\.eac-market__directory-grid \.eac-market__plugin-card \{[^}]*display: flex/)
+    expect(MARKET_CSS).toContain('animation-play-state: paused !important')
+    expect(MARKET_CSS).not.toContain('@media (prefers-color-scheme: dark)')
+  })
+
+  it('StoryStream 重造保留频道刊头条、章节流与行情表结构', () => {
+    expect(MARKET_CSS).toContain('.eac-market__stream')
+    expect(MARKET_CSS).toContain('.eac-market__chapter-index')
+    expect(MARKET_CSS).toContain('counter-reset: eac-ticker')
+    expect(MARKET_CSS).toContain('.eac-market__edition')
+    expect(MARKET_CSS).toContain('.eac-market__section-title')
+    expect(MARKET_CSS).toContain('.eac-market__nav button:nth-child(1)::before')
+    expect(MARKET_CSS).toContain('--eac-mint: #3cffd0')
+    expect(MARKET_CSS).toContain('--eac-uv: #5200ff')
+  })
+
   it('不可操作按钮保留真实 disabled 理由并关联 aria-describedby', () => {
     const blockedHtml = renderToStaticMarkup(createElement(PluginCard as never, {
       plugin: pluginFixtures.blocked,

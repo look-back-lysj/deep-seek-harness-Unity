@@ -91,7 +91,7 @@ describe('任务与安装弹窗回归', () => {
     expect(html).toContain('fixture diagnostic: source-2 failed integrity check')
     expect(html).toContain('@example/failing：already-approved')
     expect(html).toContain('不要使用校验失败的文件')
-    expect(html).toMatch(/<details><summary>查看任务记录/)
+    expect(html).toMatch(/<details[^>]*><summary>查看任务记录/)
   })
 
   it('版本不兼容只显示简短结论，长报告默认折叠', () => {

@@ -10,11 +10,96 @@ import {
 
 export type ButtonVariant = 'primary' | 'ghost' | 'outline' | 'toolbar'
 
+type MagnetFrame = { x: number; y: number } | undefined
+const magnetButtons = new Set<HTMLButtonElement>()
+let magnetListenersOn = false
+let magnetFrame = 0
+let magnetPoint: MagnetFrame
+function magnetCapable(): boolean {
+  if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return false
+  if (!window.matchMedia('(hover: hover) and (pointer: fine)').matches) return false
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return false
+  return true
+}
+function paintMagnets(): void {
+  magnetFrame = 0
+  const point = magnetPoint
+  for (const el of magnetButtons) {
+    const blocked = point === undefined || !el.isConnected || el.disabled || el.getAttribute('aria-busy') === 'true'
+    if (blocked) {
+      el.style.transform = ''
+      el.removeAttribute('data-magnet')
+      continue
+    }
+    const rect = el.getBoundingClientRect()
+    const dx = point.x - (rect.left + rect.width / 2)
+    const dy = point.y - (rect.top + rect.height / 2)
+    const distance = Math.hypot(dx, dy)
+    const radius = Math.hypot(rect.width, rect.height) / 2
+    if (distance < 1 || distance > radius + 40) {
+      el.style.transform = ''
+      el.removeAttribute('data-magnet')
+      continue
+    }
+    const pull = Math.min(3, 3 * (distance / Math.max(radius, 1)))
+    const nx = dx / distance
+    const ny = dy / distance
+    el.style.transform = `translate(${(nx * pull).toFixed(2)}px, ${(ny * pull).toFixed(2)}px)`
+    el.setAttribute('data-magnet', 'on')
+  }
+}
+function scheduleMagnets(): void {
+  if (magnetFrame === 0 && typeof requestAnimationFrame === 'function') magnetFrame = requestAnimationFrame(paintMagnets)
+}
+function handleMagnetPointer(event: PointerEvent): void {
+  magnetPoint = { x: event.clientX, y: event.clientY }
+  scheduleMagnets()
+}
+function clearMagnetPoint(): void {
+  magnetPoint = undefined
+  scheduleMagnets()
+}
+function bindMagnets(): void {
+  if (magnetListenersOn) return
+  document.addEventListener('pointermove', handleMagnetPointer, { passive: true })
+  document.addEventListener('pointerleave', clearMagnetPoint)
+  magnetListenersOn = true
+}
+function unbindMagnets(): void {
+  if (!magnetListenersOn) return
+  document.removeEventListener('pointermove', handleMagnetPointer)
+  document.removeEventListener('pointerleave', clearMagnetPoint)
+  magnetListenersOn = false
+}
+
 export function Button({ variant = 'ghost', size = 'md', className = '', children, ...rest }: ButtonHTMLAttributes<HTMLButtonElement> & {
   readonly variant?: ButtonVariant
   readonly size?: 'sm' | 'md'
 }): React.JSX.Element {
-  return <button type="button" className={`eac-button eac-button--${variant} eac-button--${size} ${className}`.trim()} {...rest}>{children}</button>
+  const buttonRef = useRef<HTMLButtonElement>(null)
+  useEffect(() => {
+    const el = buttonRef.current
+    if (!el || variant !== 'primary' || size !== 'md' || !magnetCapable()) return
+    const engage = (): void => {
+      magnetButtons.add(el)
+      bindMagnets()
+      scheduleMagnets()
+    }
+    const release = (): void => {
+      magnetButtons.delete(el)
+      el.style.transform = ''
+      el.removeAttribute('data-magnet')
+      if (magnetButtons.size === 0) unbindMagnets()
+    }
+    el.addEventListener('pointerenter', engage)
+    el.addEventListener('pointerleave', release)
+    return () => {
+      el.removeEventListener('pointerenter', engage)
+      el.removeEventListener('pointerleave', release)
+      release()
+    }
+  }, [variant, size])
+  return <button ref={buttonRef} type="button" className={`eac-button eac-button--${variant} eac-button--${size} ${className}`.trim()} {...rest}>{children}</button>
 }
 
 export function Input({ className = '', ...rest }: InputHTMLAttributes<HTMLInputElement>): React.JSX.Element {

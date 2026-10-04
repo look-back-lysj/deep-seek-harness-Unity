@@ -1,6 +1,6 @@
 {
   "name": "@dsh-eac/market",
-  "version": "0.1.0-mvp.17",
+  "version": "0.1.0-mvp.18",
   "description": "EAC desktop market adapter for official DeepSeek Harness",
   "type": "module",
   "main": "./lib/index.js",

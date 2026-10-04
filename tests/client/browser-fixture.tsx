@@ -6,6 +6,8 @@ import { InstallPlanDialog } from '../../packages/market/src/client/InstallPlanD
 import { TaskDrawer } from '../../packages/market/src/client/TaskDrawer.tsx'
 import { AuthorWorkspace } from '../../packages/market/src/client/AuthorWorkspace.tsx'
 import { MARKET_CSS } from '../../packages/market/src/client/marketStyles.ts'
+import { ActionFeedback } from '../../packages/market/src/client/action-feedback.tsx'
+import { completedActionFeedback, failedActionFeedback } from '../../packages/market/src/client/action-state.ts'
 import { decodeBase64, sha256Hex } from '../../packages/market/src/client/transfer.ts'
 import type { MarketRemote } from '../../packages/market/src/client/model.ts'
 import type { AiConfirmRequest, AuthorDraft, AuthorDraftInput, CatalogCollectionView, CatalogPack, PlanCreateRequest, PlanResult, TaskStartRequest, CatalogSourceView, CoreMaintenanceSnapshot, UpdateCheckResult, UpdatePolicySaveRequest } from '../../packages/market/src/types.ts'
@@ -183,6 +185,12 @@ function render(name: string): void {
   if (name === 'install' || name === 'late' || name === 'downgrade') root.render(<InstallHarness key={renderKey} late={name === 'late'} downgrade={name === 'downgrade'} />)
   if (name === 'ai' || name === 'ai-queued') root.render(<div className="eac-market"><TaskDrawer key={renderKey} open tasks={[taskFixture({ taskId: 'A', status: 'failed' }), taskFixture({ taskId: 'B', status: 'failed' })]} onClose={() => {}} remote={aiRemote(name === 'ai-queued')} onChanged={(task) => stats.started.push(task.taskId)} /></div>)
   if (name === 'author') root.render(<div className="eac-market"><AuthorWorkspace key={renderKey} remote={authorRemote} /></div>)
+  if (name === 'feedback-completed' || name === 'feedback-failed') {
+    const state = name === 'feedback-completed'
+      ? completedActionFeedback('合成安装', '安装已完成。', '打开我的插件核对真实状态。')
+      : failedActionFeedback('合成安装', '安装未完成。', '查看失败原因后重试。')
+    root.render(<div className="eac-market"><ActionFeedback key={renderKey} state={state} /></div>)
+  }
   if (name === 'task-events') { const task = taskFixture({ events: Array.from({ length: 12 }, (_, index) => ({ sequence: 118 + index, at: `2026-10-02T10:00:${String(index).padStart(2, '0')}.000Z`, phase: 'installing', message: `合成历史事件 ${119 + index}`, level: 'info' })) }); root.render(<div className="eac-market"><TaskDrawer key={renderKey} open tasks={[task]} onClose={() => {}} remote={remote} onChanged={() => {}} /></div>) }
   if (name === 'task-events-no-api') root.render(<div className="eac-market"><TaskDrawer key={renderKey} open tasks={[taskFixture()]} onClose={() => {}} remote={readOnlyRemote()} onChanged={() => {}} /></div>)
   if (name === 'task-events-legacy-cursor' || name === 'task-events-truncated' || name === 'task-events-failure') {
