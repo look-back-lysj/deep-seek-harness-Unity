@@ -47,8 +47,9 @@ const render = async (name) => { await evaluate(`fixture.render(${JSON.stringify
 const themeDark = async (on) => { await evaluate(`document.documentElement.style.cssText=${JSON.stringify(on ? '--dsw-alias-bg-base:#141414;--dsw-alias-bg-layer-1:#232323;--dsw-alias-bg-layer-2:#303030;--dsw-alias-label-primary:#eeeeee;--dsw-alias-label-secondary:#b8b8b8;--dsw-alias-border-l1:#4a4a4a;--dsw-alias-border-l3:#666666;--dsw-alias-link:#8aafff;--dsw-alias-state-business-primary:#386ad9;' : '')}`) }
 
 /* 各场景通用量测脚本：溢出/裁切/行内对齐/按钮尺寸/旋转越界/角标碰撞/机架尾空/导航贴合 */
-const scan = (scene) => `(() => {
-  const out = { overflow: [], clipped: [], rows: [], buttons: [], rotated: [], sticker: [], rack: [], nav: [], seam: [] }
+const scan = (scene, narrow) => `(() => {
+  const NARROW = ${narrow};
+  const out = { overflow: [], clipped: [], rows: [], buttons: [], rotated: [], sticker: [], rack: [], nav: [], seam: [], touch: [] }
   const doc = document.querySelector('.eac-market')
   if (!doc) return JSON.stringify(out)
   // 1) 横向溢出
@@ -84,6 +85,10 @@ const scan = (scene) => `(() => {
     const tabBottoms = [...document.querySelectorAll('.eac-market__nav button')].map(b => Math.round(b.getBoundingClientRect().bottom))
     out.nav.push({ tabBottoms, headerBottom: Math.round(header.bottom), diff: tabBottoms.map(b => Math.round((header.bottom - 2) - b)) })
   }
+  for (const sum of document.querySelectorAll('.eac-market details > summary, .eac-modal details > summary')) {
+    const sh = sum.getBoundingClientRect().height
+    if (sh > 0 && sh < 32) out.touch.push({ kind: 'summary', h: Math.round(sh * 10) / 10, text: (sum.textContent||'').trim().slice(0,16) })
+  }
   // 3) 按钮尺寸与阴影越界
   const scroller = document.querySelector('.eac-market__scroll')
   const scRect = scroller ? scroller.getBoundingClientRect() : document.body.getBoundingClientRect()
@@ -91,6 +96,7 @@ const scan = (scene) => `(() => {
     const r = b.getBoundingClientRect(); const st = getComputedStyle(b)
     if (r.width === 0 || st.display === 'none') continue
     if (r.height < 28 && !b.closest('.eac-market__poster-controls') && !b.closest('.eac-market__menu')) out.buttons.push({ issue: 'short', h: Math.round(r.height), text: (b.textContent||'').trim().slice(0,14) })
+    if (NARROW && !b.disabled && r.height > 0 && r.height < 44) out.touch.push({ kind: 'button-narrow', h: Math.round(r.height * 10) / 10, text: (b.textContent||'').trim().slice(0,14) })
     if (r.right + 4 > scRect.right + 1 || r.left - 4 < scRect.left - 1) out.buttons.push({ issue: 'shadow-outside', left: Math.round(r.left), right: Math.round(r.right), text: (b.textContent||'').trim().slice(0,14) })
   }
   // 4) 旋转元素是否越出父容器
@@ -146,7 +152,7 @@ for (const scene of scenes) {
     await themeDark(scene.dark)
     await scene.setup()
     await pause(800)
-    const data = JSON.parse(await evaluate(scan(scene.name)))
+    const data = JSON.parse(await evaluate(scan(scene.name, (scene.width ?? 1280) <= 719)))
     for (const [key, list] of Object.entries(data)) {
       for (const item of list) add(scene.name, 'layout', key, item)
     }
@@ -215,6 +221,8 @@ for (const f of findings) {
   if (f.check === 'rack' && f.detail && f.detail.tail > 24) violations.push({ scene: f.scene, check: 'rack-tail', tail: f.detail.tail })
   if (f.check === 'overflow' || f.check === 'clipped') violations.push({ scene: f.scene, check: f.check, detail: f.detail })
   if (f.check === 'frame-jump' || f.check === 'press-displaces' || f.check === 'extrusion-not-collapsed' || f.check === 'not-engaged-forced' || f.check === 'not-cleared-on-leave') violations.push({ scene: f.scene, check: f.check, detail: f.detail })
+  if (f.check === 'touch') violations.push({ scene: f.scene, check: 'touch', detail: f.detail })
+  if (f.check === 'buttons' && f.detail && f.detail.issue === 'short') violations.push({ scene: f.scene, check: 'touch', detail: f.detail })
 }
 writeFileSync(join(outDir, 'findings.json'), JSON.stringify({ findings, violations }, null, 2))
 console.log(JSON.stringify({ violations }, null, 2))

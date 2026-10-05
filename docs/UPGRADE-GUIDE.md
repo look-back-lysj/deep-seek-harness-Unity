@@ -1,6 +1,6 @@
 # EAC 市场最新版升级指南
 
-当前源码候选：桌面适配器 `@dsh-eac/market@0.1.0-mvp.18`，核心包 `@dsh-eac/market-core@0.1.6`；Registry 与 GitHub 固定地址双通道正式发行包位于 `releases/0.1.0-mvp.18-dual/`。npm Registry 发布与官方 Desktop 对本版的实机验收尚未完成；普通用户的可安装发行版仍为 `0.1.0-mvp.9`。本文件是当前唯一升级操作指南，历史报告用于追溯，不作为当前安装说明。
+当前源码候选：桌面适配器 `@dsh-eac/market@0.1.0-mvp.19`，核心包 `@dsh-eac/market-core@0.1.6`；已发布的 Registry 与 GitHub 固定地址双通道发行包位于 `releases/0.1.0-mvp.18-dual/`（字节固定，不覆盖）。npm Registry 发布与官方 Desktop 对本版的实机验收尚未完成；普通用户的可安装发行版仍为 `0.1.0-mvp.9`。本文件是当前唯一升级操作指南，历史报告用于追溯，不作为当前安装说明。
 
 ## 2026-10-02 本机方案 A 修复候选
 

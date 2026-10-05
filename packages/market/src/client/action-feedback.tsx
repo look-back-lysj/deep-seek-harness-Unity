@@ -11,8 +11,9 @@ export function ActionFeedback({ state, onRetry, onRefresh, onDismiss, children 
 }): React.JSX.Element | null {
   const rootRef = useRef<HTMLElement | null>(null)
   const status = state.status
+  const milestone = state.milestone === true
   useEffect(() => {
-    if (status !== 'completed') return
+    if (status !== 'completed' || !milestone) return
     if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
     const root = rootRef.current
@@ -30,7 +31,7 @@ export function ActionFeedback({ state, onRetry, onRefresh, onDismiss, children 
     root.appendChild(layer)
     const timer = window.setTimeout(() => layer.remove(), 1400)
     return () => { window.clearTimeout(timer); layer.remove() }
-  }, [status])
+  }, [status, milestone])
   if (state.status === 'idle') return null
   const tone = feedbackTone(state.status)
   const role = ['failed', 'partial', 'unknown', 'needs-recheck'].includes(state.status) ? 'alert' : 'status'

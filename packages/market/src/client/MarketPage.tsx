@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import { Button, MarkdownText, Modal, Pill, Tag } from './ui.tsx'
 import type {
   CatalogPack,
@@ -116,6 +116,11 @@ export function detailTab(origin: PrimaryView | 'skins'): PrimaryView {
 export function applyBrowseChange(change: () => void, resetPage: () => void): void {
   change()
   resetPage()
+}
+
+export function changePageInPlace(next: number, apply: (page: number) => void, scrollTo: () => void): void {
+  apply(next)
+  runAfterNextFrame(scrollTo)
 }
 
 export function runAfterNextFrame(callback: () => void): void {
@@ -273,6 +278,17 @@ export function MarketPage({ remote, skinService, onOpenOfficialPlugins, homeSup
     setPage(snapshot.page)
     setBrowseContext(snapshot.source === 'discover' ? { source: 'discover', ...(snapshot.filters.category === 'all' ? {} : { category: snapshot.filters.category }), page: snapshot.page, scrollTop: snapshot.scrollTop } : undefined)
     runAfterNextFrame(() => scrollRef.current?.scrollTo({ top: snapshot.scrollTop }))
+  }
+
+  function changePage(next: number): void {
+    setPage(next)
+    runAfterNextFrame(() => {
+      const scroller = scrollRef.current
+      const meta = document.querySelector('.eac-market__directory-meta')
+      if (scroller === null || meta === null) return
+      const delta = meta.getBoundingClientRect().top - scroller.getBoundingClientRect().top
+      scroller.scrollTo({ top: scroller.scrollTop + delta, behavior: 'instant' as ScrollBehavior })
+    })
   }
 
   function completeReturnFromSecondary(): void {
@@ -690,7 +706,7 @@ export function MarketPage({ remote, skinService, onOpenOfficialPlugins, homeSup
                 </label>
                 <div className="eac-market__advanced-actions">
                   <Button variant="primary" onClick={applyAdvancedFilters}>应用筛选</Button>
-                  <Button variant="ghost" onClick={() => setAdvanced(false)}>取消</Button>
+                  <Button variant="outline" onClick={() => setAdvanced(false)}>取消</Button>
                   <Button variant="ghost" onClick={clearBrowseFilters}>清除全部</Button>
                 </div>
               </div>
@@ -708,9 +724,9 @@ export function MarketPage({ remote, skinService, onOpenOfficialPlugins, homeSup
             )}
             {pageCount > 1 && (
               <nav className="eac-market__pagination" aria-label="插件分页">
-                <Button variant="outline" disabled={page <= 1} onClick={() => setPage((value) => value - 1)}>上一页</Button>
+                <Button variant="outline" disabled={page <= 1} onClick={() => changePage(page - 1)}>上一页</Button>
                 <span>第 {page} / {pageCount} 页</span>
-                <Button variant="outline" disabled={page >= pageCount} onClick={() => setPage((value) => value + 1)}>下一页</Button>
+                <Button variant="outline" disabled={page >= pageCount} onClick={() => changePage(page + 1)}>下一页</Button>
               </nav>
             )}
             {!availableOnly && <PendingListings listings={state.catalog.listings ?? []} query={filters.query} />}
@@ -811,18 +827,18 @@ export function MarketPage({ remote, skinService, onOpenOfficialPlugins, homeSup
 
         {view === 'help' && (
           <>
-            <Button variant="ghost" onClick={returnFromSecondary}>返回市场</Button>
+            <Button variant="outline" onClick={returnFromSecondary}>返回市场</Button>
             <header className="eac-market__page-head"><div><h1>上手帮助</h1><p>第一次使用只需要三步。安装不是教程完成条件。</p></div></header>
             <div className="eac-market__help-steps">
               {HELP_STEPS.map((step, index) => (
                 <section className="eac-market__help-step" key={step.title}>
-                  <Tag tone="info">第 {index + 1} 步</Tag><h3>{step.title}</h3><p>{step.text}</p>
+                  <span className="eac-market__chapter-index eac-market__step-mark" aria-hidden="true">0{index + 1}</span><h3>{step.title}</h3><p>{step.text}</p>
                 </section>
               ))}
             </div>
             <section className="eac-market__section">
               <div className="eac-market__section-head"><h2>常见问题</h2></div>
-              <div className="eac-market__grid grid--two eac-market__grid--two">
+              <div className="eac-market__grid grid--two eac-market__grid--two eac-market__faq">
                 <article className="eac-market__card"><h3>为什么会显示“需要重启”？</h3><p>新版本或启停状态已保存，但 DSH 仍使用旧实例。重启后才会使用新状态。</p></article>
                 <article className="eac-market__card"><h3>为什么不能安装？</h3><p>硬性不兼容、缺少官方 bundle 或缺少制品都不能绕过。详情会给出真实原因。</p></article>
                 <article className="eac-market__card"><h3>套餐部分失败怎么办？</h3><p>成功项会保留，受依赖影响的项目暂停。任务抽屉会逐项展示，不把整套假报为成功。</p></article>
@@ -834,13 +850,15 @@ export function MarketPage({ remote, skinService, onOpenOfficialPlugins, homeSup
 
         {view === 'settings' && (
           <>
-            <Button variant="ghost" onClick={returnFromSecondary}>返回市场</Button>
+            <Button variant="outline" onClick={returnFromSecondary}>返回市场</Button>
             <header className="eac-market__page-head"><div><h1>设置</h1><p>查看目录、外观和诊断信息。</p></div></header>
             <div className="eac-market__settings-list">
+              <h2 className="eac-market__chapter-head"><span className="eac-market__chapter-index" aria-hidden="true">01</span>目录与来源</h2>
               <section className="eac-market__setting">
                 <div><h3>目录状态</h3><p>目录来源：{{ embedded: '随包目录', online: '在线目录', cache: '本地缓存' }[state.catalog.origin]}{state.catalog.stale ? '（缓存已过期）' : ''} · 目录生成时间：{new Date(state.catalog.generatedAt).toLocaleString('zh-CN')}。刷新目录不会安装或更新插件。</p></div>
                 <Button variant="outline" disabled={catalogBusy || remote.refreshCatalog === undefined} onClick={() => void refreshCatalog()}>刷新目录</Button>
               </section>
+              <h2 className="eac-market__chapter-head"><span className="eac-market__chapter-index" aria-hidden="true">02</span>检查与运行</h2>
               <SettingsRemotePanel
                 remote={remote}
                 capabilities={state.hello.capabilities}
@@ -848,6 +866,7 @@ export function MarketPage({ remote, skinService, onOpenOfficialPlugins, homeSup
                 refreshBusy={catalogBusy}
                 onRefreshSource={(sourceId) => refreshCatalog(sourceId)}
               />
+              <h2 className="eac-market__chapter-head"><span className="eac-market__chapter-index" aria-hidden="true">03</span>外观与诊断</h2>
               <section className="eac-market__setting">
                 <div><h3>缓存清理</h3><p>当前版本暂不提供缓存清理。</p></div>
                 <Button variant="outline" disabled title="当前 DSH 运行时未提供缓存清理能力">暂不可用</Button>
@@ -874,7 +893,7 @@ export function MarketPage({ remote, skinService, onOpenOfficialPlugins, homeSup
         )}
 
         {view === 'extension' && <section><Button variant="outline" onClick={() => { const snapshot = extensionOrigin.current; extensionOrigin.current = undefined; if (snapshot) restoreNavigation(snapshot); else navigate('discover') }}>返回上一页</Button>{surface(EXTENSION_SLOTS.page)}</section>}
-        <div hidden={view !== 'author'}><Button variant="ghost" onClick={returnFromSecondary}>返回市场</Button><AuthorWorkspace remote={remote} onDraftSnapshot={setExtensionDraft} onDirtyChange={setAuthorDirty} draftChange={draftChange} supplemental={<>{authorSupplemental}{surface(EXTENSION_SLOTS.author)}</>} /></div>
+        <div hidden={view !== 'author'}><Button variant="outline" onClick={returnFromSecondary}>返回市场</Button><AuthorWorkspace remote={remote} onDraftSnapshot={setExtensionDraft} onDirtyChange={setAuthorDirty} draftChange={draftChange} supplemental={<>{authorSupplemental}{surface(EXTENSION_SLOTS.author)}</>} /></div>
 
         <p className="eac-market__footer-note">EAC 是社区整合市场，不代表 DeepSeek 官方认证。</p>
       </MarketFrame>
@@ -913,12 +932,12 @@ export function MarketPage({ remote, skinService, onOpenOfficialPlugins, homeSup
         {removeStep && <div className="eac-market__notice eac-market__notice--warning"><p>版本：{removeTarget?.version ?? '未能确认'}。受影响成员：{removeTarget?.rows.map((row) => row.name).join('、') || '官方未列出运行成员'}。</p><p>市场没有此插件的完整反向依赖和数据迁移资料。第三方插件自身的卸载行为可能影响数据；请先保存工作。</p></div>}
         <div className="eac-market__button-row"><Button variant="outline" onClick={() => setRemoveTarget(undefined)}>取消</Button><Button variant="primary" disabled={managementBusy} onClick={() => { if (!removeStep) setRemoveStep(true); else if (removeTarget !== undefined) void removeInventory(removeTarget) }}>{managementBusy ? '正在提交…' : removeStep ? '已了解影响，再次确认卸载' : '继续查看卸载影响'}</Button></div>
       </Modal>
-      <Modal open={authorLeaveIntent !== undefined} onClose={() => setAuthorLeaveIntent(undefined)} title="当前草稿尚未保存" closeLabel="继续编辑">
+      <Modal open={authorLeaveIntent !== undefined} onClose={() => setAuthorLeaveIntent(undefined)} title="当前草稿尚未保存" closeLabel="关闭未保存提示">
         <p>作者工具中还有未保存修改。离开会暂时隐藏作者工具，但当前编辑会保留在本次市场会话中。</p>
         <div className="eac-market__button-row"><Button variant="outline" onClick={() => setAuthorLeaveIntent(undefined)}>继续编辑</Button><Button variant="primary" onClick={confirmAuthorLeave}>离开并保留编辑</Button></div>
       </Modal>
       <Modal open={tutorialOpen} onClose={() => setTutorialOpen(false)} title="三步上手" closeLabel="关闭教程">
-        <div className="eac-market__help-steps">{HELP_STEPS.map((step, index) => <section className="eac-market__help-step" key={step.title}><Tag tone="info">第 {index + 1} 步</Tag><h3>{step.title}</h3><p>{step.text}</p></section>)}</div>
+        <div className="eac-market__help-steps">{HELP_STEPS.map((step, index) => <section className="eac-market__help-step" key={step.title}><span className="eac-market__chapter-index eac-market__step-mark" aria-hidden="true">0{index + 1}</span><h3>{step.title}</h3><p>{step.text}</p></section>)}</div>
       </Modal>
 
     </div>
@@ -1050,9 +1069,13 @@ function FeaturedPoster({ title, description, items, inventory, onOpen, onInstal
 
   useEffect(() => {
     if (items.length < 2 || paused || hovered || focused || reducedMotion || documentHidden) return
-    const timer = window.setInterval(() => setActive((value) => (value + 1) % items.length), 6500)
+    const timer = window.setInterval(() => {
+      const next = (active + 1) % items.length
+      setActive(next)
+      setAnnouncement((items[next]?.plugin.name ?? '') + '，第 ' + (next + 1) + ' 项，共 ' + items.length + ' 项')
+    }, 6500)
     return () => window.clearInterval(timer)
-  }, [items.length, paused, hovered, focused, reducedMotion, documentHidden])
+  }, [items.length, paused, hovered, focused, reducedMotion, documentHidden, active])
 
   const pluginItem = (items[active] ?? items[0])!
   const plugin = pluginItem.plugin
@@ -1070,9 +1093,9 @@ function FeaturedPoster({ title, description, items, inventory, onOpen, onInstal
     <div className="eac-market__section-head"><div><div className="eac-market__section-title"><span className="eac-market__chapter-index" aria-hidden="true">00</span><h2 id="featured-title">{title}</h2></div><p>{description}</p></div>{items.length > 1 && <div className="eac-market__poster-controls"><button type="button" aria-label="上一项首推" onClick={() => move(-1)}>上一项</button><span aria-hidden="true">{active + 1} / {items.length}</span><span className="eac-market__sr-only" aria-live="polite">{announcement}</span><button type="button" aria-label={paused ? '继续轮播' : '暂停轮播'} onClick={() => setPaused((value) => !value)}>{paused ? '继续' : '暂停'}</button><button type="button" aria-label="下一项首推" onClick={() => move(1)}>下一项</button></div>}</div>
     <article key={plugin.id + ":" + plugin.version} className={`eac-market__poster eac-market__poster-stage${hasImage ? '' : ' eac-market__poster--fallback'}`}>
       <button type="button" className="eac-market__poster-art" onClick={() => onOpen(plugin)} aria-label={`查看 ${plugin.name} 详情`}>
-        {hasImage ? <img src={current.sourceUrl} alt={current.alt || plugin.name} width={current.width ?? 1200} height={current.height ?? 675} onError={() => setFailed((value) => new Set(value).add(current.id + current.sourceUrl))} /> : <span className="eac-market__poster-fallback-copy"><strong>{pluginItem.card?.title || plugin.name}</strong><small>{pluginItem.card?.summary || plugin.summary || '作者尚未提供一句话简介。'}</small></span>}
+        {hasImage ? <img src={current.sourceUrl} alt={current.alt || plugin.name} width={current.width ?? 1200} height={current.height ?? 675} onError={() => setFailed((value) => new Set(value).add(current.id + current.sourceUrl))} /> : <span className="eac-market__poster-fallback-copy"><strong>{pluginItem.card?.title || plugin.name}</strong><small className="eac-market__poster-fallback-meta">{plugin.version} · {plugin.packageName}</small></span>}
       </button>
-      <div className="eac-market__poster-copy"><h3>{pluginItem.card?.title || plugin.name}</h3><p>{pluginItem.card?.summary || plugin.summary || '作者尚未提供一句话简介。'}</p>{reason && <p className="eac-market__recommendation">{reason}</p>}<div className="eac-market__button-row"><Button size="sm" variant="outline" onClick={() => onOpen(plugin)}>查看详情</Button>{action.kind === 'manage' && onManage ? <Button size="sm" variant="primary" onClick={onManage}>管理</Button> : <Button size="sm" variant="primary" disabled={action.disabled} title={action.reason} onClick={() => onInstall(plugin)}>{action.label}</Button>}</div>{action.reason && <p className="eac-market__action-reason">{action.reason}</p>}</div>
+      <div className="eac-market__poster-copy">{hasImage && <h3>{pluginItem.card?.title || plugin.name}</h3>}<p>{pluginItem.card?.summary || plugin.summary || '作者尚未提供一句话简介。'}</p>{reason && <p className="eac-market__recommendation">{reason}</p>}<div className="eac-market__button-row"><Button size="sm" variant="outline" onClick={() => onOpen(plugin)}>查看详情</Button>{action.kind === 'manage' && onManage ? <Button size="sm" variant="primary" onClick={onManage}>管理</Button> : <Button size="sm" variant="primary" disabled={action.disabled} title={action.reason} onClick={() => onInstall(plugin)}>{action.label}</Button>}</div>{action.reason && <p className="eac-market__action-reason">{action.reason}</p>}</div>
     </article>
   </section>
 }
@@ -1138,7 +1161,11 @@ export function DiscoverView({ catalog, inventory, onOpen, onInstall, onPack, on
   const scored = discoveryScoreItems(discovery?.highScorePlugins, allPlugins)
   const scoredSkills = discoveryScoreItems(discovery?.highScoreSkills, allPlugins)
   const [selectedCategory, setSelectedCategory] = useState('all')
+  const [showAllCategories, setShowAllCategories] = useState(false)
   const visibleRuleSorted = selectedCategory === 'all' ? ruleSorted : ruleSorted.filter((plugin) => plugin.categories.includes(selectedCategory))
+  let chapterCursor = 0
+  const nextChapter = (): string => String(++chapterCursor).padStart(2, '0')
+  const visibleCategories = showAllCategories ? categories : categories.slice(0, 4)
   return (
     <div className="eac-market__discover-page">
       <header className="eac-market__page-head eac-market__discover-head">
@@ -1152,22 +1179,23 @@ export function DiscoverView({ catalog, inventory, onOpen, onInstall, onPack, on
       ) : (
         <>
           {skinRecommended.length > 0 && <section className="eac-market__section eac-market__skin-strip" aria-labelledby="skin-recommendations-title">
-            <div className="eac-market__section-head"><div><div className="eac-market__section-title"><span className="eac-market__chapter-index" aria-hidden="true">01</span><h2 id="skin-recommendations-title">皮肤推荐</h2></div><p>只显示目录中有明确推荐记录的皮肤；更多皮肤请从皮肤中心进入。</p></div></div>
+            <div className="eac-market__section-head"><div><div className="eac-market__section-title"><span className="eac-market__chapter-index" aria-hidden="true">{nextChapter()}</span><h2 id="skin-recommendations-title">皮肤推荐</h2></div><p>只显示目录中有明确推荐记录的皮肤；更多皮肤请从皮肤中心进入。</p></div></div>
             <div className="eac-market__grid eac-market__skin-grid eac-market__stream">{skinRecommended.slice(0, 6).map((item) => <SkinRecommendation key={item.plugin.id + ":" + item.plugin.version} item={item} inventory={inventory} onOpen={onOpen} onInstall={onInstall} onManage={onManage} />)}</div>
           </section>}
 
-          {scored.length > 0 && <DiscoveryScoreSection title="高分插件" index="02" items={scored} inventory={inventory} onOpen={onOpen} onInstall={onInstall} onManage={onManage} />}
-          {scoredSkills.length > 0 && <DiscoveryScoreSection title="高分 skill" index="03" items={scoredSkills} inventory={inventory} onOpen={onOpen} onInstall={onInstall} onManage={onManage} />}
+          {scored.length > 0 && <DiscoveryScoreSection title="高分插件" index={nextChapter()} items={scored} inventory={inventory} onOpen={onOpen} onInstall={onInstall} onManage={onManage} />}
+          {scoredSkills.length > 0 && <DiscoveryScoreSection title="高分 skill" index={nextChapter()} items={scoredSkills} inventory={inventory} onOpen={onOpen} onInstall={onInstall} onManage={onManage} />}
 
           <section className="eac-market__section">
             <div className="eac-market__section-head">
-              <div><div className="eac-market__section-title"><span className="eac-market__chapter-index" aria-hidden="true">04</span><h2>规则发现</h2></div><p>仅展示已有安装包的功能。排序依据：兼容状态、用途和发布时间；待适配内容在全部插件中保留。</p></div>
+              <div><div className="eac-market__section-title"><span className="eac-market__chapter-index" aria-hidden="true">{nextChapter()}</span><h2>规则发现</h2></div><p>仅展示已有安装包的功能。排序依据：兼容状态、用途和发布时间；待适配内容在全部插件中保留。</p></div>
             </div>
             {categories.length > 0 && (
               <>
                 <div className="eac-market__filters" aria-label="按用途筛选发现内容">
                   <Pill active={selectedCategory === 'all'} onClick={() => setSelectedCategory('all')}>全部用途</Pill>
-                  {categories.map((category) => <Pill key={category} active={selectedCategory === category} onClick={() => setSelectedCategory(category)}>{category}</Pill>)}
+                  {visibleCategories.map((category) => <Pill key={category} active={selectedCategory === category} onClick={() => setSelectedCategory(category)}>{category}</Pill>)}
+                  {categories.length > 4 && <Pill active={showAllCategories} onClick={() => setShowAllCategories((value) => !value)}>{showAllCategories ? '收起用途' : `更多用途（${categories.length - 4}）`}</Pill>}
                 </div>
                 <div className="eac-market__button-row">
                   <Button variant="outline" onClick={() => onBrowse(selectedCategory === 'all' ? undefined : selectedCategory)}>
@@ -1184,7 +1212,7 @@ export function DiscoverView({ catalog, inventory, onOpen, onInstall, onPack, on
 
           {catalog.packs.length > 0 && (
             <section className="eac-market__section">
-              <div className="eac-market__section-head"><div className="eac-market__section-title"><span className="eac-market__chapter-index" aria-hidden="true">05</span><h2>套餐</h2></div><p>一次查看所有组件与版本调整。</p></div>
+              <div className="eac-market__section-head"><div className="eac-market__section-title"><span className="eac-market__chapter-index" aria-hidden="true">{nextChapter()}</span><h2>套餐</h2></div><p>一次查看所有组件与版本调整。</p></div>
               <div className="eac-market__grid grid--two eac-market__grid--two">
                 {catalog.packs.map((pack) => (
                   <article className="eac-market__card" key={pack.id + ":" + pack.version}>
@@ -1203,7 +1231,7 @@ export function DiscoverView({ catalog, inventory, onOpen, onInstall, onPack, on
         </>
       )}
       {(catalog.collections?.length ?? 0) > 0 && <section className="eac-market__section" aria-label="市场组合">
-        <div className="eac-market__section-head"><div className="eac-market__section-title"><span className="eac-market__chapter-index" aria-hidden="true">06</span><h2>市场组合</h2></div><p>按组合列出的确切版本预检，逐项确认安装范围。</p></div>
+        <div className="eac-market__section-head"><div className="eac-market__section-title"><span className="eac-market__chapter-index" aria-hidden="true">{nextChapter()}</span><h2>市场组合</h2></div><p>按组合列出的确切版本预检，逐项确认安装范围。</p></div>
         <div className="eac-market__grid eac-market__grid--two">{catalog.collections?.map((collection) => <article className="eac-market__card" key={collection.id + ':' + collection.version} data-collection-id={collection.id}>
           <div className="eac-market__tags"><Tag tone="info">市场组合</Tag><Status tone={collection.execution.coverage === 'complete' ? 'success' : 'warning'}>{packCoverageLabel(collection.execution.coverage)}</Status></div>
           <h3>{collection.name}</h3><p className="eac-market__plugin-summary">{collection.summary}</p>
@@ -1246,9 +1274,10 @@ export function DetailView({ plugin, presentation, inventory, onBack, backLabel,
 }): React.JSX.Element {
   const installed = isInstalled(inventory, plugin)
   const action = pluginActionState(plugin, inventory, { canInstall, canManage: false })
+  const detailReasonId = useId()
   return (
     <>
-      <Button variant="ghost" onClick={onBack}>{backLabel ?? '返回插件列表'}</Button>
+      <Button variant="outline" onClick={onBack}>{backLabel ?? '返回插件列表'}</Button>
       <div className="eac-market__detail">
         <div className="eac-market__plugin-head">
           <span className="eac-market__plugin-icon" aria-hidden="true">{plugin.name.slice(0, 1).toUpperCase()}</span>
@@ -1257,7 +1286,7 @@ export function DetailView({ plugin, presentation, inventory, onBack, backLabel,
         <div className="eac-market__detail-main">
           <p className="eac-market__lead">{plugin.summary || '作者尚未提供一句话简介。'}</p>
           <div className="eac-market__button-row">
-            <Button variant="primary" disabled={action.disabled} title={action.reason} onClick={() => onInstall(plugin)}>
+            <Button variant="primary" disabled={action.disabled} title={action.reason} {...(action.reason === undefined ? {} : { 'aria-describedby': detailReasonId })} onClick={() => onInstall(plugin)}>
               {action.kind === 'install' ? '安装' : action.label}
             </Button>
             {installed !== undefined && updatePlugin !== undefined && hasCatalogUpdate(installed, updatePlugin) && canInstall && onUpdate !== undefined && (
@@ -1265,6 +1294,12 @@ export function DetailView({ plugin, presentation, inventory, onBack, backLabel,
             )}
             {installed?.restartRequired === true && <Status tone="warning">需要重启</Status>}
           </div>
+          {action.disabled && action.reason !== undefined && (
+            <div className="eac-market__detail-reason" id={detailReasonId}>
+              <span className="eac-tag eac-tag--warning">暂不可用原因</span>
+              <p>{action.reason}</p>
+            </div>
+          )}
           {installed !== undefined && (
             <div className="eac-market__notice" style={{ marginTop: 14 }}>
               <strong>使用入口：</strong>
@@ -1292,7 +1327,12 @@ export function DetailView({ plugin, presentation, inventory, onBack, backLabel,
           </section>
         </div>
         <aside className="eac-market__detail-side">
-          <details><summary>来源与兼容详情</summary>
+          <details className="eac-market__facts-strip"><summary>
+            <span><em>验证</em>{verificationLabel(plugin.verification)}</span>
+            <span><em>安装</em>{installabilityLabel(plugin.installability)}</span>
+            <span><em>重启</em>{plugin.requiresRestart ? '需要重启' : '不需要'}</span>
+            <span className="eac-market__facts-more">来源与兼容详情</span>
+          </summary>
           <div className="eac-market__section-head"><h2>安装信息</h2></div>
           <dl className="eac-market__facts">
             <dt>目标版本</dt><dd>{plugin.version}</dd>

@@ -147,7 +147,7 @@ export function SettingsRemotePanel({ remote, capabilities, environmentId, refre
   const [savingPolicy, setSavingPolicy] = useState(false)
   const [installLogBusy, setInstallLogBusy] = useState(false)
   const [installLogFeedback, setInstallLogFeedback] = useState<{ text: string; failed: boolean }>()
-  const [policyFeedback, setPolicyFeedback] = useState('')
+  const [policyFeedback, setPolicyFeedback] = useState<{ text: string; failed: boolean }>({ text: '', failed: false })
 
   const readSources = useCallback(async () => {
     const catalogSources = remote.catalogSources
@@ -189,24 +189,24 @@ export function SettingsRemotePanel({ remote, capabilities, environmentId, refre
       intervalMinutes: policyDraft.intervalMinutes,
     }
     setSavingPolicy(true)
-    setPolicyFeedback('')
+    setPolicyFeedback({ text: '', failed: false })
     try {
       const saved = await boundedRequest(updatePolicySave({ expectedRevision: policy.value.revision, policy: next }), '更新策略保存')
       setPolicy({ status: 'ready', value: saved })
       setPolicyDraft({ enabled: saved.policy.automaticChecksEnabled, intervalMinutes: saved.policy.intervalMinutes ?? 60 })
-      setPolicyFeedback('检查偏好已保存。自动下载和自动安装的保存值已关闭；这不是后台检查已执行的回执。')
+      setPolicyFeedback({ text: '检查偏好已保存。自动下载和自动安装的保存值已关闭；这不是后台检查已执行的回执。', failed: false })
     } catch {
-      setPolicyFeedback('保存结果暂不确定，正在重新读取后台当前值。不会自动重放保存。')
+      setPolicyFeedback({ text: '保存结果暂不确定，正在重新读取后台当前值。不会自动重放保存。', failed: true })
       const current = await readPolicy(true)
       if (current) {
         const matches = current.policy.automaticChecksEnabled === next.automaticChecksEnabled
           && (current.policy.intervalMinutes ?? 60) === next.intervalMinutes
           && current.policy.automaticDownloadsEnabled === false
           && current.policy.automaticInstallsEnabled === false
-        setPolicyFeedback(matches
+        setPolicyFeedback({ text: matches
           ? '后台当前值与本次设置一致；保存请求没有重放。'
-          : '后台当前策略已重新读取；本次设置未确认生效。请核对后再次手动保存，旧值不会被自动覆盖。')
-      } else setPolicyFeedback('重新读取也未完成。请先确认后台当前策略，再决定是否重试。')
+          : '后台当前策略已重新读取；本次设置未确认生效。请核对后再次手动保存，旧值不会被自动覆盖。', failed: !matches })
+      } else setPolicyFeedback({ text: '重新读取也未完成。请先确认后台当前策略，再决定是否重试。', failed: true })
     } finally { setSavingPolicy(false) }
   }, [canSavePolicy, policy, policyDraft, readPolicy, savingPolicy])
 
@@ -341,7 +341,7 @@ export function SettingsRemotePanel({ remote, capabilities, environmentId, refre
             {(policy.value.policy.automaticDownloadsEnabled || policy.value.policy.automaticInstallsEnabled) && <p className="eac-market__integration-note eac-market__integration-note--warning">后台原偏好包含自动写入设置。本市场不会触发自动下载或安装；点击保存会把这两个选项关闭。</p>}
           </div>
         )}
-        {policyFeedback && <p className="eac-market__integration-note" role="status" aria-live="polite">{policyFeedback}</p>}
+        {policyFeedback.text && <p className={policyFeedback.failed ? 'eac-market__integration-note eac-market__integration-note--warning' : 'eac-market__integration-note'} role={policyFeedback.failed ? 'alert' : 'status'} {...(policyFeedback.failed ? {} : { 'aria-live': 'polite' })}>{policyFeedback.text}</p>}
       </section>
 
       <section className="eac-market__setting eac-market__setting--stacked" aria-labelledby="eac-maintenance-heading">

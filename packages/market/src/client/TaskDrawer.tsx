@@ -3,6 +3,7 @@ import type { AiAnalysisResult, AiApplyResult, AiConfirmRequest, TaskEvent, Task
 import { boundedRequest } from './data-controller.ts'
 import { createIdempotencyKey, isTaskSettled, taskItemStatusLabel, taskNextStep, taskStatusLabel, taskTone, type MarketRemote } from './model.ts'
 import { Button, Modal } from './ui.tsx'
+import { EmptyState } from './components.tsx'
 import { ActionFeedback } from './action-feedback.tsx'
 import { completedActionFeedback, failedActionFeedback, idleActionFeedback, needsRecheckActionFeedback, partialActionFeedback, runningActionFeedback, taskActionFeedback, type ActionFeedbackState } from './action-state.ts'
 
@@ -96,11 +97,14 @@ function TaskFailureSummary({ task }: { readonly task: TaskState }): React.JSX.E
 
 export function TaskDrawer({ open, tasks, ...props }: Props): React.JSX.Element | null {
   if (!open) return null
-  return <Modal open onClose={props.onClose} title="安装任务" closeLabel="关闭任务面板" className="eac-market__task-dialog">
+  return <Modal open onClose={props.onClose} title="安装任务" closeLabel="关闭任务面板" className="eac-market__task-dialog" variant="drawer">
     <div className="eac-market__task-list">
-      {tasks.length === 0 && <p>暂无安装任务。安装后可在这里查看结果。</p>}
-      {props.onRefresh && <Button variant="outline" onClick={props.onRefresh}>重新读取任务和插件状态</Button>}
-      {[...tasks].reverse().map((task) => <TaskCard key={`${task.environmentId}:${task.taskId}`} task={task} {...props} />)}
+      {tasks.length === 0
+        ? <EmptyState title="暂无安装任务" description="安装后可在这里查看结果。" action={props.onRefresh && <Button variant="outline" onClick={props.onRefresh}>重新读取任务和插件状态</Button>} />
+        : <>
+          {props.onRefresh && <Button variant="outline" onClick={props.onRefresh}>重新读取任务和插件状态</Button>}
+          {[...tasks].reverse().map((task) => <TaskCard key={`${task.environmentId}:${task.taskId}`} task={task} {...props} />)}
+        </>}
     </div>
   </Modal>
 }
@@ -253,7 +257,7 @@ function TaskCard({ task, remote, onChanged, onRefresh, onOpenOfficialPlugins }:
     </div>
     <ActionFeedback state={feedback} onRefresh={onRefresh} />
     <TaskFailureSummary task={task} />
-    {task.approval && task.status === 'awaiting-approval' && <section className="eac-market__notice"><strong>待运行的安装脚本</strong><ul>{task.approval.packages.map((name) => <li key={name}>{name}</li>)}</ul><Button disabled={!!busy || !remote.approveTask} onClick={() => void run('授权', approve)}>同意运行清单内脚本并继续</Button></section>}
+    {task.approval && task.status === 'awaiting-approval' && <section className="eac-market__notice"><strong>待运行的安装脚本 <span className="eac-tag eac-tag--danger">高权限操作</span></strong><ul>{task.approval.packages.map((name) => <li key={name}>{name}</li>)}</ul><Button variant="primary" disabled={!!busy || !remote.approveTask} onClick={() => void run('授权', approve)}>同意运行清单内脚本并继续</Button></section>}
     {task.resume && task.status === 'awaiting-resume' && <Button variant="primary" disabled={!!busy || !remote.resumeTask} onClick={() => void run('核对重启', resume)}>已重启，重新核对</Button>}
     {busy && <p role="status">{busy}中…</p>}
     {error && <p role="alert">{error}</p>}

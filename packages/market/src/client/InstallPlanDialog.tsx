@@ -164,7 +164,7 @@ function PlanSession({ target, inventory, remote, onClose, onStarted, onOpenOffi
   const blocked = !review?.canConfirm || (!group && consentRequired && !consent)
   const unsafeReady = result?.status === 'ready' && review !== undefined && review.unsafe.length > 0
   const environmentBlocked = isEnvironmentPreflightBlock(result)
-  return <Modal open onClose={() => { if (busy !== 'starting') onClose() }} title={riskStep ? '第 2 步：再次确认降级影响' : target.collection ? `安装确认：${target.collection.name}` : target.pack ? `安装确认：${target.pack.name}` : `安装确认：${target.plugin?.name ?? '所选插件'}`} closeLabel="关闭安装确认" description={riskStep ? '只有完成这次专门影响确认后，才会提交降级安装。' : '先核对版本、来源和安装条件；你确认后才会安装。'}>
+  return <Modal open dismissOnOverlay={false} onClose={() => { if (busy !== 'starting') onClose() }} title={riskStep ? '第 2 步：再次确认降级影响' : target.collection ? `安装确认：${target.collection.name}` : target.pack ? `安装确认：${target.pack.name}` : `安装确认：${target.plugin?.name ?? '所选插件'}`} closeLabel="关闭安装确认" description={riskStep ? '只有完成这次专门影响确认后，才会提交降级安装。' : '先核对版本、来源和安装条件；你确认后才会安装。'}>
     <div className="eac-market__form">
       {busy === 'preflight' && <p role="status">正在核对版本、安装条件和当前状态…</p>}
       {consentRequired && !environmentBlocked && <label className="eac-market__notice eac-market__install-consent"><input type="checkbox" checked={consent} disabled={busy === 'starting'} onChange={(event) => {
@@ -201,7 +201,7 @@ function PlanSession({ target, inventory, remote, onClose, onStarted, onOpenOffi
       <div className="eac-market__button-row">
         <Button variant="outline" onClick={onClose}>{busy === 'starting' ? '关闭窗口' : '取消'}</Button>
         {busy === undefined && !uncertain && !unsafeReady && (result?.status !== 'ready' || notice) && <Button variant="outline" onClick={() => setRetry(nextPreflightRetry)}>重新预检</Button>}
-        <Button variant="primary" disabled={busy !== undefined || blocked || remote.startTask === undefined || uncertain} onClick={() => void confirm()}>{busy === 'starting' ? '正在提交…' : riskStep ? '已了解影响，确认降级' : downgrades.length > 0 ? '查看降级影响' : group ? '确认执行可用项' : '确认安装'}</Button>
+        <Button variant="primary" aria-busy={busy === 'starting'} disabled={busy !== undefined || blocked || remote.startTask === undefined || uncertain || result?.status !== 'ready'} onClick={() => void confirm()}>{busy === 'starting' ? '正在提交…' : riskStep ? '已了解影响，确认降级' : downgrades.length > 0 ? '查看降级影响' : group ? '确认执行可用项' : '确认安装'}</Button>
       </div>
     </div>
   </Modal>

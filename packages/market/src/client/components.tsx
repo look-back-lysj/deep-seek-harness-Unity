@@ -48,6 +48,7 @@ export function EmptyState({ title, description, action }: {
   const headingId = useId()
   return (
     <section className="eac-market__empty" aria-labelledby={headingId}>
+      <span className="eac-market__chapter-index eac-market__empty-mark" aria-hidden="true">EMPTY</span>
       <h2 id={headingId}>{title}</h2>
       <p>{description}</p>
       {action}
@@ -305,7 +306,7 @@ export function FileTransferField({ remote, purpose, label, accept, onComplete }
   return (
     <div className="eac-market__field">
       <label>{label}<input type="file" accept={accept} onChange={(event) => void select(event.currentTarget.files?.[0])} /></label>
-      {progress > 0 && <div className="eac-market__progress" aria-label={`文件传输进度 ${progress}%`}><div style={{ width: `${progress}%` }} /></div>}
+      {progress > 0 && <div className="eac-market__progress" role="progressbar" aria-label="文件传输进度" aria-valuemin={0} aria-valuemax={100} aria-valuenow={progress}><div style={{ width: `${progress}%` }} /></div>}
       {message && <small role="status">{message}</small>}
     </div>
   )

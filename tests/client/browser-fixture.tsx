@@ -185,10 +185,13 @@ function render(name: string): void {
   if (name === 'install' || name === 'late' || name === 'downgrade') root.render(<InstallHarness key={renderKey} late={name === 'late'} downgrade={name === 'downgrade'} />)
   if (name === 'ai' || name === 'ai-queued') root.render(<div className="eac-market"><TaskDrawer key={renderKey} open tasks={[taskFixture({ taskId: 'A', status: 'failed' }), taskFixture({ taskId: 'B', status: 'failed' })]} onClose={() => {}} remote={aiRemote(name === 'ai-queued')} onChanged={(task) => stats.started.push(task.taskId)} /></div>)
   if (name === 'author') root.render(<div className="eac-market"><AuthorWorkspace key={renderKey} remote={authorRemote} /></div>)
-  if (name === 'feedback-completed' || name === 'feedback-failed') {
+  if (name === 'tasks-empty') root.render(<div className="eac-market"><TaskDrawer key={renderKey} open tasks={[]} onClose={() => {}} remote={readOnlyRemote()} onChanged={() => {}} onRefresh={() => {}} /></div>)
+  if (name === 'feedback-completed' || name === 'feedback-failed' || name === 'feedback-stamped') {
     const state = name === 'feedback-completed'
-      ? completedActionFeedback('合成安装', '安装已完成。', '打开我的插件核对真实状态。')
-      : failedActionFeedback('合成安装', '安装未完成。', '查看失败原因后重试。')
+      ? completedActionFeedback('合成安装', '安装已完成。', '打开我的插件核对真实状态。', true)
+      : name === 'feedback-stamped'
+        ? completedActionFeedback('目录刷新', '目录已刷新。', '可以继续浏览。')
+        : failedActionFeedback('合成安装', '安装未完成。', '查看失败原因后重试。')
     root.render(<div className="eac-market"><ActionFeedback key={renderKey} state={state} /></div>)
   }
   if (name === 'task-events') { const task = taskFixture({ events: Array.from({ length: 12 }, (_, index) => ({ sequence: 118 + index, at: `2026-10-02T10:00:${String(index).padStart(2, '0')}.000Z`, phase: 'installing', message: `合成历史事件 ${119 + index}`, level: 'info' })) }); root.render(<div className="eac-market"><TaskDrawer key={renderKey} open tasks={[task]} onClose={() => {}} remote={remote} onChanged={() => {}} /></div>) }
@@ -248,6 +251,6 @@ function render(name: string): void {
     }} onOpenOfficialPlugins={() => { stats.official += 1 }} />)
   }
 }
-const style = document.createElement('style'); style.textContent = MARKET_CSS + 'html,body,#root{margin:0;min-height:100%;}#root.official-panel-fixture{display:flex;flex-direction:column;height:calc(100dvh - 32px);overflow:hidden;margin-top:32px;}'; document.head.append(style)
+const style = document.createElement('style'); style.textContent = MARKET_CSS + 'html,body,#root{margin:0;min-height:100%;}#root.official-panel-fixture{display:flex;flex-direction:column;height:calc(100dvh - 32px);min-height:0;overflow:hidden;margin-top:32px;}'; document.head.append(style)
 Object.assign(window, { skinFixture, fixture: { render, stats, resolveA: () => settleA(), openB: () => openB(), conflict: () => { stored = { ...stored, revision: 'changed-elsewhere' } }, forcePolicyConflict: () => { settingsPolicyConflict = true } } })
 render('home')
