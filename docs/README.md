@@ -4,6 +4,8 @@
 
 ## 协作者阅读顺序
 
+2026-10-03 已确认的宿主核心版本规则和前后端职责，见[实施方案](handoff/HOST-CORE-COMPATIBILITY-PLAN-2026-10-03.md)与[数据审计](handoff/HOST-COMPATIBILITY-DATA-AUDIT-2026-10-03.md)。本轮只整理规划，旧报告不能代替新能力的实现或验收。
+
 1. [当前接手入口](handoff/START-HERE.md)：分支、版本、范围、禁止事项和验证顺序。
 2. [最新版升级指南](UPGRADE-GUIDE.md)：用户升级、维护者构建、发布和回退。
 3. [Core / Desktop Adapter 底座指南](CORE-ADAPTER-GUIDE.md)：两包职责、公开 API、协议和发现页合同。
@@ -14,7 +16,7 @@
 
 ## 当前事实
 
-- 源码候选：`@dsh-eac/market@0.1.0-mvp.10` + `@dsh-eac/market-core@0.1.0`。
+- 源码候选：`@dsh-eac/market@0.1.0-mvp.17` + `@dsh-eac/market-core@0.1.6`；协议仍为 Core API `1.0.0` / Remote `2.0.0`，新方案尚未接线。
 - 当前正式可安装发行版：`0.1.0-mvp.9` 单包。
 - 双包已经通过本地测试源空缓存安装、官方 Web 加载和作者草稿保存验证。
 - 双包公网 Core 来源、官方 Desktop 全新安装和旧版升级仍需独立验收。

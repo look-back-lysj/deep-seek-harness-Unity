@@ -1,8 +1,12 @@
 # EAC 市场后端协作者指南
 
-更新时间：2026-09-30。本文给负责 Core、Host、目录、DSH 适配器和公共业务接口的协作者使用。普通用户先读仓库根 [README](../../README.md)；前端协作者再读 [Client 维护边界](../../packages/market/src/client/README.md)、[DESIGN.md](../../DESIGN.md) 和 [当前交互审查](INTERACTION-AUDIT-2026-09-30.md)。
+更新时间：2026-10-05。本文给负责 Core、Host、目录、DSH 适配器和公共业务接口的协作者使用。普通用户先读仓库根 [README](../../README.md)；前端协作者再读 [Client 维护边界](../../packages/market/src/client/README.md)、[DESIGN.md](../../DESIGN.md) 和 [当前交互审查](INTERACTION-AUDIT-2026-09-30.md)。
+
+最新管理记录与恢复合同见[本批实施实录](MANAGEMENT-BUSINESS-IMPLEMENTATION-2026-10-05.md)：schemaVersion=1的可选completion绑定原结果与维护提交事实；维护/凭证提交在既有execution锁内。只读恢复不补写，旧缺证据仍unknown；同key原写API补业务与只读查询必须分开。公共恢复协议和最低版本未变；不新增UI任务系统。公开媒体索引18,375,959字节超8MiB、版本/制品映射缺失的审计留给来源owner，不造数据或降低门禁。
 
 ## 先确认当前状态
+
+**2026-10-04 本批维护：**以 [剩余任务账本](REMAINING-WORK-2026-10-04.md) 和 [接手入口](START-HERE.md) 为当前状态；下方旧候选与历史阶段只供追溯。新 `ReleaseSelectionContext` 绑定选中发行和列表环境/host/catalog/inventory revisions，服务器重算冻结并复验，不是授权 token；新版 Provider 能力 `host-release-context` / `operation-recovery` 为增量，旧 Client 最低要求不提高。`taskStartRecover` 由 Adapter 传可信 caller，`pluginActionRecover` 读原管理记录；缺失不能证明未执行。管理 `receipt` 仅代表官方回执，旧记录未保存完整维护结果时 `result` 保留 unknown。版本默认选择与所有交互中间态仍归 Client，不另建恢复任务系统。
 
 2026-10-01 接力计划已更新为：[Core 新增能力补齐（方案 A v1.2）](CORE-NEW-CAPABILITIES-PLAN-2026-10-01.md)。当前按其轻量 Node/Undici 单一路径和 G0–G8 门槛实施；P0 Core/Backend 修补已经完成并通过代码级回归，首次空缓存、官方 Desktop 和真实代理链仍需单独验收。以协作者 `origin/dev@f50fb5a` 为审查基线，先完成新增能力与跨机器路径、DSH 能力兼容和文件拉取闭环，前端接入在后端稳定后安排。
 

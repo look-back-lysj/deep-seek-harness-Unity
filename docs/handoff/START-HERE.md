@@ -1,13 +1,23 @@
 # EAC 市场当前接手入口
 
-更新时间：2026-09-30。**所有新协作者先读本文，再开始改代码。** 本文是当前接手入口；旧阶段报告和旧计划已经移到 `archive/2026-09-legacy/`，只能追溯。
+更新时间：2026-10-05（Asia/Shanghai）。**所有新协作者先读本文，再开始改代码。** 本文是当前接手入口；归档中的旧阶段报告和旧计划只能追溯。
+
+**下一阶段详细实现计划：**[问题分类、实现步骤与验收门禁](NEXT-IMPLEMENTATION-PLAN-2026-10-05.md)。RW-13的Core/Client实现及本批rc.2管理范围已经执行，后续优先处理真实媒体源体积、版本/制品映射与安装长链路；退出问题单独归因，正式发布需授权。各阶段状态与历史计划分开记录。
+
+**最新管理闭环批次：**[后端修复、并行Client与官方验收实录](MANAGEMENT-BUSINESS-IMPLEMENTATION-2026-10-05.md)。既有管理记录保存完整业务结果与维护凭证，维护和凭证提交纳入execution锁；恢复只读，新记录返回原完整结果，旧缺证据仍unknown。Client保存原environment/目标/版本/action/key，超时不重写；后端不提供UI中间态。最终完整1866 passed / 0 failed / 2既有skipped、通用browser49/49，build/测试tsc/lint/包边界通过。新官方rc.2隔离候选Core95/95、Adapter96/96字节一致；API管理4组、冷启动只读3组及实际Client管理3组最终核实通过，真实卸载展示超时后手动只读核对恢复且零重放。本批一次正常退出code0/精确进程清零通过，不抹去上批退出失败。跨重开Client指针使用明确标记的fault injection，不当作自然断线cold-start验收。真实来源6记录/26预览已核实，但18,375,959字节索引超8MiB，版本/核心范围/制品映射仍缺；未激活来源、未发布。
+
+**当前执行清单：**[剩余任务与执行账本](REMAINING-WORK-2026-10-04.md)。RW-01～RW-06 第一批补齐版本选择上下文、写前复验、原操作只读恢复、Client默认适配选择和TaskCard在途锁；该批完整1598/0/2 skipped及[版本上下文实机报告](OFFICIAL-DESKTOP-RELEASE-CONTEXT-2026-10-04.md)作为历史证据保留。RW-13最新范围见管理实录；默认适配升级、真实任务恢复、正式渠道、原指定载体、媒体正向和其余矩阵仍待验，不自动发布。
+
+**最新媒体批次与网络结论：**[media实施实录](AGENT-FORGE-MEDIA-IMPLEMENTATION-2026-10-04.md)。Core/API已经提供图标、完整预览、alt和theme；Client负责加载、失败、重试、放大和展开。完整1796 passed / 0 failed / 2 skipped，media专项198/0，通用浏览器49/49；新隔离官方rc.2的Core94/94、Adapter92/92安装字节一致。目录刷新与README读取初装/重开各一次真实通过，不能继续把公网全部写成blocked；raw GitHub DNS仍不稳定。正常退出首次超时，仅本轮精确进程终止后重开成功，不冒充正常退出验收；重开UI8/0/1 blocked、两阶段API各11/0/9 unknown。默认61插件/21listing无media，官方公网媒体正向仍待验；发布、原指定rc.1、升级/降级和完整管理恢复未通过。此前181文件/正常退出/原回执证据只归上一批[版本上下文实机报告](OFFICIAL-DESKTOP-RELEASE-CONTEXT-2026-10-04.md)，不移用于本媒体批次。
+
+**最新已确认需求：**dsh 核心范围对照官方 getDshRuntimeVersion() 返回的运行时版本，不用 Desktop 发行号；前端负责默认选择和交互中间态，后端保存真实写入/回执事实。[实施方案](HOST-CORE-COMPATIBILITY-PLAN-2026-10-03.md)、[数据审计](HOST-COMPATIBILITY-DATA-AUDIT-2026-10-03.md)和[第三批 API 实现](HOST-CORE-API-IMPLEMENTATION-2026-10-03.md)为设计与此前实施证据，旧测试数字不再作最新结论。releaseContext、原操作查询 API、版本选择本批已接线；管理完整业务恢复及新版官方验收依当前账本继续。未提交或发布。
 
 ## 当前事实
 
-- 源码仓库：`D:/eac-market`
+- 本轮工作区：`G:/Code/fork/agent-market`；协作者使用自己的检出路径，历史 `D:/eac-market` 不是运行时默认目录。
 - 当前协作分支：`refactor/market-core-adapter`
-- 桌面适配器源码候选：`@dsh-eac/market@0.1.0-mvp.11`
-- Core 源码候选：`@dsh-eac/market-core@0.1.1`
+- 桌面适配器源码候选：`@dsh-eac/market@0.1.0-mvp.17`；另有 `0.1.0-mvp.17-github.1` GitHub 通道候选。
+- Core 源码候选：`@dsh-eac/market-core@0.1.6`；Provider Core API `1.1.0`、Remote `2.1.0`；Client 最低要求仍为 Core API `1.0.0` / Remote `2.0.0`，新增能力单独探测。
 - 当前正式可安装版：`0.1.0-mvp.9` 单包
 - 当前 Client 已完成：发现页、全部插件目录、详情、导航返回快照、筛选、任务/皮肤/作者工具交互收口和兼容 fallback。
 - 当前真实宿主仍待验：公网 Core 来源、官方 Desktop 全新安装/升级、读屏、forced-colors、120%–200% 缩放、真实网络图片和官方插件管理器长链路。
@@ -35,7 +45,7 @@
 - 无关 `inventory.unknownItems` 只作为库存提示，不再让 `MarketRuntime.planCreate` 全局返回 `inventory:unverified-state`。
 - 真正的写入屏障仍然保留：活动安装请求、官方 package run 记录、目标包自身身份/版本未知、目标包来源或摘要变化仍会阻止对应安装。
 - `InstallTaskManager` 只对本次目标做安装前/后核对；与目标无关的旧皮肤状态不会把任务标成失败或未知。目标自身核对失败仍按 `unknown/needs-attention` 处理，不自动重放。
-- 启用、停用、卸载等管理写入仍采用严格状态核对；本次放宽只针对安装。
+- 启用、停用、卸载同样核对目标与真实写入，不要求无关插件全部健康。目标异常分类、写后结果与回执恢复仍有待修复项，见最新实施方案；不能把策略调整当完整实机验收。
 - 安装后只验证目标包是否安装到确认版本；插件启动失败或功能不可用属于上游运行问题，不伪装成市场安装成功/失败。
 - 市场不再为 `unverified`、`unknown` 或 `hard-incompatible` 增加额外的“试装勾选”门槛；这些状态只提示，兼容性由官方安装器和上游插件负责。
 - 官方 pluginManager 仍是唯一写入者；不删除旧插件、不授予兼容性批准、不关闭官方保护。

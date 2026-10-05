@@ -1,12 +1,15 @@
 # EAC Market 工程文档总目录
 
-当前源码候选：adapter `0.1.0-mvp.10` + core `0.1.0`；当前正式安装版：`0.1.0-mvp.9`。开始工作前先读 [当前接手入口](handoff/START-HERE.md) 和 [最新版升级指南](UPGRADE-GUIDE.md)。
+当前源码候选：adapter `0.1.0-mvp.17` + core `0.1.6`；新规划未修改运行代码或发布，正式安装记录仍为 `0.1.0-mvp.9`。开始工作前先读 [当前接手入口](handoff/START-HERE.md) 和 [最新版升级指南](UPGRADE-GUIDE.md)。
 
 ## 当前有效文档
 
 | 文档 | 用途 |
 | --- | --- |
 | [当前接手入口](handoff/START-HERE.md) | 当前分支、版本、阅读顺序、边界和验证命令 |
+| [宿主核心与前后端实施方案](handoff/HOST-CORE-COMPATIBILITY-PLAN-2026-10-03.md) | 已确认产品规则、范围来源、API/交互分离、迁移、owner 和 HC-0–HC-5 施工门槛；尚未实施 |
+| [版本数据审计](handoff/HOST-COMPATIBILITY-DATA-AUDIT-2026-10-03.md) | 当前真实字段、覆盖统计与不可推断部分 |
+| [合成验收场景](handoff/fixtures/host-core-compatibility-cases.v1.json) | 测试设计数据，非真实插件要求，非通过证据 |
 | [最新版升级指南](UPGRADE-GUIDE.md) | 用户升级、维护者构建、发布、回退和证据规则 |
 | [Core / Desktop Adapter 底座指南](CORE-ADAPTER-GUIDE.md) | 两包职责、公开 API、通信协商、目录合同和发布边界 |
 | [后端协作者指南](handoff/BACKEND-CONTRIBUTOR-GUIDE-2026-09-30.md) | Core、Host、目录、适配器和失败语义 |

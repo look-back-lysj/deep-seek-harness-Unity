@@ -2,6 +2,8 @@
 
 状态：方案 B 实现；当前接手顺序、真实测试结果与发行状态以 [当前接手入口](handoff/START-HERE.md) 和 [最新版升级指南](UPGRADE-GUIDE.md) 为准。本文件只描述合同，不把设计当验收。
 
+2026-10-04媒体合同为兼容性扩展：`CatalogPlugin.media?`和`CatalogListing.media?`保留图标、有序完整预览及声明theme，图片使用既有id/alt/sourceUrl；旧字段screenshots/presentation.media仍提供完整预览。Core负责严格元数据校验、公开投影和原字节身份；Adapter只转发API；Client负责图片加载、失败、重试、放大和展开。不下载/缓存/代理图片，不把media/theme当适配或安装授权，未新增业务Remote或提高最低协议。详见[接线计划](handoff/AGENT-FORGE-MEDIA-PLAN-2026-10-05.md)与[实施实录](handoff/AGENT-FORGE-MEDIA-IMPLEMENTATION-2026-10-04.md)。
+
 ## 1. 决策与替代方案
 
 用户选择同仓两个包。`@dsh-eac/market` 保留旧安装身份和桌面入口；`@dsh-eac/market-core` 是新增依赖库。暂不增加第三个宿主包、不开发 TUI、不变更市场导航或第三方插件目录。
@@ -46,6 +48,7 @@ UI 人员只改 `market/src/client`。业务人员只改 core 对应模块；DSH
 | planCreate / taskStart | 冻结目标、来源、摘要、环境；可信 callerId 绑定预检与确认 |
 | taskGet/List/Events/Cancel/Resume/ApproveBuilds | 同一任务生命周期；取消不等于官方写入已撤销 |
 | pluginSetEnabled / pluginRemove | 沿统一写协调；不允许市场自己管理 core/adapter |
+| pluginActionRecover | 原身份只读查询，区分官方receipt与完整result；缺维护/业务凭证保持unknown |
 | author* | 本地资料与受限传输；导出不等于上架，不接受任意本机路径 |
 | aiAnalyze / aiConfirm | 仅提案，业务层校验后按既有确认执行；卸载/降级保留额外确认 |
 
@@ -66,6 +69,8 @@ UI 人员只改 `market/src/client`。业务人员只改 core 对应模块；DSH
 ## 5. 存储与生命周期
 
 继续使用 `<profile>/eac-market`，environmentId 算法、任务 schema3、作者草稿、目录接受历史保持原语义；不因拆包创建另一份空历史或清空坏记录。保持未知执行的写入阻断，不重放没有官方回执的操作。
+
+管理schema1兼容增加私有completion：在现有execution锁内保存维护提交revision及完整业务结果，摘要绑定原fingerprint与官方回执。已完成原操作按原记录恢复，不从新库存或not-found猜结果；旧记录无completion仍unknown，损坏凭证拒绝。查询不写维护状态，显式原管理调用补提交也必须核实原目标且不再次执行官方动作。此扩展不增加公开Remote、不提高最低协议；前端原请求指针与交互中间态仍由Client维护。
 
 Adapter 从自己的 `data/index.json` 读取原始字节传给 core，避免移动文件夹后目录丢失或摘要变动。Core 不根据工作目录或旧路径猜测资源。UI 关闭只释放自身订阅；Host 仍拥有业务任务。
 

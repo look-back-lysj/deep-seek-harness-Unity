@@ -1,0 +1,154 @@
+{
+  "schemaVersion": "planning-fixture/1",
+  "testOnly": true,
+  "executionStatus": "not-run",
+  "description": "合成验收设计，不是真实插件、宿主版本或已通过测试；字段是规划输入，不是现行 Remote DTO。",
+  "defaults": {
+    "agentId": "fixture-agent",
+    "agentName": "测试 Agent",
+    "releaseTargetAgentId": "fixture-agent",
+    "includePrerelease": false,
+    "publication": "active",
+    "artifactStatus": "available",
+    "verification": "unverified",
+    "rangeBasis": "synthetic-explicit-target",
+    "catalogStale": false
+  },
+  "cases": [
+    {
+      "id": "VC01", "scope": "version-facts", "title": "普通适配更新",
+      "input": { "hostVersion": "1.0.0", "installedVersion": "1.0.0", "releases": [{ "version": "1.1.0", "range": "^1.0.0" }] },
+      "expected": { "latestPublished": "1.1.0", "latestCompatible": "1.1.0", "clientDefaultUpgrade": "1.1.0", "coreTooOldNotice": false, "requiresUnverifiedConsent": false, "requiresOrdinaryPlanConfirmation": true }
+    },
+    {
+      "id": "VC02", "scope": "version-facts", "title": "更高发行需升级核心，保留较旧适配更新",
+      "input": { "hostVersion": "1.0.0", "installedVersion": "1.0.0", "releases": [{ "version": "2.0.0", "range": ">=2.0.0" }, { "version": "1.5.0", "range": ">=1.0.0 <2.0.0" }] },
+      "expected": { "latestPublished": "2.0.0", "latestCompatible": "1.5.0", "clientDefaultUpgrade": "1.5.0", "latestCompatibilityReason": "core-too-old", "coreTooOldNotice": true }
+    },
+    {
+      "id": "VC03", "scope": "version-facts", "title": "已是适配最新，但不是最新发行",
+      "input": { "hostVersion": "1.0.0", "installedVersion": "1.5.0", "releases": [{ "version": "2.0.0", "range": ">=2.0.0" }, { "version": "1.5.0", "range": ">=1.0.0 <2.0.0" }] },
+      "expected": { "latestPublished": "2.0.0", "latestCompatible": "1.5.0", "clientDefaultUpgrade": null, "currentIsLatestCompatible": true, "coreTooOldNotice": true }
+    },
+    {
+      "id": "VC04", "scope": "version-facts", "title": "没有适配候选",
+      "input": { "hostVersion": "1.0.0", "installedVersion": null, "releases": [{ "version": "2.0.0", "range": ">=2.0.0" }] },
+      "expected": { "latestPublished": "2.0.0", "latestCompatible": null, "clientDefaultUpgrade": null, "latestCompatibilityReason": "core-too-old", "coreTooOldNotice": true }
+    },
+    {
+      "id": "VC05", "scope": "version-facts", "title": "核心高于排他上界",
+      "input": { "hostVersion": "3.0.0", "installedVersion": null, "releases": [{ "version": "1.0.0", "range": ">=2.0.0 <3.0.0" }] },
+      "expected": { "latestCompatible": null, "latestCompatibilityReason": "core-too-new", "coreTooOldNotice": false }
+    },
+    {
+      "id": "VC06", "scope": "version-facts", "title": "OR 区间空洞不能说核心过旧",
+      "input": { "hostVersion": "2.5.0", "installedVersion": null, "releases": [{ "version": "1.0.0", "range": ">=1.0.0 <2.0.0 || >=3.0.0 <4.0.0" }] },
+      "expected": { "latestCompatible": null, "latestCompatibilityReason": "core-range-mismatch", "coreTooOldNotice": false }
+    },
+    {
+      "id": "VC07", "scope": "version-facts", "title": "宿主核心版本未知",
+      "input": { "hostVersion": null, "installedVersion": "1.0.0", "releases": [{ "version": "2.0.0", "range": ">=2.0.0" }] },
+      "expected": { "compatibility": "unknown", "latestCompatibilityReason": "core-version-unknown", "latestCompatible": null, "coreTooOldNotice": false }
+    },
+    {
+      "id": "VC08", "scope": "version-facts", "title": "旧目录缺范围不推断通配",
+      "input": { "hostVersion": "1.0.0", "installedVersion": null, "releases": [{ "version": "1.0.0", "range": null, "verification": "verified" }] },
+      "expected": { "compatibility": "unknown", "latestCompatibilityReason": "core-range-unknown", "latestCompatible": null, "coreTooOldNotice": false, "preserveVerification": "verified", "mustNotInventAdditionalTrialCheckbox": true }
+    },
+    {
+      "id": "VC09", "scope": "version-facts", "title": "非法范围不是普通不适配",
+      "input": { "hostVersion": "1.0.0", "installedVersion": null, "releases": [{ "version": "1.0.0", "range": "not-a-version-range" }] },
+      "expected": { "compatibility": "unknown", "latestCompatibilityReason": "core-range-invalid", "coreTooOldNotice": false }
+    },
+    {
+      "id": "VC10", "scope": "version-facts", "title": "其他 Agent 不能比较为核心过旧",
+      "input": { "hostVersion": "1.0.0", "installedVersion": null, "releases": [{ "version": "2.0.0", "range": ">=2.0.0", "targetAgentId": "other-fixture-agent" }] },
+      "expected": { "latestPublished": null, "latestCompatible": null, "excludedReason": "target-agent-mismatch", "coreTooOldNotice": false }
+    },
+    {
+      "id": "VC11", "scope": "version-facts", "title": "已撤回更高版本不成为最新",
+      "input": { "hostVersion": "1.0.0", "installedVersion": "1.0.0", "releases": [{ "version": "2.0.0", "range": ">=2.0.0", "publication": "withdrawn" }, { "version": "1.1.0", "range": "^1.0.0" }] },
+      "expected": { "latestPublished": "1.1.0", "latestCompatible": "1.1.0", "clientDefaultUpgrade": "1.1.0", "coreTooOldNotice": false }
+    },
+    {
+      "id": "VC12", "scope": "version-facts", "title": "默认不纳入预发行包",
+      "input": { "hostVersion": "1.0.0", "installedVersion": "1.0.0", "releases": [{ "version": "2.0.0-beta.1", "range": ">=2.0.0" }, { "version": "1.5.0", "range": "^1.0.0" }] },
+      "expected": { "latestPublished": "1.5.0", "latestCompatible": "1.5.0", "clientDefaultUpgrade": "1.5.0", "coreTooOldNotice": false }
+    },
+    {
+      "id": "VC13", "scope": "version-facts", "title": "用户明确纳入预发行包",
+      "input": { "hostVersion": "1.0.0", "installedVersion": "1.0.0", "includePrerelease": true, "releases": [{ "version": "2.0.0-beta.1", "range": ">=2.0.0" }, { "version": "1.5.0", "range": "^1.0.0" }] },
+      "expected": { "latestPublished": "2.0.0-beta.1", "latestCompatible": "1.5.0", "clientDefaultUpgrade": "1.5.0", "coreTooOldNotice": true, "mustNotEnableAllHostPrereleases": true }
+    },
+    {
+      "id": "VC14", "scope": "version-facts", "title": "宿主预发行被范围明确允许",
+      "input": { "hostVersion": "0.2.0-rc.1", "installedVersion": null, "releases": [{ "version": "1.0.0", "range": "0.2.0-rc.1 || ^0.2.0" }] },
+      "expected": { "compatibility": "compatible", "latestCompatible": "1.0.0", "coreTooOldNotice": false }
+    },
+    {
+      "id": "VC15", "scope": "version-facts", "title": "宿主预发行未被普通范围显式允许",
+      "input": { "hostVersion": "0.2.0-rc.1", "installedVersion": null, "releases": [{ "version": "1.0.0", "range": ">=0.1.0 <0.3.0" }] },
+      "expected": { "compatibility": "incompatible", "latestCompatibilityReason": "core-range-mismatch", "coreTooOldNotice": false }
+    },
+    {
+      "id": "VC16", "scope": "version-facts", "title": "同包同版多来源摘要冲突",
+      "input": { "hostVersion": "1.0.0", "installedVersion": null, "releases": [{ "version": "1.0.0", "range": "^1.0.0", "sourceId": "fixture-a", "artifactDigest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" }, { "version": "1.0.0", "range": "^1.0.0", "sourceId": "fixture-b", "artifactDigest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb" }] },
+      "expected": { "latestPublished": null, "clientDefaultUpgrade": null, "conflictReason": "metadata-conflict", "mustNotUseLastMapEntry": true }
+    },
+    {
+      "id": "VC17", "scope": "version-facts", "title": "适配最高版缺制品，默认可选较旧版",
+      "input": { "hostVersion": "1.0.0", "installedVersion": "1.0.0", "releases": [{ "version": "1.3.0", "range": "^1.0.0", "artifactStatus": "missing" }, { "version": "1.2.0", "range": "^1.0.0" }] },
+      "expected": { "latestPublished": "1.3.0", "latestCompatible": "1.3.0", "clientDefaultUpgrade": "1.2.0", "latestSelectable": false, "coreTooOldNotice": false }
+    },
+    {
+      "id": "VC18", "scope": "version-facts", "title": "缓存目录的最新不是公网全局最新",
+      "input": { "hostVersion": "1.0.0", "installedVersion": "1.0.0", "catalogStale": true, "releases": [{ "version": "2.0.0", "range": ">=2.0.0" }, { "version": "1.5.0", "range": "^1.0.0" }] },
+      "expected": { "latestPublished": "2.0.0", "latestCompatible": "1.5.0", "coreTooOldNotice": true, "noticeMustIdentifyCachedCatalog": true }
+    },
+    {
+      "id": "VC19", "scope": "version-facts", "title": "已安装版本高于目录时不自动降级",
+      "input": { "hostVersion": "1.0.0", "installedVersion": "3.0.0", "releases": [{ "version": "2.0.0", "range": "^1.0.0" }] },
+      "expected": { "latestPublished": "2.0.0", "latestCompatible": "2.0.0", "clientDefaultUpgrade": null, "mustNotDowngrade": true }
+    },
+    {
+      "id": "VC20", "scope": "version-facts", "title": "相同 precedence 的 build 身份不得任意默认",
+      "input": { "hostVersion": "1.0.0", "installedVersion": "1.0.0", "releases": [{ "version": "1.1.0+fixture.a", "range": "^1.0.0" }, { "version": "1.1.0+fixture.b", "range": "^1.0.0" }] },
+      "expected": { "clientDefaultUpgrade": null, "requiresExplicitReleaseChoice": true, "mustPreserveExactReleaseIdentity": true }
+    },
+    {
+      "id": "RC01", "scope": "range-engine", "title": "完整范围语法与边界",
+      "input": { "probes": [{ "version": "1.5.0", "range": "^1.2.0", "matches": true }, { "version": "2.0.0", "range": "^1.2.0", "matches": false }, { "version": "1.2.9", "range": "~1.2.0", "matches": true }, { "version": "1.3.0", "range": "~1.2.0", "matches": false }, { "version": "1.9.0", "range": "1.x", "matches": true }, { "version": "2.0.0", "range": "1.2.0 - 2.0.0", "matches": true }, { "version": "2.5.0", "range": ">=1 <2 || >=3 <4", "matches": false }] },
+      "expected": { "allProbesMatchExpected": true, "mustNotUseMinVersionOnly": true, "clientDoesNotEvaluateRanges": true }
+    },
+    {
+      "id": "IC01", "scope": "interaction", "title": "核心变更使已确认上下文失效",
+      "input": { "events": ["read options at core 1.0.0", "create plan", "host core becomes 2.0.0", "submit old plan"] },
+      "expected": { "oldPlan": "stale-or-blocked", "officialWrites": 0, "mustReconfirm": true }
+    },
+    {
+      "id": "IC02", "scope": "interaction", "title": "提交超时后重开只追查原操作",
+      "input": { "events": ["submit operation K", "client wait times out", "close page", "reopen", "query original K"] },
+      "expected": { "newWritesOnReopen": 0, "mustKeepOperationIdentity": true, "timeoutDoesNotMeanCancelled": true }
+    },
+    {
+      "id": "IC03", "scope": "interaction", "title": "官方成功、维护记录失败分层返回",
+      "input": { "officialOutcome": "applied", "changed": true, "maintenancePersist": "failed" },
+      "expected": { "mustPreserveChanged": true, "mustNotReturnFailedChangedFalse": true, "maintenanceFact": "repair-required", "reconciliationWrites": 0 }
+    },
+    {
+      "id": "IC04", "scope": "interaction", "title": "进度刷新不解除取消请求在途锁",
+      "input": { "events": ["cancel submitted", "request remains pending", "task.updatedAt changes twice", "click cancel again"] },
+      "expected": { "cancelRequests": 1, "frontendLockRemains": true }
+    },
+    {
+      "id": "IC05", "scope": "interaction", "title": "版本切换和用户选择保持",
+      "input": { "events": ["request options A", "switch target to B", "user selects B older selectable release", "B response", "A late response", "refresh B unchanged"] },
+      "expected": { "lateAChangesB": false, "mustPreserveValidUserSelection": true, "mustNotAutoSubmit": true }
+    },
+    {
+      "id": "IC06", "scope": "interaction", "title": "旧 Host、未知范围及无关库存异常",
+      "input": { "newCapabilityAvailable": false, "catalogHasRanges": false, "historyCoverage": "latest-only", "unrelatedInventoryIssue": "fixture unrelated skin version unknown" },
+      "expected": { "mustPreserveLegacyBrowse": true, "mustNotClaimKnownCompatibility": true, "mustNotClaimNoHistoricalCompatibleRelease": true, "mustNotReintroduceGlobalBlock": true, "mustRespectProtocolWriteGate": true }
+    }
+  ]
+}
