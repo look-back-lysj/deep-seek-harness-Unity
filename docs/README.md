@@ -4,7 +4,7 @@
 
 ## 协作者阅读顺序
 
-2026-10-03 已确认的宿主核心版本规则和前后端职责，见[实施方案](handoff/HOST-CORE-COMPATIBILITY-PLAN-2026-10-03.md)与[数据审计](handoff/HOST-COMPATIBILITY-DATA-AUDIT-2026-10-03.md)。本轮只整理规划，旧报告不能代替新能力的实现或验收。
+2026-10-05维护接手先读[详细开发者交接](handoff/DEVELOPER-HANDOFF-2026-10-05.md)和[详细修改记录](handoff/MODIFICATION-RECORD-2026-10-05.md)。核心版本/API/只读恢复/media/管理闭环已经实现；合并后全量1877/0/2既有pending、合成browser55/55通过，独立布局审计被中断、合并后新官方字节仍待验。2026-10-03的[实施方案](handoff/HOST-CORE-COMPATIBILITY-PLAN-2026-10-03.md)与[数据审计](handoff/HOST-COMPATIBILITY-DATA-AUDIT-2026-10-03.md)用于追溯决定，不是当前验收。
 
 1. [当前接手入口](handoff/START-HERE.md)：分支、版本、范围、禁止事项和验证顺序。
 2. [最新版升级指南](UPGRADE-GUIDE.md)：用户升级、维护者构建、发布和回退。
@@ -16,7 +16,7 @@
 
 ## 当前事实
 
-- 源码候选：`@dsh-eac/market@0.1.0-mvp.17` + `@dsh-eac/market-core@0.1.6`；协议仍为 Core API `1.0.0` / Remote `2.0.0`，新方案尚未接线。
+- 源码候选：`@dsh-eac/market@0.1.0-mvp.18` + `@dsh-eac/market-core@0.1.6`；Provider Core API `1.1.0` / Remote `2.1.0`，Client最低仍为`1.0.0` / `2.0.0`，新增可选能力独立探测。上游已有同版本预备制品不等于本轮合并后的新字节。
 - 当前正式可安装发行版：`0.1.0-mvp.9` 单包。
 - 双包已经通过本地测试源空缓存安装、官方 Web 加载和作者草稿保存验证。
 - 双包公网 Core 来源、官方 Desktop 全新安装和旧版升级仍需独立验收。

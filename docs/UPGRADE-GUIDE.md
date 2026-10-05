@@ -1,6 +1,8 @@
 # EAC 市场最新版升级指南
 
-当前源码候选：桌面适配器 `@dsh-eac/market@0.1.0-mvp.18`，核心包 `@dsh-eac/market-core@0.1.6`；Registry 与 GitHub 固定地址双通道正式发行包位于 `releases/0.1.0-mvp.18-dual/`。npm Registry 发布与官方 Desktop 对本版的实机验收尚未完成；普通用户的可安装发行版仍为 `0.1.0-mvp.9`。本文件是当前唯一升级操作指南，历史报告用于追溯，不作为当前安装说明。
+当前源码候选：桌面适配器 `@dsh-eac/market@0.1.0-mvp.18`，核心包 `@dsh-eac/market-core@0.1.6`；上游Registry与GitHub固定地址双通道预备包位于 `releases/0.1.0-mvp.18-dual/`，其字节不包含本轮合并后的全部修复，不得覆盖或冒充本轮候选。npm Registry发布与合并后新字节的官方Desktop实机验收尚未完成；普通用户的可安装发行版仍为 `0.1.0-mvp.9`。本文件是当前唯一升级操作指南，历史报告用于追溯，不作为当前安装说明。
+
+2026-10-05当前Git交付见[详细开发者交接](handoff/DEVELOPER-HANDOFF-2026-10-05.md)和[详细修改记录](handoff/MODIFICATION-RECORD-2026-10-05.md)。合并后全量1877/0/2既有pending、合成browser55/55，build/额外Client tsc/lint/包边界通过；独立布局审计被中断，新mvp.18官方字节待验。以下管理/媒体实机结果仅属于历史不可变候选，不能自动继承给本轮源码。GitHub分支推送不等于公开包发布。
 
 2026-10-05最新管理候选见[管理业务实施实录](handoff/MANAGEMENT-BUSINESS-IMPLEMENTATION-2026-10-05.md)：Core/Client业务回执与原意图恢复完成，最终1866/0/2既有skipped、browser49/49；新官方rc.2隔离安装Core95/95、Adapter96/96一致。官方API管理4组、冷启动只读3组、实际UI管理3组最终核实通过；真实卸载展示超时后保留原key并只读恢复。一次正常退出/冷启动通过，历史退出失败未消除。只属于该本机不可变候选，不是公开发行、原指定rc.1或自然断线cold-start全验收。公开真实媒体源已核实但索引超限、DSH范围/版本/制品映射仍缺；来源未激活。
 

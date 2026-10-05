@@ -1,5 +1,7 @@
 # 剩余任务与执行账本
 
+2026-10-05当前收尾：[详细开发者交接](DEVELOPER-HANDOFF-2026-10-05.md)与[修改记录](MODIFICATION-RECORD-2026-10-05.md)为最新接手入口。合并后mvp.18源码已完成全量1877/0/2既有pending、合成browser55/55及build/类型/lint/包边界；布局审计被中断，新官方字节待验。主人已授权提交及推送GitHub当前分支，未授权npm/tag/Release。下文起点“不commit/push”及各批数字为当时历史状态，不覆盖当前收尾授权；实际远端交付应以普通push后的ref核对为准。
+
 2026-10-05（Asia/Shanghai）最新补充：[管理业务闭环实录](MANAGEMENT-BUSINESS-IMPLEMENTATION-2026-10-05.md)记录本批Core/Client实现与官方rc.2管理验收；最终1866/0/2既有skipped、browser49/49、新安装191文件一致。RW-13当前实现范围完成；媒体/版本/退出历史/发行等门禁分别保留。[详细实现计划](NEXT-IMPLEMENTATION-PLAN-2026-10-05.md)已同步状态；下文旧批次测试数字不作为最新结论。
 
 日期：2026-10-04（Asia/Shanghai）。分支 `refactor/market-core-adapter`，起点 HEAD `9c6a1d22aa6b6e666172c81e1f1fbdd3517b059b`。保留所有既有未提交修改；不 commit、push、发布或改官方安装。本文是后续执行清单，不把计划写成通过。

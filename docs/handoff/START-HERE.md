@@ -2,6 +2,8 @@
 
 更新时间：2026-10-05（Asia/Shanghai）。**所有新协作者先读本文，再开始改代码。** 本文是当前接手入口；归档中的旧阶段报告和旧计划只能追溯。
 
+**当前开发交接与修改记录：**[详细开发者交接](DEVELOPER-HANDOFF-2026-10-05.md)、[逐模块修改记录](MODIFICATION-RECORD-2026-10-05.md)。已正常合并GitHub上游mvp.18，保留两边功能；合并后build、额外Client tsc、lint、包边界及全量1877 passed / 0 failed / 2既有pending、合成browser55/55通过。独立布局审计被中断，合并后新官方制品尚未打包安装验收，不能引用下面mvp.17批次证明mvp.18字节通过。本次提交/推送只交付当前分支源码、工具和文档，不是npm、tag/Release或日常Profile安装。
+
 **下一阶段详细实现计划：**[问题分类、实现步骤与验收门禁](NEXT-IMPLEMENTATION-PLAN-2026-10-05.md)。RW-13的Core/Client实现及本批rc.2管理范围已经执行，后续优先处理真实媒体源体积、版本/制品映射与安装长链路；退出问题单独归因，正式发布需授权。各阶段状态与历史计划分开记录。
 
 **最新管理闭环批次：**[后端修复、并行Client与官方验收实录](MANAGEMENT-BUSINESS-IMPLEMENTATION-2026-10-05.md)。既有管理记录保存完整业务结果与维护凭证，维护和凭证提交纳入execution锁；恢复只读，新记录返回原完整结果，旧缺证据仍unknown。Client保存原environment/目标/版本/action/key，超时不重写；后端不提供UI中间态。最终完整1866 passed / 0 failed / 2既有skipped、通用browser49/49，build/测试tsc/lint/包边界通过。新官方rc.2隔离候选Core95/95、Adapter96/96字节一致；API管理4组、冷启动只读3组及实际Client管理3组最终核实通过，真实卸载展示超时后手动只读核对恢复且零重放。本批一次正常退出code0/精确进程清零通过，不抹去上批退出失败。跨重开Client指针使用明确标记的fault injection，不当作自然断线cold-start验收。真实来源6记录/26预览已核实，但18,375,959字节索引超8MiB，版本/核心范围/制品映射仍缺；未激活来源、未发布。
@@ -16,12 +18,12 @@
 
 - 本轮工作区：`G:/Code/fork/agent-market`；协作者使用自己的检出路径，历史 `D:/eac-market` 不是运行时默认目录。
 - 当前协作分支：`refactor/market-core-adapter`
-- 桌面适配器源码候选：`@dsh-eac/market@0.1.0-mvp.17`；另有 `0.1.0-mvp.17-github.1` GitHub 通道候选。
+- 桌面适配器源码候选：`@dsh-eac/market@0.1.0-mvp.18`；上游`releases/0.1.0-mvp.18-dual/`是合并前预备制品，不能覆盖，也不能当成本轮修复的安装字节。
 - Core 源码候选：`@dsh-eac/market-core@0.1.6`；Provider Core API `1.1.0`、Remote `2.1.0`；Client 最低要求仍为 Core API `1.0.0` / Remote `2.0.0`，新增能力单独探测。
 - 当前正式可安装版：`0.1.0-mvp.9` 单包
 - 当前 Client 已完成：发现页、全部插件目录、详情、导航返回快照、筛选、任务/皮肤/作者工具交互收口和兼容 fallback。
 - 当前真实宿主仍待验：公网 Core 来源、官方 Desktop 全新安装/升级、读屏、forced-colors、120%–200% 缩放、真实网络图片和官方插件管理器长链路。
-- 真实宿主验收只能使用官方 DeepSeek Harness Desktop `0.2.0-rc.1` Windows x64；AIO/Lite/合成浏览器不算官方通过。
+- 原指定验收载体为官方DeepSeek Harness Desktop `0.2.0-rc.1` Windows x64，仍待可信载体；已有实机批次实际为官方`0.2.0-rc.2`，仅按该版本及当批字节记录。AIO/Lite/合成浏览器不算官方通过。
 
 源码候选不等于正式发行版。不要把协作分支、workspace 包名或本地 `.tgz` 写成用户下载地址。
 
