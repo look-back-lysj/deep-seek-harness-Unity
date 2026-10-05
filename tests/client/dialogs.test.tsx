@@ -93,6 +93,7 @@ describe('任务与安装弹窗回归', () => {
     expect(html).toContain('不要使用校验失败的文件')
     const histories = [...html.matchAll(/<details class="eac-market__task-history" aria-label="任务记录"><summary>查看任务记录（已载入 2 条）<\/summary>/g)]
     expect(histories).toHaveLength(6)
+    expect(html).toMatch(/<details[^>]*><summary>查看任务记录/)
   })
 
   it('版本不兼容只显示简短结论，长报告默认折叠', () => {

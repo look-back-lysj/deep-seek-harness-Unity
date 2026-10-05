@@ -1,6 +1,6 @@
-# EAC 桌面市场适配器 0.1.0-mvp.17
+# EAC 桌面市场适配器 0.1.0-mvp.18
 
-这是运行在官方 DeepSeek Harness 内的 EAC 社区市场桌面适配器，当前源码候选为 `0.1.0-mvp.17`，尚未正式发布。它保留原包名 `@dsh-eac/market`，依赖独立业务包 `@dsh-eac/market-core@0.1.6`；双包正式发布后，用户安装桌面入口即可，由官方包管理器取得依赖。不要把 core 当作独立 DSH bundle 安装。
+这是运行在官方 DeepSeek Harness 内的 EAC 社区市场桌面适配器，当前源码候选为 `0.1.0-mvp.18`，尚未正式发布。它保留原包名 `@dsh-eac/market`，依赖独立业务包 `@dsh-eac/market-core@0.1.6`；双包正式发布后，用户安装桌面入口即可，由官方包管理器取得依赖。不要把 core 当作独立 DSH bundle 安装。
 
 当前正式安装入口以 Gitee 发行站 README 为准。本地测试源和官方 Web 验证已完成；公网 core 下载、Desktop 新装与旧版升级尚未验收。
 

@@ -6,14 +6,14 @@
 
 ## 当前状态
 
-- 源码候选：`@dsh-eac/market@0.1.0-mvp.17`
+- 源码候选：`@dsh-eac/market@0.1.0-mvp.18`
 - 源码候选：`@dsh-eac/market-core@0.1.6`
 - Core API：`1.0.0`
 - 页面通信协议：`2.0.0`
 - 目标宿主：官方 DSH `0.2.0-rc.1` / Windows x64
 - 当前正式可安装版：`0.1.0-mvp.9` 单包
 
-`mvp.17` 和 Core `0.1.6` 已生成 Registry / GitHub 双通道候选；Registry 通道仍需发布 Core 后才能供普通用户安装。双包已经完成本地测试源空缓存安装、官方 Web 加载和作者草稿保存验证；公网 Core 来源、官方 Desktop 全新安装、旧版升级和跨平台仍需独立验收。
+`mvp.18` 和 Core `0.1.6` 已生成 Registry / GitHub 双通道正式发行包（`releases/0.1.0-mvp.18-dual/`）；Registry 通道仍需发布 Core 后才能供普通用户安装。本版包含 StoryStream 排版重造、硬边触感层，以及布局节奏与按键错位修复。双包已经完成本地测试源空缓存安装、官方 Web 加载和作者草稿保存验证；公网 Core 来源、官方 Desktop 全新安装、旧版升级和跨平台仍需独立验收。
 
 ## 协作者从这里开始
 
@@ -33,15 +33,15 @@
 
 ### A：npm Registry 通道
 
-- 前端：`@dsh-eac/market@0.1.0-mvp.17`
+- 前端：`@dsh-eac/market@0.1.0-mvp.18`
 - 自动依赖：`@dsh-eac/market-core@0.1.6`
 - 状态：候选包已生成；Core 发布到 npm Registry 后才能正式使用。
 
 ### B：GitHub 固定地址通道
 
-- 前端：`@dsh-eac/market@0.1.0-mvp.17-github.1`
+- 前端：`@dsh-eac/market@0.1.0-mvp.18-github.1`
 - 自动依赖：GitHub 固定 commit 中的 Core `0.1.6` 内容寻址文件
-- 前端包：`releases/0.1.0-mvp.17-dual/dsh-eac-market-0.1.0-mvp.17-github.1.tgz`
+- 前端包：`releases/0.1.0-mvp.18-dual/dsh-eac-market-0.1.0-mvp.18-github.1.tgz`
 
 两个通道都只需要把一个前端 `.tgz` 填入官方 DSH 的「插件 → 添加插件」。不要单独安装 Core。安装后完整退出并重新启动 DSH。
 

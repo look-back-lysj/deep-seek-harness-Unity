@@ -236,3 +236,43 @@ await ctx.remote.$mount(TYPERT_REMOTE)
 - 常驻冗长保护说明折叠收纳；降级第二次确认、校验/缺包/硬阻断、未知提交不重放等保护不变。
 
 新增 9 项 Client 回归、Client 全量 244 项、Adapter 定向 68 项通过；主控串行完整检查 736 项通过、2 项固定协议跳过，类型/包边界通过；合成浏览器全量 48 项通过，Impeccable detect 为 []。新包尚未覆盖用户官方版，最终本机重装和安装预检实机边界以最新交接记录为准。
+
+## 17. 2026-10-04 StoryStream 重造与触感层
+
+用户选择方案 B 血统的 The Verge 方向并要求"完全重新设计 + 每个部件有独立且协调的设计"。本节记录两轮实施。
+
+### 17.1 骨架重造（StoryStream）
+
+- 全局：频道刊头条（薄荷徽标 + 01/02/03 频道标签，当前频道薄荷压纸块）。
+- 发现页：刊头（DISCOVER 小标 + 超大标题 + EDITION 版次线）+ `00–06` 编号章节 + 左侧虚线轨道流（单列）；无图海报整块紫外光。
+- 全部插件：卡片网格改行情表（等宽序号 + 行分隔 + 扫光悬停）；我的插件改机架条（状态色带 + 整宽行）。
+- 详情页双层壳带头；设置台账化；任务日志化。视觉基底按 `awesome-design-md/theverge` 重写：薄荷/紫外/黄/粉危险色、等宽大写小标、20/24px 圆角、零投影、宿主主题变量跟随。
+
+### 17.2 触感层（同日第二轮）
+
+五个签名母题：危险色标签 tab、硬边立体台阶（2/4/6px 实色投影）、编号牌、虚线轨道、贴纸/盖章。
+
+- 按钮实体物理：hover 抬升 1px 加深台阶，active 位移 +2px 台阶归零，disabled 平灰虚线无台阶。
+- 主按钮磁吸（原生 JS，ref+rAF，仅精确指针且非 reduced-motion，位移 ≤3px）；徽标有任务时脉冲、页面隐藏暂停（visibilitychange）。
+- 入场：刊头错峰淡入、章节编号 rotateX 翻牌、轨道自上而下画入、节点错峰点亮（上限 6）；海报切换 clip 翻页。
+- 状态时刻：成功盖章动效、失败单程抖动、运行中紫外块呼吸；同一任务首次安装/更新成功时16 片四色纸屑 900ms 自动清理，失败与 reduced-motion 绝不撒纸。
+- 部件性格：皮肤卡拍立得轻倾 hover 摆正、高分前三名黄/粉/薄荷奖牌、RESTART/BLOCK 贴纸角标（data-sticker 定点，不滥用）、详情带头双层壳、画廊 hover 透视倾斜、目录计数进页滚动一次（aria-hidden 可见层 + sr-only 播报层分离）。
+- 降级：`prefers-reduced-motion` 关闭全部位移/翻牌/彩纸/脉冲，保留颜色与台阶的即时状态；forced-colors 移除台阶回系统色。禁渐变、禁模糊阴影、禁 prefers-color-scheme 媒体查询。
+
+### 17.3 验证
+
+typecheck/lint 通过；Client 248 项通过（新增触感层断言）；browser-check 54 项通过（新增"按压台阶/成功彩纸/reduced-motion 降级"微交互检查）；兼容专项（forced-colors+reduced-motion、120%/200% 缩放）通过；全量 `pnpm check` 758 项通过、2 项固定协议跳过、包验证通过。截图证据位于 `D:/eac-market-verify/implementation-20260928/C-UI`（含 directory/rack/stream/detail 新截图）。官方 Desktop 实机验收仍属 P0 未完成项，合成检查不替代。
+
+## 18. 2026-10-04 排版与按键错位升级（AAA 定案）
+
+用户实机反馈"排版不合理、按键效果错位"，经 `tests/client/layout-audit.mjs` 在 8 个场景逐元素量测确认 5 类真实缺陷并全部修复，三个定案均为 A：只动台阶不动物体 / 详情单列整合 / 行布局改 flex。
+
+- **D1 幽灵空白**：行情表行与机架行从固定 `grid-template-areas` 改为 flex 主行 + 全宽说明行（order 控制流向），清除空轨道 gap；移除遗留 `min-height:206/208px` 与 `margin-top:auto`。审计指标：行尾空白 ≤24px（实测 16–17）。
+- **D2 顶栏错位**：三块同排中心差 17px → 0；频道标签高改 56px 与刊头内容区等高、底边与 2px 墨线齐平（1280 diff=0，480 通过 `.topbar--editorial .nav padding-bottom:0` 修正为 0）；章节头对齐改 center。
+- **D3 详情半空列**：带头从 main 提出为 `.eac-market__detail` 直接子元素，网格改 `head / side / body` 三区域单列流（带头→来源信息条→正文）；仅 ≥1440px 分栏且右栏 sticky。浏览器检查选择器同步。
+- **D4 按键错位**：hover/active 全部移除本体位移（悬停=台阶加深、按压=台阶归零+`brightness(.95)`）；频道标签、胶囊、海报控制、工具钮、机架行、行情行、设置行、系统组折叠均不再推移内容；磁吸改为 `pointerenter` 接管、`pointerleave` 清除、去掉 40px 提前感应与 −1px 基准，进入位移经120ms 过渡平滑。
+- **D5/D6**：章节头 `align-items:center`（误差 12–40px→0）；审计工具补齐 `sr-only` 排除、同行基线判定、导航贴合直测、磁吸强制能力模式（stub matchMedia），并升级为**超标即 exit 1** 的回归门禁。
+- 新增浏览器检查 2 项：`微交互`（按压无位移+台阶塌陷+彩纸/reduced-motion/磁吸正反向）与 `排版节奏`（行尾 ≤24、顶栏中心差 ≤4、标签贴合 ≤1）。
+
+验证：typecheck/lint 通过；Client 248 项通过；browser-check **55 项全过**；布局审计 **0 违规（exit 0）**；兼容专项通过；全量 `pnpm check` 758 项通过、2 项固定跳过、包验证通过（调度器测试偶发超时按交接文档单跑 24 项确认为历史波动）。截图证据 `D:/eac-market-verify/implementation-20260928/C-UI`，布局审计明细 `D:/eac-market-verify/layout-audit/findings.json`。官方 Desktop 实机验收仍属未完成 P0。
+

@@ -72,7 +72,7 @@ export function PreflightBlockNotice({ result, onOpenOfficialPlugins, inventoryI
   readonly inventoryIssues?: readonly string[] | undefined
 }): React.JSX.Element {
   const environmentBlocked = isEnvironmentPreflightBlock(result)
-  return <section role="alert" className="eac-market__notice eac-market__notice--warning">
+  return <section role="alert" data-sticker="BLOCK" className="eac-market__notice eac-market__notice--warning">
     <strong>{environmentBlocked ? '安装目标状态待核对' : '暂不能安装'}</strong>
     {environmentBlocked ? <>
       <p>市场暂时无法完整确认本次目标插件的安装状态。这不是对无关插件的风险判定。</p>
