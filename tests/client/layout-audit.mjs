@@ -1,5 +1,5 @@
 /** 布局/交互瑕疵审计：合成沙盒 + 无头 Edge + CDP 量测，只读产品代码。
- * 用法: node tests/client/layout-audit.mjs   输出 JSON 到 stdout（退出码恒为 0）
+ * 用法: node tests/client/layout-audit.mjs   输出 JSON 到 stdout（发现违规时退出 1）
  */
 import { build } from 'esbuild'
 import { mkdirSync, readFileSync, writeFileSync, existsSync } from 'node:fs'
@@ -7,7 +7,7 @@ import { createServer } from 'node:http'
 import { spawn } from 'node:child_process'
 import { resolve, join } from 'node:path'
 
-const outDir = 'D:/eac-market-verify/layout-audit'
+const outDir = resolve(process.env.EAC_LAYOUT_AUDIT_OUT ?? `D:/eac-market-verify/layout-audit-${Date.now()}`)
 mkdirSync(outDir, { recursive: true })
 const bundle = join(outDir, 'audit-fixture.js')
 await build({ entryPoints: ['tests/client/browser-fixture.tsx'], bundle: true, format: 'iife', platform: 'browser', jsx: 'automatic', outfile: bundle, alias: { react: resolve('packages/market/node_modules/react'), 'react-dom': resolve('packages/market/node_modules/react-dom') }, define: { 'process.env.NODE_ENV': '"development"' } })
@@ -35,6 +35,8 @@ try {
   send = (method, params = {}) => new Promise((res, rej) => { const id = ++serial; const timer = setTimeout(() => { pending.delete(id); rej(new Error('timeout ' + method)) }, 15000); pending.set(id, { resolve: res, reject: rej, timer }); ws.send(JSON.stringify({ id, method, params })) })
   evaluate = async (expression) => { const r = await send('Runtime.evaluate', { expression, awaitPromise: true, returnByValue: true }); if (r.exceptionDetails) throw new Error(r.exceptionDetails.exception?.description ?? r.exceptionDetails.text); return r.result.value }
   await send('Page.enable')
+  await send('Network.enable')
+  await send('Network.setBlockedURLs', { urls: ['http://me.kis.v2.scr.kaspersky-labs.com/*'] })
   await send('Emulation.setDeviceMetricsOverride', { width: 1280, height: 900, deviceScaleFactor: 1, mobile: false })
   await send('Page.navigate', { url: `http://127.0.0.1:${server.address().port}` })
 } catch (error) {

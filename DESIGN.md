@@ -275,4 +275,3 @@ typecheck/lint 通过；Client 248 项通过（新增触感层断言）；browse
 - 新增浏览器检查 2 项：`微交互`（按压无位移+台阶塌陷+彩纸/reduced-motion/磁吸正反向）与 `排版节奏`（行尾 ≤24、顶栏中心差 ≤4、标签贴合 ≤1）。
 
 验证：typecheck/lint 通过；Client 248 项通过；browser-check **55 项全过**；布局审计 **0 违规（exit 0）**；兼容专项通过；全量 `pnpm check` 758 项通过、2 项固定跳过、包验证通过（调度器测试偶发超时按交接文档单跑 24 项确认为历史波动）。截图证据 `D:/eac-market-verify/implementation-20260928/C-UI`，布局审计明细 `D:/eac-market-verify/layout-audit/findings.json`。官方 Desktop 实机验收仍属未完成 P0。
-
