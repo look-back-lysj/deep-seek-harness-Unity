@@ -495,6 +495,8 @@ export interface InstallPlanItem {
   readonly verification: VerificationState
   readonly requiresRestart: boolean
   readonly blockers: readonly string[]
+  /** 非阻断提示：已知兼容性风险等，只记录不阻止生成方案。 */
+  readonly warnings?: readonly string[]
 }
 
 export interface InstallPlan {
@@ -896,4 +898,33 @@ export interface DiagnosticExport {
   readonly summaries: readonly string[]
   readonly diagnostics: readonly DiagnosticEntry[]
   readonly redacted: boolean
+}
+
+/** 安装日志（B 档）：每行一条 JSON 的只读记录面。字段只含脱敏摘要，
+ * 不含本机绝对路径、令牌或完整交付 URL。 */
+export type InstallLogAction = 'install' | 'remove' | 'enable' | 'disable' | 'update'
+
+export interface InstallLogCheck {
+  readonly check: string
+  readonly pass: boolean
+  readonly reason?: string | undefined
+}
+
+export interface InstallLogOfficialResult {
+  readonly kind: string
+  readonly changed?: boolean | undefined
+  readonly error?: string | undefined
+}
+
+export interface InstallLogEntry {
+  readonly at: string
+  readonly action: InstallLogAction
+  readonly packageName: string
+  readonly version?: string | undefined
+  readonly artifactDigest?: string | undefined
+  readonly source?: string | undefined
+  readonly officialResult?: InstallLogOfficialResult | undefined
+  readonly postcheck?: readonly InstallLogCheck[] | undefined
+  readonly taskId?: string | undefined
+  readonly hostVersion: string
 }

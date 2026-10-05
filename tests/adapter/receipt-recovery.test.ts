@@ -10,6 +10,8 @@ import { build } from 'esbuild'
 import { describe, expect, it, vi } from 'vitest'
 import { OfficialHostPort } from '../../packages/market-core/src/adapters/dsh/host-port.ts'
 import type { HostInstallRequest } from '../../packages/market-core/src/core/ports.ts'
+import type { InstallLogEntry } from '../../packages/market-core/src/contracts/types.ts'
+type LogEntry = Omit<InstallLogEntry, 'hostVersion'>
 import { createPlanBundle } from '../../packages/market-core/src/core/planner.ts'
 
 const output = process.env.EAC_TEST_OUTPUT ?? join(tmpdir(), 'eac-market-tests')
@@ -36,7 +38,11 @@ async function fixture(restartRequired = false) {
   const request: HostInstallRequest = { requestId: 'request-test', enabled: true, artifact: {
     pluginId: 'p0', packageName: 'test-package', version: '1.0.0', artifactDigest: createHash('sha256').update(bytes).digest('hex'), localRef: cache, size: bytes.length,
   } }
-  return { root, cache, manager, context, request, port: new OfficialHostPort(context, 'env-test') }
+  const installLog = {
+    entries: [] as LogEntry[],
+    append(entry: LogEntry) { this.entries.push(entry) },
+  }
+  return { root, cache, manager, context, request, installLog, port: new OfficialHostPort(context, 'env-test', undefined, installLog) }
 }
 
 describe('REV-02/03/05 recoverable official ownership', () => {
@@ -69,14 +75,17 @@ describe('REV-02/03/05 recoverable official ownership', () => {
     expect(await f.port.install(f.request)).toMatchObject({ kind: 'applied', changed: true })
   })
 
-  it('still reports postcondition unknown when the target itself cannot be verified', async () => {
+  it('宽松模式：官方 applied 但装后核对不符仍按已安装完成，存疑项只写进日志', async () => {
     const f = await fixture()
     f.manager.installBundle.mockImplementationOnce(async (path: string, options: { enabled: boolean }) => {
       await f.manager.installBundle.getMockImplementation()!(path, options)
       f.manager.listBundles = async () => [{ name: 'test-package', version: '9.9.9', installed: true, enabled: options.enabled, removable: true, rows: [] }]
       return { application: 'applied', changed: true, bundle: 'test-package', target: 'test-package', stage: 'install' }
     })
-    expect(await f.port.install(f.request)).toMatchObject({ kind: 'unknown', errorCode: 'receipt/postcondition' })
+    expect(await f.port.install(f.request)).toMatchObject({ kind: 'applied', changed: true })
+    const failed = f.installLog.entries.flatMap((entry) => entry.postcheck ?? []).filter((check) => !check.pass)
+    expect(failed.map((check) => check.check)).toContain('已装版本与确认版本一致')
+    expect(f.installLog.entries.some((entry) => entry.officialResult?.kind === 'applied')).toBe(true)
   })
 
   it.each(['cache', 'reference'] as const)('revokes source proof when %s changes', async change => {

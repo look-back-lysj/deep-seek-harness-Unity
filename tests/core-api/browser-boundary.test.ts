@@ -49,7 +49,7 @@ describe('浏览器安全入口与显式 API', () => {
     const runtimeMethods = [...new Set([...methods.map(node => node.name!.getText(runtime)), 'capabilities', 'catalog', 'inventory',
       'catalogSources', 'agentForgeRefresh', 'maintenanceStatus', 'checkUpdates', 'updatePolicyGet', 'updatePolicySave'])]
     expect(names.sort()).toEqual(runtimeMethods.sort())
-    expect(names).toHaveLength(36)
+    expect(names).toHaveLength(37)
     for (const name of ['planCreate', 'taskStart', 'aiAnalyze', 'aiConfirm']) {
       const method = contract.members.find(node => node.name!.getText(api) === name) as ts.MethodSignature
       const caller = method.parameters[1]!

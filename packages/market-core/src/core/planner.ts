@@ -190,6 +190,8 @@ export async function createPlanBundle(
       }
       const action = actionFor(current, selection.targetVersion)
       if (action === 'blocked') blockers.push(versionBlocker(current, selection.targetVersion))
+      // 宽松模式：已知不兼容只降级为警告，不再阻断方案生成；官方安装器仍可能拒绝。
+      const warnings: string[] = fact?.verification === 'hard-incompatible' ? ['verification:hard-incompatible'] : []
       if (blockers.length > 0) details.push(`${selection.packageName}:${blockers.join(',')}`)
       const edge = edgeByConsumer.get(pluginId)
       const requiresRestart = fact?.requiresRestart === true
@@ -205,6 +207,7 @@ export async function createPlanBundle(
         verification: fact?.verification ?? 'unknown',
         requiresRestart,
         blockers,
+        ...(warnings.length > 0 ? { warnings } : {}),
       }
       items.push(item)
       expected.push({
@@ -268,6 +271,8 @@ export async function createPlanBundle(
     }
     const action = actionFor(current, selection.targetVersion)
     if (action === 'blocked') blockers.push(versionBlocker(current, selection.targetVersion))
+    // 宽松模式：已知不兼容只降级为警告，不再阻断方案生成；官方安装器仍可能拒绝。
+    const warnings: string[] = fact?.verification === 'hard-incompatible' ? ['verification:hard-incompatible'] : []
     const item: InstallPlanItem = {
       pluginId: selection.pluginId,
       packageName: selection.packageName,
@@ -280,6 +285,7 @@ export async function createPlanBundle(
       verification: fact?.verification ?? 'unknown',
       requiresRestart: fact?.requiresRestart === true,
       blockers,
+      ...(warnings.length > 0 ? { warnings } : {}),
     }
     items.push(item)
     expected.push({

@@ -33,6 +33,7 @@ import type {
   UpdatePolicySnapshot,
   UpdatePolicySaveRequest,
   DiagnosticExport,
+  InstallLogEntry,
   PlanCreateRequest,
   PlanResult,
   PluginActionResult,
@@ -59,6 +60,7 @@ import type {
 import { AiAssistant } from "./ai-assist.ts"
 import { AiProposalStore } from './ai-proposal-store.ts'
 import { collectDiagnostics, diagnosticDigest, sanitizeDiagnostic, sourceIdentity } from './diagnostics.ts'
+import { InstallLog } from './install-log.ts'
 import { assessRiskyAction, type ManagementManifest } from './management-impact.ts'
 import { canonicalJson } from '../core/canonical.ts'
 import { isProtectedMarketPackage } from '../core/identity.ts'
@@ -142,6 +144,7 @@ function resultFromOutcome(outcome: import('../core/ports.ts').HostInstallOutcom
 
 export class MarketRuntime {
   readonly host: OfficialHostPort
+  readonly installLog: InstallLog
   readonly catalog: CatalogRepository
   readonly artifacts: CatalogArtifactPort
   readonly tasks: InstallTaskManager
@@ -182,7 +185,8 @@ export class MarketRuntime {
     this.marketVersion = options.marketVersion ?? 'development'
     this.artifactCacheDir = join(dataDirectory, 'artifacts')
     this.network = options.network
-    this.host = new OfficialHostPort(ctx, identity.environmentId, { hostVersion: identity.hostVersion, profileName: identity.profileName })
+    this.installLog = new InstallLog(join(dataDirectory, 'logs'), identity.hostVersion)
+    this.host = new OfficialHostPort(ctx, identity.environmentId, { hostVersion: identity.hostVersion, profileName: identity.profileName }, this.installLog)
     this.files = new NodePersistenceFiles(join(dataDirectory, 'state'))
     const locks = new AtomicProfileLocks(dataDirectory)
     this.maintenanceIntents = new MaintenanceIntentStore(this.files, locks)
@@ -243,10 +247,12 @@ export class MarketRuntime {
         if (!item) throw new Error('当前步骤不在已确认方案中')
         this.catalog.assertReleaseActive(item.pluginId, item.targetVersion, item.targetDigest)
         const current = this.catalogView().plugins.find(plugin => plugin.id === item.pluginId && plugin.version === item.targetVersion)
-        if (current?.verification === 'hard-incompatible' || current?.installability === 'hard-blocked') throw new Error('制品在执行前已撤回或确认不兼容')
+        // 宽松模式：已知不兼容降级为计划级警告；发行撤回与 hard-blocked 仍阻断。
+      if (current?.installability === 'hard-blocked') throw new Error('制品在执行前已撤回或确认不兼容')
       },
       locks,
       events: new SegmentedEventLog(this.files),
+      installLog: this.installLog,
     })
     const authorRoot = join(dataDirectory, 'authoring')
     this.authoring = new AuthorPackageService(authorRoot)
@@ -526,7 +532,8 @@ export class MarketRuntime {
     for (const item of bundle.plan.items) {
       this.catalog.assertReleaseActive(item.pluginId, item.targetVersion, item.targetDigest)
       const current = this.catalog.load().snapshot.plugins.find(plugin => plugin.id === item.pluginId && plugin.version === item.targetVersion)
-      if (current?.verification === 'hard-incompatible' || current?.installability === 'hard-blocked') throw new Error('该版本已被撤回或确认不兼容，请重新预检')
+      // 宽松模式：已知不兼容降级为警告，交由官方安装器裁决；撤回与 hard-blocked 仍阻断。
+      if (current?.installability === 'hard-blocked') throw new Error('该版本已被撤回，请重新预检')
     }
     const previousIntent = await this.maintenanceIntents.load()
     const packageByPlugin = new Map(bundle.plan.items.map(item => [item.pluginId, item.packageName]))
@@ -952,5 +959,10 @@ export class MarketRuntime {
     try { inventory = (await this.host.readState()).inventory } catch (error) { errors.push(errorText(error)) }
     return collectDiagnostics({ environmentId: this.identity.environmentId, hostVersion: this.identity.hostVersion,
       marketVersion: this.marketVersion, selection, tasks, inventory, catalog: this.catalog.load().snapshot, errors })
+  }
+
+  /** 安装日志只读出口（B 档）：最多返回 500 条，字段已脱敏。 */
+  installLogRead(request?: { readonly limit?: number }): Promise<readonly InstallLogEntry[]> {
+    return this.installLog.read(request?.limit)
   }
 }

@@ -22,6 +22,7 @@ import type {
   AiConfirmRequest,
   DiagnosticExport,
   EnvironmentHello,
+  InstallLogEntry,
   InventoryItem,
   InventorySnapshot,
   PlanCreateRequest,
@@ -114,6 +115,7 @@ export interface MarketRemote {
   updatePolicyGet?(): Promise<UpdatePolicySnapshot>
   updatePolicySave?(request: UpdatePolicySaveRequest): Promise<UpdatePolicySnapshot>
   exportDiagnostic?(): Promise<DiagnosticExport>
+  installLogRead?(request?: { readonly limit?: number }): Promise<readonly InstallLogEntry[]>
   aiAnalyze?(request: AiAnalyzeRequest): Promise<AiAnalysisResult>
   aiConfirm?(request: AiConfirmRequest): Promise<AiApplyResult>
 }

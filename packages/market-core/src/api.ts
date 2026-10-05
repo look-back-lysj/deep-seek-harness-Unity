@@ -7,7 +7,7 @@ import type {
   AuthorDraft, AuthorDraftDeleteRequest, AuthorDraftInput, AuthorExportRequest,
   AuthorMediaReadRequest, AuthorMediaReadResult, CapabilityName,
   CatalogRefreshRequest, CatalogRefreshView, CatalogSnapshot, DiagnosticExport,
-  InventorySnapshot, PlanCreateRequest, PlanResult, PluginActionRequest, PluginActionResult,
+  InstallLogEntry, InventorySnapshot, PlanCreateRequest, PlanResult, PluginActionRequest, PluginActionResult,
   CoreMaintenanceSnapshot, UpdateCheckResult, CatalogSourceView, UpdatePolicySnapshot, UpdatePolicySaveRequest,
   ReadmeApplyPreviewRequest, ReadmeImportRequest, ReadmeImportResult, ReadmePreviewView,
   RemovePluginRequest, TaskApprovalRequest, TaskCancelRequest, TaskEventPage,
@@ -52,6 +52,8 @@ export interface MarketBackend {
   authorExportDraft(request: AuthorExportRequest): TransferResult
   authorMediaRead(request: AuthorMediaReadRequest): AuthorMediaReadResult
   diagnosticsExport(selection?: AiAnalyzeRequest): Promise<DiagnosticExport>
+  /** B 档安装日志：只读、最多 500 条、字段已脱敏。 */
+  installLogRead(request?: { readonly limit?: number }): Promise<readonly InstallLogEntry[]>
   aiAnalyze(request: AiAnalyzeRequest, callerId: string, signal?: AbortSignal): Promise<AiAnalysisResult>
   aiConfirm(request: AiConfirmRequest, callerId: string): Promise<AiApplyResult>
 }

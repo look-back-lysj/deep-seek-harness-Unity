@@ -22,6 +22,7 @@ import type {
   HostInstallOutcome,
   HostInstallRequest,
   HostPort,
+  InstallLogSink,
   HostReadState,
 } from '../../core/ports.ts'
 import { canonicalJson, pendingBuildsDigest } from '../../core/canonical.ts'
@@ -364,6 +365,8 @@ export class OfficialHostPort implements HostPort {
     private readonly ctx: Context,
     private readonly environmentId = 'current',
     private readonly hostIdentity?: { readonly hostVersion: string; readonly profileName: string },
+    /** B 档安装日志；缺省时静默跳过，单测宿主无需提供。 */
+    private readonly installLog?: InstallLogSink,
   ) {
     this.receipts = new NodePersistenceFiles(join(ctx.profileContext.dir, 'eac-market', 'official-receipts'))
     this.adapter = new DshManagerAdapter(ctx, environmentId, () => this.sourceEvidence(), {
@@ -516,8 +519,28 @@ export class OfficialHostPort implements HostPort {
         const inventory = await this.adapter.inventory(this.environmentId)
         const installed = inventory.items.find(item => item.packageName === request.artifact.packageName)
         const targetUnknown = inventory.unknownItems.some(issue => inventoryIssueAffectsPackage(issue, request.artifact.packageName))
-        if (targetUnknown || installed?.version !== request.artifact.version || installed.source !== 'market-cache-file' || installed.bundleEnabled !== request.enabled)
-          return { kind: 'unknown', error: 'official receipt saved but dependency, cache bytes or inventory did not verify', errorCode: 'receipt/postcondition', permissionChanges: mapped.permissionChanges }
+        // 装后核对：逐项记录通过/不通过，日志是唯一落点，核对本身不改写官方结果。
+        const postcheck = [
+          { check: '库存目标状态已核定', pass: !targetUnknown, ...(targetUnknown ? { reason: '官方库存仍把目标标为未知' } : {}) },
+          { check: '已装版本与确认版本一致', pass: installed?.version === request.artifact.version,
+            ...(installed?.version === request.artifact.version ? {} : { reason: '官方库存版本 ' + (installed?.version ?? '缺失') }) },
+          { check: '来源为市场缓存文件', pass: installed?.source === 'market-cache-file',
+            ...(installed?.source === 'market-cache-file' ? {} : { reason: '官方记录来源 ' + String(installed?.source ?? '缺失') }) },
+          { check: '启用状态与请求一致', pass: installed?.bundleEnabled === request.enabled,
+            ...(installed?.bundleEnabled === request.enabled ? {} : { reason: '官方启用状态 ' + String(installed?.bundleEnabled) }) },
+        ]
+        this.installLog?.append({
+          at: new Date().toISOString(),
+          action: 'install',
+          packageName: request.artifact.packageName,
+          version: request.artifact.version,
+          artifactDigest: request.artifact.artifactDigest,
+          officialResult: { kind: mapped.kind, changed: mapped.changed },
+          postcheck,
+          taskId: request.requestId,
+        })
+        // 宽松模式（方案 1）：官方已明确 applied，装后核对只写日志、不再降级为 unknown。
+        // 红线仍保留：写前制品字节/摘要不符、发行撤回、官方明确 failed 一律照旧失败。
       }
       return mapped
     } catch (error) {
