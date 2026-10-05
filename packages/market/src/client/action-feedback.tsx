@@ -2,11 +2,13 @@ import type { ReactNode } from 'react'
 import { Button } from './ui.tsx'
 import { feedbackStatusLabel, feedbackTone, type ActionFeedbackState } from './action-state.ts'
 
-export function ActionFeedback({ state, onRetry, onRefresh, onDismiss, children }: {
+export function ActionFeedback({ state, onRetry, onRefresh, onDismiss, refreshLabel = '重新核对', refreshDisabled = false, children }: {
   readonly state: ActionFeedbackState
   readonly onRetry?: (() => void) | undefined
   readonly onRefresh?: (() => void) | undefined
   readonly onDismiss?: (() => void) | undefined
+  readonly refreshLabel?: string
+  readonly refreshDisabled?: boolean
   readonly children?: ReactNode
 }): React.JSX.Element | null {
   if (state.status === 'idle') return null
@@ -23,7 +25,7 @@ export function ActionFeedback({ state, onRetry, onRefresh, onDismiss, children 
     {children}
     {(onRetry || onRefresh || onDismiss) && <div className="eac-market__button-row">
       {onRetry && retryAllowed && <Button size="sm" variant="outline" onClick={onRetry}>重试</Button>}
-      {onRefresh && <Button size="sm" variant="outline" onClick={onRefresh}>重新核对</Button>}
+      {onRefresh && <Button size="sm" variant="outline" disabled={refreshDisabled} onClick={onRefresh}>{refreshLabel}</Button>}
       {onDismiss && <Button size="sm" variant="ghost" onClick={onDismiss}>收起提示</Button>}
     </div>}
   </section>

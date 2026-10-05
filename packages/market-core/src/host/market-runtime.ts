@@ -55,20 +55,36 @@ import type {
   TransferChunkReadResult,
   TransferChunkRequest,
   TransferResult,
+  HostCoreSnapshot,
+  ReleaseOptionsRequest,
+  ReleaseOptionsResult,
+  TaskStartRecoveryRequest,
+  TaskStartRecoveryResult,
+  PluginActionRecoveryRequest,
+  PluginActionRecoveryResult,
 } from '../contracts/types.ts'
 import { AiAssistant } from "./ai-assist.ts"
 import { AiProposalStore } from './ai-proposal-store.ts'
 import { collectDiagnostics, diagnosticDigest, sanitizeDiagnostic, sourceIdentity } from './diagnostics.ts'
 import { assessRiskyAction, type ManagementManifest } from './management-impact.ts'
 import { canonicalJson } from '../core/canonical.ts'
+import { validVersion } from '../core/semver.ts'
+import { evaluateHostCompatibility } from '../core/host-compatibility.ts'
+import { MarketCoreError } from '../core/errors.ts'
+import { buildReleaseOptions, parseReleaseOptionsRequest, type ReleaseOptionsSource } from './release-options.ts'
+import { assertReleaseSelectionContext, releaseSelectionContext } from './release-context.ts'
+import { assertManagementRecoveryRequest, assertTaskRecoveryRequest, decodeManagementRecord } from './operation-recovery.ts'
+import { managementResultFromOutcome as resultFromOutcome } from '../core/management-record.ts'
 import { isProtectedMarketPackage } from '../core/identity.ts'
 import { CatalogRepository } from '../catalog/store.ts'
+import { mergeCatalogSnapshots } from '../catalog/merge.ts'
 import { CatalogSourceRegistry, type CatalogSourceIdentity } from '../catalog/source.ts'
 import { DEFAULT_CATALOG_SOURCES } from '../catalog/defaults.ts'
 import { ArtifactCache } from '../delivery/cache.ts'
-import { createPlanBundle } from '../core/planner.ts'
+import { createPlanBundle, verifyPlanBundle } from '../core/planner.ts'
 import type { CollectionExecutionContext, PackExecutionContext, PlanBundle, PlanCatalogContext } from '../core/ports.ts'
 import { InstallTaskManager } from '../core/task-manager.ts'
+import { executionOf } from '../core/execution-state.ts'
 import { buildMaintenanceSnapshot } from '../core/maintenance-state.ts'
 import { MaintenanceIntentStore } from '../core/maintenance-intent-store.ts'
 import { compareInstalledUpdates } from '../core/update-check.ts'
@@ -102,6 +118,7 @@ export interface RuntimeIdentity {
 }
 
 export interface RuntimeOptions {
+  readonly readHostCore?: () => HostCoreSnapshot
   readonly catalogSources?: readonly CatalogSourceIdentity[]
   /** Host-maintained Agent Forge sources; source URLs are never accepted from Remote input. */
   readonly agentForgeSources?: readonly MarketCatalogSource[]
@@ -120,23 +137,10 @@ function errorText(error: unknown): string {
   return error instanceof Error ? error.message : String(error)
 }
 
-function resultFromOutcome(outcome: import('../core/ports.ts').HostInstallOutcome): PluginActionResult {
-  if (outcome.kind === 'applied') {
-    return {
-      status: outcome.restartRequired ? 'restart-required' : 'applied',
-      changed: outcome.changed,
-      permissionChanges: outcome.permissionChanges,
-    }
-  }
-  if (outcome.kind === 'failed') {
-    return { status: 'failed', changed: outcome.changed, error: outcome.error, errorCode: outcome.errorCode, diagnostic: outcome.diagnostic, permissionChanges: outcome.permissionChanges }
-  }
-  if (outcome.kind === 'unknown') return { status: 'unknown', changed: false, error: outcome.error, errorCode: outcome.errorCode, diagnostic: outcome.diagnostic, permissionChanges: outcome.permissionChanges }
-  return {
-    status: 'unknown',
-    changed: 'changed' in outcome ? outcome.changed : false,
-    error: outcome.kind === 'awaiting-approval' ? 'awaiting build approval' : 'cancelled',
-    permissionChanges: outcome.permissionChanges,
+function publicManagementResult(result: PluginActionResult): PluginActionResult {
+  return { ...structuredClone(result),
+    ...(result.error === undefined ? {} : { error: sanitizeDiagnostic(result.error) }),
+    ...(result.diagnostic === undefined ? {} : { diagnostic: sanitizeDiagnostic(result.diagnostic) }),
   }
 }
 
@@ -164,6 +168,7 @@ export class MarketRuntime {
   private readonly marketVersion: string
   private readonly artifactCacheDir: string
   private readonly network: RuntimeNetworkOptions | undefined
+  private readonly readHostCore: (() => HostCoreSnapshot) | undefined
   private readonly maintenanceIntents: MaintenanceIntentStore
 
   constructor(ctx: Context, readonly identity: RuntimeIdentity, dataDirectory: string, options: RuntimeOptions = {}) {
@@ -178,11 +183,13 @@ export class MarketRuntime {
     }
     const embeddedCatalog = embeddedRaw === undefined ? options.embeddedCatalog : JSON.parse(Buffer.from(embeddedRaw).toString('utf8')) as unknown
     this.context = ctx
+    this.readHostCore = options.readHostCore
     this.agentForgeSourceOptions = options.agentForgeSourceOptions ?? {}
     this.marketVersion = options.marketVersion ?? 'development'
     this.artifactCacheDir = join(dataDirectory, 'artifacts')
     this.network = options.network
-    this.host = new OfficialHostPort(ctx, identity.environmentId, { hostVersion: identity.hostVersion, profileName: identity.profileName })
+    this.host = new OfficialHostPort(ctx, identity.environmentId, { hostVersion: identity.hostVersion, profileName: identity.profileName },
+      options.readHostCore === undefined ? undefined : () => this.hostCore().hostRevision)
     this.files = new NodePersistenceFiles(join(dataDirectory, 'state'))
     const locks = new AtomicProfileLocks(dataDirectory)
     this.maintenanceIntents = new MaintenanceIntentStore(this.files, locks)
@@ -231,19 +238,31 @@ export class MarketRuntime {
       ...(testLocalSources.length === 0 ? {} : { allowLocalFileSources: testLocalSources }),
       ...(options.network === undefined ? {} : options.network),
     })
-    this.artifacts = new CatalogArtifactPort(cache, () => this.catalog.load().snapshot.deliveries, testLocalSources)
+    this.artifacts = new CatalogArtifactPort(cache, () => this.catalogView().deliveries, testLocalSources)
     this.taskStore = new JsonTaskStore(this.files, locks, `market-${identity.environmentId}`)
     this.tasks = new InstallTaskManager({
       host: this.host,
       artifacts: this.artifacts,
       store: this.taskStore,
       coordinationFiles: this.files,
-      validateWrite: async (bundle, pluginId) => {
+      validateStart: async bundle => {
+        const state = await this.host.readState()
+        if (bundle.plan.hostFingerprint !== state.hostFingerprint) throw new MarketCoreError('plan/stale-host', '宿主核心版本或能力已变化，请重新预检确认')
+        this.assertPlanReleaseContext(bundle, state.inventory)
+        for (const step of bundle.steps) {
+          const item = bundle.plan.items.find(candidate => candidate.pluginId === step.pluginId)
+          if (!item) throw new Error('当前步骤不在已确认方案中')
+          this.assertSelectedReleaseActive(item)
+        }
+      },
+      validateWrite: async (bundle, pluginId, state) => {
+        const record = await this.taskStore.getByPlan(bundle.plan.environmentId, bundle.plan.planId)
+        const dispatched = record !== undefined && Object.values(executionOf(record)?.attempts ?? {}).some(attempt => attempt.stage !== 'prepared')
+        const currentState = state ?? (dispatched ? undefined : await this.host.readState())
+        this.assertPlanReleaseContext(bundle, dispatched ? undefined : currentState?.inventory)
         const item = bundle.plan.items.find(candidate => candidate.pluginId === pluginId)
         if (!item) throw new Error('当前步骤不在已确认方案中')
-        this.catalog.assertReleaseActive(item.pluginId, item.targetVersion, item.targetDigest)
-        const current = this.catalogView().plugins.find(plugin => plugin.id === item.pluginId && plugin.version === item.targetVersion)
-        if (current?.verification === 'hard-incompatible' || current?.installability === 'hard-blocked') throw new Error('制品在执行前已撤回或确认不兼容')
+        this.assertSelectedReleaseActive(item)
       },
       locks,
       events: new SegmentedEventLog(this.files),
@@ -329,15 +348,86 @@ export class MarketRuntime {
   }
 
   catalogView(): import('../contracts/types.ts').CatalogSnapshot {
-    const base = this.catalog.load().snapshot
-    const extras = [...this.agentForgeCatalogs.values()].map(repository => repository.load().snapshot)
-    const plugins = [...new Map([...base.plugins, ...extras.flatMap(snapshot => snapshot.plugins)].map(item => [`${item.id}:${item.version}`, item])).values()]
-    const listings = [...new Map([...(base.listings ?? []), ...extras.flatMap(snapshot => snapshot.listings ?? [])].map(item => [`${item.id}:${item.requestedVersion ?? ''}`, item])).values()]
-    const deliveries = [...new Map([...base.deliveries, ...extras.flatMap(snapshot => snapshot.deliveries)].map(item => [`${item.pluginId}:${item.version}:${item.artifactDigest}`, item])).values()]
-    const presentations = [...base.presentations, ...extras.flatMap(snapshot => snapshot.presentations)]
-    const extraRevisions = extras.map(snapshot => snapshot.revision).sort()
-    const revision = extraRevisions.length === 0 ? base.revision : [base.revision, ...extraRevisions].join('|').slice(0, 200)
-    return { ...base, revision, plugins, listings, deliveries, presentations, stale: base.stale || extras.some(snapshot => snapshot.stale) }
+    return this.readCatalogContext().catalog
+  }
+
+  private readCatalogContext(): { readonly catalog: import('../contracts/types.ts').CatalogSnapshot; readonly sources: readonly ReleaseOptionsSource[] } {
+    const base = this.catalog.sourceSnapshot()
+    const extras = [...this.agentForgeCatalogs.entries()].map(([sourceId, repository]) => ({ sourceId: `agent-forge:${sourceId}`, ...repository.sourceSnapshot() }))
+    const sources = [{ sourceId: 'market-index:primary', ...base }, ...extras]
+    if (extras.length === 0) return { catalog: base.snapshot, sources }
+    const merged = mergeCatalogSnapshots({ sourceId: 'market-index:primary', snapshot: base.snapshot }, extras)
+    return { catalog: { ...merged.snapshot, sourceRevisions: merged.sourceRevisions, mergeIssues: merged.issues }, sources }
+  }
+
+  hostCore(): HostCoreSnapshot {
+    const unavailable: HostCoreSnapshot = {
+      agentId: null, agentName: '未知 Agent', version: null, status: 'unknown', source: 'unavailable',
+      hostRevision: createHash('sha256').update(canonicalJson({ environmentId: this.identity.environmentId, status: 'unknown' })).digest('hex'),
+      reason: 'host-core-binding-unavailable',
+    }
+    try {
+      const snapshot = this.readHostCore?.()
+      if (snapshot === undefined || snapshot.agentId === null || typeof snapshot.agentId !== 'string' || snapshot.agentId.length > 200
+        || !snapshot.agentId.trim() || typeof snapshot.agentName !== 'string' || !snapshot.agentName.trim() || snapshot.agentName.length > 200
+        || typeof snapshot.hostRevision !== 'string' || !/^(?:sha256:)?[a-f0-9]{64}$/u.test(snapshot.hostRevision)
+        || typeof snapshot.source !== 'string' || !/^[a-z0-9][a-z0-9._-]{0,127}$/u.test(snapshot.source)) return unavailable
+      if (snapshot.status === 'known' && (typeof snapshot.version !== 'string' || !validVersion(snapshot.version))) return unavailable
+      if (snapshot.status !== 'known' && snapshot.status !== 'unknown') return unavailable
+      return { agentId: snapshot.agentId, agentName: snapshot.agentName, version: snapshot.status === 'known' ? snapshot.version : null,
+        status: snapshot.status, hostRevision: snapshot.hostRevision, source: snapshot.source,
+        ...(snapshot.versionScheme === undefined ? {} : { versionScheme: snapshot.versionScheme }),
+        ...(snapshot.status === 'unknown' ? { reason: 'host-core-version-unavailable' } : {}),
+      }
+    } catch { return unavailable }
+  }
+
+  async releaseOptions(request: ReleaseOptionsRequest): Promise<ReleaseOptionsResult> {
+    parseReleaseOptionsRequest(request)
+    const captured = this.readCatalogContext()
+    const catalog = captured.catalog
+    const hostCore = this.hostCore()
+    let inventory: InventorySnapshot
+    try { inventory = (await this.host.readState()).inventory }
+    catch { inventory = { environmentId: this.identity.environmentId, revision: 'inventory-unavailable', items: [], unknownItems: ['listBundles:unavailable'] } }
+    const current = this.hostCore()
+    if (current.hostRevision !== hostCore.hostRevision || this.fingerprint(this.readCatalogContext()) !== this.fingerprint(captured)) {
+      throw new MarketCoreError('release-options/stale-context', '宿主核心或目录在读取期间发生变化，请重新读取版本列表')
+    }
+    return buildReleaseOptions(request, {
+      environmentId: this.identity.environmentId, hostCore, catalog, inventory,
+      sources: captured.sources,
+    })
+  }
+
+  private assertSelectedReleaseActive(item: import('../contracts/types.ts').InstallPlanItem): void {
+    this.catalog.assertReleaseActive(item.pluginId, item.targetVersion, item.targetDigest)
+    const current = this.catalogView().plugins.find(plugin => plugin.id === item.pluginId && plugin.packageName === item.packageName
+      && plugin.version === item.targetVersion && plugin.artifactDigest === item.targetDigest)
+    if (current === undefined || current.publication === 'withdrawn' || current.verification === 'hard-incompatible' || current.installability !== 'bundle-installable') throw new Error('所选发行已缺失、发生冲突、被撤回或无法安装，请重新预检')
+    if (item.releaseContext !== undefined) {
+      const captured = this.readCatalogContext()
+      const expected = releaseSelectionContext(current, { environmentId: this.identity.environmentId, hostCore: this.hostCore(),
+        catalogRevision: captured.catalog.revision, catalogStale: captured.catalog.stale,
+        inventory: { environmentId: this.identity.environmentId, revision: item.releaseContext.context.inventoryRevision, items: [], unknownItems: [] }, sources: captured.sources })
+      assertReleaseSelectionContext(item.releaseContext, expected)
+    }
+    const compatibility = evaluateHostCompatibility(this.hostCore(), current.hostRequirements)
+    if (compatibility.status === 'incompatible' || compatibility.status === 'conflict') {
+      throw new MarketCoreError(compatibility.reason ?? 'core-range-mismatch', '所选发行不适配当前宿主核心，请重新预检')
+    }
+    for (const repository of this.agentForgeCatalogs.values()) {
+      if (repository.load().snapshot.plugins.some(plugin => plugin.id === item.pluginId && plugin.version === item.targetVersion && plugin.artifactDigest === item.targetDigest)) {
+        repository.assertReleaseActive(item.pluginId, item.targetVersion, item.targetDigest)
+      }
+    }
+  }
+  private assertPlanReleaseContext(bundle: PlanBundle, inventory?: InventorySnapshot): void {
+    const frozen = bundle.releaseValidation
+    if (frozen === undefined) return
+    if (frozen.hostBinding !== this.fingerprint(this.hostCore())) throw new MarketCoreError('plan/stale-host', '宿主核心事实已变化，请重新预检确认')
+    if (frozen.catalogBinding !== this.fingerprint(this.readCatalogContext())) throw new MarketCoreError('release-context/stale', '目录、发行 metadata 或可信来源已变化，请重新预检确认')
+    if (inventory !== undefined && (inventory.revision !== frozen.inventoryRevision || this.fingerprint(inventory) !== frozen.inventoryBinding)) throw new MarketCoreError('plan/stale-inventory', '库存事实已变化，请重新预检确认')
   }
   capabilities(): readonly import('../contracts/types.ts').CapabilityName[] {
     const result = new Set(this.host.capabilities())
@@ -345,6 +435,9 @@ export class MarketRuntime {
     result.add('core-maintenance')
     result.add('update-check')
     result.add('update-policy')
+    result.add('host-release-options')
+    result.add('host-release-context')
+    result.add('operation-recovery')
     if (this.agentForgeSources.size > 0) result.add('agent-forge-refresh')
     return [...result]
   }
@@ -406,7 +499,7 @@ export class MarketRuntime {
         offlineArtifacts = verified
       }
       const projected = projectAgentForgeCatalog(sourceData, {
-        revision: `af-${source.id}-${sourceData.sourceRevision}`.slice(0, 200),
+        revision: `af-${source.id}-${sourceData.sourceRevision}`,
         generatedAt: String(sourceData.index.generatedAt ?? new Date().toISOString()),
         sourceUrl: String(sourceData.source.baseUrl),
         ...(offlineArtifacts === undefined ? {} : { offlineArtifacts }),
@@ -433,19 +526,43 @@ export class MarketRuntime {
       const result = await this.catalog.refreshWithSource(this.sources.connection(source ? { sourceUrl: source.indexUrl } : request ?? {}))
       return {
         status: result.status,
-        current: { ...this.catalogView(), collections: this.catalog.collectionViews() },
+        current: this.catalogView(),
         ...(result.reason === undefined ? {} : { reason: result.reason }),
       }
     } catch (error) {
-      return { status: 'failed', current: { ...this.catalogView(), collections: this.catalog.collectionViews() }, reason: errorText(error) }
+      return { status: 'failed', current: this.catalogView(), reason: errorText(error) }
     }
   }
 
   async planCreate(request: PlanCreateRequest, callerId = 'local-operator', preferredSource?: { readonly packageName: string; readonly sourceId: string }): Promise<PlanResult> {
     try {
       await this.ensureWriteReady()
-      const snapshot = this.catalogView()
+      const captured = this.readCatalogContext()
+      const snapshot = captured.catalog
+      const hostCore = this.hostCore()
       const state = await this.host.readState()
+      if (this.fingerprint(hostCore) !== this.fingerprint(this.hostCore()) || this.fingerprint(captured) !== this.fingerprint(this.readCatalogContext())) return { status: 'stale', reason: 'release-context/stale', details: ['宿主核心或目录在预检期间发生变化，请重新读取'] }
+      const selections = request.selections.map(selection => {
+        const plugin = snapshot.plugins.find(candidate => candidate.id === selection.pluginId && candidate.packageName === selection.packageName
+          && candidate.version === selection.targetVersion && candidate.artifactDigest === selection.targetDigest)
+        if (plugin === undefined) return selection
+        const expected = releaseSelectionContext(plugin, { environmentId: this.identity.environmentId, hostCore,
+          catalogRevision: snapshot.revision, catalogStale: snapshot.stale, inventory: state.inventory, sources: captured.sources })
+        if (selection.releaseContext !== undefined) {
+          assertReleaseSelectionContext(selection.releaseContext, expected)
+          if (snapshot.stale) throw new MarketCoreError('release-context/catalog-stale', '版本列表来自过期目录，请刷新目录后重新选择')
+        }
+        return { ...selection, releaseContext: expected }
+      })
+      for (const selection of selections) {
+        const plugin = snapshot.plugins.find(candidate => candidate.id === selection.pluginId && candidate.packageName === selection.packageName
+          && candidate.version === selection.targetVersion && candidate.artifactDigest === selection.targetDigest)
+        if (plugin === undefined || state.inventory.items.some(item => item.packageName === selection.packageName && item.installed && item.version === selection.targetVersion)) continue
+        const compatibility = evaluateHostCompatibility(hostCore, plugin.hostRequirements)
+        if (compatibility.status === 'incompatible' || compatibility.status === 'conflict') {
+          return { status: 'blocked', reason: compatibility.reason ?? 'core-range-mismatch', blockers: [compatibility.reason ?? 'core-range-mismatch'] }
+        }
+      }
       // Native-like installation policy: unrelated inventory uncertainty is an
       // advisory condition, not a global preflight blocker. Target identity,
       // frozen delivery and actual write safety are checked by the planner/task
@@ -503,31 +620,35 @@ export class MarketRuntime {
         hostFingerprint: state.hostFingerprint!,
         inventory: state.inventory.items,
         plugins: facts,
-        selections: request.selections,
+        selections,
+        releaseValidation: { hostBinding: this.fingerprint(hostCore), catalogBinding: this.fingerprint(captured), inventoryRevision: state.inventory.revision, inventoryBinding: this.fingerprint(state.inventory) },
         now: new Date(),
         marketManagedPackageNames,
         localIdentityByPackage,
       }
       const result = await createPlanBundle(context, pack)
+      const currentState = await this.host.readState()
+      if (this.fingerprint(captured) !== this.fingerprint(this.readCatalogContext()) || this.fingerprint(hostCore) !== this.fingerprint(this.hostCore())
+        || state.hostFingerprint !== currentState.hostFingerprint || this.fingerprint(state.inventory) !== this.fingerprint(currentState.inventory)) {
+        return { status: 'stale', reason: 'release-context/stale', details: ['预检期间列表事实发生变化，请重新读取并确认'] }
+      }
       if (result.status === 'ready' && result.bundle !== undefined) await this.savePlan(result.bundle, callerId)
       if (result.status === 'ready' && result.bundle !== undefined) return { status: 'ready', plan: result.bundle.plan }
       if (result.status === 'stale') return { status: 'stale', reason: result.reason ?? 'stale', details: result.details ?? [] }
       return { status: 'blocked', reason: result.reason ?? 'blocked', blockers: result.blockers ?? [] }
     } catch (error) {
+      if (error instanceof MarketCoreError && error.code === 'release-context/stale') return { status: 'stale', reason: error.code, details: [error.message] }
       return { status: 'blocked', reason: errorText(error), blockers: [errorText(error)] }
     }
   }
 
   async taskStart(request: TaskStartRequest, callerId = 'local-operator'): Promise<TaskState> {
+    if (request.confirmed !== true || !request.idempotencyKey) throw new MarketCoreError('plan/not-confirmed', '缺少明确确认或幂等键')
+    const original = await this.taskStartRecover({ planId: request.planId, planDigest: request.planDigest, idempotencyKey: request.idempotencyKey }, callerId)
+    if (original.status === 'found') return original.task
     await this.ensureWriteReady()
     const bundle = await this.loadPlan(request.planId, callerId)
     const baseline = await this.host.readState()
-    if (bundle.plan.hostFingerprint !== baseline.hostFingerprint) throw new Error('宿主版本或能力已变化，请重新预检')
-    for (const item of bundle.plan.items) {
-      this.catalog.assertReleaseActive(item.pluginId, item.targetVersion, item.targetDigest)
-      const current = this.catalog.load().snapshot.plugins.find(plugin => plugin.id === item.pluginId && plugin.version === item.targetVersion)
-      if (current?.verification === 'hard-incompatible' || current?.installability === 'hard-blocked') throw new Error('该版本已被撤回或确认不兼容，请重新预检')
-    }
     const previousIntent = await this.maintenanceIntents.load()
     const packageByPlugin = new Map(bundle.plan.items.map(item => [item.pluginId, item.packageName]))
     const explicitPackages = (bundle.explicitPluginIds ?? [])
@@ -552,6 +673,47 @@ export class MarketRuntime {
       })
       throw error
     }
+  }
+
+  async taskStartRecover(request: TaskStartRecoveryRequest, callerId: string): Promise<TaskStartRecoveryResult> {
+    assertTaskRecoveryRequest(request, callerId)
+    const bytes = await this.files.read(this.planPath(request.planId))
+    let bundle: PlanBundle | undefined
+    if (bytes !== undefined) {
+      let saved: { schemaVersion?: number; callerId?: string; bundle?: PlanBundle }
+      try { saved = JSON.parse(new TextDecoder().decode(bytes)) as typeof saved }
+      catch { throw new MarketCoreError('operation-recovery/corrupt-plan', '原计划记录损坏，不能证明未写入') }
+      if (saved === null || saved.schemaVersion !== 2 || saved.bundle === undefined) throw new MarketCoreError('operation-recovery/corrupt-plan', '原计划记录无效，不能证明未写入')
+      if (saved.callerId !== callerId) throw new MarketCoreError('operation-recovery/caller-mismatch', '原计划不属于当前连接')
+      bundle = saved.bundle
+      if (!await verifyPlanBundle(bundle)) throw new MarketCoreError('operation-recovery/corrupt-plan', '原计划摘要校验失败')
+      if (bundle.plan.environmentId !== this.identity.environmentId || bundle.plan.planId !== request.planId || bundle.plan.planDigest !== request.planDigest) {
+        throw new MarketCoreError('plan/confirmation-mismatch', '查询身份与原计划不一致')
+      }
+    }
+    const record = await this.taskStore.getByPlan(this.identity.environmentId, request.planId)
+    if (record === undefined) return { status: 'not-found' }
+    if (bundle === undefined) throw new MarketCoreError('operation-recovery/ownership-unavailable', '原任务存在，但计划归属记录缺失，不能安全恢复')
+    if (!await verifyPlanBundle(record.bundle) || record.bundle.bundleDigest !== bundle.bundleDigest
+      || record.task.environmentId !== this.identity.environmentId || record.task.planId !== request.planId || record.task.planDigest !== request.planDigest) {
+      throw new MarketCoreError('operation-recovery/task-conflict', '原任务与计划耐久身份冲突')
+    }
+    if (!Object.hasOwn(record.idempotency, request.idempotencyKey) || record.idempotency[request.idempotencyKey] !== 'start') {
+      throw new MarketCoreError('task/idempotency-conflict', '查询幂等键不是原任务的开始操作')
+    }
+    return { status: 'found', task: structuredClone(record.task) }
+  }
+
+  async pluginActionRecover(request: PluginActionRecoveryRequest): Promise<PluginActionRecoveryResult> {
+    assertManagementRecoveryRequest(request)
+    const saved = await this.savedManagement({ environmentId: this.identity.environmentId, ...request, expectedVersion: request.expectedVersion ?? '' })
+    if (saved === undefined) return { status: 'not-found' }
+    const receipt = saved.stage === 'settled' ? saved.outcome : saved.receipt ?? saved.outcome
+    if (receipt === undefined) return { status: 'found', stage: saved.stage }
+    const official = publicManagementResult(resultFromOutcome(receipt))
+    if (saved.completion !== undefined) return { status: 'found', stage: saved.stage, receipt: official, result: publicManagementResult(saved.completion.result) }
+    return { status: 'found', stage: saved.stage, receipt: official, result: { ...official, status: 'unknown',
+      error: '仅恢复原官方回执；维护状态保存结果未记录，不能证明整个业务完成。', errorCode: 'management/business-result-unavailable' } }
   }
 
   async taskGet(request: TaskIdRequest): Promise<TaskState> {
@@ -586,28 +748,25 @@ export class MarketRuntime {
   }
 
   async pluginSetEnabled(request: PluginActionRequest): Promise<PluginActionResult> {
-    try {
-      await this.ensureWriteReady()
-      const result = await this.tasks.manage({
-        environmentId: this.identity.environmentId,
-        packageName: request.packageName,
-        expectedVersion: request.expectedVersion ?? '',
-        action: request.enabled ? 'enable' : 'disable',
-        idempotencyKey: request.idempotencyKey,
-      }, () => this.host.setEnabled(request.packageName, request.enabled))
-      const output = resultFromOutcome(result)
-      if (output.status === 'applied' || output.status === 'restart-required') {
-        await this.maintenanceIntents.setExplicit(request.packageName, true)
-      }
-      return output
-    } catch (error) {
-      return { status: 'failed', changed: false, error: errorText(error), permissionChanges: [] }
-    }
+    return this.managePlugin({
+      environmentId: this.identity.environmentId,
+      packageName: request.packageName,
+      expectedVersion: request.expectedVersion ?? '',
+      action: request.enabled ? 'enable' : 'disable',
+      idempotencyKey: request.idempotencyKey,
+    }, () => this.host.setEnabled(request.packageName, request.enabled),
+    () => this.maintenanceIntents.setExplicit(request.packageName, true))
   }
 
   async pluginRemove(request: RemovePluginRequest): Promise<PluginActionResult> {
-    try {
-      await this.ensureWriteReady()
+    return this.managePlugin({
+      environmentId: this.identity.environmentId,
+      packageName: request.packageName,
+      expectedVersion: request.expectedVersion ?? '',
+      action: 'remove',
+      idempotencyKey: request.idempotencyKey,
+    }, async () => mapOfficialChange(await this.host.remove(request.packageName)),
+    () => this.maintenanceIntents.clearPackage(request.packageName), async () => {
       if (request.confirmed !== true) throw new Error('卸载操作尚未确认')
       const state = await this.host.readState()
       const intent = await this.maintenanceIntents.load()
@@ -616,20 +775,87 @@ export class MarketRuntime {
         .filter(edge => edge.prerequisite === request.packageName && (installed.has(edge.consumer) || intent.explicitPackages.includes(edge.consumer)))
         .map(edge => edge.consumer)
       if (protectedDependents.length > 0) throw new Error(`仍有已安装或明确保留的插件依赖此包：${[...new Set(protectedDependents)].join('、')}`)
-      const result = await this.tasks.manage({
-        environmentId: this.identity.environmentId,
-        packageName: request.packageName,
-        expectedVersion: request.expectedVersion ?? '',
-        action: 'remove',
-        idempotencyKey: request.idempotencyKey,
-      }, async () => mapOfficialChange(await this.host.remove(request.packageName)))
-      const output = resultFromOutcome(result)
-      if (output.status === 'applied' || output.status === 'restart-required') {
-        await this.maintenanceIntents.clearPackage(request.packageName)
+    })
+  }
+
+  private async savedManagement(request: Parameters<InstallTaskManager['manage']>[0]): Promise<import('../core/execution-state.ts').ManagementRecord | undefined> {
+    const digest = createHash('sha256').update(request.environmentId + ':' + request.idempotencyKey).digest('hex')
+    const bytes = await this.files.read(`management/${digest}.json`)
+    if (bytes === undefined) return undefined
+    const record = decodeManagementRecord(bytes)
+    const fingerprint = createHash('sha256').update(canonicalJson(request)).digest('hex')
+    if (record.fingerprint !== fingerprint) throw new MarketCoreError('task/idempotency-conflict', '管理幂等键已用于其他内容')
+    return record
+  }
+
+  private async managePlugin(
+    request: Parameters<InstallTaskManager['manage']>[0],
+    write: () => Promise<import('../core/ports.ts').HostInstallOutcome>,
+    saveMaintenance: () => Promise<{ readonly revision: number }>,
+    preflight?: () => Promise<void>,
+  ): Promise<PluginActionResult> {
+    let receipt: import('../core/ports.ts').HostInstallOutcome | undefined
+    let output: PluginActionResult | undefined
+    let dispatched = false
+    let businessPrepared = false
+    try {
+      const saved = await this.savedManagement(request)
+      if (saved?.completion !== undefined) return publicManagementResult(saved.completion.result)
+      await this.ensureWriteReady()
+      const result = await this.tasks.manage(request, async () => {
+        dispatched = true
+        receipt = await write()
+        return receipt
+      }, async record => {
+        output = resultFromOutcome(record.outcome!)
+        let maintenance: import('../core/execution-state.ts').ManagementCompletion['maintenance'] = { status: 'not-required' }
+        if (output.status === 'applied' || output.status === 'restart-required') {
+          const state = await saveMaintenance()
+          maintenance = { status: 'saved', revision: state.revision }
+        }
+        businessPrepared = true
+        return maintenance
+      }, preflight)
+      output = resultFromOutcome(result)
+      if (output.status === 'unknown' && receipt !== undefined) {
+        const official = resultFromOutcome(receipt)
+        output = { ...output, changed: official.changed, diagnostic: sanitizeDiagnostic([
+          `官方回执：${official.status}，changed=${official.changed}`, output.diagnostic, official.diagnostic,
+        ].filter(Boolean).join('；')) }
       }
-      return output
+      return publicManagementResult(output)
     } catch (error) {
-      return { status: 'failed', changed: false, error: errorText(error), permissionChanges: [] }
+      let diagnostic = errorText(error)
+      if (receipt === undefined && output === undefined) {
+        try {
+          const saved = await this.savedManagement(request)
+          if (saved !== undefined) {
+            dispatched = true
+            receipt = saved.receipt ?? saved.outcome
+          }
+        } catch (recoveryError) {
+          if (!(recoveryError instanceof MarketCoreError && recoveryError.code === 'task/idempotency-conflict')) dispatched = true
+          diagnostic += '；管理回执读取失败：' + errorText(recoveryError)
+        }
+      }
+      const known = output ?? (receipt === undefined ? undefined : resultFromOutcome(receipt))
+      if (!dispatched && known === undefined) {
+        return { status: 'failed', changed: false, error: sanitizeDiagnostic(diagnostic), permissionChanges: [] }
+      }
+      const maintenanceFailed = !businessPrepared && (output?.status === 'applied' || output?.status === 'restart-required')
+      return {
+        status: 'unknown',
+        changed: known?.changed ?? false,
+        permissionChanges: known?.permissionChanges ?? [],
+        error: businessPrepared ? '官方管理和维护结果已返回，但完整业务凭证未保存；请核对原操作，不会重复写入。'
+          : maintenanceFailed ? '官方管理结果已确认，但维护状态未保存；请核对原操作，不会重复写入。'
+          : '管理写入结果尚未完整核实；请核对原操作，不会重复写入。',
+        errorCode: businessPrepared ? 'management/business-result-save-failed' : maintenanceFailed ? 'management/maintenance-save-failed' : 'management/outcome-unverified',
+        diagnostic: sanitizeDiagnostic([
+          known === undefined ? undefined : `官方回执：${known.status}，changed=${known.changed}`, diagnostic,
+          known?.errorCode, known?.error, known?.diagnostic,
+        ].filter(Boolean).join('；')),
+      }
     }
   }
 
@@ -639,7 +865,7 @@ export class MarketRuntime {
     const state = await this.host.readState()
     const tasks = await this.taskStore.list(this.identity.environmentId)
     const taskStates = tasks.map(record => record.task)
-    const catalogRevision = this.catalog.load().snapshot.revision
+    const catalogRevision = this.catalogView().revision
     const intent = await this.maintenanceIntents.load()
     return buildMaintenanceSnapshot({
       environmentId: this.identity.environmentId,
@@ -656,9 +882,13 @@ export class MarketRuntime {
   readonly checkUpdates = async (request?: { readonly sourceId?: string; readonly refreshFirst?: boolean }): Promise<import('../contracts/types.ts').UpdateCheckResult> => {
     await this.recovery
     if (request?.refreshFirst) await this.catalogRefresh(request.sourceId ? { sourceId: request.sourceId } : undefined)
+    const captured = this.readCatalogContext()
+    const hostCore = this.hostCore()
     const state = await this.host.readState()
-    const snapshot = this.catalogView()
-    return compareInstalledUpdates(state.inventory, snapshot.plugins, snapshot.revision, { catalogStale: snapshot.stale })
+    if (hostCore.hostRevision !== this.hostCore().hostRevision || this.fingerprint(captured) !== this.fingerprint(this.readCatalogContext())) {
+      throw new MarketCoreError('update-check/stale-context', '宿主核心或目录在检查期间发生变化，请重新检查')
+    }
+    return compareInstalledUpdates(state.inventory, captured.catalog.plugins, captured.catalog.revision, { catalogStale: captured.catalog.stale, hostCore, catalog: captured.catalog })
   }
 
   async updatePolicyGet(): Promise<UpdatePolicySnapshot> {

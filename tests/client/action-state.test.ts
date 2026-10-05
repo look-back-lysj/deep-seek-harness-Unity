@@ -6,19 +6,25 @@ describe('client action lifecycle feedback', () => {
   it('把官方插件管理结果映射成可执行的下一步', () => {
     expect(pluginActionFeedbackState({ status: 'unknown', error: undefined }, '启用插件', '已启用')).toMatchObject({
       status: 'unknown',
-      nextStep: '先重新读取插件状态，不要立即重复提交。',
+      nextStep: '核对原操作回执，不要立即重复提交；当前库存不是原操作完成证据。',
     })
     expect(pluginActionFeedbackState({ status: 'restart-required', error: undefined }, '卸载插件', '已卸载')).toMatchObject({
       status: 'needs-recheck',
       retryable: false,
     })
-    expect(pluginActionFeedbackState({ status: 'completed', error: undefined }, '启用插件', '已启用')).toMatchObject({ status: 'completed' })
+    expect(pluginActionFeedbackState({ status: 'applied', error: undefined }, '启用插件', '已启用')).toMatchObject({ status: 'completed' })
   })
 
   it('区分任务部分完成、失败和未知结果', () => {
     expect(taskActionFeedback(taskFixture({ status: 'partial' }), '安装任务').status).toBe('partial')
     expect(taskActionFeedback(taskFixture({ status: 'failed' }), '安装任务').status).toBe('failed')
     expect(taskActionFeedback(taskFixture({ status: 'unknown' }), '安装任务').status).toBe('unknown')
+  })
+
+  it('管理失败不能抹掉已发生变更或权限变化，也不提供自动重试', () => {
+    expect(pluginActionFeedbackState({ status: 'failed', changed: true }, '停用插件', '')).toMatchObject({ status: 'partial', retryable: false })
+    expect(pluginActionFeedbackState({ status: 'failed', changed: false, permissionChanges: [{ packageName: 'alpha', decision: 'revoked' }] }, '卸载插件', '')).toMatchObject({ status: 'partial', retryable: false })
+    expect(pluginActionFeedbackState({ status: 'failed', changed: false }, '停用插件', '')).toMatchObject({ status: 'failed', retryable: false })
   })
 
   it('保留动作标签并允许前端显式给出完成和重新核对语义', () => {

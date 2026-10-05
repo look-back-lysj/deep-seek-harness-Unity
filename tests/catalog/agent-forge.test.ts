@@ -46,7 +46,61 @@ const index = {
   packages: { '@test/alpha': { latest: '1.2.3', versions: ['1.2.3'], path: 'packages/alpha.json', recordRevision: 'r1' } },
 } as const
 
+async function readRecordFixture(value: unknown) {
+  const root = mkdtempSync(join(tmpdir(), 'eac-agent-forge-scheme-'))
+  try {
+    writeFileSync(join(root, 'source.json'), JSON.stringify(source))
+    writeFileSync(join(root, 'index.json'), JSON.stringify(index))
+    mkdirSync(join(root, 'packages'), { recursive: true })
+    writeFileSync(join(root, 'packages', 'alpha.json'), `${JSON.stringify(value, null, 4)}\r\n`)
+    const config: MarketCatalogSource = { id: 'test', kind: 'agent-forge', location: { mode: 'local-file', value: root }, enabled: true, priority: 0, refreshPolicy: 'manual' }
+    return await readAgentForgeSource(config, { localRoots: [root], targetAgent: 'dsh' })
+  } finally { rmSync(root, { recursive: true, force: true }) }
+}
+
 describe('Agent Forge v2 source reader', () => {
+  it('缺省 package 与 target scheme 均不补 semver', async () => {
+    const catalog = await readRecordFixture(record)
+    const loaded = catalog.packages.get(record.name)!
+    expect(loaded).not.toHaveProperty('versionScheme')
+    expect((loaded.targets as Record<string, unknown>[])[0]).not.toHaveProperty('versionScheme')
+    const projected = projectAgentForgeCatalog(catalog, { revision: 'projection-scheme-r1', generatedAt: source.generatedAt, sourceUrl: 'https://example.com/catalog/source.json' })
+    expect(validateMarketIndex(projected).snapshot.listings![0]!.hostRequirements!.declarations[0]).not.toHaveProperty('versionScheme')
+  })
+
+  it.each(['semver', 'npm', 'pep440', 'calver', 'date', 'custom', 'unknown'])('读取 %s，package 与 target scheme 独立且原始字节不变', async versionScheme => {
+    const packageScheme = versionScheme === 'npm' ? 'pep440' : 'npm'
+    for (const range of ['*', null]) {
+      const fixture = { ...record, versionScheme: packageScheme, targets: [{ ...record.targets[0], compatibilityStatus: range === null ? 'unknown' : 'known', compatibilityNote: '声明范围待确认', agentVersionRange: range, versionScheme }] }
+      const bytes = Buffer.from(`${JSON.stringify(fixture, null, 4)}\r\n`)
+      const catalog = await readRecordFixture(fixture)
+      expect(catalog.packages.get(record.name)).toEqual(fixture)
+      expect(catalog.packageDocuments.get(record.name)).toEqual({ contentBase64: bytes.toString('base64'), sha256: digest(bytes) })
+      const projected = projectAgentForgeCatalog(catalog, { revision: 'projection-scheme-r1', generatedAt: source.generatedAt, sourceUrl: 'https://example.com/catalog/source.json' })
+      expect(projected.listings![0]!.agentForgeMetadata!.document).toEqual({ contentBase64: bytes.toString('base64'), sha256: digest(bytes) })
+      expect(validateMarketIndex(projected).snapshot.listings![0]!.hostRequirements).toEqual({ historyCoverage: 'latest-only', declarations: [{
+        agentId: 'dsh', range, versionScheme, origin: 'agent-forge-target', metadataDigest: digest(bytes), sourceId: source.sourceId, sourceRevision: source.revision,
+      }] })
+    }
+  })
+
+  it.each(['semver', 'npm', 'pep440', 'calver', 'date', 'custom', 'unknown'])('package %s 不回填 target scheme', async versionScheme => {
+    const catalog = await readRecordFixture({ ...record, versionScheme })
+    expect(catalog.packages.get(record.name)).toMatchObject({ versionScheme })
+    const projected = projectAgentForgeCatalog(catalog, { revision: 'projection-scheme-r1', generatedAt: source.generatedAt, sourceUrl: 'https://example.com/catalog/source.json' })
+    expect(validateMarketIndex(projected).snapshot.listings![0]!.hostRequirements!.declarations[0]).not.toHaveProperty('versionScheme')
+  })
+
+  it.each([null, 7, true, [], {}, '', 'SEMVER', 'semver ', 'invalid'].map(versionScheme => ({ versionScheme })))('读取时拒绝非法 scheme $versionScheme，不遗漏非宿主 target', async ({ versionScheme }) => {
+    for (const fixture of [
+      { ...record, versionScheme },
+      { ...record, targets: [{ ...record.targets[0], versionScheme }] },
+      { ...record, targets: [...record.targets, { ...record.targets[0], agentId: 'other-agent', versionScheme }] },
+    ]) {
+      await expect(readRecordFixture(fixture)).rejects.toMatchObject({ code: 'agent-forge/version-scheme' })
+    }
+  })
+
   it('读取受控本地目录并保留未知 _meta', async () => {
     const root = mkdtempSync(join(tmpdir(), 'eac-agent-forge-'))
     try {

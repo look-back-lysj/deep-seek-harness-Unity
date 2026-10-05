@@ -5,7 +5,7 @@
 import type { Context } from '@deepseek-ai/cordis'
 import { isProtectedMarketPackage } from '../../core/identity.ts'
 import { validVersion } from '../../core/semver.ts'
-import { canonicalJson } from '../../core/canonical.ts'
+import { canonicalJson, sha256Hex } from '../../core/canonical.ts'
 import { PACKAGE_NAME, type IncompatibleBundleEvidence } from './incompatible-evidence.ts'
 import type {
   CapabilityName,
@@ -431,13 +431,9 @@ export class DshManagerAdapter {
 
     return {
       environmentId,
-      revision: `inventory-${items.length}-${rowsCount(items)}-${unknownItems.length}`,
+      revision: 'inventory-' + await sha256Hex(canonicalJson({ environmentId, items, unknownItems })),
       items,
       unknownItems,
     }
   }
-}
-
-function rowsCount(items: readonly InventoryItemProjection[]): number {
-  return items.reduce((total, item) => total + item.rows.length, 0)
 }

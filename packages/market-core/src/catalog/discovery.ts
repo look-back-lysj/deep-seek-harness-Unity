@@ -12,7 +12,7 @@ type DiscoveryPlacement = 'featured' | 'recommended-skin' | 'top-plugin' | 'top-
  * 将目录事实投影成发现页需要的四个分区。
  *
  * 这里不自行计算“高分”：只有目录明确提供 source=score 且带评分时才进入高分分区。
- * 海报优先使用插件截图，再使用对应 Presentation 的第一张媒体；两者都没有时
+ * 海报优先使用声明的首张预览，再使用旧截图或 Presentation 媒体；都没有时
  * poster 保持缺省，客户端按 title+summary 渲染固定尺寸的默认卡片。
  */
 export function buildCatalogDiscovery(snapshot: Pick<CatalogSnapshot, 'plugins' | 'presentations' | 'recommendations'>): CatalogDiscovery {
@@ -24,7 +24,7 @@ export function buildCatalogDiscovery(snapshot: Pick<CatalogSnapshot, 'plugins' 
       ?? [...plugins.values()].find(item => item.id === recommendation.pluginId)
     if (!plugin) return undefined
     const presentation = presentations.get(plugin.presentationId)
-    const poster = plugin.screenshots[0] ?? presentation?.media[0]
+    const poster = plugin.media?.previews?.[0] ?? plugin.screenshots[0] ?? presentation?.media[0]
     return {
       pluginId: plugin.id,
       version: plugin.version,

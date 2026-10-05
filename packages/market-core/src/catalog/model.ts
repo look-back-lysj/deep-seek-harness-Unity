@@ -29,6 +29,17 @@ export interface MarketPluginRecord extends CatalogPlugin {
   readonly metadata?: MarketPluginMetadata
   readonly releaseId?: string
   readonly evidence?: readonly RawDocumentRecord[]
+  readonly agentForgeMetadata?: AgentForgeMetadataRecord
+}
+
+export interface AgentForgeMetadataRecord {
+  readonly document: RawDocumentRecord
+  readonly sourceId: string
+  readonly sourceRevision: string
+}
+
+export interface MarketListingRecord extends CatalogListing {
+  readonly agentForgeMetadata?: AgentForgeMetadataRecord
 }
 
 export type MarketPluginMetadata =
@@ -110,7 +121,7 @@ export interface MarketIndexDocument {
   readonly revision: string
   readonly generatedAt: string
   readonly plugins: readonly MarketPluginRecord[]
-  readonly listings?: readonly CatalogListing[] | undefined
+  readonly listings?: readonly MarketListingRecord[] | undefined
   readonly packs: readonly MarketPackRecord[]
   readonly presentations: readonly CatalogPresentation[]
   readonly deliveries: readonly CatalogDelivery[]

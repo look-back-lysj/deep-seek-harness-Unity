@@ -7,12 +7,13 @@
 import { createHash } from 'node:crypto'
 import { closeSync, fstatSync, openSync, readFileSync, realpathSync, statSync } from 'node:fs'
 import { isAbsolute, relative, resolve, sep, dirname, join } from 'node:path'
-import type { CatalogListing, MarketCatalogSource } from '../contracts/types.ts'
-import { MARKET_INDEX_SCHEMA_VERSION, type MarketIndexDocument, type MarketPluginRecord } from './model.ts'
+import type { MarketCatalogSource } from '../contracts/types.ts'
+import { MARKET_INDEX_SCHEMA_VERSION, type MarketIndexDocument, type MarketPluginRecord, type MarketListingRecord, type RawDocumentRecord } from './model.ts'
 import { validateMarketIndex } from './validate.ts'
 import { readOfflinePack, type OfflinePackContents, type OfflinePackLimits } from './offline-pack.ts'
 import { DEFAULT_ZIP_LIMITS } from '../authoring/zip.ts'
 import { readLimitedResponse, safeFetch, type RemoteSecurityOptions } from '../delivery/security.ts'
+import { parseAgentForgeMedia } from './agent-forge-media.ts'
 
 export class AgentForgeSourceError extends Error {
   readonly code: string
@@ -35,6 +36,7 @@ export interface AgentForgeCatalog {
   readonly source: Record<string, unknown>
   readonly index: Record<string, unknown>
   readonly packages: ReadonlyMap<string, Record<string, unknown>>
+  readonly packageDocuments: ReadonlyMap<string, RawDocumentRecord>
   readonly advisories: ReadonlyMap<string, Record<string, unknown>>
   readonly sourceRevision: string
   readonly sourceId: string
@@ -149,6 +151,7 @@ function validateIndex(value: unknown, source: Record<string, unknown>): Record<
     if (!Array.isArray(entry.versions) || entry.versions.length === 0 || entry.versions.some(item => typeof item !== 'string' || item.length === 0) || new Set(entry.versions).size !== entry.versions.length || !entry.versions.includes(latest)) fail('versions', `index.packages.${name} 的版本列表必须唯一且包含 latest`)
     safeRelative(entry.path, `index.packages.${name}.path`)
     if (entry.id !== undefined) text(entry.id, `index.packages.${name}.id`, 214)
+    if (entry.media !== undefined) parseAgentForgeMedia(entry.media, `index.packages.${name}.media`, fail, 1)
     if (entry.recordRevision !== undefined && (typeof entry.recordRevision !== 'string' || entry.recordRevision !== source.revision)) fail('record-revision', `index.packages.${name} recordRevision 与 source revision 不一致`)
   }
   return index
@@ -156,6 +159,9 @@ function validateIndex(value: unknown, source: Record<string, unknown>): Record<
 
 function validatePackage(value: unknown, field: string, targetAgent?: string): Record<string, unknown> {
   const record = object(value, field)
+  if (record.media !== undefined) parseAgentForgeMedia(record.media, `${field}.media`, fail)
+  const versionSchemes = ['semver', 'npm', 'pep440', 'calver', 'date', 'custom', 'unknown']
+  if (record.versionScheme !== undefined && (typeof record.versionScheme !== 'string' || !versionSchemes.includes(record.versionScheme))) fail('version-scheme', `${field}.versionScheme 无效`)
   if (record.schemaVersion !== 2) fail('schema-version', `${field} 必须是 Agent Forge v2`)
   text(record.id, `${field}.id`, 214); text(record.name, `${field}.name`, 214); text(record.version, `${field}.version`, 100)
   if (!TYPES.has(record.type as string)) fail('package-type', `${field}.type 无效`)
@@ -170,6 +176,7 @@ function validatePackage(value: unknown, field: string, targetAgent?: string): R
   }
   for (const [index, target] of (record.targets as unknown[]).entries()) {
     const targetRecord = object(target, `${field}.targets[${index}]`)
+    if (targetRecord.versionScheme !== undefined && (typeof targetRecord.versionScheme !== 'string' || !versionSchemes.includes(targetRecord.versionScheme))) fail('version-scheme', `${field}.targets[${index}].versionScheme 无效`)
     text(targetRecord.agentId, `${field}.targets[${index}].agentId`, 100)
     if (targetRecord.compatibilityStatus === 'known') {
       text(targetRecord.agentVersionRange, `${field}.targets[${index}].agentVersionRange`, 512)
@@ -259,6 +266,7 @@ export async function readAgentForgeSource(source: MarketCatalogSource, options:
     if (options.targetAgent !== undefined && offline.manifest.targetAgent !== options.targetAgent) fail('agent-target-mismatch', '离线包目标与当前宿主不一致')
     const offlineTargetAgent = options.targetAgent ?? offline.manifest.targetAgent
     const packageRecords = new Map<string, Record<string, unknown>>()
+    const packageDocuments = new Map<string, RawDocumentRecord>()
     const identityIds = new Set<string>()
     for (const [pathName, value] of offline.packages) {
       const record = validatePackage(value, pathName, offlineTargetAgent)
@@ -266,9 +274,12 @@ export async function readAgentForgeSource(source: MarketCatalogSource, options:
       if (identityIds.has(String(record.id))) fail('duplicate-package-id', `Duplicate offline package id ${String(record.id)}`)
       identityIds.add(String(record.id))
       packageRecords.set(String(record.name), record)
+      const bytes = offline.packageBytes.get(pathName)
+      if (bytes === undefined) fail('package-bytes-missing', '离线包缺少原始元数据')
+      packageDocuments.set(String(record.name), rawDocument(bytes))
     }
     if (source.expectedRevision !== undefined && source.expectedRevision !== sourceRecord.revision) fail('revision-mismatch', '来源 revision 与 expectedRevision 不一致')
-    return { source: sourceRecord, index: indexRecord, packages: packageRecords, advisories: new Map([...offline.advisories].map(([key, value]) => [key, object(value, key)])), sourceRevision: sourceRecord.revision as string, sourceId: sourceRecord.sourceId as string, agentId: sourceRecord.agentId as string | null, stale: false, origin: 'offline-pack', offline }
+    return { source: sourceRecord, index: indexRecord, packages: packageRecords, packageDocuments, advisories: new Map([...offline.advisories].map(([key, value]) => [key, object(value, key)])), sourceRevision: sourceRecord.revision as string, sourceId: sourceRecord.sourceId as string, agentId: sourceRecord.agentId as string | null, stale: false, origin: 'offline-pack', offline }
   }
   let sourceBytes: Uint8Array
   let indexBytes: Uint8Array
@@ -303,11 +314,13 @@ export async function readAgentForgeSource(source: MarketCatalogSource, options:
   if (options.targetAgent !== undefined && sourceRecord.agentId !== null && sourceRecord.agentId !== options.targetAgent) fail('agent-target-mismatch', '来源目标 Agent 与当前宿主不一致')
   const targetAgent = options.targetAgent ?? (sourceRecord.agentId === null ? undefined : String(sourceRecord.agentId))
   const packageRecords = new Map<string, Record<string, unknown>>()
+  const packageDocuments = new Map<string, RawDocumentRecord>()
   const identityNames = new Map<string, string>()
   const entries = object(indexRecord.packages, 'index.packages')
   for (const [name, raw] of Object.entries(entries)) {
     const entry = object(raw, `index.packages.${name}`)
-    const record = validatePackage(parseJson(await packageRead(String(entry.path)), `package ${name}`), `package ${name}`, targetAgent)
+    const bytes = await packageRead(String(entry.path))
+    const record = validatePackage(parseJson(bytes, `package ${name}`), `package ${name}`, targetAgent)
     if (record.name !== name) fail('package-name-mismatch', `索引键 ${name} 与 package record name 不一致`)
     if (record.version !== entry.latest || !Array.isArray(entry.versions) || !entry.versions.includes(record.version)) fail('package-version-mismatch', `索引 latest 与 ${name} package record version 不一致`)
     if (entry.id !== undefined && record.id !== entry.id) fail('package-id-mismatch', `索引 id 与 ${name} package record id 不一致`)
@@ -316,10 +329,14 @@ export async function readAgentForgeSource(source: MarketCatalogSource, options:
     if (existingName !== undefined && existingName !== name) fail('duplicate-package-id', `Agent Forge id ${id} 对应多个包名`)
     identityNames.set(id, name)
     packageRecords.set(name, record)
+    packageDocuments.set(name, rawDocument(bytes))
   }
-  return { source: sourceRecord, index: indexRecord, packages: packageRecords, advisories: new Map(), sourceRevision: sourceRecord.revision as string, sourceId: sourceRecord.sourceId as string, agentId: sourceRecord.agentId as string | null, stale: false, origin: source.location.mode === 'https' ? 'online' : 'local-file' }
+  return { source: sourceRecord, index: indexRecord, packages: packageRecords, packageDocuments, advisories: new Map(), sourceRevision: sourceRecord.revision as string, sourceId: sourceRecord.sourceId as string, agentId: sourceRecord.agentId as string | null, stale: false, origin: source.location.mode === 'https' ? 'online' : 'local-file' }
 }
 
+function rawDocument(bytes: Uint8Array): RawDocumentRecord {
+  return { contentBase64: Buffer.from(bytes).toString('base64'), sha256: `sha256:${createHash('sha256').update(bytes).digest('hex')}` }
+}
 
 /** Convert Agent Forge metadata into validated browse-only market listings.
  * This intentionally produces no installable plugin or delivery rows.
@@ -357,7 +374,7 @@ export function projectAgentForgeCatalog(
   const plugins: MarketPluginRecord[] = []
   const presentations: MarketIndexDocument['presentations'][number][] = []
   const deliveries: MarketIndexDocument['deliveries'][number][] = []
-  const listings: CatalogListing[] = []
+  const listings: MarketListingRecord[] = []
   for (const record of catalog.packages.values()) {
     const rawId = text(record.id, 'package.id', 214)
     const normalizedId = rawId.toLowerCase().replace(/[^a-z0-9.-]+/g, '-')
@@ -368,6 +385,11 @@ export function projectAgentForgeCatalog(
     const packageName = text(record.name, 'package.name', 214)
     const name = truncateUtf8(packageName, 200)
     const requestedVersion = text(record.version, 'package.version', 100)
+    const document = catalog.packageDocuments.get(packageName)
+    if (document === undefined) fail('package-bytes-missing', '投影缺少原始 Agent Forge 元数据')
+    const agentForgeMetadata = { document, sourceId: catalog.sourceId, sourceRevision: catalog.sourceRevision }
+    const media = record.media === undefined ? undefined : parseAgentForgeMedia(record.media, `package ${packageName}.media`, fail)
+    const previews = media?.previews ?? []
     const description = typeof record.description === 'string' ? record.description : ''
     const verified = verifiedByPackage.get(packageName)
     const installable = record.type === 'plugin' && verified !== undefined && verified.packageName === packageName && verified.version === requestedVersion && verified.pluginId === rawId
@@ -375,7 +397,7 @@ export function projectAgentForgeCatalog(
       const packageJson = Buffer.from(verified.packageJson, 'utf8').toString('base64')
       const packageJsonDigest = `sha256:${createHash('sha256').update(verified.packageJson, 'utf8').digest('hex')}`
       const license = typeof record.license === 'string' ? record.license : Array.isArray(record.license) ? record.license.filter(item => typeof item === 'string').join(', ') : undefined
-      presentations.push({ id: `agent-forge.${rawId}.presentation`, revision, title: name, summary: truncateUtf8(description, 4096) || 'Agent Forge 离线制品', markdown: description || '该制品来自受控 Agent Forge 离线包。', media: [], sourceUrl: parsedSourceUrl.href, importedAt: generatedAt })
+      presentations.push({ id: `agent-forge.${rawId}.presentation`, revision, title: name, summary: truncateUtf8(description, 4096) || 'Agent Forge 离线制品', markdown: description || '该制品来自受控 Agent Forge 离线包。', media: previews, sourceUrl: parsedSourceUrl.href, importedAt: generatedAt })
       plugins.push({
         id: rawId, name, packageName, version: requestedVersion, kind: 'plugin',
         summary: truncateUtf8(description, 4096) || 'Agent Forge 离线制品',
@@ -385,18 +407,22 @@ export function projectAgentForgeCatalog(
         // Agent Forge target metadata is not a current official-host evidence record.
         verification: 'unknown',
         installability: 'bundle-installable', artifactDigest: verified.artifactDigest,
-        presentationId: `agent-forge.${rawId}.presentation`, categories: ['plugin'], screenshots: [],
+        presentationId: `agent-forge.${rawId}.presentation`, categories: ['plugin'], screenshots: previews,
+        ...(media === undefined ? {} : { media }),
         enabledPolicy: 'default-on', requiresRestart: false, requiresSetup: false, largeExternalResource: false,
         metadata: { kind: 'official-bundle', packageJson: { contentBase64: packageJson, sha256: packageJsonDigest }, files: verified.files },
+        agentForgeMetadata,
       })
       deliveries.push({ pluginId: rawId, version: requestedVersion, artifactDigest: verified.artifactDigest, packageName,
         sources: [{ kind: 'cache', ref: verified.artifactDigest, priority: 0, size: verified.size }] })
     } else {
       listings.push({
         id, name, packageName,
+        ...(media === undefined ? {} : { media }),
         summary: truncateUtf8(description, 4096) || 'Agent Forge 来源条目；尚未验证为可安装市场制品。',
         reason: 'Agent Forge 元数据已读取；当前尚未绑定市场审核发行与官方安装验证。',
         sourceUrl: parsedSourceUrl.href, requestedVersion,
+        agentForgeMetadata,
       })
     }
   }

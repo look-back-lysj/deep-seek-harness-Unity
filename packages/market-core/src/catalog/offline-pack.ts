@@ -30,6 +30,7 @@ export interface OfflinePackContents {
   readonly source: unknown
   readonly index: unknown
   readonly packages: ReadonlyMap<string, unknown>
+  readonly packageBytes: ReadonlyMap<string, Uint8Array>
   readonly advisories: ReadonlyMap<string, unknown>
   readonly artifacts: ReadonlyMap<string, Uint8Array>
   readonly artifactEntries: readonly OfflinePackArtifact[]
@@ -225,8 +226,10 @@ export function readOfflinePack(bytes: Uint8Array, options: OfflinePackLimits = 
   const packagePaths = entries.filter(entry => entry.path.startsWith('agent-forge/packages/') && entry.path.endsWith('.json'))
   if (packagePaths.length === 0 || packagePaths.length > limits.maxPackages) fail('missing-packages', '离线包缺少 package records')
   const packages = new Map<string, unknown>()
+  const packageBytes = new Map<string, Uint8Array>()
   for (const entry of packagePaths) {
     packages.set(entry.path, json(entry.data, entry.path, limits.maxMetadataBytes))
+    packageBytes.set(entry.path, entry.data)
   }
   const advisories = new Map<string, unknown>()
   for (const entry of entries.filter(item => item.path.startsWith('advisories/') && item.path.endsWith('.json'))) advisories.set(entry.path, json(entry.data, entry.path, limits.maxMetadataBytes))
@@ -241,7 +244,7 @@ export function readOfflinePack(bytes: Uint8Array, options: OfflinePackLimits = 
     artifacts.set(artifact.digest, data)
   }
   validateCrossReferences(manifest, source, index, packages, artifacts)
-  return { manifest, source, index, packages, advisories, artifacts, artifactEntries: manifest.artifacts }
+  return { manifest, source, index, packages, packageBytes, advisories, artifacts, artifactEntries: manifest.artifacts }
 }
 
 export function readOfflinePackFile(path: string, options: OfflinePackLimits = {}): OfflinePackContents {

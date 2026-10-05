@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import { activateMarketClient, remoteFacade } from '../../packages/market/src/client/activation.ts'
-import type { AuthorDraft, ClientHandshakeRequest, ClientHandshakeResult, ReadmeApplyPreviewRequest, ReadmeImportRequest, ReadmePreviewView } from '@dsh-eac/market-core/contracts'
+import type { AuthorDraft, ClientHandshakeRequest, ClientHandshakeResult, ReadmeApplyPreviewRequest, ReadmeImportRequest, ReadmePreviewView } from '../../packages/market/src/types.ts'
 import { ADAPTER_PROTOCOL_VERSION, ADAPTER_VERSION } from '../../packages/market/src/version.ts'
 import { helloFixture } from './fixtures.ts'
 
@@ -22,6 +22,23 @@ function emptyComponent() {
 }
 
 describe('client activation order', () => {
+  it('原操作恢复按只读方法传递原身份与结果，不调用写入握手或新操作', async () => {
+    const taskRequest = { planId: 'original-plan', planDigest: 'sha256:original', idempotencyKey: 'original-start' }
+    const managementRequest = { packageName: '@test/original', expectedVersion: '1.0.0', action: 'remove' as const, idempotencyKey: 'original-remove' }
+    const taskStartRecover = vi.fn(async () => ({ ok: true, value: { status: 'not-found' } }))
+    const pluginActionRecover = vi.fn(async () => ({ ok: true, value: { status: 'found', stage: 'unknown' } }))
+    const clientConnect = vi.fn()
+    const taskStart = vi.fn()
+    const pluginRemove = vi.fn()
+    const facade = remoteFacade({ taskStartRecover, pluginActionRecover, clientConnect, taskStart, pluginRemove })
+    await expect(facade.taskStartRecover?.(taskRequest)).resolves.toEqual({ status: 'not-found' })
+    await expect(facade.pluginActionRecover?.(managementRequest)).resolves.toEqual({ status: 'found', stage: 'unknown' })
+    expect(taskStartRecover).toHaveBeenCalledExactlyOnceWith(taskRequest)
+    expect(pluginActionRecover).toHaveBeenCalledExactlyOnceWith(managementRequest)
+    expect(clientConnect).not.toHaveBeenCalled()
+    expect(taskStart).not.toHaveBeenCalled()
+    expect(pluginRemove).not.toHaveBeenCalled()
+  })
   it('unwraps RemoteResult, maps legacy UI names and supplies an empty refresh request', async () => {
     const calls: unknown[][] = []
     const facade = remoteFacade({

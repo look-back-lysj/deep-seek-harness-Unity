@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import type { ClientHandshakeRequest, ClientHandshakeResult, TaskApprovalRequest } from '@dsh-eac/market-core/contracts'
+import type { ClientHandshakeRequest, ClientHandshakeResult, TaskApprovalRequest } from '../../packages/market/src/types.ts'
 import { remoteFacade } from '../../packages/market/src/client/activation.ts'
 import { ADAPTER_PROTOCOL_VERSION, ADAPTER_VERSION } from '../../packages/market/src/version.ts'
 import { helloFixture } from './fixtures.ts'

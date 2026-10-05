@@ -214,7 +214,7 @@ describe('REV-03/04/06/07 production coordination', () => {
     const stopped = await waitForTask(manager, task.task.taskId, task => task.status === 'needs-attention')
     expect(stopped.items[0]).toMatchObject({ status: 'failed', errorCode: 'release/withdrawn', error: '测试发行已由团队撤回' })
     expect(host.calls).toHaveLength(phase === 'download' ? 0 : 1)
-    expect(validateWrite).toHaveBeenCalledTimes(phase === 'download' ? 1 : 2)
+    expect(validateWrite).toHaveBeenCalledTimes(phase === 'download' ? 2 : 3)
   })
 
   it('a late cancellation reports the last real success after its receipt under real locks', async () => {

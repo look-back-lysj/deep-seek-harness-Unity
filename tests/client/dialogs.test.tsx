@@ -91,7 +91,8 @@ describe('任务与安装弹窗回归', () => {
     expect(html).toContain('fixture diagnostic: source-2 failed integrity check')
     expect(html).toContain('@example/failing：already-approved')
     expect(html).toContain('不要使用校验失败的文件')
-    expect(html).toMatch(/<details><summary>查看任务记录/)
+    const histories = [...html.matchAll(/<details class="eac-market__task-history" aria-label="任务记录"><summary>查看任务记录（已载入 2 条）<\/summary>/g)]
+    expect(histories).toHaveLength(6)
   })
 
   it('版本不兼容只显示简短结论，长报告默认折叠', () => {
@@ -135,7 +136,7 @@ describe('任务与安装弹窗回归', () => {
     expect(source).toContain('riskConfirmed: true as const')
     expect(source).toContain('challengeDigest: challenge.digest')
     expect(source).toContain('idempotencyKey: second ? confirmationKeys.current.second : confirmationKeys.current.first')
-    expect(source).toContain('applyAi(true)')
+    expect(source).toContain("run('确认影响', ticket => applyAi(true, ticket), 20_000)")
   })
 
   it('unsafe 预检说明勾选后自动重检，“重新预检”按钮真实调用 retry 流程', () => {
@@ -152,7 +153,7 @@ describe('任务与安装弹窗回归', () => {
     expect(nextPreflightRetry(0)).toBe(1)
     const installSource = readFileSync(join(here, '../../packages/market/src/client/InstallPlanDialog.tsx'), 'utf8')
     expect(installSource).toContain('onRetry={() => setRetry(nextPreflightRetry)}')
-    expect(installSource).toContain('[consent, retry, remote, target]')
+    expect(installSource).toContain('[consent, retry, remote, targetSignature, inventoryIdentity, releaseMode, options, selectedKey, releaseBusy]')
   })
 
   it('安装弹窗保留硬限制、降级二次确认和未知结果不重放边界', () => {

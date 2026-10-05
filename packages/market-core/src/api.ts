@@ -14,9 +14,13 @@ import type {
   TaskEventRequest, TaskIdRequest, TaskResumeRequest, TaskStartRequest, TaskState,
   TransferBeginRequest, TransferChunkReadRequest, TransferChunkReadResult,
   TransferChunkRequest, TransferResult,
+  HostCoreSnapshot, ReleaseOptionsRequest, ReleaseOptionsResult,
+  TaskStartRecoveryRequest, TaskStartRecoveryResult, PluginActionRecoveryRequest, PluginActionRecoveryResult,
 } from './contracts/types.ts'
 
 export interface MarketBackend {
+  hostCore(): HostCoreSnapshot
+  releaseOptions(request: ReleaseOptionsRequest): Promise<ReleaseOptionsResult>
   capabilities(): readonly CapabilityName[]
   catalog(): CatalogSnapshot
   inventory(): Promise<InventorySnapshot>
@@ -29,6 +33,8 @@ export interface MarketBackend {
   updatePolicySave(request: UpdatePolicySaveRequest): Promise<UpdatePolicySnapshot>
   planCreate(request: PlanCreateRequest, callerId: string): Promise<PlanResult>
   taskStart(request: TaskStartRequest, callerId: string): Promise<TaskState>
+  taskStartRecover(request: TaskStartRecoveryRequest, callerId: string): Promise<TaskStartRecoveryResult>
+  pluginActionRecover(request: PluginActionRecoveryRequest): Promise<PluginActionRecoveryResult>
   taskGet(request: TaskIdRequest): Promise<TaskState>
   taskList(): Promise<readonly TaskState[]>
   taskEvents(request: TaskEventRequest): Promise<TaskEventPage>

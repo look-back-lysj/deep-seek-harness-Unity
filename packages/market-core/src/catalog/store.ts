@@ -8,7 +8,7 @@ import { createHash, randomUUID } from 'node:crypto'
 import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { isDeepStrictEqual } from 'node:util'
-import type { CatalogSnapshot } from '../contracts/types.ts'
+import type { CatalogSnapshot, CatalogSourceRevision } from '../contracts/types.ts'
 import {
   CatalogValidationError,
   DEFAULT_CATALOG_LIMITS,
@@ -167,7 +167,7 @@ export class CatalogRepository {
         ? validateMarketIndex(this.projectionDocument, { ...this.limits, origin: this.cached.snapshot.origin })
         : this.cachedValidation ?? this.embedded
       const snapshot = applyKnownLifecycle(projection.snapshot, this.acceptance)
-      this.cached = { ...this.cached, ...(this.acceptanceFailure ? { reason: this.acceptanceFailure } : {}), snapshot: { ...snapshot, ...(this.acceptanceFailure ? { plugins: snapshot.plugins.map(plugin => ({ ...plugin, installability: 'hard-blocked' as const })), recommendations: [] } : {}), stale: this.cached.snapshot.stale || this.acceptanceFailure !== undefined } }
+      this.cached = { ...this.cached, ...(this.acceptanceFailure ? { reason: this.acceptanceFailure } : {}), snapshot: { ...snapshot, ...(this.acceptanceFailure ? { plugins: snapshot.plugins.map(plugin => ({ ...plugin, publication: plugin.publication === 'withdrawn' ? 'withdrawn' as const : 'unknown' as const, installability: 'hard-blocked' as const })), recommendations: [] } : {}), stale: this.cached.snapshot.stale || this.acceptanceFailure !== undefined } }
       return structuredClone(this.cached)
     }
     const acceptanceFailure = this.acceptanceFailure
@@ -194,7 +194,7 @@ export class CatalogRepository {
         this.projectionDocument = document
         const snapshot = applyKnownLifecycle(validated.snapshot, this.acceptance)
         this.cached = {
-          snapshot: { ...snapshot, ...(acceptanceFailure ? { plugins: snapshot.plugins.map(plugin => ({ ...plugin, installability: 'hard-blocked' as const })), recommendations: [] } : {}), stale: pointerName === 'previous.json' || this.acceptance !== undefined || acceptanceFailure !== undefined },
+          snapshot: { ...snapshot, ...(acceptanceFailure ? { plugins: snapshot.plugins.map(plugin => ({ ...plugin, publication: plugin.publication === 'withdrawn' ? 'withdrawn' as const : 'unknown' as const, installability: 'hard-blocked' as const })), recommendations: [] } : {}), stale: pointerName === 'previous.json' || this.acceptance !== undefined || acceptanceFailure !== undefined },
           source: 'cache',
           cacheUsable: true,
           ...(acceptanceFailure ? { reason: acceptanceFailure } : {}),
@@ -207,7 +207,7 @@ export class CatalogRepository {
     this.cachedValidation = this.embedded
     this.projectionDocument = this.embeddedDocument
     const snapshot = applyKnownLifecycle(this.embedded.snapshot, this.acceptance)
-    this.cached = { snapshot: acceptanceFailure ? { ...snapshot, stale: true, plugins: snapshot.plugins.map(plugin => ({ ...plugin, installability: 'hard-blocked' as const })), recommendations: [] } : snapshot, source: 'embedded', cacheUsable: false, reason: acceptanceFailure ?? 'cache-unusable' }
+    this.cached = { snapshot: acceptanceFailure ? { ...snapshot, stale: true, plugins: snapshot.plugins.map(plugin => ({ ...plugin, publication: plugin.publication === 'withdrawn' ? 'withdrawn' as const : 'unknown' as const, installability: 'hard-blocked' as const })), recommendations: [] } : snapshot, source: 'embedded', cacheUsable: false, reason: acceptanceFailure ?? 'cache-unusable' }
     return structuredClone(this.cached)
   }
 
@@ -301,6 +301,15 @@ export class CatalogRepository {
   }
 
   /** 更新目录只改变浏览快照；安装层必须继续持有旧 planDigest，不能被新目录静默替换。 */
+  sourceSnapshot(): { readonly snapshot: CatalogSnapshot; readonly provenance?: CatalogSourceRevision } {
+    const loaded = this.load()
+    const publication = this.cachedValidation?.publication
+    return {
+      snapshot: { ...loaded.snapshot, collections: (this.cachedValidation?.collections ?? []).map(collectionView) },
+      ...(publication === undefined ? {} : { provenance: { sourceId: publication.sourceId, revision: loaded.snapshot.revision } }),
+    }
+  }
+
   snapshotForInstall(): CatalogSnapshot {
     return this.load().snapshot
   }

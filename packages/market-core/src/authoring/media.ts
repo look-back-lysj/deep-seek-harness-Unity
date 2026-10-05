@@ -5,6 +5,7 @@
 import { createHash } from 'node:crypto'
 import { existsSync, mkdirSync, readFileSync, readdirSync, renameSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
+import { parseAuthorJson, withAuthorStorageError } from './errors.ts'
 
 export interface MediaLimits {
   readonly maxFileBytes?: number
@@ -26,6 +27,7 @@ export class MediaValidationError extends Error {
     super(message)
     this.name = 'MediaValidationError'
     this.code = code
+    delete this.stack
   }
 }
 
@@ -72,7 +74,26 @@ export class MediaStore {
     this.maxFileBytes = limits.maxFileBytes ?? 8 * 1024 * 1024
     this.maxFiles = limits.maxFiles ?? 128
     this.maxTotalBytes = limits.maxTotalBytes ?? 64 * 1024 * 1024
-    mkdirSync(this.root, { recursive: true })
+    this.storage(() => mkdirSync(this.root, { recursive: true }))
+  }
+
+  private storage<T>(operation: () => T): T {
+    return withAuthorStorageError(operation, () => new MediaValidationError('media/storage-error', '媒体存储操作失败，请检查存储状态后重试'))
+  }
+
+  private readFile(filename: string): Buffer {
+    return withAuthorStorageError(() => readFileSync(join(this.root, filename)), (missing) => new MediaValidationError(
+      missing ? 'media/not-found' : 'media/storage-error',
+      missing ? '媒体已不存在' : '媒体读取失败，请检查存储状态后重试',
+    ))
+  }
+
+  private readMetadata(filename: string): StoredMedia {
+    const value = parseAuthorJson(this.readFile(filename).toString('utf8'), () => new MediaValidationError('media/corrupt', '媒体元数据不是合法 JSON')) as StoredMedia
+    if (!value || typeof value !== 'object' || Array.isArray(value) || typeof value.id !== 'string' || !/^[a-zA-Z0-9_-]{1,128}$/.test(value.id) || typeof value.filename !== 'string' || typeof value.mediaType !== 'string' || typeof value.sha256 !== 'string' || !Number.isSafeInteger(value.size) || value.size <= 0) {
+      throw new MediaValidationError('media/corrupt', '媒体元数据结构无效')
+    }
+    return value
   }
 
   save(bytes: Uint8Array, filename: string): StoredMedia {
@@ -90,9 +111,9 @@ export class MediaStore {
         throw new MediaValidationError('media/total-limit', '媒体总数量或总体积超限')
       }
       const temporary = `${filePath}.${process.pid}.${Date.now()}.tmp`
-      writeFileSync(temporary, bytes, { flag: 'wx' })
-      renameSync(temporary, filePath)
-      writeFileSync(metadataPath, JSON.stringify(stored, null, 2), { encoding: 'utf8', flag: 'wx' })
+      this.storage(() => writeFileSync(temporary, bytes, { flag: 'wx' }))
+      this.storage(() => renameSync(temporary, filePath))
+      this.storage(() => writeFileSync(metadataPath, JSON.stringify(stored, null, 2), { encoding: 'utf8', flag: 'wx' }))
     } else {
       this.get(id)
     }
@@ -101,8 +122,8 @@ export class MediaStore {
 
   get(id: string): { readonly metadata: StoredMedia; readonly bytes: Uint8Array } {
     if (!/^[a-zA-Z0-9_-]{1,128}$/.test(id)) throw new MediaValidationError('media/invalid-id', 'media id 无效')
-    const metadata = JSON.parse(readFileSync(join(this.root, `${id}.json`), 'utf8')) as StoredMedia
-    const bytes = readFileSync(join(this.root, `${id}.bin`))
+    const metadata = this.readMetadata(`${id}.json`)
+    const bytes = this.readFile(`${id}.bin`)
     const actual = `sha256:${createHash('sha256').update(bytes).digest('hex')}`
     if (metadata.id !== id || metadata.sha256 !== actual || metadata.size !== bytes.byteLength || bytes.byteLength > this.maxFileBytes || detectImage(bytes) !== metadata.mediaType) {
       throw new MediaValidationError('media/digest-mismatch', '媒体文件与摘要不符')
@@ -111,9 +132,9 @@ export class MediaStore {
   }
 
   list(): readonly StoredMedia[] {
-    return readdirSync(this.root)
+    return this.storage(() => readdirSync(this.root))
       .filter((name) => name.endsWith('.json'))
-      .map((name) => JSON.parse(readFileSync(join(this.root, name), 'utf8')) as StoredMedia)
+      .map((name) => this.readMetadata(name))
       .sort((left, right) => left.id.localeCompare(right.id))
   }
 }

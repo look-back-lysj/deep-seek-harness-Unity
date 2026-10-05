@@ -201,6 +201,7 @@ export async function createPlanBundle(
         currentEnabled: current?.bundleEnabled ?? false,
         targetVersion: selection.targetVersion,
         targetDigest: selection.targetDigest,
+        ...(selection.releaseContext === undefined ? {} : { releaseContext: structuredClone(selection.releaseContext) }),
         requestedEnabled: selection.enabledIntent,
         verification: fact?.verification ?? 'unknown',
         requiresRestart,
@@ -228,6 +229,7 @@ export async function createPlanBundle(
     const plan = await makePlan(context, items, pack)
     if (structural.length > 0) return { status: 'blocked', reason: 'invalid-pack-execution', details: structural, blockers: structural }
     const bundleWithoutDigest = {
+      ...(context.releaseValidation === undefined ? {} : { releaseValidation: structuredClone(context.releaseValidation) }),
       plan,
       explicitPluginIds: [...new Set(context.selections.map(selection => selection.pluginId))].sort(),
       steps,
@@ -276,6 +278,7 @@ export async function createPlanBundle(
       currentEnabled: current?.bundleEnabled ?? false,
       targetVersion: selection.targetVersion,
       targetDigest: selection.targetDigest,
+      ...(selection.releaseContext === undefined ? {} : { releaseContext: structuredClone(selection.releaseContext) }),
       requestedEnabled: selection.enabledIntent,
       verification: fact?.verification ?? 'unknown',
       requiresRestart: fact?.requiresRestart === true,
@@ -297,6 +300,7 @@ export async function createPlanBundle(
   }
   const plan = await makePlan(context, items)
   const bundleWithoutDigest = {
+    ...(context.releaseValidation === undefined ? {} : { releaseValidation: structuredClone(context.releaseValidation) }),
     plan,
     explicitPluginIds: [...new Set(context.selections.map(selection => selection.pluginId))].sort(),
     steps,
@@ -350,6 +354,7 @@ export async function verifyPlanBundle(bundle: PlanBundle): Promise<boolean> {
   const expectedPlanDigest = await digestPlan(bundle.plan)
   if (expectedPlanDigest !== bundle.plan.planDigest) return false
   const expectedBundleDigest = await digestBundle({
+    ...(bundle.releaseValidation === undefined ? {} : { releaseValidation: bundle.releaseValidation }),
     plan: bundle.plan,
     ...(bundle.explicitPluginIds === undefined ? {} : { explicitPluginIds: bundle.explicitPluginIds }),
     steps: bundle.steps,

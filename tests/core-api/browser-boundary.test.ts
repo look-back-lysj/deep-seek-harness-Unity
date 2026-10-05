@@ -37,7 +37,7 @@ describe('浏览器安全入口与显式 API', () => {
     expect(root).not.toHaveProperty('createDshMarketBackend')
   })
 
-  it('接口显式覆盖原运行时的所有公开业务方法，四个 callerId 无可选或默认值', () => {
+  it('接口显式覆盖原运行时的所有公开业务方法，五个 callerId 无可选或默认值', () => {
     const api = ts.createSourceFile('api.ts', readFileSync(resolve(sourceRoot, 'api.ts'), 'utf8'), ts.ScriptTarget.Latest, true)
     const runtime = ts.createSourceFile('runtime.ts', readFileSync(resolve(sourceRoot, 'host/market-runtime.ts'), 'utf8'), ts.ScriptTarget.Latest, true)
     const contract = api.statements.find((node): node is ts.InterfaceDeclaration => ts.isInterfaceDeclaration(node) && node.name.text === 'MarketBackend')!
@@ -49,8 +49,8 @@ describe('浏览器安全入口与显式 API', () => {
     const runtimeMethods = [...new Set([...methods.map(node => node.name!.getText(runtime)), 'capabilities', 'catalog', 'inventory',
       'catalogSources', 'agentForgeRefresh', 'maintenanceStatus', 'checkUpdates', 'updatePolicyGet', 'updatePolicySave'])]
     expect(names.sort()).toEqual(runtimeMethods.sort())
-    expect(names).toHaveLength(36)
-    for (const name of ['planCreate', 'taskStart', 'aiAnalyze', 'aiConfirm']) {
+    expect(names).toHaveLength(40)
+    for (const name of ['planCreate', 'taskStart', 'taskStartRecover', 'aiAnalyze', 'aiConfirm']) {
       const method = contract.members.find(node => node.name!.getText(api) === name) as ts.MethodSignature
       const caller = method.parameters[1]!
       expect(caller.name.getText(api)).toBe('callerId')

@@ -18,8 +18,9 @@ type Candidate = { content: AuthorDraftInput; warnings: readonly string[]; readm
 
 /** Local editing has no fallback storage with a fake saved status. A revision from
  * the Host is the sole authority for saved/overwritten state. */
-export function AuthorWorkspace({ remote, supplemental, onDraftSnapshot, onDirtyChange, draftChange }: { remote: MarketRemote; supplemental?: React.ReactNode; onDraftSnapshot?: ((draft: ExtensionDraftRef | undefined) => void) | undefined; onDirtyChange?: ((dirty: boolean) => void) | undefined; draftChange?: ExtensionDraftChange | undefined }): React.JSX.Element {
+export function AuthorWorkspace({ remote, visible = true, supplemental, onDraftSnapshot, onDirtyChange, draftChange }: { remote: MarketRemote; visible?: boolean; supplemental?: React.ReactNode; onDraftSnapshot?: ((draft: ExtensionDraftRef | undefined) => void) | undefined; onDirtyChange?: ((dirty: boolean) => void) | undefined; draftChange?: ExtensionDraftChange | undefined }): React.JSX.Element {
   const [drafts, setDrafts] = useState<readonly AuthorDraft[]>([])
+  const [listStatus, setListStatus] = useState<'loading' | 'ready' | 'failed' | 'unavailable'>('loading')
   const [saved, setSaved] = useState<AuthorDraft>()
   const [form, setForm] = useState<AuthorDraftInput>(blank)
   const [dirty, setDirty] = useState(false)
@@ -31,6 +32,8 @@ export function AuthorWorkspace({ remote, supplemental, onDraftSnapshot, onDirty
   const [switchTo, setSwitchTo] = useState<string>()
   const [media, setMedia] = useState<Readonly<Record<string, string>>>({})
   const generation = useRef(0)
+  const listGeneration = useRef(0)
+  const listStarted = useRef(false)
   const lock = useRef(false)
   const retryRef = useRef<{ readonly label: string; readonly action: () => Promise<void> }>()
 
@@ -51,11 +54,28 @@ export function AuthorWorkspace({ remote, supplemental, onDraftSnapshot, onDirty
   }, [draftChange])
 
   useEffect(() => {
-    const token = ++generation.current
-    setSaved(undefined); setForm(blank()); setDirty(false); setCandidate(undefined); setBusy(''); setFeedback(idleActionFeedback()); retryRef.current = undefined; lock.current = false
-    if (remote.listDrafts) void boundedRequest(remote.listDrafts(), '读取草稿列表').then((list) => { if (token === generation.current) setDrafts(list) }).catch((error: unknown) => { if (token === generation.current) setNotice(String(error instanceof Error ? error.message : error)) })
+    generation.current += 1
+    listStarted.current = false; setListStatus('loading')
+    setDrafts([]); setSaved(undefined); setForm(blank()); setDirty(false); setCandidate(undefined); setBusy(''); setFeedback(idleActionFeedback()); retryRef.current = undefined; lock.current = false
     return () => { generation.current += 1 }
   }, [remote])
+  useEffect(() => () => { listStarted.current = false; listGeneration.current += 1 }, [])
+  useEffect(() => {
+    const initial = !listStarted.current
+    listStarted.current = true
+    const token = ++listGeneration.current
+    if (!visible && !initial) return
+    if (!remote.listDrafts) { setListStatus('unavailable'); return }
+    setListStatus('loading')
+    void (async () => {
+      try {
+        const list = await boundedRequest(remote.listDrafts!(), '读取草稿列表')
+        if (token === listGeneration.current) { setDrafts(list); setListStatus('ready') }
+      } catch {
+        if (token === listGeneration.current) setListStatus('failed')
+      }
+    })()
+  }, [remote, visible])
   useEffect(() => {
     const beforeUnload = (event: BeforeUnloadEvent): void => { if (dirty) event.preventDefault() }
     window.addEventListener('beforeunload', beforeUnload)
@@ -78,13 +98,14 @@ export function AuthorWorkspace({ remote, supplemental, onDraftSnapshot, onDirty
           if (disposed) break
           const url = URL.createObjectURL(new Blob([bytes as BlobPart], { type: result.mediaType }))
           urls.push(url); resolved[mediaId] = url; setMedia({ ...resolved })
-        } catch (error) { if (!disposed) setNotice(`部分图片未能读取：${error instanceof Error ? error.message : String(error)}`) }
+        } catch { if (!disposed) setNotice('部分图片未能读取，请核对草稿和宿主状态后重试。') }
       }
     })()
     return () => { disposed = true; urls.forEach((url) => URL.revokeObjectURL(url)) }
   }, [saved, remote])
 
   function adopt(draft: AuthorDraft): void {
+    listGeneration.current += 1; setListStatus('ready')
     setSaved(draft); setForm(draftInput(draft)); setDirty(false)
     setDrafts((current) => [draft, ...current.filter((item) => item.id !== draft.id)])
   }
@@ -97,11 +118,11 @@ export function AuthorWorkspace({ remote, supplemental, onDraftSnapshot, onDirty
     try {
       await action()
       if (token === generation.current) setFeedback(completedActionFeedback(label, successMessage ?? `${label}已完成。`, '后台版本是保存状态的唯一依据；如需继续编辑，请先确认当前草稿版本。'))
-    } catch (error) {
+    } catch {
       if (token === generation.current) {
-        const message = error instanceof Error ? error.message : String(error)
+        const message = `${label}失败或结果尚未确认，当前编辑已保留。`
         setNotice(message)
-        setFeedback(failedActionFeedback(label, error, '保留当前编辑，确认宿主状态后再重试；失败不会伪造为已保存。'))
+        setFeedback(failedActionFeedback(label, message, '确认宿主状态后再重试；若其他窗口修改了草稿，请先核对版本。失败不会伪造为已保存。'))
       }
     } finally { if (token === generation.current) { lock.current = false; setBusy('') } }
   }
@@ -163,6 +184,7 @@ export function AuthorWorkspace({ remote, supplemental, onDraftSnapshot, onDirty
     } else {
       if (!remote.getDraft) throw new Error('资料 ZIP 已导入，但当前宿主无法重开，请刷新草稿列表。')
       const imported = await currentRequest(remote.getDraft(result.resultId), '读取导入草稿')
+      listGeneration.current += 1; setListStatus('ready')
       setDrafts((list) => [imported, ...list.filter((item) => item.id !== imported.id)])
       if (dirty) { setNotice('资料 ZIP 已作为独立草稿导入，当前未保存正文已保留。'); return }
       adopt(imported); setNotice('介绍 ZIP 已导入并重新读取。')
@@ -173,7 +195,10 @@ export function AuthorWorkspace({ remote, supplemental, onDraftSnapshot, onDirty
     <div className="eac-market__author-layout">
       <aside aria-label="已保存草稿"><Button variant="outline" disabled={!!busy} onClick={() => choose('new')}>新建草稿</Button>
         <ul className="eac-market__draft-list">{drafts.map((item) => <li key={item.id}><button type="button" disabled={!!busy || !remote.getDraft} aria-current={saved?.id === item.id ? 'true' : undefined} onClick={() => choose(item.id)}>{item.title || '未命名草稿'}<small>{new Date(item.updatedAt).toLocaleString('zh-CN')}</small></button></li>)}</ul>
-        {drafts.length === 0 && <p>还没有保存的草稿。</p>}
+        {listStatus === 'loading' && <p role="status">正在读取已保存草稿…</p>}
+        {listStatus === 'failed' && <p role="alert">草稿列表读取失败，当前列表可能不是最新；当前编辑已保留。请重新进入作者页重试。</p>}
+        {listStatus === 'unavailable' && <p role="status">当前宿主不能读取草稿列表。</p>}
+        {listStatus === 'ready' && drafts.length === 0 && <p>还没有保存的草稿。</p>}
       </aside>
       <div className="eac-market__form">
         <div className="eac-market__button-row"><Button variant="primary" disabled={!!busy || !remote.saveDraft} onClick={() => void run('保存', async () => { await save(); setNotice('草稿已保存在当前 DSH 环境。') })}>保存草稿</Button><Button variant="outline" disabled={!!busy || !remote.exportDraft || !remote.transferRead} onClick={() => void run('导出', exportZip)}>保存并导出介绍 ZIP</Button></div>

@@ -8,7 +8,7 @@ import { AuthorWorkspace } from '../../packages/market/src/client/AuthorWorkspac
 import { MARKET_CSS } from '../../packages/market/src/client/marketStyles.ts'
 import { decodeBase64, sha256Hex } from '../../packages/market/src/client/transfer.ts'
 import type { MarketRemote } from '../../packages/market/src/client/model.ts'
-import type { AiConfirmRequest, AuthorDraft, AuthorDraftInput, CatalogCollectionView, CatalogPack, PlanCreateRequest, PlanResult, TaskStartRequest, CatalogSourceView, CoreMaintenanceSnapshot, UpdateCheckResult, UpdatePolicySaveRequest } from '../../packages/market/src/types.ts'
+import type { AiConfirmRequest, AuthorDraft, AuthorDraftInput, CatalogCollectionView, CatalogPack, PlanCreateRequest, PlanResult, TaskStartRequest, CatalogSourceView, CoreMaintenanceSnapshot, UpdateCheckResult, UpdatePolicySaveRequest, UpdatePolicySnapshot } from '../../packages/market/src/types.ts'
 import { catalogFixture, helloFixture, inventoryFixture, pluginFixtures, readOnlyRemote, taskFixture } from './fixtures.ts'
 import { renderSkinFixture, skinFixture } from './skin-browser-fixture.tsx'
 
@@ -35,7 +35,7 @@ let settingsSources: readonly CatalogSourceView[] = [
   { id: 'curated-main', kind: 'agent-forge', mode: 'https', enabled: true, priority: 1, refreshPolicy: 'manual', status: 'stale', revision: 'catalog:old', reason: 'synthetic fetch failed: https://fixture-user:fixture-token@example.invalid/index.json at C:\\fixture-private\\source.json' },
   { id: 'offline-import', kind: 'market-index', mode: 'offline-pack', enabled: true, priority: 2, refreshPolicy: 'manual', status: 'not-checked' },
 ]
-let settingsPolicy = { revision: 'policy:r1', policy: { automaticChecksEnabled: true, automaticDownloadsEnabled: false, automaticInstallsEnabled: false, intervalMinutes: 60 } }
+let settingsPolicy: UpdatePolicySnapshot = { revision: 'policy:r1', policy: { automaticChecksEnabled: true, automaticDownloadsEnabled: false, automaticInstallsEnabled: false, intervalMinutes: 60 } }
 let settingsPolicyConflict = false
 const settingsMaintenance: CoreMaintenanceSnapshot = {
   schemaVersion: '1', revision: 'maintenance:test', environmentId: helloFixture.environmentId, generatedAt: '2026-10-02T09:00:00.000Z',
@@ -100,7 +100,7 @@ function InstallHarness({ late = false, downgrade = false }: { late?: boolean; d
     startTask: async (request) => {
       stats.starts.push(request)
       if (late) await new Promise<void>((resolve) => { settleA = resolve })
-      return taskFixture({ taskId: request.planId, status: 'completed' })
+      return taskFixture({ taskId: request.planId, planId: request.planId, planDigest: request.planDigest, status: 'completed' })
     },
   }))
   return <div className="eac-market"><button id="launch" onClick={() => setOpen(true)}>打开安装窗口</button><InstallPlanDialog open={open} target={target} inventory={[]} remote={service} onClose={() => { stats.closes += 1; setOpen(false) }} onStarted={(task) => stats.started.push(task.taskId)} /></div>
@@ -163,7 +163,7 @@ function groupRemote(mode: string): MarketRemote {
           : row),
       } }
     },
-    startTask: async (request) => { stats.starts.push(request); return taskFixture({ status: 'partial' }) },
+    startTask: async (request) => { stats.starts.push(request); return taskFixture({ planId: request.planId, planDigest: request.planDigest, status: 'partial' }) },
   }
 }
 let renderEpoch = 0
@@ -204,7 +204,7 @@ function render(name: string): void {
       catalog: async () => ({ ...catalogFixture, plugins, packs: [pack], collections: [], recommendations: [], deliveries: plugins.filter((plugin) => plugin.version !== '3.0.0').map((plugin) => ({ pluginId: plugin.id, version: plugin.version, packageName: plugin.packageName, artifactDigest: plugin.artifactDigest, sources: [{ kind: 'https-artifact', ref: 'https://example.invalid/test.tgz', priority: 0 }] })) }),
       inventory: async () => ({ ...inventoryFixture, unknownItems: [], items: name === 'versions-installed' ? [{ ...inventoryFixture.items[0]!, packageName: '@test/versioned', version: '0.5.0', restartRequired: false, rows: [] }] : [] }),
       createPlan: async (request) => makePlan(request),
-      startTask: async (request) => { stats.starts.push(request); return taskFixture({ status: 'completed' }) },
+      startTask: async (request) => { stats.starts.push(request); return taskFixture({ planId: request.planId, planDigest: request.planDigest, status: 'completed' }) },
     }} />)
   }
   if (name.startsWith('collection-') || name === 'pack-partial') root.render(<MarketPage key={renderKey} remote={groupRemote(name)} />)
@@ -218,7 +218,7 @@ function render(name: string): void {
         if (name === 'trial-environment-blocked') { stats.plans.push(request); return { status: 'blocked', reason: '当前库存或安装活动无法完整核实，请稍后重新预检', blockers: ['inventory:unverified-state'] } }
         return makePlan(request)
       },
-      startTask: async (request) => { stats.starts.push(request); return taskFixture({ status: 'queued' }) },
+      startTask: async (request) => { stats.starts.push(request); return taskFixture({ planId: request.planId, planDigest: request.planDigest, status: 'queued' }) },
     }} onOpenOfficialPlugins={() => { stats.official += 1 }} />)
   }
   if (name === 'all-sections') {

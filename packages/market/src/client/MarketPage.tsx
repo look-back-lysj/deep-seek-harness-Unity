@@ -18,10 +18,8 @@ import {
   activeTasks,
   browseSortPlugins,
   categoriesOf,
-  createIdempotencyKey,
   hasCatalogUpdate,
   partitionInventory,
-  pluginActionFeedback,
   type BrowseSortMode,
   filterPlugins,
   findPlugin,
@@ -42,6 +40,7 @@ import {
   type PrimaryView,
 } from './model.ts'
 import {
+  CatalogMediaIcon,
   EmptyState,
   InstallPlanDialog,
   InventoryCard,
@@ -50,10 +49,10 @@ import {
   SearchField,
   Status,
   TaskDrawer,
-  errorMessage,
   type PlanTarget,
 } from './components.tsx'
 import { MARKET_CSS } from './marketStyles.ts'
+import { MEDIA_CSS } from './mediaStyles.ts'
 import { ActionFeedback } from './action-feedback.tsx'
 import {
   completedActionFeedback,
@@ -61,12 +60,13 @@ import {
   idleActionFeedback,
   needsRecheckActionFeedback,
   partialActionFeedback,
-  pluginActionFeedbackState,
   preparingActionFeedback,
   runningActionFeedback,
   type ActionFeedbackState,
 } from './action-state.ts'
 import { useMarketData, boundedRequest } from './data-controller.ts'
+import { ManagementPointerStore } from './management-pointer.ts'
+import { ManagementRequest, emptyManagementView, type ManagementView } from './management-request.ts'
 import { AuthorWorkspace } from './AuthorWorkspace.tsx'
 import { SkinCenter, SkinCenterEntry } from './SkinCenter.tsx'
 import { SettingsRemotePanel } from './SettingsRemotePanel.tsx'
@@ -181,8 +181,10 @@ export function MarketPage({ remote, skinService, onOpenOfficialPlugins, homeSup
   const scrollRef = useRef<HTMLDivElement | null>(null)
   const scrollPositions = useRef(new Map<string, number>())
   const [removeStep, setRemoveStep] = useState(false)
-  const [managementBusy, setManagementBusy] = useState(false)
-  const managementLock = useRef(false)
+  const [management, setManagement] = useState<ManagementView>(emptyManagementView)
+  const managementRequest = useRef<ManagementRequest>()
+  const managementBusy = management.busy
+  const managementEnvironment = state.status === 'ready' ? state.hello.environmentId : undefined
   const [catalogBusy, setCatalogBusy] = useState(false)
   const catalogLock = useRef(false)
   const [extensionPage, setExtensionPage] = useState<string>()
@@ -203,6 +205,23 @@ export function MarketPage({ remote, skinService, onOpenOfficialPlugins, homeSup
   }, [view])
 
   useEffect(() => { const lifetime = new AbortController(); extensionLifetime.current = lifetime; return () => lifetime.abort() }, [remote])
+
+  useEffect(() => {
+    if (managementEnvironment === undefined) return
+    let owner: ManagementRequest
+    try {
+      owner = new ManagementRequest(remote, managementEnvironment, new ManagementPointerStore(window.localStorage), (next) => {
+        setManagement(next)
+        if (next.result && next.result.status !== 'unknown' && !next.pointer && next.feedback.label === '卸载插件') setRemoveTarget(undefined)
+      }, () => controller.refreshInventory())
+    } catch {
+      setManagement({ busy: true, checking: false, feedback: { status: 'unknown', label: '插件管理', message: '无法访问原操作指针存储，已停止新管理写入。', nextStep: '请到官方插件页核对，不会自动重新提交。', retryable: false } })
+      return
+    }
+    managementRequest.current = owner
+    owner.restore()
+    return () => { owner.dispose(); if (managementRequest.current === owner) managementRequest.current = undefined }
+  }, [remote, controller, managementEnvironment])
 
   useEffect(() => {
     if (state.status !== 'ready') return
@@ -441,56 +460,22 @@ export function MarketPage({ remote, skinService, onOpenOfficialPlugins, homeSup
   }
 
   async function toggleInventory(item: InventoryItem, enabled: boolean): Promise<void> {
-    if (managementLock.current) return
     if (item.packageName === '@dsh-eac/market') { onOpenOfficialPlugins?.(); return }
-    managementLock.current = true; setManagementBusy(true)
-    beginAction(enabled ? '启用插件' : '停用插件')
-    await markActionRunning(enabled ? '启用插件' : '停用插件')
-    try {
-      if (remote.setPluginEnabled === undefined) throw new Error('当前 DSH 运行时未开放启用/停用能力')
-      const action = await boundedRequest(remote.setPluginEnabled({
-        packageName: item.packageName,
-        ...(item.version === undefined ? {} : { expectedVersion: item.version }),
-        enabled,
-        idempotencyKey: createIdempotencyKey('market-enable'),
-      }), '更改插件启停', 20_000)
-      const feedback = pluginActionFeedback(action, enabled)
-      try {
-        await controller.refreshInventory()
-      } catch (inventoryError) {
-        setActionFeedback(needsRecheckActionFeedback(enabled ? '启用插件' : '停用插件', `${feedback.message} 库存刷新失败：${errorMessage(inventoryError)}`, '重新读取插件状态，确认官方管理器是否已经完成操作。'))
-        return
-      }
-      setActionFeedback(pluginActionFeedbackState(action, enabled ? '启用插件' : '停用插件', feedback.message))
-    } catch (error) {
-      setActionFeedback(failedActionFeedback(enabled ? '启用插件' : '停用插件', error, '确认官方插件管理器可用后重试。'))
-    } finally { managementLock.current = false; setManagementBusy(false) }
+    await managementRequest.current?.submit(item, enabled ? 'enable' : 'disable')
+  }
+
+  async function recheckAction(): Promise<void> {
+    if (actionFeedback.label === '目录刷新') {
+      try { await controller.recheckCatalog() }
+      catch { setActionFeedback(needsRecheckActionFeedback('目录刷新', '当前目录状态未能读取；不会重发刷新请求。', '确认宿主连接后，再重新核对。', false)) }
+    }
+    await controller.sync(true)
   }
 
   async function removeInventory(item: InventoryItem): Promise<void> {
-    if (managementLock.current || !removeStep) return
+    if (!removeStep) return
     if (item.packageName === '@dsh-eac/market') { onOpenOfficialPlugins?.(); return }
-    managementLock.current = true; setManagementBusy(true)
-    beginAction('卸载插件')
-    await markActionRunning('卸载插件')
-    try {
-      if (remote.removePlugin === undefined) throw new Error('当前 DSH 运行时未开放卸载能力')
-      const action = await boundedRequest(remote.removePlugin({
-        packageName: item.packageName,
-        ...(item.version === undefined ? {} : { expectedVersion: item.version }),
-        confirmed: true,
-        idempotencyKey: createIdempotencyKey('market-remove'),
-      }), '卸载插件', 20_000)
-      try { await controller.refreshInventory() }
-      catch (inventoryError) {
-        setActionFeedback(needsRecheckActionFeedback('卸载插件', `卸载请求已返回，但库存刷新失败：${errorMessage(inventoryError)}`, '重新读取插件状态，确认插件是否仍在列表中。'))
-        return
-      }
-      setRemoveTarget((current) => current?.packageName === item.packageName ? undefined : current)
-      setActionFeedback(pluginActionFeedbackState(action, '卸载插件', '已调用官方卸载。市场未额外清理独立配置、用户文件或未知目录。'))
-    } catch (error) {
-      setActionFeedback(failedActionFeedback('卸载插件', error, '确认官方插件管理器可用后重新核对，再决定是否重试。'))
-    } finally { managementLock.current = false; setManagementBusy(false) }
+    await managementRequest.current?.submit(item, 'remove')
   }
 
   async function exportDiagnostic(): Promise<void> {
@@ -597,7 +582,18 @@ export function MarketPage({ remote, skinService, onOpenOfficialPlugins, homeSup
         transitionPhase={navigationPhase}
       >
         {syncNotice && <div className="eac-market__notice eac-market__notice--warning" role="status">{syncNotice} <Button variant="outline" onClick={() => void controller.sync(true)}>重新读取</Button></div>}
-        <ActionFeedback state={actionFeedback} onRefresh={() => void (actionFeedback.label === '目录刷新' ? refreshCatalog() : controller.sync(true))} onDismiss={clearActionFeedback} />
+        <ActionFeedback state={actionFeedback} onRefresh={() => void recheckAction()} onDismiss={clearActionFeedback} />
+        <ActionFeedback state={management.feedback}
+          onRefresh={management.pointer ? () => void managementRequest.current?.recheck() : undefined}
+          refreshLabel={management.checking ? '正在核对原操作…' : '核对原操作'} refreshDisabled={management.checking}>
+          {management.identity && <p>原目标：{management.identity.packageName} · {management.identity.expectedVersion ?? '未指定版本'} · 环境：{management.identity.environmentId} · 动作：{management.identity.action}</p>}
+          {management.stage && <p>官方管理阶段：{management.stage}（不是完整业务完成证明）。</p>}
+          {management.receipt && <p>官方回执：{management.receipt.status}；已发生变更：{management.receipt.changed ? '是' : '否'}；权限变化：{management.receipt.permissionChanges.length} 项。此回执不等于完整业务结果。</p>}
+          {management.result && <div><p>原业务结果：{management.result.status}；已发生变更：{management.result.changed ? '是' : '否'}；权限变化：{management.result.permissionChanges.length} 项。</p>
+            {management.result.permissionChanges.map((change, index) => <p key={index}>{change.packageName}：{change.decision}</p>)}
+          </div>}
+          {management.feedback.status === 'unknown' && onOpenOfficialPlugins && <Button variant="outline" onClick={onOpenOfficialPlugins}>到官方插件页核对</Button>}
+        </ActionFeedback>
 
         {view === 'discover' && (
           <DiscoverView
@@ -849,7 +845,7 @@ export function MarketPage({ remote, skinService, onOpenOfficialPlugins, homeSup
         )}
 
         {view === 'extension' && <section><Button variant="outline" onClick={() => { const snapshot = extensionOrigin.current; extensionOrigin.current = undefined; if (snapshot) restoreNavigation(snapshot); else navigate('discover') }}>返回上一页</Button>{surface(EXTENSION_SLOTS.page)}</section>}
-        <div hidden={view !== 'author'}><Button variant="ghost" onClick={returnFromSecondary}>返回市场</Button><AuthorWorkspace remote={remote} onDraftSnapshot={setExtensionDraft} onDirtyChange={setAuthorDirty} draftChange={draftChange} supplemental={<>{authorSupplemental}{surface(EXTENSION_SLOTS.author)}</>} /></div>
+        <div hidden={view !== 'author'}><Button variant="ghost" onClick={returnFromSecondary}>返回市场</Button><AuthorWorkspace remote={remote} visible={view === 'author'} onDraftSnapshot={setExtensionDraft} onDirtyChange={setAuthorDirty} draftChange={draftChange} supplemental={<>{authorSupplemental}{surface(EXTENSION_SLOTS.author)}</>} /></div>
 
         <p className="eac-market__footer-note">EAC 是社区整合市场，不代表 DeepSeek 官方认证。</p>
       </MarketFrame>
@@ -920,7 +916,7 @@ export function MarketFrame({ view, activeCount, onNavigate, onTasks, onMore, mo
   useEffect(() => { if (moreMenu) menuRef.current?.querySelector<HTMLElement>('[role="menuitem"]')?.focus() }, [moreMenu])
   return (
     <div className="eac-market">
-      <style dangerouslySetInnerHTML={{ __html: MARKET_CSS }} />
+      <style dangerouslySetInnerHTML={{ __html: MARKET_CSS + MEDIA_CSS }} />
       <div className="eac-market__scroll" ref={scrollRef} tabIndex={0} role="region" aria-label="市场内容">
         <div className="eac-market__shell">
           <header className="eac-market__topbar eac-market__topbar--editorial">
@@ -1204,7 +1200,7 @@ export function DetailView({ plugin, presentation, inventory, onBack, backLabel,
       <div className="eac-market__detail">
         <div className="eac-market__detail-main">
           <div className="eac-market__plugin-head">
-            <span className="eac-market__plugin-icon" aria-hidden="true">{plugin.name.slice(0, 1).toUpperCase()}</span>
+            <CatalogMediaIcon name={plugin.name} media={plugin.media?.icon} />
             <div><h1>{plugin.name}</h1><p>{plugin.author} · {plugin.packageName} · {plugin.version}</p></div>
           </div>
           <p className="eac-market__lead">{plugin.summary || '作者尚未提供一句话简介。'}</p>
@@ -1230,7 +1226,7 @@ export function DetailView({ plugin, presentation, inventory, onBack, backLabel,
               {plugin.verification === 'hard-incompatible' ? '此版本存在已知兼容性风险；是否能正常使用由官方安装器和上游插件负责。' : `${verificationLabel(plugin.verification)}。${installabilityLabel(plugin.installability)}。未验证内容仍可进入安装方案，最终以官方安装结果为准。`}
             </div>
           )}
-          <ScreenshotGallery screenshots={plugin.screenshots} />
+          <ScreenshotGallery screenshots={plugin.media?.previews ?? plugin.screenshots} />
           <section className="eac-market__section">
             <div className="eac-market__section-head"><h2>作者图文介绍</h2></div>
             {presentation === undefined ? (

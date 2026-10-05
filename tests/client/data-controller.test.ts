@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { MarketDataController } from '../../packages/market/src/client/data-controller.ts'
 import type { MarketRemote } from '../../packages/market/src/client/model.ts'
-import type { EnvironmentHello, InventorySnapshot, TaskState } from '@dsh-eac/market-core/contracts'
+import type { EnvironmentHello, InventorySnapshot, TaskState } from '../../packages/market/src/types.ts'
 import { remoteFacade } from '../../packages/market/src/client/activation.ts'
 import { catalogFixture, helloFixture, inventoryFixture, readOnlyRemote, taskFixture } from './fixtures.ts'
 
@@ -177,5 +177,33 @@ describe('REV-10 bounded client data lifecycle', () => {
     expect(data.snapshot().paused).toBe(true)
     await data.sync(true)
     expect(data.snapshot().paused).toBe(false)
+  })
+
+  it('重新核对目录只读取已接受快照，不重新发起刷新或丢失指定来源', async () => {
+    const refreshCatalog = vi.fn(async () => ({ status: 'refreshed' as const, current: catalogFixture }))
+    const catalog = vi.fn().mockResolvedValueOnce(catalogFixture).mockResolvedValueOnce({ ...catalogFixture, revision: 'read-only:r2' })
+    const data = controller({ ...readOnlyRemote(), catalog, refreshCatalog })
+    await data.start()
+    await data.refreshCatalog({ sourceId: 'agent-forge-main' })
+    await data.recheckCatalog()
+    expect(refreshCatalog).toHaveBeenCalledExactlyOnceWith({ sourceId: 'agent-forge-main' })
+    expect(catalog).toHaveBeenCalledTimes(2)
+    expect(ready(data).catalog.revision).toBe('read-only:r2')
+  })
+
+  it('目录只读核对的迟到回包不覆盖后发刷新或卸载后的状态', async () => {
+    const stale = deferred<typeof catalogFixture>()
+    const catalog = vi.fn().mockResolvedValueOnce(catalogFixture).mockReturnValue(stale.promise)
+    const data = controller({ ...readOnlyRemote(), catalog, refreshCatalog: async () => ({ status: 'refreshed' as const, current: { ...catalogFixture, revision: 'fresh:r3' } }) })
+    await data.start()
+    const recheck = data.recheckCatalog()
+    await data.refreshCatalog({ sourceId: 'agent-forge-main' })
+    stale.resolve({ ...catalogFixture, revision: 'late:r1' })
+    await recheck
+    expect(ready(data).catalog.revision).toBe('fresh:r3')
+    const stopped = data.recheckCatalog()
+    data.stop()
+    await stopped
+    expect(ready(data).catalog.revision).toBe('fresh:r3')
   })
 })

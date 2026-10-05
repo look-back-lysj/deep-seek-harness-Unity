@@ -42,6 +42,10 @@ import type {
   TaskItemStatus,
   TaskResumeRequest,
   TaskStartRequest,
+  TaskStartRecoveryRequest,
+  TaskStartRecoveryResult,
+  PluginActionRecoveryRequest,
+  PluginActionRecoveryResult,
   TaskState,
   TaskStatus,
   TransferBeginRequest,
@@ -52,6 +56,9 @@ import type {
   TransferDisposeRequest,
   AuthorDraftDeleteRequest,
   VerificationState,
+  HostCoreSnapshot,
+  ReleaseOptionsRequest,
+  ReleaseOptionsResult,
 } from '@dsh-eac/market-core/contracts'
 import { supportsApiVersion } from '@dsh-eac/market-core/compatibility'
 import { compareVersions as compareSemVer, validVersion } from '@dsh-eac/market-core/semver'
@@ -79,12 +86,16 @@ export function assertCompatibleHello(hello: EnvironmentHello): void {
 }
 
 export interface MarketRemote {
+  hostCore?(): Promise<HostCoreSnapshot>
+  releaseOptions?(request: ReleaseOptionsRequest): Promise<ReleaseOptionsResult>
   hello(): Promise<EnvironmentHello>
   clientConnect?(request: ClientHandshakeRequest): Promise<ClientHandshakeResult>
   catalog(): Promise<CatalogSnapshot>
   inventory(): Promise<InventorySnapshot>
   createPlan?(request: PlanCreateRequest): Promise<PlanResult>
   startTask?(request: TaskStartRequest): Promise<TaskState>
+  taskStartRecover?(request: TaskStartRecoveryRequest): Promise<TaskStartRecoveryResult>
+  pluginActionRecover?(request: PluginActionRecoveryRequest): Promise<PluginActionRecoveryResult>
   getTask?(request: TaskIdRequest): Promise<TaskState>
   listTasks?(): Promise<readonly TaskState[]>
   taskEvents?(request: TaskEventRequest): Promise<TaskEventPage>

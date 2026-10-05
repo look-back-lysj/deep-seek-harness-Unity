@@ -1,7 +1,7 @@
 import { useId, useState } from 'react'
-import { Button, Input, Modal } from './ui.tsx'
+import { Button, Input } from './ui.tsx'
+import { CatalogMediaIcon } from './media.tsx'
 import type {
-  CatalogMedia,
   CatalogPlugin,
   InventoryItem,
   TransferResult,
@@ -18,6 +18,8 @@ import {
   type MarketRemote,
 } from './model.ts'
 import { uploadFile } from './transfer.ts'
+
+export { CatalogMediaIcon, ScreenshotFailure, ScreenshotGallery } from './media.tsx'
 
 export function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error)
@@ -72,7 +74,7 @@ export function PluginCard({ plugin, inventory, onOpen, onInstall, onManage, can
   return (
     <article className="eac-market__card eac-market__plugin-card">
       <div className="eac-market__plugin-top">
-        <span className="eac-market__plugin-icon" aria-hidden="true">{plugin.name.slice(0, 1).toUpperCase()}</span>
+        <CatalogMediaIcon name={plugin.name} media={plugin.media?.icon} />
         <div className="eac-market__plugin-title">
           <h3 title={plugin.name}>{plugin.name}</h3>
           <p title={`${plugin.author} · ${plugin.packageName}`}>{plugin.author} · {plugin.packageName}</p>
@@ -203,79 +205,6 @@ export function InventoryCard({ item, catalogPlugin, showCatalogNotice = true, o
       </div>
       {actionReasonText !== '' && <p className="eac-market__action-reason" id={actionReasonId}>{actionReasonText}</p>}
     </article>
-  )
-}
-
-function ImageOffIcon(): React.JSX.Element {
-  return (
-    <svg className="eac-market__fallback-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-      <rect x="3.5" y="4.5" width="17" height="15" rx="2.5" />
-      <path d="m6.5 16 3.2-3.2 2.2 2.2 1.7-1.7 3.9 3.9M8 8.5h.01M4 4l16 16" />
-    </svg>
-  )
-}
-
-/** 加载失败不是空白图块：保留来源、真实图片说明，并提供可重复尝试的恢复入口。 */
-export function ScreenshotFailure({ media, onRetry }: {
-  readonly media: CatalogMedia
-  readonly onRetry: (media: CatalogMedia) => void
-}): React.JSX.Element {
-  return (
-    <div className="eac-market__gallery-fallback" role="status">
-      <ImageOffIcon />
-      <div className="eac-market__fallback-copy">
-        <strong>截图加载失败</strong>
-        <span>{media.alt}</span>
-        <span>图片来源暂时无法读取。可重试；不会用占位图替代真实截图。</span>
-        <small>来源：<span className="eac-market__fallback-source">{media.sourceUrl}</span></small>
-      </div>
-      <Button size="sm" variant="outline" aria-label={`重试加载截图：${media.alt}`} onClick={() => onRetry(media)}>重试加载</Button>
-    </div>
-  )
-}
-
-export function ScreenshotGallery({ screenshots }: { readonly screenshots: CatalogPlugin['screenshots'] }): React.JSX.Element | null {
-  const [failed, setFailed] = useState<ReadonlySet<string>>(new Set())
-  const [attempts, setAttempts] = useState<ReadonlyMap<string, number>>(new Map())
-  const [active, setActive] = useState<string | undefined>(undefined)
-  if (screenshots.length === 0) return null
-  const current = screenshots.find((item) => item.id === active)
-  function retry(media: CatalogMedia): void {
-    setFailed((value) => {
-      const next = new Set(value)
-      next.delete(media.id)
-      return next
-    })
-    setAttempts((value) => new Map(value).set(media.id, (value.get(media.id) ?? 0) + 1))
-  }
-  return (
-    <>
-      <section className="eac-market__section" aria-labelledby="screenshots-title">
-        <div className="eac-market__section-head"><h2 id="screenshots-title">真实截图</h2></div>
-        <div className="eac-market__gallery">
-          {screenshots.map((media) => failed.has(media.id) ? (
-            <ScreenshotFailure key={media.id} media={media} onRetry={retry} />
-          ) : (
-            <button type="button" key={media.id} onClick={() => setActive(media.id)} aria-label={`放大查看：${media.alt}`}>
-              <img
-                key={`${media.id}:${attempts.get(media.id) ?? 0}`}
-                src={media.sourceUrl}
-                alt={media.alt}
-                loading="lazy"
-                width={media.width ?? 800}
-                height={media.height ?? 450}
-                onError={() => setFailed((value) => new Set(value).add(media.id))}
-              />
-            </button>
-          ))}
-        </div>
-      </section>
-      {current !== undefined && (
-        <Modal open onClose={() => setActive(undefined)} title={current.alt} closeLabel="关闭图片">
-          <img src={current.sourceUrl} alt={current.alt} style={{ width: '100%', maxHeight: '70vh', objectFit: 'contain' }} />
-        </Modal>
-      )}
-    </>
   )
 }
 

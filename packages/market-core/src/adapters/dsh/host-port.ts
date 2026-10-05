@@ -25,6 +25,7 @@ import type {
   HostReadState,
 } from '../../core/ports.ts'
 import { canonicalJson, pendingBuildsDigest } from '../../core/canonical.ts'
+import { bundleInventoryReadFailed, inventoryIssueAffectsPackage } from '../../core/inventory-safety.ts'
 import { DshManagerAdapter, type InventorySourceEvidence } from './manager.ts'
 import { readIncompatibleBundleEvidence } from './incompatible-evidence.ts'
 
@@ -168,10 +169,6 @@ function isMarketOutcome(value: unknown): value is HostInstallOutcome {
   if (entry.kind === 'failed') return typeof entry.changed === 'boolean' && typeof entry.error === 'string'
   if (entry.kind === 'cancelled') return typeof entry.changed === 'boolean'
   return entry.kind === 'unknown' && typeof entry.error === 'string'
-}
-
-function inventoryIssueAffectsPackage(issue: string, packageName: string): boolean {
-  return issue === `bundle-version:${packageName}` || issue.startsWith(`bundle:${packageName}:`)
 }
 
 function unknownOutcome(message: string, errorCodeValue: string, result: unknown, permissions: readonly PermissionChange[] = []): HostInstallOutcome {
@@ -364,6 +361,7 @@ export class OfficialHostPort implements HostPort {
     private readonly ctx: Context,
     private readonly environmentId = 'current',
     private readonly hostIdentity?: { readonly hostVersion: string; readonly profileName: string },
+    private readonly readHostCoreRevision?: () => string,
   ) {
     this.receipts = new NodePersistenceFiles(join(ctx.profileContext.dir, 'eac-market', 'official-receipts'))
     this.adapter = new DshManagerAdapter(ctx, environmentId, () => this.sourceEvidence(), {
@@ -385,7 +383,7 @@ export class OfficialHostPort implements HostPort {
     const inventory = await this.adapter.inventory(this.environmentId)
     let stable = inventory.unknownItems.length === 0 && this.active.size === 0
     let unknownSharedImpact = !stable
-    let writeBarrier = this.active.size > 0
+    let writeBarrier = this.active.size > 0 || inventory.unknownItems.some(bundleInventoryReadFailed)
     let reason: string | undefined = stable ? undefined : 'official inventory or active request is not settled'
     try {
       const raw = readFileSync(join(this.ctx.profileContext.dir, '.plugin-manager', 'run.json'), 'utf8')
@@ -409,7 +407,9 @@ export class OfficialHostPort implements HostPort {
     }
     return {
       inventory,
-      ...(this.hostIdentity === undefined ? {} : { hostFingerprint: canonicalJson({ ...this.hostIdentity, capabilities: [...this.capabilities()].sort() }) }),
+      ...(this.hostIdentity === undefined ? {} : { hostFingerprint: canonicalJson({ ...this.hostIdentity, capabilities: [...this.capabilities()].sort(),
+        ...(this.readHostCoreRevision === undefined ? {} : { hostCoreRevision: this.readHostCoreRevision() }),
+      }) }),
       sessionRevision: HOST_SESSION,
       activeRequests: [...this.active],
       activity: { stable, unknownSharedImpact, writeBarrier, ...(reason === undefined ? {} : { reason }) },
@@ -479,6 +479,14 @@ export class OfficialHostPort implements HostPort {
     try {
       if (!await this.artifactMatches(request)) return { kind: 'failed', changed: false, error: 'artifact bytes, size or digest changed before official write', errorCode: 'artifact/integrity', permissionChanges: [] }
     } catch (error) { return { kind: 'failed', changed: false, error: redactDiagnostic(String(error)), errorCode: 'artifact/unreadable', permissionChanges: [] } }
+    try {
+      const state = await this.readState()
+      if (state.activeRequests.length > 0 || state.activity.writeBarrier === true
+        || state.inventory.unknownItems.some(issue => inventoryIssueAffectsPackage(issue, request.artifact.packageName)))
+        return { kind: 'unknown', error: 'official activity or target bundle inventory is not settled', errorCode: 'adapter/state-unknown', permissionChanges: [] }
+    } catch (error) {
+      return { kind: 'unknown', error: redactDiagnostic(error instanceof Error ? error.message : 'official inventory read failed'), errorCode: 'adapter/state-unknown', permissionChanges: [] }
+    }
     const receipt: OfficialReceipt = { schemaVersion: 1, request, sessionRevision: HOST_SESSION, at: new Date().toISOString(), stage: 'dispatched' }
     await this.receipts.writeAtomic(this.receiptPath(request.requestId), encodeJson(receipt))
     this.active.add(request.requestId)

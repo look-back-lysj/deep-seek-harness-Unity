@@ -12,6 +12,7 @@
   "exclude": [
     "src/host/**",
     "src/index.ts",
+    "src/host-core.ts",
     "src/adapters/**",
     "src/catalog/**",
     "src/core/**",

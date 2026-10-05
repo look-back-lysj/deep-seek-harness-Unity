@@ -7,6 +7,7 @@
 import { createHash } from 'node:crypto'
 import type {
   CatalogDelivery,
+  CatalogDisplayMedia,
   CatalogListing,
   DeliverySource,
   CatalogMedia,
@@ -42,6 +43,7 @@ import { buildCatalogDiscovery } from './discovery.ts'
 import { parseCollection, parseRelease, parseReleaseStatus } from './releases.ts'
 import { exactVersion, integer, string, timestamp } from './input.ts'
 import { parseManagementEvidence } from './management-evidence.ts'
+import { agentForgeHostRequirements, packageHostRequirements } from './host-requirements.ts'
 
 const ID_RE = /^[a-z][a-z0-9]*(?:[.-][a-z0-9][a-z0-9-]*)+$/
 const DIGEST_RE = /^sha256:[a-f0-9]{64}$/
@@ -122,13 +124,39 @@ function parseMedia(value: unknown, field: string, maxTextBytes: number): Catalo
   if (!isRecord(value)) fail('catalog/invalid-field', `${field} 必须是对象`)
   const width = value.width === undefined ? undefined : numberInt(value.width, `${field}.width`, 1, 32_768)
   const height = value.height === undefined ? undefined : numberInt(value.height, `${field}.height`, 1, 32_768)
+  const theme = value.theme === undefined ? undefined : requiredString(value.theme, `${field}.theme`, 20)
+  if (theme !== undefined && !['light', 'dark', 'system'].includes(theme)) fail('catalog/invalid-field', `${field}.theme 无效`)
+  const sourceUrl = requiredString(value.sourceUrl, `${field}.sourceUrl`, 16_384)
+  if (Array.from(sourceUrl).length > 4_096) fail('catalog/invalid-field', `${field}.sourceUrl 超过允许长度`)
   return {
     id: requiredString(value.id, `${field}.id`, 200),
     alt: requiredString(value.alt, `${field}.alt`, maxTextBytes),
-    sourceUrl: requiredString(value.sourceUrl, `${field}.sourceUrl`, 4_096),
+    sourceUrl,
     ...(width === undefined ? {} : { width }),
     ...(height === undefined ? {} : { height }),
+    ...(theme === undefined ? {} : { theme: theme as NonNullable<CatalogMedia['theme']> }),
   }
+}
+
+function parseDisplayMedia(value: unknown, field: string): CatalogDisplayMedia {
+  if (!isRecord(value) || Object.keys(value).some(key => !['icon', 'previews'].includes(key))
+    || value.icon === undefined && value.previews === undefined) fail('catalog/invalid-field', `${field} 只能包含图标或预览`)
+  const image = (raw: unknown, name: string): CatalogMedia => {
+    const media = parseMedia(raw, name, 2_000)
+    if (!media.alt.trim() || Array.from(media.alt).length > 500) fail('catalog/invalid-field', `${name}.alt 必须是非空且不超过500字符的文本`)
+    let url: URL
+    try { url = new URL(media.sourceUrl) } catch { fail('catalog/invalid-field', `${name}.sourceUrl 无效`) }
+    if (url.protocol !== 'https:' || url.username || url.password || /[\s\\\u0000-\u001f\u007f]/u.test(media.sourceUrl)) {
+      fail('catalog/invalid-field', `${name}.sourceUrl 必须是无凭据 HTTPS`)
+    }
+    return media
+  }
+  const icon = value.icon === undefined ? undefined : image(value.icon, `${field}.icon`)
+  const previews = value.previews === undefined ? undefined : array(value.previews, `${field}.previews`, 12).map((item, index) => image(item, `${field}.previews[${index}]`))
+  if (previews !== undefined && (previews.length === 0 || new Set(previews.map(item => JSON.stringify(item))).size !== previews.length)) {
+    fail('catalog/invalid-field', `${field}.previews 必须是非空且不重复的有序列表`)
+  }
+  return { ...(icon === undefined ? {} : { icon }), ...(previews === undefined ? {} : { previews }) }
 }
 
 function parsePlugin(value: unknown, field: string, maxTextBytes: number, now: Date): MarketPluginRecord {
@@ -138,9 +166,11 @@ function parsePlugin(value: unknown, field: string, maxTextBytes: number, now: D
   const authorUrl = optionalString(value.authorUrl, `${field}.authorUrl`, 4_096)
   const sourceUrl = optionalString(value.sourceUrl, `${field}.sourceUrl`, 4_096)
   const license = optionalString(value.license, `${field}.license`, 200)
+  const targetRequirements = value.agentForgeMetadata === undefined ? undefined : agentForgeHostRequirements(value.agentForgeMetadata, requiredString(value.packageName, `${field}.packageName`, 214), parseVersion(value.version, `${field}.version`))
   const plugin: CatalogPlugin = {
     id: parseId(value.id, `${field}.id`),
     name: requiredString(value.name, `${field}.name`, 200),
+    ...(value.media === undefined ? {} : { media: parseDisplayMedia(value.media, `${field}.media`) }),
     packageName: requiredString(value.packageName, `${field}.packageName`, 214),
     version: parseVersion(value.version, `${field}.version`),
     ...(declaredKind === undefined ? {} : { kind: declaredKind as CatalogPlugin['kind'] }),
@@ -163,10 +193,16 @@ function parsePlugin(value: unknown, field: string, maxTextBytes: number, now: D
     largeExternalResource: bool(value.largeExternalResource, `${field}.largeExternalResource`),
     ...(value.releasedAt === undefined ? {} : { releasedAt: parseDate(value.releasedAt, `${field}.releasedAt`) }),
     ...(value.managementEvidence === undefined ? {} : { managementEvidence: parseManagementEvidence(value.managementEvidence, value.artifactDigest === undefined ? undefined : parseDigest(value.artifactDigest, `${field}.artifactDigest`), now) }),
+    ...(targetRequirements === undefined ? {} : { hostRequirements: targetRequirements }),
   }
   if (value.metadata !== undefined) {
     if (value.manifest !== undefined || value.manifestDigest !== undefined) fail('catalog/ambiguous-metadata', 'metadata 联合与旧 Manifest 字段不能同时提供')
     const metadata = parseMetadata(value.metadata, plugin)
+    const rawMetadata = metadata.kind === 'official-bundle' ? metadata.packageJson : metadata.manifest
+    const parsedMetadata = JSON.parse(Buffer.from(rawMetadata.contentBase64, 'base64').toString('utf8')) as Record<string, unknown>
+    const packageMetadata = metadata.kind === 'official-bundle' ? parsedMetadata : parsedMetadata['x-mojobox-package'] as Record<string, unknown> | undefined
+    const packageRequirements = packageHostRequirements(packageMetadata ?? {}, rawMetadata.sha256)
+    const hostRequirements = { historyCoverage: targetRequirements?.historyCoverage ?? packageRequirements.historyCoverage, declarations: [...(targetRequirements?.declarations ?? []), ...packageRequirements.declarations] }
     let skinView: { kind?: 'skin'; skinId?: string } = {}
     if (metadata.kind === 'official-bundle') {
       const packageJson = JSON.parse(Buffer.from(metadata.packageJson.contentBase64, 'base64').toString('utf8')) as { dsh?: { skin?: { id?: unknown; apiVersion?: unknown } } }
@@ -180,7 +216,7 @@ function parsePlugin(value: unknown, field: string, maxTextBytes: number, now: D
     }
     const evidence = value.evidence === undefined ? [] : array(value.evidence, `${field}.evidence`, 32).map((item, index) => decodeRaw(item, `${field}.evidence[${index}]`, maxTextBytes).record)
     if (metadata.kind === 'official-bundle' && evidence.length) fail('catalog/official-evidence', '官方包不能冒用需要 Manifest 的公共 Evidence')
-    return { ...plugin, ...skinView, metadata, ...(value.releaseId === undefined ? {} : { releaseId: string(value.releaseId, 'releaseId', 100) }), ...(metadata.kind === 'dsh-std' ? { manifest: metadata.manifest, manifestDigest: metadata.manifest.sha256 } : {}), ...(evidence.length ? { evidence } : {}) }
+    return { ...plugin, ...skinView, metadataDigest: rawMetadata.sha256, hostRequirements, metadata, ...(value.releaseId === undefined ? {} : { releaseId: string(value.releaseId, 'releaseId', 100) }), ...(metadata.kind === 'dsh-std' ? { manifest: metadata.manifest, manifestDigest: metadata.manifest.sha256 } : {}), ...(evidence.length ? { evidence } : {}) }
   }
   const manifestDigest = parseDigest(value.manifestDigest, `${field}.manifestDigest`)
   const manifest = decodeRaw(value.manifest, `${field}.manifest`, maxTextBytes)
@@ -189,7 +225,10 @@ function parsePlugin(value: unknown, field: string, maxTextBytes: number, now: D
   }
   validatePublicManifest(manifest.bytes, plugin)
   const evidence = value.evidence === undefined ? [] : array(value.evidence, `${field}.evidence`, 32).map((item, index) => decodeRaw(item, `${field}.evidence[${index}]`, maxTextBytes))
-  return { ...plugin, manifestDigest, manifest: manifest.record, ...(value.releaseId === undefined ? {} : { releaseId: string(value.releaseId, 'releaseId', 100) }), ...(evidence.length === 0 ? {} : { evidence: evidence.map((item) => item.record) }) }
+  const parsedManifest = JSON.parse(Buffer.from(manifest.record.contentBase64, 'base64').toString('utf8')) as Record<string, unknown>
+  const packageRequirements = packageHostRequirements(parsedManifest['x-mojobox-package'] as Record<string, unknown> ?? {}, manifestDigest)
+  const hostRequirements = { historyCoverage: targetRequirements?.historyCoverage ?? packageRequirements.historyCoverage, declarations: [...(targetRequirements?.declarations ?? []), ...packageRequirements.declarations] }
+  return { ...plugin, metadataDigest: manifestDigest, hostRequirements, manifestDigest, manifest: manifest.record, ...(value.releaseId === undefined ? {} : { releaseId: string(value.releaseId, 'releaseId', 100) }), ...(evidence.length === 0 ? {} : { evidence: evidence.map((item) => item.record) }) }
 }
 
 function parseListing(value: unknown, field: string): CatalogListing {
@@ -205,7 +244,9 @@ function parseListing(value: unknown, field: string): CatalogListing {
     summary: requiredString(value.summary, `${field}.summary`, 4096),
     reason: requiredString(value.reason, `${field}.reason`, 8192),
     sourceUrl,
+    ...(value.media === undefined ? {} : { media: parseDisplayMedia(value.media, `${field}.media`) }),
     ...(value.requestedVersion === undefined ? {} : { requestedVersion: requiredString(value.requestedVersion, `${field}.requestedVersion`, 100) }),
+    ...(value.agentForgeMetadata === undefined ? {} : { hostRequirements: agentForgeHostRequirements(value.agentForgeMetadata, requiredString(value.packageName, `${field}.packageName`, 214), typeof value.requestedVersion === 'string' ? value.requestedVersion : undefined) }),
   }
 }
 
@@ -488,7 +529,18 @@ export function validateMarketIndex(
     validateExecutionGraph({ ...collection.execution, schemaVersion: '1', packId: collection.id, packVersion: collection.version, lockDigest: '' }, new Set(collection.components.map(item => item.pluginId)))
   }
   if (new Set(collections.map(item => `${item.id}@${item.version}`)).size !== collections.length) fail('catalog/duplicate-collection', '私有组合重复')
-  const projectedPlugins = plugins.map(({ manifest: _manifest, manifestDigest: _manifestDigest, metadata: _metadata, releaseId, evidence: _evidence, ...plugin }) => ({ ...plugin, verification: verificationByKey.get(`${plugin.id}@${plugin.version}`) ?? plugin.verification, ...(isV2 && releaseId ? { releasedAt: releasesById.get(releaseId)?.publishedAt } : {}), ...(releaseId && latestStatuses.get(releaseId)?.status === 'withdrawn' ? { installability: 'hard-blocked' as const } : {}) }))
+  const projectedPlugins = plugins.map(({ manifest: _manifest, manifestDigest: _manifestDigest, metadata: _metadata, releaseId, evidence: _evidence, ...plugin }) => {
+    const release = isV2 && releaseId ? releasesById.get(releaseId) : undefined
+    const publication: NonNullable<CatalogPlugin['publication']> = release && release.pluginId === plugin.id && release.packageName === plugin.packageName
+      && release.version === plugin.version && release.artifactDigest === plugin.artifactDigest
+      && release.metadataDigest === plugin.metadataDigest ? latestStatuses.get(release.releaseId)?.status ?? 'unknown' : 'unknown'
+    return {
+      ...plugin, publication,
+      verification: verificationByKey.get(`${plugin.id}@${plugin.version}`) ?? plugin.verification,
+      ...(release ? { releaseId, releasedAt: release.publishedAt } : {}),
+      ...(publication === 'withdrawn' ? { installability: 'hard-blocked' as const } : {}),
+    }
+  })
 
   const recommendations = parseRecommendations(input.recommendations, projectedPlugins, options.now ?? new Date(), isV2)
   const snapshot: CatalogSnapshot = {

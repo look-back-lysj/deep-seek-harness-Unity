@@ -2,6 +2,8 @@
 
 本目录只规划和协调，真正修改 profile 的动作仍由官方 pluginManager 执行。`planner.ts` 冻结计划、基线和所选 delivery；`semver.ts` 按 SemVer 2.0 比较，非法版本拒绝判断。不同 build 元数据具有相同优先级，但不代表相同制品，规划器不猜作降级。
 
+`host-compatibility.ts` 在已绑定宿主身份/版本域下用直接依赖 semver 解释完整范围；多声明按交集判断，不以 minVersion 或字段缺省猜兼容。`release-facts.ts` 分别保留 installed / latestPublished / latestCompatible、制品、verification、历史覆盖和 build 身份歧义；只读 Remote 版本列表和更新摘要复用它们，不实现默认选择、弹窗、等待或轮询，不授权写入。
+
 `execution-state.ts` 是 Host 私有实现记录，不是 Remote 合同。每次尝试保存 prepared、dispatched、received、verified；没有回执的 dispatched 不重放。`needs-attention` 本身不等于释放写入权，`writeUncertain` 会在服务重建后继续阻断后续写入。只有旧写入已停止、可靠回执及当前库存核对完成才清除此屏障。等待脚本批准则有明确已结束的官方回执；用户批准后的调用使用新 requestId，并保留同一 attempt 的审批资料。
 
 执行占用使用 `execution:<environmentId>` 文件锁，短时控制和每个任务记录使用不同锁。下载通过 AbortSignal 取消，取消意图先持久保存，每次官方写前再读。正在调用的官方安装必须等待安装回执，取消接口返回 cancelled/not-running 都不能代替该回执。

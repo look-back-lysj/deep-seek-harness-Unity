@@ -1,5 +1,5 @@
 /** Host-private recovery facts. Absence on legacy records is never proof that a write did not run. */
-import type { InventoryItem } from '../contracts/types.ts'
+import type { InventoryItem, PluginActionResult } from '../contracts/types.ts'
 import type { HostInstallOutcome, HostPort, TaskRecord } from './ports.ts'
 
 export interface ExecutionState {
@@ -40,6 +40,13 @@ export interface ManagementRecord {
   readonly outcome?: HostInstallOutcome
   readonly receipt?: HostInstallOutcome
   readonly before?: InventoryItem
+  readonly completion?: ManagementCompletion
+}
+
+export interface ManagementCompletion {
+  readonly result: PluginActionResult
+  readonly maintenance: { readonly status: 'saved'; readonly revision: number } | { readonly status: 'not-required' }
+  readonly digest: string
 }
 
 export function executionOf(record: TaskRecord): ExecutionState | undefined {

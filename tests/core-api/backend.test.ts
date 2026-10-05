@@ -15,7 +15,7 @@ describe('DSH 无界面业务门面', () => {
   it('提供冻结的 Core 门面并能使用新增只读/策略接口和作者草稿', async () => {
     await withBackend(async backend => {
       expect(Object.isFrozen(backend)).toBe(true)
-      expect(Object.keys(backend)).toHaveLength(36)
+      expect(Object.keys(backend)).toHaveLength(40)
       expect(Object.values(backend).every(value => typeof value === 'function')).toBe(true)
       for (const key of ['host', 'tasks', 'files', 'context', 'identity', 'runtime', 'authoring', 'transfers']) expect(backend).not.toHaveProperty(key)
       const { capabilities, catalog, inventory, authorDraftSave, authorDraftGet, authorDraftList, authorDraftDelete } = backend

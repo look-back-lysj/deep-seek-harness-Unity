@@ -6,7 +6,7 @@
 
 // v2 requires a connection-scoped handshake before writes. Cached v1 pages
 // must refresh; persistent task/author/catalog schemas are unchanged.
-export const PROTOCOL_VERSION = '2.0.0'
+export const PROTOCOL_VERSION = '2.1.0'
 export const SERVICE_NAME = 'eacMarket'
 export const MARKET_SCHEMA_VERSION = '1'
 
@@ -23,6 +23,9 @@ export type CapabilityName =
   | 'catalog-source-list'
   | 'agent-forge-refresh'
   | 'update-policy'
+  | 'host-release-options'
+  | 'host-release-context'
+  | 'operation-recovery'
 
 export interface EnvironmentHello {
   readonly protocolVersion: string
@@ -34,6 +37,7 @@ export interface EnvironmentHello {
   readonly capabilities: readonly CapabilityName[]
   readonly coreVersion?: string
   readonly coreApiVersion?: string
+  readonly hostCore?: HostCoreSnapshot
 }
 
 /** Adapter identity is diagnostic data, never an authorization credential. */
@@ -68,6 +72,12 @@ export interface CatalogMedia {
   readonly sourceUrl: string
   readonly width?: number
   readonly height?: number
+  readonly theme?: 'light' | 'dark' | 'system'
+}
+
+export interface CatalogDisplayMedia {
+  readonly icon?: CatalogMedia
+  readonly previews?: readonly CatalogMedia[]
 }
 
 export interface CatalogRecommendation {
@@ -91,6 +101,175 @@ export interface CatalogScore {
   readonly measuredAt?: string | undefined
 }
 
+export type VersionScheme = 'semver' | 'npm' | 'pep440' | 'calver' | 'date' | 'custom' | 'unknown'
+
+export interface HostCoreSnapshot {
+  readonly agentId: string | null
+  readonly agentName: string
+  readonly version: string | null
+  readonly versionScheme?: VersionScheme
+  readonly status: 'known' | 'unknown'
+  readonly hostRevision: string
+  readonly source: string
+  readonly reason?: string
+}
+
+export type CoreCompatibilityReason =
+  | 'core-too-old' | 'core-too-new' | 'core-range-mismatch'
+  | 'core-version-unknown' | 'core-version-invalid'
+  | 'core-range-unknown' | 'core-range-invalid'
+  | 'core-range-evaluation-limited'
+  | 'core-version-scheme-unknown' | 'core-version-scheme-unsupported'
+  | 'core-range-scheme-unknown' | 'core-range-scheme-unsupported'
+  | 'target-agent-mismatch' | 'metadata-conflict'
+
+export interface CoreCompatibility {
+  readonly status: 'compatible' | 'incompatible' | 'unknown' | 'conflict'
+  readonly reason?: CoreCompatibilityReason
+  readonly declaredRanges: readonly string[]
+}
+
+export interface ReleaseIdentity {
+  readonly pluginId: string
+  readonly packageName: string
+  readonly version: string
+  readonly metadataDigest?: string
+  readonly artifactDigest?: string
+  readonly releaseId?: string
+}
+
+export interface ReleaseFact {
+  readonly identity: ReleaseIdentity
+  readonly hostRequirements?: CatalogHostRequirements
+  readonly compatibility: CoreCompatibility
+  readonly publication: 'active' | 'withdrawn' | 'unknown'
+  readonly artifact: { readonly status: 'available' | 'missing' | 'blocked' | 'unknown'; readonly installability: Installability }
+  readonly verification: VerificationState
+  readonly selectable: boolean
+  readonly blockers: readonly string[]
+  readonly relation: 'upgrade' | 'same' | 'downgrade' | 'unknown'
+  readonly confirmationRequirements: readonly ('ordinary-plan' | 'downgrade')[]
+  readonly exclusionReason?: string
+}
+
+export interface InstalledVersionFact {
+  readonly status: 'known' | 'unknown' | 'absent'
+  readonly version: string | null
+  readonly reason?: string
+}
+
+export interface PackageReleaseFacts {
+  readonly packageName: string
+  readonly hostCore: HostCoreSnapshot
+  readonly catalogRevision: string
+  readonly catalogStale: boolean
+  readonly inventoryRevision: string
+  readonly installed: InstalledVersionFact
+  readonly historyCoverage: CatalogHostRequirements['historyCoverage']
+  readonly evaluatedRecords: number
+  readonly latestPublished: ReleaseIdentity | null
+  readonly latestCompatible: ReleaseIdentity | null
+  readonly latestPublishedCandidates: readonly ReleaseIdentity[]
+  readonly latestCompatibleCandidates: readonly ReleaseIdentity[]
+  readonly publishedAmbiguous: boolean
+  readonly compatibleAmbiguous: boolean
+  readonly releases: readonly ReleaseFact[]
+}
+
+export interface ReleaseOptionsRequest {
+  readonly packageName: string
+  readonly includePrerelease?: boolean
+  readonly cursor?: string
+  readonly limit?: number
+}
+
+export interface ReleaseOption extends ReleaseFact {
+  readonly sources: readonly CatalogSourceRevision[]
+}
+
+export interface ReleaseOptionsContext {
+  readonly environmentId: string
+  readonly hostRevision: string
+  readonly catalogRevision: string
+  readonly inventoryRevision: string
+  readonly checkedAt: string
+  readonly catalogStale: boolean
+}
+
+export interface ReleaseSelectionContext {
+  readonly context: ReleaseOptionsContext
+  readonly identity: ReleaseIdentity
+  readonly sources: readonly CatalogSourceRevision[]
+}
+
+export interface ReleaseOptionsResult {
+  readonly packageName: string
+  readonly includePrerelease: boolean
+  readonly context: ReleaseOptionsContext
+  readonly hostCore: HostCoreSnapshot
+  readonly installed: InstalledVersionFact
+  readonly coverage: {
+    readonly historyCoverage: CatalogHostRequirements['historyCoverage']
+    readonly obtainedRecords: number
+    readonly evaluatedRecords: number
+    readonly totalKnownRecords: number | null
+    readonly reasons: readonly string[]
+  }
+  readonly latestPublished: ReleaseIdentity | null
+  readonly latestCompatible: ReleaseIdentity | null
+  readonly latestPublishedCandidates: readonly ReleaseIdentity[]
+  readonly latestCompatibleCandidates: readonly ReleaseIdentity[]
+  readonly publishedAmbiguous: boolean
+  readonly compatibleAmbiguous: boolean
+  readonly releases: readonly ReleaseOption[]
+  readonly issues: readonly CatalogSourceMergeIssue[]
+  readonly pagination: { readonly cursor: string | null; readonly hasMore: boolean }
+}
+
+export interface PackageReleaseSummary {
+  readonly hostCore: HostCoreSnapshot
+  readonly installed: InstalledVersionFact
+  readonly historyCoverage: CatalogHostRequirements['historyCoverage']
+  readonly latestPublished: ReleaseIdentity | null
+  readonly latestCompatible: ReleaseIdentity | null
+  readonly latestPublishedCompatibility: CoreCompatibility | null
+  readonly publishedAmbiguous: boolean
+  readonly compatibleAmbiguous: boolean
+}
+
+export interface CatalogCoreRangeDeclaration {
+  readonly agentId: string
+  readonly range: string | null
+  readonly versionScheme?: VersionScheme
+  readonly origin: 'agent-forge-target' | 'package-engines' | 'package-peer'
+  readonly metadataDigest: string
+  readonly sourceId?: string
+  readonly sourceRevision?: string
+}
+
+export interface CatalogHostRequirements {
+  readonly historyCoverage: 'complete' | 'partial' | 'latest-only' | 'unknown'
+  readonly declarations: readonly CatalogCoreRangeDeclaration[]
+}
+
+export interface CatalogSourceRevision {
+  readonly sourceId: string
+  readonly revision: string
+}
+
+export interface CatalogSourceMergeIssue {
+  readonly code: 'content-conflict' | 'identity-conflict' | 'reference-conflict' | 'known-blocked' | 'source-conflict'
+  readonly table: 'sources' | 'plugins' | 'listings' | 'deliveries' | 'presentations' | 'packs' | 'collections'
+  readonly key: string
+  readonly message: string
+  readonly candidates: readonly (CatalogSourceRevision & {
+    readonly contentDigest: string
+    readonly artifactDigest?: string
+    readonly metadataDigest?: string
+    readonly hostRequirements?: CatalogHostRequirements
+  })[]
+}
+
 export interface CatalogPlugin {
   readonly id: string
   readonly name: string
@@ -112,6 +291,7 @@ export interface CatalogPlugin {
   readonly presentationId: string
   readonly categories: readonly string[]
   readonly screenshots: readonly CatalogMedia[]
+  readonly media?: CatalogDisplayMedia
   readonly enabledPolicy: EnabledPolicy
   readonly requiresRestart: boolean
   readonly requiresSetup: boolean
@@ -119,6 +299,10 @@ export interface CatalogPlugin {
   readonly releasedAt?: string | undefined
   /** Team-reviewed operation evidence; absent means no data-safety claim. */
   readonly managementEvidence?: CatalogManagementEvidence | undefined
+  readonly metadataDigest?: string
+  readonly releaseId?: string
+  readonly hostRequirements?: CatalogHostRequirements
+  readonly publication?: 'active' | 'withdrawn' | 'unknown'
 }
 
 /** Research-only listing: no artifact, install plan, metadata or claimed exact
@@ -131,6 +315,8 @@ export interface CatalogListing {
   readonly reason: string
   readonly sourceUrl: string
   readonly requestedVersion?: string | undefined
+  readonly hostRequirements?: CatalogHostRequirements
+  readonly media?: CatalogDisplayMedia
 }
 
 export interface CatalogManagementEvidence {
@@ -242,6 +428,8 @@ export interface CatalogSnapshot {
   /** 发现页的稳定投影；缺少评分数据的高分分区会省略。 */
   readonly discovery?: CatalogDiscovery | undefined
   readonly collections?: readonly CatalogCollectionView[] | undefined
+  readonly sourceRevisions?: readonly CatalogSourceRevision[]
+  readonly mergeIssues?: readonly CatalogSourceMergeIssue[]
 }
 
 export interface CatalogDiscoveryCard {
@@ -297,6 +485,7 @@ export interface UpdateCheckItem {
   readonly latestVersion?: string
   readonly status: 'update-available' | 'up-to-date' | 'not-in-catalog' | 'unknown' | 'incompatible'
   readonly reason?: string
+  readonly releaseSummary?: PackageReleaseSummary
 }
 
 export interface UpdateCheckResult {
@@ -469,6 +658,7 @@ export interface PlanSelection {
   readonly targetDigest: string
   readonly enabledIntent: boolean
   readonly tryUnverified: boolean
+  readonly releaseContext?: ReleaseSelectionContext
 }
 
 export interface PlanCreateRequest {
@@ -495,6 +685,7 @@ export interface InstallPlanItem {
   readonly verification: VerificationState
   readonly requiresRestart: boolean
   readonly blockers: readonly string[]
+  readonly releaseContext?: ReleaseSelectionContext
 }
 
 export interface InstallPlan {
@@ -629,6 +820,27 @@ export interface TaskStartRequest {
 export interface TaskIdRequest {
   readonly taskId: string
 }
+
+export interface TaskStartRecoveryRequest {
+  readonly planId: string
+  readonly planDigest: string
+  readonly idempotencyKey: string
+}
+
+export type TaskStartRecoveryResult =
+  | { readonly status: 'found'; readonly task: TaskState }
+  | { readonly status: 'not-found' }
+
+export interface PluginActionRecoveryRequest {
+  readonly packageName: string
+  readonly expectedVersion?: string
+  readonly action: 'enable' | 'disable' | 'remove'
+  readonly idempotencyKey: string
+}
+
+export type PluginActionRecoveryResult =
+  | { readonly status: 'found'; readonly stage: 'dispatched' | 'settled' | 'unknown'; readonly result?: PluginActionResult; readonly receipt?: PluginActionResult }
+  | { readonly status: 'not-found' }
 
 export interface TaskEventRequest {
   readonly taskId: string

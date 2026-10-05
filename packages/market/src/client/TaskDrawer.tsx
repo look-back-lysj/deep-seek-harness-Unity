@@ -1,6 +1,7 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import type { AiAnalysisResult, AiApplyResult, AiConfirmRequest, TaskEvent, TaskEventPage, TaskItemResult, TaskItemStatus, TaskState } from '../types.ts'
-import { boundedRequest } from './data-controller.ts'
+import { boundedRequest, RequestTimeout } from './data-controller.ts'
+import { TaskRequestGuard, type TaskRequestTicket } from './task-request-guard.ts'
 import { createIdempotencyKey, isTaskSettled, taskItemStatusLabel, taskNextStep, taskStatusLabel, taskTone, type MarketRemote } from './model.ts'
 import { Button, Modal } from './ui.tsx'
 import { ActionFeedback } from './action-feedback.tsx'
@@ -105,8 +106,6 @@ export function TaskDrawer({ open, tasks, ...props }: Props): React.JSX.Element 
   </Modal>
 }
 
-/** AI state is local to one task, never shared across cards. Generation checks also
- * reject late analysis for a task whose evidence has since changed. */
 function TaskCard({ task, remote, onChanged, onRefresh, onOpenOfficialPlugins }: Omit<Props, 'open' | 'tasks'> & { task: TaskState }): React.JSX.Element {
   const [analysis, setAnalysis] = useState<AiAnalysisResult>()
   const [applied, setApplied] = useState<AiApplyResult>()
@@ -114,32 +113,31 @@ function TaskCard({ task, remote, onChanged, onRefresh, onOpenOfficialPlugins }:
   const [error, setError] = useState('')
   const [feedback, setFeedback] = useState<ActionFeedbackState>(idleActionFeedback())
   const [eventLog, setEventLog] = useState<{ readonly events: readonly TaskEvent[]; readonly nextSequence: number; readonly hasMore: boolean; readonly truncated: boolean; readonly status: 'idle' | 'loading' | 'ready' | 'failed' }>({ events: task.events, nextSequence: -1, hasMore: true, truncated: false, status: 'idle' })
-  const eventRequest = useRef(false)
-  const eventGeneration = useRef(0)
-  const generation = useRef(0)
-  const busyRef = useRef(false)
+  const scope = useMemo(() => ({ action: new TaskRequestGuard(), events: new TaskRequestGuard(), recheck: new TaskRequestGuard() }), [task.taskId, task.environmentId, remote])
+  const previousScope = useRef(scope)
+  if (previousScope.current !== scope) {
+    previousScope.current.action.invalidate(); previousScope.current.events.invalidate(); previousScope.current.recheck.invalidate()
+    previousScope.current = scope
+  }
+  const [checking, setChecking] = useState(false)
   const confirmationKeys = useRef({ first: '', second: '' })
   useEffect(() => {
-    generation.current += 1; setAnalysis(undefined); setApplied(undefined); setBusy(''); setError(''); setFeedback(idleActionFeedback()); confirmationKeys.current = { first: '', second: '' }; busyRef.current = false
-    return () => { generation.current += 1 }
-  }, [task.taskId, task.environmentId, task.updatedAt, remote])
-  useEffect(() => {
-    eventGeneration.current += 1
-    eventRequest.current = false
+    setAnalysis(undefined); setApplied(undefined); setBusy(''); setChecking(false); setError(''); setFeedback(idleActionFeedback()); confirmationKeys.current = { first: '', second: '' }
     setEventLog({ events: task.events, nextSequence: -1, hasMore: true, truncated: false, status: 'idle' })
-    return () => { eventGeneration.current += 1; eventRequest.current = false }
-  }, [task.taskId, task.environmentId, remote])
+    return () => { scope.action.invalidate(); scope.events.invalidate(); scope.recheck.invalidate() }
+  }, [scope])
 
   async function loadTaskEvents(more = false): Promise<void> {
     const readEvents = remote.taskEvents
-    if (!readEvents || eventRequest.current || (more && !eventLog.hasMore)) return
-    const ticket = eventGeneration.current
+    if (!readEvents || (more && !eventLog.hasMore)) return
+    const ticket = scope.events.begin()
+    if (!ticket) return
     const afterSequence = more ? Math.max(-1, eventLog.nextSequence - 1) : -1
-    eventRequest.current = true
     setEventLog(current => ({ ...current, status: 'loading' }))
+    const request = Promise.resolve().then(() => readEvents({ taskId: task.taskId, afterSequence, limit: 100 }))
     try {
-      const page: TaskEventPage = await boundedRequest(readEvents({ taskId: task.taskId, afterSequence, limit: 100 }), '读取完整任务记录')
-      if (ticket !== eventGeneration.current) return
+      const page: TaskEventPage = await boundedRequest(request, '读取完整任务记录')
+      if (!scope.events.accepts(ticket)) return
       setEventLog(current => {
         const merged = new Map<number, TaskEvent>(current.events.map(event => [event.sequence, event]))
         for (const event of page.events) merged.set(event.sequence, event)
@@ -154,31 +152,58 @@ function TaskCard({ task, remote, onChanged, onRefresh, onOpenOfficialPlugins }:
         }
       })
     } catch {
-      if (ticket === eventGeneration.current) setEventLog(current => ({ ...current, status: 'failed' }))
+      if (scope.events.accepts(ticket)) setEventLog(current => ({ ...current, status: 'failed' }))
     } finally {
-      if (ticket === eventGeneration.current) eventRequest.current = false
+      scope.events.expire(ticket)
+      const release = (): void => { if (scope.events.finish(ticket)) setEventLog(current => ({ ...current })) }
+      void request.then(release, release)
     }
   }
 
-  async function run(label: string, operation: () => Promise<void>): Promise<void> {
-    if (busyRef.current) return
-    busyRef.current = true; setBusy(label); setError(''); setFeedback(runningActionFeedback(label))
-    const ticket = generation.current
-    try { await operation() } catch (reason) {
-      if (ticket === generation.current) {
+  async function run(label: string, operation: (ticket: TaskRequestTicket) => Promise<void>, timeoutMs = 12_000): Promise<void> {
+    const ticket = scope.action.begin()
+    if (!ticket) return
+    setBusy(label); setError(''); setFeedback(runningActionFeedback(label))
+    const request = Promise.resolve().then(() => scope.action.accepts(ticket) ? operation(ticket) : undefined)
+    try { await boundedRequest(request, label, timeoutMs) } catch (reason) {
+      if (scope.action.accepts(ticket)) {
         const message = reason instanceof Error ? reason.message : String(reason)
         setError(message)
-        setFeedback(failedActionFeedback(label, reason, '确认任务仍处于当前环境后再重试；结果未知时先重新读取，不要重复提交。'))
+        setFeedback(reason instanceof RequestTimeout
+          ? needsRecheckActionFeedback(label, message, '原请求仍可能执行中；只读核对任务状态，不要重复提交。', false)
+          : failedActionFeedback(label, reason, '确认任务仍处于当前环境后再重试；结果未知时先重新读取，不要重复提交。'))
       }
-    } finally { if (ticket === generation.current) { busyRef.current = false; setBusy('') } }
+    } finally {
+      scope.action.expire(ticket)
+      const release = (): void => { if (scope.action.finish(ticket)) setBusy('') }
+      void request.then(release, release)
+    }
   }
-  async function askAi(): Promise<void> {
+  async function recheck(): Promise<void> {
+    if (!remote.getTask) { onRefresh?.(); return }
+    const ticket = scope.recheck.begin()
+    if (!ticket) return
+    setChecking(true)
+    const request = Promise.resolve().then(() => remote.getTask!({ taskId: task.taskId }))
+    try {
+      const next = await boundedRequest(request, '任务状态核对')
+      if (!scope.recheck.accepts(ticket)) return
+      if (next.taskId !== task.taskId || next.environmentId !== task.environmentId) throw new Error('核对结果不属于本任务或当前环境，已拒绝显示。')
+      onChanged(next)
+    } catch (reason) {
+      if (scope.recheck.accepts(ticket)) setError(reason instanceof Error ? reason.message : String(reason))
+    } finally {
+      scope.recheck.expire(ticket)
+      const release = (): void => { if (scope.recheck.finish(ticket)) setChecking(false) }
+      void request.then(release, release)
+    }
+  }
+  async function askAi(ticket: TaskRequestTicket): Promise<void> {
     if (remote.aiAnalyze === undefined) return
-    const ticket = generation.current
     setAnalysis(undefined); setApplied(undefined)
     confirmationKeys.current = { first: createIdempotencyKey('market-ai'), second: createIdempotencyKey('market-ai-risk') }
-    const result = await boundedRequest(remote.aiAnalyze({ taskId: task.taskId }), 'AI 分析', 45_000)
-    if (ticket !== generation.current) return
+    const result = await remote.aiAnalyze({ taskId: task.taskId })
+    if (!scope.action.accepts(ticket)) return
     if (result.proposal && (result.proposal.environmentId !== task.environmentId || result.proposal.taskId !== task.taskId)) {
       throw new Error('AI 方案不属于本任务，已拒绝显示和执行。')
     }
@@ -186,22 +211,26 @@ function TaskCard({ task, remote, onChanged, onRefresh, onOpenOfficialPlugins }:
     if (result.status === 'ready' && result.proposal) setFeedback({ status: 'completed', label: 'AI 分析本任务', message: 'AI 已完成分析，方案仍需你逐项核对。', nextStep: '阅读事实、版本和影响后，再决定是否确认。' })
     else setFeedback(partialActionFeedback('AI 分析本任务', result.reason ?? 'AI 没有给出可执行方案。', '保留当前任务结果，并使用官方插件页继续核对。'))
   }
-  async function applyAi(second: boolean): Promise<void> {
+  async function applyAi(second: boolean, ticket: TaskRequestTicket): Promise<void> {
     const proposal = analysis?.proposal
     if (proposal === undefined || remote.aiConfirm === undefined || proposal.actions.length !== 1) return
     const challenge = applied?.challenge
     if (!Number.isFinite(Date.parse(proposal.expiresAt)) || Date.parse(proposal.expiresAt) <= Date.now()) throw new Error('AI 方案已过期，请重新分析。')
     if (second && (!challenge || !Number.isFinite(Date.parse(challenge.expiresAt)) || Date.parse(challenge.expiresAt) <= Date.now())) throw new Error('影响确认已过期，请重新分析。')
-    const ticket = generation.current
     const request: AiConfirmRequest = {
       proposalId: proposal.id, impactDigest: proposal.impactDigest, confirmed: true,
       idempotencyKey: second ? confirmationKeys.current.second : confirmationKeys.current.first,
       ...(second && challenge ? { challengeId: challenge.id, challengeDigest: challenge.digest, riskConfirmed: true as const } : {}),
     }
-    const result = await boundedRequest(remote.aiConfirm(request), 'AI 方案确认', 20_000)
-    if (ticket !== generation.current) { onRefresh?.(); return }
+    const result = await remote.aiConfirm(request)
+    if (!scope.action.accepts(ticket)) return
     setApplied(result)
-    if (result.taskId && remote.getTask) onChanged(await boundedRequest(remote.getTask({ taskId: result.taskId }), '执行任务读取'))
+    if (result.taskId && remote.getTask) {
+      const next = await boundedRequest(remote.getTask({ taskId: result.taskId }), '执行任务读取')
+      if (!scope.action.accepts(ticket)) return
+      if (next.taskId !== result.taskId || next.environmentId !== task.environmentId) throw new Error('执行结果不属于当前任务环境，已拒绝显示。')
+      onChanged(next)
+    }
     if (result.status === 'requires-confirmation') setFeedback(needsRecheckActionFeedback('AI 方案确认', '后台要求再次确认影响，方案尚未执行。', '阅读影响清单后，明确确认或取消这次方案。', false))
     else if (result.status === 'queued') setFeedback({ status: 'running', label: 'AI 方案确认', message: '方案已排队，正在读取真实任务状态。', nextStep: '等待任务状态更新，不要重复提交。' })
     else if (result.status === 'restart-required') setFeedback(needsRecheckActionFeedback('AI 方案确认', '方案已执行，但 DSH 需要重启后才能确认最终状态。', '保存当前工作并重启 DSH，回来后重新读取任务和插件状态。', false))
@@ -210,21 +239,27 @@ function TaskCard({ task, remote, onChanged, onRefresh, onOpenOfficialPlugins }:
     else setFeedback(failedActionFeedback('AI 方案确认', result.error ?? 'AI 方案未执行。', '查看任务记录和官方插件状态后，再重新分析。'))
     if (result.status !== 'requires-confirmation') onRefresh?.()
   }
-  async function cancel(): Promise<void> {
+  async function cancel(ticket: TaskRequestTicket): Promise<void> {
     if (!remote.cancelTask) return
-    const next = await boundedRequest(remote.cancelTask({ taskId: task.taskId, idempotencyKey: createIdempotencyKey('market-cancel') }), '取消请求')
+    const next = await remote.cancelTask({ taskId: task.taskId, idempotencyKey: createIdempotencyKey('market-cancel') })
+    if (!scope.action.accepts(ticket)) return
+    if (next.taskId !== task.taskId || next.environmentId !== task.environmentId) throw new Error('取消结果不属于本任务或当前环境，已拒绝显示。')
     onChanged(next)
     setFeedback(taskActionFeedback(next, '取消任务'))
   }
-  async function approve(): Promise<void> {
+  async function approve(ticket: TaskRequestTicket): Promise<void> {
     if (!remote.approveTask || !task.approval) return
-    const next = await boundedRequest(remote.approveTask({ taskId: task.taskId, attemptId: task.approval.attemptId, challengeId: task.approval.id, pendingBuildsDigest: task.approval.digest, approvedBuilds: task.approval.packages, idempotencyKey: createIdempotencyKey('market-approve') }), '脚本授权')
+    const next = await remote.approveTask({ taskId: task.taskId, attemptId: task.approval.attemptId, challengeId: task.approval.id, pendingBuildsDigest: task.approval.digest, approvedBuilds: task.approval.packages, idempotencyKey: createIdempotencyKey('market-approve') })
+    if (!scope.action.accepts(ticket)) return
+    if (next.taskId !== task.taskId || next.environmentId !== task.environmentId) throw new Error('授权结果不属于本任务或当前环境，已拒绝显示。')
     onChanged(next)
     setFeedback(taskActionFeedback(next, '脚本授权'))
   }
-  async function resume(): Promise<void> {
+  async function resume(ticket: TaskRequestTicket): Promise<void> {
     if (!remote.resumeTask || !task.resume) return
-    const next = await boundedRequest(remote.resumeTask({ taskId: task.taskId, challengeId: task.resume.id, resumeDigest: task.resume.digest, idempotencyKey: createIdempotencyKey('market-resume') }), '重启状态检查')
+    const next = await remote.resumeTask({ taskId: task.taskId, challengeId: task.resume.id, resumeDigest: task.resume.digest, idempotencyKey: createIdempotencyKey('market-resume') })
+    if (!scope.action.accepts(ticket)) return
+    if (next.taskId !== task.taskId || next.environmentId !== task.environmentId) throw new Error('重启核对结果不属于本任务或当前环境，已拒绝显示。')
     onChanged(next)
     setFeedback(taskActionFeedback(next, '重启状态检查'))
   }
@@ -248,10 +283,12 @@ function TaskCard({ task, remote, onChanged, onRefresh, onOpenOfficialPlugins }:
     </li>)}</ul>
     <div className="eac-market__button-row">
       {(!isTaskSettled(task) || task.status === 'awaiting-approval' || task.status === 'awaiting-resume') && remote.cancelTask && <Button size="sm" variant="outline" disabled={!!busy} onClick={() => void run('取消', cancel)}>取消任务</Button>}
-      {['failed', 'partial', 'needs-attention', 'unknown', 'interrupted'].includes(task.status) && remote.aiAnalyze && <Button size="sm" variant="outline" disabled={!!busy} onClick={() => void run('AI 分析', askAi)}>AI 分析本任务</Button>}
+      {['failed', 'partial', 'needs-attention', 'unknown', 'interrupted'].includes(task.status) && remote.aiAnalyze && <Button size="sm" variant="outline" disabled={!!busy} onClick={() => void run('AI 分析', askAi, 45_000)}>AI 分析本任务</Button>}
+      {(remote.getTask || onRefresh) && <Button size="sm" variant="outline" disabled={checking} onClick={() => void recheck()}>重新核对本任务</Button>}
       {onOpenOfficialPlugins && <Button size="sm" variant="outline" onClick={onOpenOfficialPlugins}>打开官方插件页</Button>}
     </div>
-    <ActionFeedback state={feedback} onRefresh={onRefresh} />
+    <ActionFeedback state={feedback} onRefresh={remote.getTask || onRefresh ? () => void recheck() : undefined} />
+    {checking && <p role="status">正在只读核对任务状态…</p>}
     <TaskFailureSummary task={task} />
     {task.approval && task.status === 'awaiting-approval' && <section className="eac-market__notice"><strong>待运行的安装脚本</strong><ul>{task.approval.packages.map((name) => <li key={name}>{name}</li>)}</ul><Button disabled={!!busy || !remote.approveTask} onClick={() => void run('授权', approve)}>同意运行清单内脚本并继续</Button></section>}
     {task.resume && task.status === 'awaiting-resume' && <Button variant="primary" disabled={!!busy || !remote.resumeTask} onClick={() => void run('核对重启', resume)}>已重启，重新核对</Button>}
@@ -263,7 +300,7 @@ function TaskCard({ task, remote, onChanged, onRefresh, onOpenOfficialPlugins }:
       {proposal.actions.map((action, index) => <p key={index}>{actionNames[action.kind]} {action.packageName}{action.targetVersion ? ` → ${action.targetVersion}` : ''}：{action.reason}</p>)}
       {proposal.plan && <div aria-label="AI方案实际版本调整"><strong>实际安装计划</strong><ul>{proposal.plan.items.map((item) => <li key={item.pluginId}>{item.packageName}：{item.currentVersion ?? '未安装'} → {item.targetVersion}；{item.requestedEnabled ? '配置启用' : '保持停用'}{item.requiresRestart ? '；需要重启' : ''}{item.blockers.length ? `；阻止原因：${item.blockers.join('、')}` : ''}</li>)}</ul></div>}
       {proposal.impact && <p>{proposal.impact.summary}</p>}
-      {!applied && <Button variant="primary" disabled={!!busy || !remote.aiConfirm || proposal.actions.length !== 1} onClick={() => void run('确认方案', () => applyAi(false))}>确认执行 AI 方案</Button>}
+      {!applied && <Button variant="primary" disabled={!!busy || !remote.aiConfirm || proposal.actions.length !== 1} onClick={() => void run('确认方案', ticket => applyAi(false, ticket), 20_000)}>确认执行 AI 方案</Button>}
     </section>}
     {challenge && <section className="eac-market__notice eac-market__notice--warning" aria-label="再次确认影响">
       <h4>再次确认影响</h4><p>{challenge.impact.summary}</p>
@@ -271,7 +308,7 @@ function TaskCard({ task, remote, onChanged, onRefresh, onOpenOfficialPlugins }:
       <p>受影响的插件：{challenge.impact.affectedPackages.join('、') || '后台未列出'}</p>
       <p>{challenge.impact.dataBehavior}</p>
       {challenge.impact.unknowns.length > 0 && <ul>{challenge.impact.unknowns.map((item, index) => <li key={index}>尚不能确认：{item}</li>)}</ul>}
-      <div className="eac-market__button-row"><Button variant="outline" disabled={!!busy} onClick={() => { setApplied(undefined); setAnalysis(undefined); confirmationKeys.current = { first: '', second: '' }; setFeedback(idleActionFeedback()) }}>取消此方案</Button><Button variant="primary" disabled={!!busy} onClick={() => void run('确认影响', () => applyAi(true))}>已了解影响，再次确认执行</Button></div>
+      <div className="eac-market__button-row"><Button variant="outline" disabled={!!busy} onClick={() => { setApplied(undefined); setAnalysis(undefined); confirmationKeys.current = { first: '', second: '' }; setFeedback(idleActionFeedback()) }}>取消此方案</Button><Button variant="primary" disabled={!!busy} onClick={() => void run('确认影响', ticket => applyAi(true, ticket), 20_000)}>已了解影响，再次确认执行</Button></div>
     </section>}
     {applied && <p role="status">{applyNames[applied.status]}{applied.error ? `：${applied.error}` : ''}</p>}
     <details className="eac-market__task-history" aria-label="任务记录" onToggle={(event) => { if (event.currentTarget.open && eventLog.status === 'idle') void loadTaskEvents() }}>
@@ -282,8 +319,8 @@ function TaskCard({ task, remote, onChanged, onRefresh, onOpenOfficialPlugins }:
       {eventLog.truncated && <p role="status">后台提示部分历史记录已被清理或不完整，以下内容不代表完整时间线。</p>}
       <ul className="eac-market__event-list">{visibleEvents.map((event) => <li key={`${event.sequence}-${event.at}`} data-level={event.level}>{event.message}</li>)}</ul>
       {remote.taskEvents === undefined && <p>当前宿主不支持读取完整历史，仅显示任务摘要中的记录。</p>}
-      {eventLog.status === 'failed' && remote.taskEvents !== undefined && <Button variant="ghost" disabled={!!busy || eventRequest.current} onClick={() => void loadTaskEvents(eventLog.nextSequence > 0)}>重新读取任务记录</Button>}
-      {eventLog.hasMore && remote.taskEvents !== undefined && <Button variant="outline" disabled={!!busy || eventRequest.current || eventLog.status === 'loading'} onClick={() => void loadTaskEvents(true)}>{eventLog.status === 'loading' ? '正在读取…' : '加载更多记录'}</Button>}
+      {eventLog.status === 'failed' && remote.taskEvents !== undefined && <Button variant="ghost" disabled={!!busy || scope.events.pending} onClick={() => void loadTaskEvents(eventLog.nextSequence > 0)}>重新读取任务记录</Button>}
+      {eventLog.hasMore && remote.taskEvents !== undefined && <Button variant="outline" disabled={!!busy || scope.events.pending || eventLog.status === 'loading'} onClick={() => void loadTaskEvents(true)}>{eventLog.status === 'loading' ? '正在读取…' : '加载更多记录'}</Button>}
     </details>
   </article>
 }

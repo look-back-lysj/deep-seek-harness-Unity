@@ -146,6 +146,7 @@ export interface PlanFacts {
 }
 
 export interface PlanCatalogContext {
+  readonly releaseValidation?: PlanReleaseValidation
   readonly planId?: string
   readonly catalogRevision: string
   readonly environmentId: string
@@ -206,6 +207,7 @@ export interface ExpectedItemState {
 }
 
 export interface PlanBundle {
+  readonly releaseValidation?: PlanReleaseValidation
   readonly plan: import('../contracts/types.ts').InstallPlan
   /** User-selected package identities; dependency prerequisites are stored separately. */
   readonly explicitPluginIds?: readonly string[]
@@ -215,6 +217,13 @@ export interface PlanBundle {
   /** Frozen source descriptions may contain test-local paths and stay off the wire. */
   readonly deliveries?: readonly CatalogDelivery[]
   readonly bundleDigest: string
+}
+
+export interface PlanReleaseValidation {
+  readonly hostBinding: string
+  readonly catalogBinding: string
+  readonly inventoryRevision: string
+  readonly inventoryBinding: string
 }
 
 export interface PreparedPlanResult {

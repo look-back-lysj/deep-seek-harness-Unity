@@ -15,7 +15,7 @@ const compatibilityOnly = process.argv.includes('--compatibility-only')
 const settingsOnly = process.argv.includes('--settings-only')
 const taskHistoryOnly = process.argv.includes('--task-history-only')
 const trialOnly = process.argv.includes('--trial-only')
-const defaultOutput = compatibilityOnly ? 'D:/eac-market-verify/implementation-20260928/C-UI/compatibility' : listingsOnly || skinsOnly ? `D:/eac-market-verify/distribution-20260928/ui/${listingsOnly ? 'listings' : 'skins'}-${Date.now()}` : scrollOnly ? 'D:/eac-market-verify/skin-market-20260928/ui' : 'D:/eac-market-verify/implementation-20260928/C-UI' + (versionsOnly ? '/versions' : collectionsOnly ? '/collections' : '')
+const defaultOutput = `D:/eac-market-verify/browser-check-${Date.now()}`
 const output = process.env.EAC_BROWSER_CHECK_OUT ?? defaultOutput
 console.log(`Evidence: ${output}`)
 mkdirSync(output, { recursive: true })
@@ -44,7 +44,7 @@ try {
   send = (method, params = {}) => new Promise((resolveRequest, reject) => { const id = ++serial; const timer = setTimeout(() => { pending.delete(id); reject(new Error(`CDP timeout: ${method}`)) }, 15_000); pending.set(id, { resolve: resolveRequest, reject, timer }); ws.send(JSON.stringify({ id, method, params })) })
   const evaluate = async (expression) => { const result = await send('Runtime.evaluate', { expression, awaitPromise: true, returnByValue: true }); if (result.exceptionDetails) throw new Error(result.exceptionDetails.exception?.description ?? result.exceptionDetails.text); return result.result.value }
   const expect = async (expression, message) => { if (!await evaluate(expression)) throw new Error(message) }
-  const until = async (expression) => { for (let i = 0; i < 100; i++) { if (await evaluate(expression)) return; await pause(30) } throw new Error(`DOM timeout: ${expression}`) }
+  const until = async (expression) => { for (let i = 0; i < 100; i++) { if (await evaluate(expression)) return; await pause(30) } throw new Error(`DOM timeout: ${expression}; ${JSON.stringify(await evaluate('({ ready: document.readyState, fixture: !!window.fixture, scripts: [...document.scripts].map(script => { const url = new URL(script.src, location.href); return url.origin + url.pathname }), body: document.body?.innerText ?? "" })'))}`) }
   const click = async (text, scope = 'document') => { await evaluate(`(() => { const button = [...${scope}.querySelectorAll('button')].find(e => e.textContent.trim() === ${JSON.stringify(text)}); if (!button || button.disabled) throw new Error('button missing or disabled: ' + ${JSON.stringify(text)}); button.click() })()`); await pause(50) }
   const clickSelector = async (selector) => { const encoded = JSON.stringify(selector); await evaluate(`document.querySelector(${encoded}).scrollIntoView({block:'center'})`); await pause(80); const rect = JSON.parse(await evaluate(`(() => { const r=document.querySelector(${encoded}).getBoundingClientRect(); return JSON.stringify({x:r.x,y:r.y,width:r.width,height:r.height}) })()`)); const x=rect.x+rect.width/2, y=rect.y+rect.height/2; await send('Input.dispatchMouseEvent',{type:'mousePressed',x,y,button:'left',clickCount:1}); await send('Input.dispatchMouseEvent',{type:'mouseReleased',x,y,button:'left',clickCount:1}); await pause(80) }
   const render = async (name) => { await evaluate(`fixture.render(${JSON.stringify(name)})`); await pause(100) }
@@ -53,6 +53,8 @@ try {
     await evaluate(`document.documentElement.style.cssText=${JSON.stringify(dark ? '--dsw-alias-bg-base:#141414;--dsw-alias-bg-layer-1:#232323;--dsw-alias-bg-layer-2:#303030;--dsw-alias-label-primary:#eeeeee;--dsw-alias-label-secondary:#b8b8b8;--dsw-alias-label-tertiary:#aaaaaa;--dsw-alias-border-l1:#4a4a4a;--dsw-alias-border-l3:#666666;--dsw-alias-link:#8aafff;--dsw-alias-state-business-primary:#386ad9;' : '')}`)
   }
   await send('Page.enable')
+  await send('Network.enable')
+  await send('Network.setBlockedURLs', { urls: ['http://me.kis.v2.scr.kaspersky-labs.com/*'] })
   await send('Emulation.setDeviceMetricsOverride', { width: 1280, height: 900, deviceScaleFactor: 1, mobile: false })
   await send('Page.navigate', { url: `http://127.0.0.1:${server.address().port}` })
   await until('!!window.fixture && document.body.innerText.includes("发现适合你的插件")')
@@ -209,7 +211,7 @@ try {
     await until('document.body.innerText.includes("确认正文差异")')
     await expect('fixture.stats.saved.length === 0', 'README preview overwrote draft')
     await evaluate('fixture.conflict()'); await click('确认差异并保存')
-    await expect('document.body.innerText.includes("revision 已变化") && document.getElementById("draft-markdown").value === "旧正文"', 'conflict lost original')
+    await expect('document.body.innerText.includes("保存差异失败或结果尚未确认，当前编辑已保留") && document.getElementById("draft-markdown").value === "旧正文" && fixture.stats.saved.length === 0 && !document.body.innerText.includes("README 差异已确认并保存")', 'conflict lost original or falsely reported success')
     await click('关闭'); await click('保存并导出介绍 ZIP')
     await expect('fixture.stats.exports === 1 && fixture.stats.dispose === 1', 'ZIP did not use outbound API')
   })
@@ -283,6 +285,8 @@ try {
     await click('刷新此来源'); await until('fixture.stats.sourceRefreshes.length === 1')
     await until('document.body.innerText.includes("来源已刷新，市场目录已同步")')
     await expect('fixture.stats.sourceRefreshes[0] === "curated-main"', 'refresh did not target the registered source ID')
+    await click('重新核对', 'document.querySelector(".eac-market__action-feedback")')
+    await expect('fixture.stats.sourceRefreshes.length === 1 && fixture.stats.sourceRefreshes[0] === "curated-main"', 'read-only recheck replayed refresh or discarded sourceId')
     await until('document.querySelector(".eac-market__source-row .eac-market__source-title")?.textContent.includes("可用")')
     await click('检查当前目录'); await until('fixture.stats.updateChecks === 1')
     await until('document.body.innerText.includes("目录已过期或刷新状态不确定")')

@@ -50,9 +50,12 @@ export function needsRecheckActionFeedback(label: string, message: string, nextS
   return { status: 'needs-recheck', label, message, nextStep, retryable }
 }
 
-export function pluginActionFeedbackState(action: Pick<PluginActionResult, 'status' | 'error'>, label: string, successMessage: string): ActionFeedbackState {
-  if (action.status === 'failed') return failedActionFeedback(label, action.error ?? '官方插件管理器报告失败。', '核对官方插件页中的真实状态，确认没有正在进行的任务后再重试。')
-  if (action.status === 'unknown') return unknownActionFeedback(label, '请求已经提交，但后台没有返回可确认的最终结果。', '先重新读取插件状态，不要立即重复提交。')
+export function pluginActionFeedbackState(action: Pick<PluginActionResult, 'status' | 'error'> & Partial<Pick<PluginActionResult, 'changed' | 'permissionChanges'>>, label: string, successMessage: string): ActionFeedbackState {
+  if (action.status === 'failed' && (action.changed || action.permissionChanges?.length)) return {
+    ...partialActionFeedback(label, `${action.error ?? '管理业务报告失败。'} 已发生的变更和权限变化会保留。`, '先核对官方插件页中的真实状态，不自动重试原写入。'), retryable: false,
+  }
+  if (action.status === 'failed') return failedActionFeedback(label, action.error ?? '官方插件管理器报告失败。', '核对官方插件页中的真实状态，确认没有正在进行的任务后再明确发起新操作。', false)
+  if (action.status === 'unknown') return unknownActionFeedback(label, '请求已经提交，但后台没有返回可确认的最终结果。', '核对原操作回执，不要立即重复提交；当前库存不是原操作完成证据。')
   if (action.status === 'restart-required') return needsRecheckActionFeedback(label, '请求已保存，但需要重启 DSH 才能确认最终状态。', '保存当前工作并重启 DSH，回来后重新读取插件状态。', false)
   return completedActionFeedback(label, successMessage, '可以继续使用插件，或打开任务面板查看官方执行记录。')
 }

@@ -197,6 +197,15 @@ export class MarketDataController {
     this.publish({ state: { ...ready, catalog: result.current } })
     return result
   }
+
+  async recheckCatalog(): Promise<void> {
+    const version = ++this.refreshVersion
+    const epoch = this.epoch
+    const catalog = await this.read(this.remote.catalog(), '目录状态读取')
+    const ready = this.ready()
+    if (this.stopped || epoch !== this.epoch || version !== this.refreshVersion || ready === undefined) return
+    this.publish({ state: { ...ready, catalog } })
+  }
 }
 
 export function useMarketData(remote: MarketRemote): DataView & { controller: MarketDataController } {

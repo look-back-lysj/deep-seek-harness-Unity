@@ -7,7 +7,7 @@ import { readFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { join } from 'node:path'
 import { Context, Service } from '@deepseek-ai/cordis'
-import type {} from '@deepseek-ai/dsh-app-boot'
+import * as dshHost from '@deepseek-ai/dsh-app-boot'
 import { Remote, bindTypertRemote } from '@deepseek-ai/dsh-typert-protocol'
 import z from '@deepseek-ai/schemastery'
 import {
@@ -51,6 +51,10 @@ import {
   type TaskIdRequest,
   type TaskResumeRequest,
   type TaskStartRequest,
+  type TaskStartRecoveryRequest,
+  type TaskStartRecoveryResult,
+  type PluginActionRecoveryRequest,
+  type PluginActionRecoveryResult,
   type TaskState,
   type TransferBeginRequest,
   type TransferChunkReadRequest,
@@ -58,12 +62,17 @@ import {
   type TransferChunkRequest,
   type TransferDisposeRequest,
   type TransferResult,
+  type HostCoreSnapshot,
+  type ReleaseOptionsRequest,
+  type ReleaseOptionsResult,
 } from './types.ts'
 import type { MarketBackend } from '@dsh-eac/market-core'
 import { createDshMarketBackend } from '@dsh-eac/market-core/dsh'
+import { desktopCatalogSourceOptions } from './catalog-options.ts'
 import { CORE_API_VERSION, CORE_VERSION, supportsApiVersion } from '@dsh-eac/market-core/compatibility'
 import { ClientSessionGate } from './session-gate.ts'
-import { ADAPTER_PROTOCOL_VERSION, REQUIRED_CORE_API_VERSION } from './version.ts'
+import { ADAPTER_PROVIDER_PROTOCOL_VERSION, HOST_REQUIRED_CORE_API_VERSION } from './version.ts'
+import { readDshHostCore } from './host-core.ts'
 
 export interface Config {
   readonly dataDirectory?: string
@@ -125,11 +134,11 @@ export class MarketService extends Service {
   private readonly hostVersion: string
   readonly typertRemote: unknown = bindTypertRemote(this, 'eacMarket')
   private readonly runtime: MarketBackend
-  private readonly clientSessions = new ClientSessionGate(ADAPTER_PROTOCOL_VERSION)
+  private readonly clientSessions = new ClientSessionGate(ADAPTER_PROVIDER_PROTOCOL_VERSION)
 
   constructor(ctx: Context, config: Config = {}) {
     super(ctx, 'eacMarket')
-    if (!supportsApiVersion(CORE_API_VERSION, REQUIRED_CORE_API_VERSION)) {
+    if (!supportsApiVersion(CORE_API_VERSION, HOST_REQUIRED_CORE_API_VERSION)) {
       throw new Error('市场 core 接口版本不匹配，请安装经过验证的完整市场版本。')
     }
     this.context = ctx
@@ -144,13 +153,9 @@ export class MarketService extends Service {
     this.runtime = createDshMarketBackend(ctx, identity, this.marketDataDir, {
       embeddedCatalogBytes: readFileSync(new URL('../data/index.json', import.meta.url)),
       marketVersion,
-      catalogSources: (config.catalogSources ?? []).map((source) => ({
-        id: source.id,
-        indexUrl: source.indexUrl,
-        maintainer: source.maintainer,
-        trust: 'team-registered',
-        ...(source.fallbackId ? { fallbackId: source.fallbackId } : {}),
-      })),
+      readHostCore: () => readDshHostCore(() => typeof dshHost.getDshRuntimeVersion === 'function' ? dshHost.getDshRuntimeVersion() : undefined),
+      ...desktopCatalogSourceOptions(config.catalogSources),
+      agentForgeSourceOptions: { targetAgent: 'dsh' },
       agentForgeSources: (config.agentForgeSources ?? []).map(source => {
         if (!/^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/u.test(source.id)) throw new Error('Agent Forge source ID 格式无效')
         let url: URL
@@ -194,7 +199,7 @@ export class MarketService extends Service {
     const accepted = this.clientSessions.connect(caller.id, request?.protocolVersion)
     return {
       accepted,
-      protocolVersion: ADAPTER_PROTOCOL_VERSION,
+      protocolVersion: ADAPTER_PROVIDER_PROTOCOL_VERSION,
       coreVersion: CORE_VERSION,
       coreApiVersion: CORE_API_VERSION,
       ...(accepted ? {} : { reason: '市场页面与后台协议不兼容，请刷新或更新市场。' }),
@@ -204,7 +209,7 @@ export class MarketService extends Service {
   @Remote
   hello(): EnvironmentHello {
     return {
-      protocolVersion: ADAPTER_PROTOCOL_VERSION,
+      protocolVersion: ADAPTER_PROVIDER_PROTOCOL_VERSION,
       coreVersion: CORE_VERSION,
       coreApiVersion: CORE_API_VERSION,
       schemaVersion: MARKET_SCHEMA_VERSION,
@@ -213,12 +218,23 @@ export class MarketService extends Service {
       profileName: this.context.profileContext.name,
       hostVersion: this.hostVersion,
       capabilities: this.runtime.capabilities(),
+      hostCore: this.runtime.hostCore(),
     }
   }
 
   @Remote
   catalog(): CatalogSnapshot {
     return this.runtime.catalog()
+  }
+
+  @Remote
+  hostCore(): HostCoreSnapshot {
+    return this.runtime.hostCore()
+  }
+
+  @Remote
+  releaseOptions(request: ReleaseOptionsRequest): Promise<ReleaseOptionsResult> {
+    return this.runtime.releaseOptions(request)
   }
 
   @Remote
@@ -280,6 +296,16 @@ export class MarketService extends Service {
   @Remote
   taskGet(request: TaskIdRequest): Promise<TaskState> {
     return this.runtime.taskGet(request)
+  }
+
+  @Remote
+  taskStartRecover(request: TaskStartRecoveryRequest): Promise<TaskStartRecoveryResult> {
+    return this.runtime.taskStartRecover(request, this.remoteCaller().id)
+  }
+
+  @Remote
+  pluginActionRecover(request: PluginActionRecoveryRequest): Promise<PluginActionRecoveryResult> {
+    return this.runtime.pluginActionRecover(request)
   }
 
   @Remote

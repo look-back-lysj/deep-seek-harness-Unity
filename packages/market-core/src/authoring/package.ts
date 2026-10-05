@@ -9,6 +9,7 @@ import { existsSync, mkdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import type { AuthorDraft, AuthorDraftInput } from '../contracts/types.ts'
 import { AuthorDraftConflictError, AuthorDraftStore, type DraftStoreOptions } from './drafts.ts'
+import { parseAuthorJson, parseAuthorUrl, withAuthorStorageError } from './errors.ts'
 import { MediaStore, type MediaLimits, type StoredMedia } from './media.ts'
 import { createZip, readZip, safeZipPath, type ZipEntry, type ZipLimits } from './zip.ts'
 
@@ -42,6 +43,7 @@ export class AuthorPackageError extends Error {
     super(message)
     this.name = 'AuthorPackageError'
     this.code = code
+    delete this.stack
   }
 }
 
@@ -77,11 +79,7 @@ function text(value: unknown, field: string, maxBytes: number, allowEmpty = fals
 }
 
 function parseJson(bytes: Uint8Array, field: string): unknown {
-  try {
-    return JSON.parse(Buffer.from(bytes).toString('utf8'))
-  } catch {
-    throw new AuthorPackageError('author-package/invalid-json', `${field} 不是合法 JSON`)
-  }
+  return parseAuthorJson(Buffer.from(bytes).toString('utf8'), () => new AuthorPackageError('author-package/invalid-json', `${field} 不是合法 JSON`))
 }
 
 function validateProvenance(value: unknown): AuthorProvenance {
@@ -97,13 +95,13 @@ function validateProvenance(value: unknown): AuthorProvenance {
   const licenseUrlValue = record.licenseUrl === undefined ? undefined : text(record.licenseUrl, 'provenance.licenseUrl', 4_096)
   let licenseUrl: string | undefined
   if (licenseUrlValue !== undefined) {
-    const url = new URL(licenseUrlValue)
+    const url = parseAuthorUrl(licenseUrlValue, () => new AuthorPackageError('author-package/invalid-source', 'provenance licenseUrl 必须是无凭据 HTTPS'))
     if (url.protocol !== 'https:' || url.username || url.password) throw new AuthorPackageError('author-package/invalid-source', 'provenance licenseUrl 必须是无凭据 HTTPS')
     licenseUrl = url.href
   }
   let repositoryUrl: string | undefined
   if (repositoryUrlValue !== undefined) {
-    const url = new URL(repositoryUrlValue)
+    const url = parseAuthorUrl(repositoryUrlValue, () => new AuthorPackageError('author-package/invalid-source', 'provenance URL 必须是无凭据 HTTPS'))
     if (url.protocol !== 'https:' || url.username || url.password) throw new AuthorPackageError('author-package/invalid-source', 'provenance URL 必须是无凭据 HTTPS')
     repositoryUrl = url.href
   }
@@ -132,7 +130,7 @@ export class AuthorPackageService {
     this.drafts = new AuthorDraftStore(`${root}/drafts`, options.draft)
     this.media = new MediaStore(`${root}/media`, options.media)
     this.provenanceDir = join(root, 'provenance')
-    mkdirSync(this.provenanceDir, { recursive: true })
+    withAuthorStorageError(() => mkdirSync(this.provenanceDir, { recursive: true }), () => new AuthorPackageError('author-package/storage-error', '作者资料存储初始化失败，请检查存储状态后重试'))
     this.zipLimits = options.zip ?? {}
   }
 
@@ -146,7 +144,8 @@ export class AuthorPackageService {
     if (inline !== undefined) return validateProvenance(inline)
     const path = this.provenancePath(draftId)
     if (!existsSync(path)) return {}
-    return validateProvenance(JSON.parse(readFileSync(path, 'utf8')))
+    const bytes = withAuthorStorageError(() => readFileSync(path), () => new AuthorPackageError('author-package/storage-error', '作者来源资料读取失败，请检查存储状态后重试'))
+    return validateProvenance(parseJson(bytes, 'provenance.json'))
   }
 
   private writeProvenance(draftId: string, provenance: AuthorProvenance): void {
@@ -253,10 +252,12 @@ export class AuthorPackageService {
     if (readme !== markdown) throw new AuthorPackageError('author-package/readme-mismatch', 'README.md 与 presentation.markdown 不一致')
     const sourceCommit = presentationValue.sourceCommit
     if (sourceCommit !== undefined && !/^[0-9a-f]{40}$/.test(sourceCommit)) throw new AuthorPackageError('author-package/invalid-commit', 'sourceCommit 必须完整固定')
-    const sourceUrl = presentationValue.sourceUrl
+    let sourceUrl = presentationValue.sourceUrl
     if (sourceUrl !== undefined) {
-      const url = new URL(sourceUrl)
+      if (typeof sourceUrl !== 'string') throw new AuthorPackageError('author-package/invalid-source', 'sourceUrl 必须是无凭据 HTTPS')
+      const url = parseAuthorUrl(sourceUrl, () => new AuthorPackageError('author-package/invalid-source', 'sourceUrl 必须是无凭据 HTTPS'))
       if (url.protocol !== 'https:' || url.username || url.password) throw new AuthorPackageError('author-package/invalid-source', 'sourceUrl 必须是无凭据 HTTPS')
+      sourceUrl = url.href
     }
     if (!Array.isArray(presentationValue.mediaIds)) throw new AuthorPackageError('author-package/invalid-media', 'mediaIds 必须是数组')
     const mediaIds = presentationValue.mediaIds
@@ -288,7 +289,7 @@ export class AuthorPackageService {
       ...(presentationValue.pluginVersion === undefined ? {} : { pluginVersion: text(presentationValue.pluginVersion, 'presentation.pluginVersion', 100) }),
       mediaIds: mediaIds.map((id) => savedMedia.find((item) => item.id === id)?.id ?? id),
       ...(sourceCommit === undefined ? {} : { sourceCommit }),
-      ...(sourceUrl === undefined ? {} : { sourceUrl: new URL(sourceUrl).href }),
+      ...(sourceUrl === undefined ? {} : { sourceUrl }),
     }
     const draft = options.targetDraftId !== undefined && options.expectedRevision !== undefined
       ? this.drafts.update({ ...input, id: options.targetDraftId }, provenance)

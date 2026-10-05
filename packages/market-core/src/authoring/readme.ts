@@ -77,16 +77,14 @@ function text(value: unknown, field: string, maxBytes: number): string {
 }
 
 function githubCoordinates(input: string): { owner: string; repository: string; repositoryUrl: string } {
-  const url = new URL(input)
-  if (url.protocol !== 'https:' || url.hostname.toLowerCase() !== 'github.com' || url.username || url.password) {
+  const match = /^https:\/\/github\.com\/([A-Za-z0-9_.-]+)\/([A-Za-z0-9_.-]+)\/?$/i.exec(input)
+  if (!match || match[0] !== input) {
     throw new ReadmeImportError('readme/invalid-repository', '只接受无凭据的公开 github.com 仓库地址')
   }
-  const segments = url.pathname.split('/').filter(Boolean)
-  if (segments.length !== 2) throw new ReadmeImportError('readme/invalid-repository', '仓库地址必须是 https://github.com/<owner>/<repo>')
-  const owner = segments[0] ?? ''
-  const repositoryWithSuffix = segments[1] ?? ''
+  const owner = match[1] ?? ''
+  const repositoryWithSuffix = match[2] ?? ''
   const repository = repositoryWithSuffix.replace(/\.git$/, '')
-  if (!/^[A-Za-z0-9_.-]+$/.test(owner) || !/^[A-Za-z0-9_.-]+$/.test(repository)) {
+  if (!repository || [owner, repository].some((segment) => segment === '.' || segment === '..')) {
     throw new ReadmeImportError('readme/invalid-repository', '仓库名包含不安全字符')
   }
   return { owner, repository, repositoryUrl: `https://github.com/${owner}/${repository}` }
@@ -94,6 +92,9 @@ function githubCoordinates(input: string): { owner: string; repository: string; 
 
 function safeRepoPath(input: string | undefined): string {
   const value = input ?? 'README.md'
+  if (/[\\?#\u0000-\u001f\u007f]/.test(value) || /%(?:25|2e|2f|5c|3f|23|0[0-9a-f]|1[0-9a-f]|7f)/i.test(value) || value.split('/').includes('..')) {
+    throw new ReadmeImportError('readme/unsafe-path', 'README 或媒体路径不安全')
+  }
   const normalized = posix.normalize(value.replace(/\\/g, '/')).replace(/^\.\//, '')
   if (
     !normalized ||
@@ -105,20 +106,44 @@ function safeRepoPath(input: string | undefined): string {
   return normalized
 }
 
+function githubContentUrl(input: string): string {
+  const match = /^https:\/\/raw\.githubusercontent\.com\/([A-Za-z0-9_.-]+)\/([A-Za-z0-9_.-]+)\/([0-9a-f]{40})\/([^?#\\\s]+)$/.exec(input)
+  if (!match || match[0] !== input) throw new ReadmeImportError('readme/unsafe-url', '只接受固定 commit 的公开 GitHub 文件地址')
+  const owner = match[1] ?? ''
+  const repository = match[2] ?? ''
+  const commit = match[3] ?? ''
+  const encodedPath = match[4] ?? ''
+  if ([owner, repository].some((segment) => segment === '.' || segment === '..')) {
+    throw new ReadmeImportError('readme/unsafe-url', '仓库坐标不安全')
+  }
+  let path: string
+  try { path = decodeURIComponent(encodedPath) }
+  catch { throw new ReadmeImportError('readme/unsafe-path', '文件路径编码无效') }
+  const safePath = safeRepoPath(path).split('/').map(encodeURIComponent).join('/')
+  if (safePath !== encodedPath) throw new ReadmeImportError('readme/unsafe-path', '文件路径编码不安全')
+  return `https://api.github.com/repos/${owner}/${repository}/contents/${safePath}?ref=${commit}`
+}
+
 function defaultRemote(options: RemoteSecurityOptions): RemoteBytesReader {
+  const headers = { 'user-agent': 'eac-market-readme-importer', 'x-github-api-version': '2022-11-28' }
   return {
     readJson: async (url: string) => {
-      const response = await safeFetch(url, { ...options, headers: { accept: 'application/vnd.github+json', 'x-github-api-version': '2022-11-28' } })
+      const response = await safeFetch(url, { ...options, headers: { ...headers, accept: 'application/vnd.github+json' } })
       const bytes = await readResponse(response, 1024 * 1024)
       return JSON.parse(Buffer.from(bytes).toString('utf8'))
     },
-    readBytes: async (url: string) => readResponse(await safeFetch(url, options), 8 * 1024 * 1024),
+    readBytes: async (url: string) => readResponse(await safeFetch(githubContentUrl(url), {
+      ...options, headers: { ...headers, accept: 'application/vnd.github.raw+json' },
+    }), 8 * 1024 * 1024),
   }
 }
 
 async function readResponse(response: Response, maxBytes: number): Promise<Uint8Array> {
   const declared = Number(response.headers.get('content-length') ?? '0')
-  if (Number.isFinite(declared) && declared > maxBytes) throw new ReadmeImportError('readme/too-large', '远程内容声明体积超限')
+  if (Number.isFinite(declared) && declared > maxBytes) {
+    void response.body?.cancel().catch(() => undefined)
+    throw new ReadmeImportError('readme/too-large', '远程内容声明体积超限')
+  }
   const body = response.body as AsyncIterable<Uint8Array> | null
   if (!body) return Buffer.alloc(0)
   const chunks: Buffer[] = []

@@ -103,7 +103,7 @@ export function applyKnownLifecycle(snapshot: CatalogSnapshot, acceptance?: Cata
     const release = acceptance.releases[id]?.record
     return release ? `${release.pluginId}@${release.version}:${release.artifactDigest}` : ''
   }))
-  const plugins = snapshot.plugins.map(plugin => withdrawn.has(`${plugin.id}@${plugin.version}:${plugin.artifactDigest}`) ? { ...plugin, installability: 'hard-blocked' as const } : plugin)
+  const plugins = snapshot.plugins.map(plugin => withdrawn.has(`${plugin.id}@${plugin.version}:${plugin.artifactDigest}`) ? { ...plugin, publication: 'withdrawn' as const, installability: 'hard-blocked' as const } : plugin)
   const available = new Set(plugins.filter(plugin => plugin.installability !== 'hard-blocked').map(plugin => `${plugin.id}@${plugin.version}`))
   const recommendations = snapshot.recommendations?.filter(item => available.has(`${item.pluginId}@${item.version ?? ''}`) || [...available].some(key => key.startsWith(`${item.pluginId}@`))) ?? []
   return { ...snapshot, plugins, recommendations, discovery: filterCatalogDiscovery(snapshot.discovery, plugins.filter(plugin => plugin.installability !== 'hard-blocked')) }

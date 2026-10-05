@@ -6,6 +6,9 @@ import type { MarketBackend } from './api.ts'
 import { MarketRuntime, type RuntimeIdentity, type RuntimeOptions } from './host/market-runtime.ts'
 
 export type { RuntimeIdentity } from './host/market-runtime.ts'
+export { evaluateHostCompatibility } from './core/host-compatibility.ts'
+export { evaluatePackageReleaseFacts } from './core/release-facts.ts'
+export type { ReleaseIdentity, ReleaseCandidate, ReleaseFact, InstalledVersionFact, PackageReleaseFacts } from './core/release-facts.ts'
 
 /** DSH adapter 唯一可公开的运行选项；目录原始字节由随包资源提供。 */
 export type DshMarketBackendOptions = Omit<RuntimeOptions, 'embeddedCatalog' | 'embeddedCatalogBytes'> & {
@@ -31,8 +34,10 @@ export function createDshMarketBackend(
   // 显式列出业务入口并保留接收者；解构调用也不会丢失 this。
   // 不转发内部对象或包装失败结果，审批、持久化和锁仍由原运行时负责。
   const backend: MarketBackend = {
+    hostCore: () => runtime.hostCore(),
+    releaseOptions: request => runtime.releaseOptions(request),
     capabilities: () => runtime.capabilities(),
-    catalog: () => ({ ...runtime.catalogView(), collections: runtime.catalog.collectionViews() }),
+    catalog: () => runtime.catalogView(),
     inventory: async () => (await runtime.host.readState()).inventory,
     catalogRefresh: request => runtime.catalogRefresh(request),
     catalogSources: () => runtime.catalogSources(),
@@ -43,6 +48,8 @@ export function createDshMarketBackend(
     updatePolicySave: request => runtime.updatePolicySave(request),
     planCreate: async (request, callerId) => runtime.planCreate(request, requireCallerId(callerId)),
     taskStart: async (request, callerId) => runtime.taskStart(request, requireCallerId(callerId)),
+    taskStartRecover: (request, callerId) => runtime.taskStartRecover(request, requireCallerId(callerId)),
+    pluginActionRecover: request => runtime.pluginActionRecover(request),
     taskGet: request => runtime.taskGet(request),
     taskList: () => runtime.taskList(),
     taskEvents: request => runtime.taskEvents(request),
