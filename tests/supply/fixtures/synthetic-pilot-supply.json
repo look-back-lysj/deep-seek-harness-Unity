@@ -1,0 +1,32 @@
+{
+  "schemaVersion": "supply.eac/v1",
+  "sourceId": "dsh-eac.mojobox",
+  "sequence": 1,
+  "revision": "synthetic-pilot-2026-10-05",
+  "generatedAt": "2026-10-05T12:00:00Z",
+  "items": [
+    {
+      "type": "plugin",
+      "packageName": "dsh-better-sidebar",
+      "version": "0.12.2",
+      "name": "侧栏增强",
+      "summary": "把侧栏整理成更清晰的分组（合成样本，仅用于导入器联调）。",
+      "source": { "url": "https://example.org/dsh-better-sidebar", "commit": null },
+      "status": "active",
+      "runtime": "not-tested",
+      "requiresDsh": null,
+      "compatibilityBasis": "unknown"
+    },
+    {
+      "type": "material",
+      "packageName": "blue-fantasy",
+      "version": "1.0.0",
+      "name": "蓝梦 Prompt 资料",
+      "summary": "一套可直接参考的提示词资料（合成样本，仅用于导入器联调）。",
+      "source": { "url": "https://example.org/blue-fantasy", "commit": null },
+      "status": "active",
+      "runtime": "not-tested",
+      "installable": false
+    }
+  ]
+}
