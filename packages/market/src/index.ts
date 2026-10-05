@@ -34,6 +34,7 @@ import {
   type UpdatePolicySaveRequest,
   type DiagnosticExport,
   type EnvironmentHello,
+  type InstallLogEntry,
   type InventorySnapshot,
   type PlanCreateRequest,
   type PlanResult,
@@ -425,6 +426,12 @@ export class MarketService extends Service {
   @Remote
   diagnosticsExport(): Promise<DiagnosticExport> {
     return this.runtime.diagnosticsExport()
+  }
+
+  /** 只读安装日志；旧后台缺少该方法时 Client 自行降级隐藏入口。 */
+  @Remote
+  installLogRead(request?: { readonly limit?: number }): Promise<readonly InstallLogEntry[]> {
+    return this.runtime.installLogRead(request)
   }
 
   @Remote

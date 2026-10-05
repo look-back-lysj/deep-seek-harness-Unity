@@ -120,7 +120,9 @@ export function Pill({ active = false, className = '', children, ...rest }: Butt
   return <button type="button" aria-pressed={active} className={`eac-pill ${active ? 'eac-pill--active' : ''} ${className}`.trim()} {...rest}>{children}</button>
 }
 
-export function Modal({ open, onClose, title, description, children, footer, closeLabel, className = '', contentClassName = '' }: {
+let openModalCount = 0
+
+export function Modal({ open, onClose, title, description, children, footer, closeLabel, className = '', contentClassName = '', variant = 'center', dismissOnOverlay = true }: {
   readonly open: boolean
   readonly onClose: () => void
   readonly title: string
@@ -130,6 +132,8 @@ export function Modal({ open, onClose, title, description, children, footer, clo
   readonly closeLabel: string
   readonly className?: string
   readonly contentClassName?: string
+  readonly variant?: 'center' | 'drawer'
+  readonly dismissOnOverlay?: boolean
 }): React.JSX.Element | null {
   const cardRef = useRef<HTMLDivElement>(null)
   const returnFocus = useRef<HTMLElement | null>(null)
@@ -140,6 +144,10 @@ export function Modal({ open, onClose, title, description, children, footer, clo
   useEffect(() => {
     if (!open) return
     returnFocus.current = document.activeElement instanceof HTMLElement ? document.activeElement : null
+    openModalCount += 1
+    const topbar = document.querySelector('.eac-market__topbar')
+    topbar?.setAttribute('inert', '')
+    topbar?.setAttribute('aria-hidden', 'true')
     const card = cardRef.current
     const first = card?.querySelector<HTMLElement>('[data-modal-autofocus]:not([disabled]), button:not([disabled]), input:not([disabled]), textarea:not([disabled]), select:not([disabled]), a[href]')
     ;(first ?? card)?.focus()
@@ -166,13 +174,18 @@ export function Modal({ open, onClose, title, description, children, footer, clo
     document.addEventListener('keydown', onKeyDown)
     return () => {
       document.removeEventListener('keydown', onKeyDown)
+      openModalCount = Math.max(0, openModalCount - 1)
+      if (openModalCount === 0) {
+        topbar?.removeAttribute('inert')
+        topbar?.removeAttribute('aria-hidden')
+      }
       returnFocus.current?.focus()
     }
   }, [open])
   if (!open) return null
   return (
-    <div className="eac-modal-overlay" role="presentation" onMouseDown={(event) => { if (event.currentTarget === event.target) onClose() }}>
-      <div className={`eac-modal ${className}`.trim()} role="dialog" aria-modal="true" aria-labelledby={titleId} {...(description === undefined ? {} : { 'aria-describedby': descriptionId })} tabIndex={-1} ref={cardRef}>
+    <div className={`eac-modal-overlay${variant === 'drawer' ? ' eac-modal-overlay--drawer' : ''}`} role="presentation" onMouseDown={(event) => { if (dismissOnOverlay && event.currentTarget === event.target) onClose() }}>
+      <div className={`eac-modal${variant === 'drawer' ? ' eac-modal--drawer' : ''} ${className}`.trim()} role="dialog" aria-modal="true" aria-labelledby={titleId} {...(description === undefined ? {} : { 'aria-describedby': descriptionId })} tabIndex={-1} ref={cardRef}>
         <div className="eac-modal__head">
           <div><h2 id={titleId}>{title}</h2>{description !== undefined && <p id={descriptionId}>{description}</p>}</div>
           <Button variant="ghost" aria-label={closeLabel} onClick={onClose}>关闭</Button>

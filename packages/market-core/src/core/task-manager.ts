@@ -14,6 +14,8 @@ import type {
   TaskApprovalRequest,
   TaskCancelRequest,
   TaskEvent,
+  InstallLogAction,
+  PlanAction,
   TaskItemResult,
   TaskItemStatus,
   TaskResumeRequest,
@@ -32,9 +34,11 @@ import type {
   HostInstallOutcome,
   HostReadState,
   PlanBundle,
+  PlanStep,
   ProfileLockPort,
   TaskAttemptRecord,
   TaskEventLogPort,
+  InstallLogSink,
   TaskItemFact,
   TaskRecord,
   TaskStorePort,
@@ -66,6 +70,8 @@ export interface TaskManagerDeps {
   readonly store: TaskStorePort
   readonly locks: ProfileLockPort
   readonly events?: TaskEventLogPort
+  /** B 档安装日志；缺省时静默跳过，测试宿主无需它。 */
+  readonly installLog?: InstallLogSink
   readonly owner?: string
   readonly now?: () => Date
   readonly maxEventHistory?: number
@@ -248,8 +254,11 @@ export class InstallTaskManager {
         record = this.refreshFacts(record, state)
         if (record.cancellationRequested) record = this.finalize(this.cancelPending(record))
         else if (record.task.status !== 'awaiting-approval') {
+          const pendingAttention = record.task.status === 'needs-attention'
           const finalized = this.finalize(record)
-          record = isTerminal(finalized.task.status) ? finalized : { ...record,
+          // 宽松模式：本来就是"结果未知（已提交）"的任务保持 needs-attention，
+          // 不再升级成 interrupted，否则会重新变成后续安装的活动阻塞。
+          record = isTerminal(finalized.task.status) || pendingAttention ? finalized : { ...record,
             task: { ...cloneState(record.task), status: 'interrupted', nextAction: 'reconcile-before-retrying' } }
         }
         record = await this.save(await this.appendEvent(record, record.task.status, accounted ? '已用旧回执和当前库存结算；未重放安装' : '已核对旧写入停止；剩余步骤等待明确确认', 'info'))
@@ -535,6 +544,7 @@ export class InstallTaskManager {
         const maintenance = await settleBusiness(settled)
         await files.writeAtomic(path, encodeJson(completeManagementRecord(settled, maintenance)))
       }
+      this.logManagement(request, outcome)
       return outcome
     } finally { await handle.release() }
   }
@@ -889,18 +899,27 @@ export class InstallTaskManager {
       record = await this.save(record)
       const after = await this.deps.host.readState()
       record = this.applyOutcome(record, itemIndex, attempt, outcome, after.inventory)
-      const uncertain = !this.installStateSettled(after, [item.packageName]) || outcome.kind === 'unknown'
-        || (outcome.kind === 'failed' && outcome.unknownSharedImpact === true) || record.task.items[itemIndex]?.status === 'unknown'
+      this.logOutcome(record, step, InstallTaskManager.logAction(planItem.action), outcome, planItem.targetDigest)
+      // 宽松模式（方案 1）：只有"官方明确失败且共享影响未知"仍按原语义暂停并设写入阻塞。
+      // 官方异常/回执不可识别、写后库存未安定、装后核对存疑一律只写日志——
+      // 不暂停任务、不阻塞后续安装、启动恢复也不再因此卡住。
+      const blocked = outcome.kind === 'failed' && outcome.unknownSharedImpact === true
+      const loggedOnly = !blocked && (outcome.kind === 'unknown'
+        || !this.installStateSettled(after, [item.packageName])
+        || record.task.items[itemIndex]?.status === 'unknown')
       const observed = packageItem(after.inventory, item.packageName)
       const barriers = { ...executionOf(record)?.restartBarriers }
       if (outcome.kind === 'applied' && outcome.restartRequired) barriers[step.pluginId] = beforeWrite.sessionRevision
-      record = withExecution(record, { writeUncertain: uncertain, restartBarriers: barriers,
+      record = withExecution(record, { writeUncertain: blocked, restartBarriers: barriers,
         observed: { ...executionOf(record)?.observed, ...(observed === undefined ? {} : { [step.pluginId]: observed }) },
-        attempts: { ...executionOf(record)?.attempts, [attempt.id]: { stage: uncertain ? 'received' : 'verified', sessionRevision: beforeWrite.sessionRevision, outcome } } })
-      if (!uncertain) record = this.clearActiveRequest(record)
+        attempts: { ...executionOf(record)?.attempts, [attempt.id]: { stage: blocked ? 'received' : 'verified', sessionRevision: beforeWrite.sessionRevision, outcome } } })
+      if (!blocked) record = this.clearActiveRequest(record)
       record = this.refreshFacts(record, after)
-      record = await this.save(await this.appendEvent(record, record.task.status, 'Host结果：' + outcome.kind, uncertain ? 'error' : 'info', step.pluginId))
-      if (uncertain) { await this.pause(record, '写入回执或写后库存尚未核定', true); return }
+      const message = outcome.kind === 'unknown' ? '已提交，结果未核实，详见安装日志'
+        : loggedOnly ? '装后核对或写后库存未安定，已记入安装日志'
+        : 'Host结果：' + outcome.kind
+      record = await this.save(await this.appendEvent(record, record.task.status, message, blocked ? 'error' : loggedOnly ? 'warning' : 'info', step.pluginId))
+      if (blocked) { await this.pause(record, '写入回执或写后库存尚未核定', true); return }
       if (outcome.kind === 'awaiting-approval') {
         if (record.cancellationRequested) { record = await this.save(this.finalize(this.cancelPending(record))); }
         return
@@ -947,6 +966,61 @@ export class InstallTaskManager {
     return next
   }
 
+  /** 安装日志动作映射：计划动作 → 日志动作（降级/重试都按版本变更记录）。 */
+  private static logAction(action: PlanAction): InstallLogAction {
+    return action === 'upgrade' || action === 'downgrade' ? 'update' : 'install'
+  }
+
+  /** 官方结果返回点的 B 档日志埋点；失败只打印，绝不影响任务推进。 */
+  private logOutcome(record: TaskRecord, step: PlanStep, action: InstallLogAction, outcome: HostInstallOutcome, artifactDigest?: string): void {
+    const sink = this.deps.installLog
+    if (sink === undefined) return
+    try {
+      const delivery = record.bundle.deliveries?.find(entry => entry.pluginId === step.pluginId && entry.packageName === step.packageName)
+      const source = delivery?.sources[0]
+      const version = record.bundle.plan.items.find(candidate => candidate.pluginId === step.pluginId)?.targetVersion
+      const error = outcome.kind === 'failed' || outcome.kind === 'unknown' ? outcome.error : undefined
+      sink.append({
+        at: this.now().toISOString(),
+        action,
+        packageName: step.packageName,
+        ...(version === undefined ? {} : { version }),
+        ...(artifactDigest === undefined ? {} : { artifactDigest }),
+        ...(source === undefined ? {} : { source: source.kind + ':' + sha256Hex(canonicalJson(source)) }),
+        officialResult: {
+          kind: outcome.kind,
+          ...('changed' in outcome ? { changed: outcome.changed } : {}),
+          ...(error === undefined ? {} : { error }),
+        },
+        taskId: record.task.taskId,
+      })
+    } catch (error) {
+      console.error('[eac-market/install-log] 记录官方结果失败', error)
+    }
+  }
+
+  /** 管理动作（卸载/启用/停用）的 B 档日志埋点。 */
+  private logManagement(request: CoordinatedManagementRequest, outcome: HostInstallOutcome): void {
+    const sink = this.deps.installLog
+    if (sink === undefined) return
+    try {
+      const error = outcome.kind === 'failed' || outcome.kind === 'unknown' ? outcome.error : undefined
+      sink.append({
+        at: this.now().toISOString(),
+        action: request.action,
+        packageName: request.packageName,
+        version: request.expectedVersion,
+        officialResult: {
+          kind: outcome.kind,
+          ...('changed' in outcome ? { changed: outcome.changed } : {}),
+          ...(error === undefined ? {} : { error }),
+        },
+      })
+    } catch (error) {
+      console.error('[eac-market/install-log] 记录管理结果失败', error)
+    }
+  }
+
   private applyOutcome(record: TaskRecord, itemIndex: number, attempt: TaskAttemptRecord, outcome: HostInstallOutcome, inventory: InventorySnapshot): TaskRecord {
     const item = record.task.items[itemIndex]
     if (item === undefined) return record
@@ -954,14 +1028,27 @@ export class InstallTaskManager {
     if (outcome.kind === 'applied') {
       const current = packageItem(inventory, item.packageName)
       const targetUnknown = inventory.unknownItems.some(issue => inventoryIssueAffectsPackage(issue, item.packageName))
-      if (targetUnknown || current?.installed !== true || current.source !== 'market-cache-file' || current.version !== item.targetVersion || current.bundleEnabled !== record.bundle.plan.items.find(target => target.pluginId === item.pluginId)?.requestedEnabled) {
-        return this.updateItem(record, itemIndex, {
-          status: 'unknown',
-          changed: outcome.changed,
-          installOutcome: 'unknown',
-          error: '官方结果已返回，但库存中的包身份或目标版本未核实',
-          permissionChanges,
-        })
+      const requestedEnabled = record.bundle.plan.items.find(target => target.pluginId === item.pluginId)?.requestedEnabled
+      if (targetUnknown || current?.installed !== true || current.source !== 'market-cache-file' || current.version !== item.targetVersion || current.bundleEnabled !== requestedEnabled) {
+        // 宽松模式（方案 1）：官方已明确 applied，我方核对存疑只写日志并按已安装完成，
+        // 不再把任务判成未核定；具体哪一项存疑由 host-port 装后核对日志承载。
+        const status: TaskItemStatus = outcome.restartRequired ? 'restart-required'
+          : current?.installed === true && current.version === item.targetVersion
+            ? (current.bundleEnabled ? 'enabled' : 'disabled')
+            : 'installed'
+        return {
+          ...this.updateItem(record, itemIndex, {
+            status,
+            changed: outcome.changed,
+            installOutcome: outcome.restartRequired ? 'restart-required' : 'applied',
+            error: '官方安装结果已确认；我方装后核对存在存疑项，已记入安装日志',
+            errorCode: 'postcheck/logged',
+            permissionChanges,
+            ...(outcome.packageResultCode === undefined ? {} : { packageResultCode: outcome.packageResultCode }),
+          }),
+          itemFacts: { ...record.itemFacts, [item.pluginId]: this.factFromInventory(inventory, item.packageName) },
+          attempts: record.attempts.map((candidate) => candidate.id === attempt.id ? { ...candidate, phase: 'finished' } : candidate),
+        }
       }
       const status: TaskItemStatus = outcome.restartRequired ? 'restart-required' : current?.bundleEnabled ? 'enabled' : 'disabled'
       return {

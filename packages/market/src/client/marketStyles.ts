@@ -1,6 +1,7 @@
 export const MARKET_CSS = `
 .eac-market-host { position: relative; display: flex; flex: 1 1 0%; height: 100%; min-height: 0; min-width: 0; overflow: hidden; }
 .eac-market {
+  position: relative;
   --eac-page: var(--dsw-alias-bg-base, #f7f8fa);
   --eac-panel: var(--dsw-alias-bg-layer-1, #fff);
   --eac-panel-2: var(--dsw-alias-bg-layer-2, #f1f3f5);
@@ -398,7 +399,7 @@ export const MARKET_CSS = `
 .eac-pill { min-height: 32px; padding: 5px 11px; border: 1px solid var(--eac-border); border-radius: 999px; color: var(--eac-text-2); background: var(--eac-panel); cursor: pointer; }
 .eac-pill--active { color: #fff; border-color: var(--eac-accent); background: var(--eac-accent); }
 .eac-modal-overlay {
-  position: fixed; inset: 0; z-index: 100; display: grid; padding: 20px; place-items: center;
+  position: absolute; inset: 0; z-index: 100; display: grid; padding: 20px; place-items: center;
   background: rgba(0, 0, 0, .38);
 }
 .eac-modal {
@@ -1963,6 +1964,28 @@ export const MARKET_CSS = `
 }
 
 /* ---- 16. 任务抽屉与任务贴片: 日志流 ---- */
+.eac-market__task-list { counter-reset: eac-task; }
+.eac-market__task-list > .eac-market__task { counter-increment: eac-task; position: relative; padding-left: 58px; }
+.eac-market__task-list > .eac-market__task::before {
+  position: absolute;
+  top: 18px;
+  left: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  height: 32px;
+  padding: 0 6px;
+  border-radius: 6px;
+  color: #ffffff;
+  background: var(--eac-uv);
+  font-family: var(--eac-font-mono);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  content: counter(eac-task, decimal-leading-zero);
+}
+
 .eac-market__drawer {
   background: var(--eac-page);
   border-left: 1px solid var(--eac-hairline-strong);
@@ -2581,5 +2604,384 @@ export const MARKET_CSS = `
     gap: 24px 32px;
   }
   .eac-market__detail-side { position: sticky; top: 88px; }
+}
+
+/* ============================================================
+   Round-3 polish layer - 2026-10-05
+   三定案: 一次最终确认 / 真右侧任务抽屉 / 墨黑刊头+首推框
+   评审来源: Assessment A(设计总监) + Assessment B(证据)
+   ============================================================ */
+
+/* ---- 1. 墨黑刊头（浅色宿主下也保留 The Verge 身份） ---- */
+.eac-market__topbar--editorial {
+  background: #131313;
+  color: var(--eac-text);
+  --eac-page: #131313;
+  --eac-panel: #1d1d1d;
+  --eac-panel-2: #2d2d2d;
+  --eac-text: #ffffff;
+  --eac-text-2: #b8b8b8;
+  --eac-text-3: #949494;
+  --eac-hairline: rgba(255, 255, 255, .32);
+  --eac-hairline-strong: rgba(255, 255, 255, .7);
+  --eac-link: #3cffd0;
+  border-bottom-color: rgba(255, 255, 255, .7);
+}
+.eac-market__topbar--editorial .eac-market__nav button { color: #b8b8b8; border-color: rgba(255, 255, 255, .32); }
+.eac-market__topbar--editorial .eac-market__nav button::before { color: #7d7d7d; }
+.eac-market__topbar--editorial .eac-market__nav button:hover { color: #ffffff; background: #2d2d2d; }
+.eac-market__topbar--editorial .eac-market__nav button[aria-current="page"] { color: #000000; background: #3cffd0; border-color: #131313; }
+.eac-market__topbar--editorial .eac-market__nav button[aria-current="page"]::before { color: #000000; }
+.eac-market__topbar--editorial .eac-market__top-action { color: #b8b8b8; }
+.eac-market__topbar--editorial .eac-market__top-action:hover { color: #ffffff; background: #2d2d2d; }
+.eac-market__topbar--editorial .eac-market__menu { background: #1d1d1d; border-color: rgba(255, 255, 255, .7); color: #ffffff; }
+.eac-market__topbar--editorial .eac-market__menu button { color: #ffffff; }
+.eac-market__topbar--editorial .eac-market__menu button:hover { background: #3a3a3a; color: #ffffff; }
+
+/* ---- 2. 首推框固定墨底 ---- */
+.eac-market__poster-stage {
+  background: #131313;
+  color: var(--eac-text);
+  --eac-text: #ffffff;
+  --eac-text-2: #c9c9c9;
+  --eac-text-3: #9a9a9a;
+  --eac-page: #131313;
+  --eac-panel: #131313;
+  --eac-panel-2: #242424;
+  --eac-hairline: rgba(255, 255, 255, .3);
+  --eac-hairline-strong: rgba(255, 255, 255, .65);
+  --eac-link: #3cffd0;
+  border-color: rgba(255, 255, 255, .65);
+}
+.eac-market__poster-stage .eac-market__poster-copy p:not(.eac-market__poster-kicker):not(.eac-market__recommendation) { color: #c9c9c9; }
+.eac-market__poster--fallback .eac-market__poster-copy > p:first-child {
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 1.6;
+}
+.eac-market__poster-fallback-meta {
+  font-family: var(--eac-font-mono);
+  font-size: 12px;
+  letter-spacing: 1px;
+  color: rgba(255, 255, 255, .85);
+}
+.eac-market__poster-controls button { color: #c9c9c9; border-bottom-color: rgba(255, 255, 255, .5); }
+.eac-market__poster-controls button:hover { color: #3cffd0; border-bottom-color: #3cffd0; }
+.eac-market__poster-controls { color: #9a9a9a; }
+
+/* ---- 3. 详情: 一行事实条 + 可见禁用原因 ---- */
+.eac-market__facts-strip {
+  border: 1px solid var(--eac-hairline);
+  border-radius: var(--eac-radius-tile);
+  background: var(--eac-panel);
+}
+.eac-market__facts-strip > summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 18px;
+  min-height: 44px;
+  padding: 10px 16px;
+  cursor: pointer;
+  list-style: none;
+}
+.eac-market__facts-strip > summary::-webkit-details-marker { display: none; }
+.eac-market__facts-strip summary span {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  font-size: 13px;
+}
+.eac-market__facts-strip summary em {
+  font-style: normal;
+  color: var(--eac-text-3);
+  font-family: var(--eac-font-mono);
+  font-size: 11px;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+}
+.eac-market__facts-more {
+  margin-left: auto;
+  color: var(--eac-link);
+  font-family: var(--eac-font-mono);
+  font-size: 12px;
+  letter-spacing: .8px;
+}
+.eac-market__facts-strip[open] > summary { border-bottom: 1px solid var(--eac-hairline); }
+.eac-market__facts-strip > details, .eac-market__facts-strip > .eac-market__section-head,
+.eac-market__facts-strip > .eac-market__facts, .eac-market__facts-strip > .eac-market__footer-note {
+  margin-inline: 16px;
+}
+.eac-market__facts-strip > .eac-market__section-head { margin-top: 8px; }
+.eac-market__detail-reason {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-top: 6px;
+}
+.eac-market__detail-reason p { margin: 0; color: var(--eac-text-2); font-size: 13px; line-height: 1.55; }
+.eac-market__detail-reason .eac-tag { flex: 0 0 auto; margin-top: 1px; }
+
+/* ---- 4. 设置三章节 ---- */
+.eac-market__chapter-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 36px 0 6px;
+  padding-top: 20px;
+  border-top: 2px solid var(--eac-hairline-strong);
+  color: var(--eac-text);
+  font-family: var(--eac-font-display);
+  font-size: clamp(19px, 2vw, 26px);
+  font-weight: 900;
+  letter-spacing: -.03em;
+}
+.eac-market__settings-list > .eac-market__chapter-head:first-child {
+  margin-top: 10px;
+  padding-top: 0;
+  border-top: 0;
+}
+.eac-market__chapter-head .eac-market__chapter-index { margin-right: 0; }
+
+/* ---- 5. 帮助页: 虚线轨道 + 编号 + FAQ 台账 ---- */
+.eac-market__help-steps { position: relative; padding-left: 26px; }
+.eac-market__help-steps::before {
+  position: absolute;
+  top: 10px;
+  bottom: 10px;
+  left: 7px;
+  border-left: 1px dashed var(--eac-stream-rail);
+  content: '';
+}
+.eac-market__help-step { position: relative; }
+.eac-market__help-step::before {
+  position: absolute;
+  top: 26px;
+  left: -25px;
+  width: 13px;
+  height: 13px;
+  border: 2px solid var(--eac-page);
+  border-radius: 50%;
+  background: var(--eac-mint);
+  box-shadow: 0 0 0 1px var(--eac-hairline-strong);
+  content: '';
+}
+.eac-market__help-step:nth-child(2)::before { background: var(--eac-uv); }
+.eac-market__help-step:nth-child(3)::before { background: var(--eac-yellow); }
+.eac-market__step-mark { margin-bottom: 8px; }
+.eac-market__faq {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  border-top: 2px solid var(--eac-hairline-strong);
+}
+.eac-market__faq > .eac-market__card {
+  padding: 16px 6px;
+  border: 0;
+  border-bottom: 1px solid var(--eac-hairline);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.eac-market__faq > .eac-market__card:hover {
+  transform: none;
+  background: var(--eac-panel-2);
+  box-shadow: none;
+}
+.eac-market__faq h3 {
+  font-family: var(--eac-font-display);
+  font-weight: 900;
+  font-size: 15px;
+  letter-spacing: -.02em;
+}
+
+/* ---- 6. 皮肤中心: 主操作 / 工具行 ---- */
+.eac-market__skin-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px 14px;
+}
+.eac-market__skin-actions-tools {
+  padding-left: 14px;
+  border-left: 1px solid var(--eac-hairline);
+}
+
+/* ---- 7. 作者贴纸 / 空状态 / 传输 ---- */
+.eac-market__dirty-sticker {
+  display: inline-block;
+  padding: 3px 10px;
+  border: 1px solid var(--eac-ink);
+  border-radius: 2px;
+  color: var(--eac-ink);
+  background: var(--eac-yellow);
+  font-family: var(--eac-font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  transform: rotate(-1.5deg);
+}
+.eac-market__chip-ok {
+  display: inline-block;
+  padding: 3px 10px;
+  border: 1px solid var(--eac-hairline);
+  border-radius: var(--eac-radius-tile);
+  color: var(--eac-text-2);
+  background: var(--eac-panel);
+  font-family: var(--eac-font-mono);
+  font-size: 12px;
+  letter-spacing: .06em;
+}
+.eac-market__empty { display: flex; flex-direction: column; align-items: flex-start; gap: 14px; }
+.eac-market__empty-mark {
+  width: auto;
+  min-width: 0;
+  margin-bottom: 0;
+  padding: 3px 10px;
+  letter-spacing: 1.6px;
+}
+p > .eac-tag--danger { margin-left: 8px; vertical-align: middle; }
+.eac-market__skeleton { border-left: 3px solid var(--eac-stream-rail); }
+
+/* ---- 8. 任务真抽屉 + 弹窗不透明入场 ---- */
+.eac-modal-overlay--drawer {
+  padding: 0;
+  place-items: stretch end;
+  background: rgba(0, 0, 0, .44);
+}
+.eac-modal--drawer {
+  width: min(460px, 100vw);
+  height: 100%;
+  max-height: 100%;
+  margin: 0;
+  border: 0;
+  border-left: 1px solid var(--eac-hairline-strong);
+  border-radius: 0;
+  display: flex;
+  flex-direction: column;
+  box-shadow: none;
+  animation: eac-drawer-in 280ms cubic-bezier(.16, 1, .3, 1) both;
+}
+.eac-modal--drawer .eac-modal__head { flex: 0 0 auto; }
+.eac-modal--drawer .eac-modal__content { flex: 1 1 auto; overflow: auto; }
+.eac-modal--drawer .eac-modal__footer { flex: 0 0 auto; }
+@keyframes eac-overlay-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes eac-card-plant { from { transform: scale(.97) translateY(8px); } to { transform: none; } }
+.eac-modal-overlay { animation: eac-overlay-fade 160ms ease both; }
+.eac-modal { animation: eac-card-plant var(--eac-overlay-in) both; }
+.eac-modal-overlay--drawer { animation: eac-overlay-fade 160ms ease both; }
+
+/* ---- 9. 警告主体水平，只旋转贴纸；贴纸角度静态 ---- */
+.eac-market__notice--warning,
+.eac-market__notice--danger { transform: none; }
+.eac-market__notice[data-sticker]::after { transform: rotate(-2deg); }
+
+/* ---- 10. 截图画廊单失败项跨列 ---- */
+.eac-market__gallery:has(> *:only-child) { grid-template-columns: minmax(0, 1fr); }
+
+/* ---- 11. 折叠 summary 触达（P1） ---- */
+.eac-market details > summary,
+.eac-modal details > summary {
+  display: flex;
+  align-items: center;
+  min-height: 32px;
+}
+
+/* ---- 12. 窄屏/粗指针 44px 触达重申（置于全层之后，防覆盖回退） ---- */
+@media (max-width: 719px), (pointer: coarse) {
+  .eac-market .eac-button { min-height: 44px; }
+  .eac-market .eac-button--sm { min-height: 44px; }
+  .eac-market .eac-pill { min-height: 44px; }
+  .eac-market .eac-market__top-action { min-height: 44px; }
+  .eac-market .eac-market__poster-controls button { min-height: 44px; }
+  .eac-market .eac-market__menu button { min-height: 44px; }
+  .eac-market details > summary,
+  .eac-modal details > summary { min-height: 44px; }
+  .eac-market__skin-actions { flex-direction: column; align-items: stretch; }
+  .eac-market__skin-actions-tools { padding-left: 0; border-left: 0; }
+}
+
+/* ---- 13. reduced-motion: 补齐残留位移（P1） ---- */
+@media (prefers-reduced-motion: reduce) {
+  .eac-market__brand-mark:hover,
+  .eac-market__score-section .eac-market__ranked-item:hover,
+  .eac-market__grid--two > .eac-market__card:hover,
+  .eac-market__skin-entry:hover,
+  .eac-market__skin-entry:active,
+  .eac-tag:not(.eac-tag--success):not(.eac-tag--info):not(.eac-tag--warning):not(.eac-tag--danger):hover,
+  .eac-market__dirty-sticker,
+  .eac-modal,
+  .eac-modal--drawer {
+    transform: none !important;
+    transition: none !important;
+  }
+  .eac-modal-overlay,
+  .eac-modal-overlay--drawer,
+  .eac-market__facts-strip > summary,
+  .eac-market__chapter-head,
+  .eac-market__skin-actions > * {
+    animation: none !important;
+  }
+}
+
+/* ---- 14. 强制颜色: 墨黑面回系统色 ---- */
+@media (forced-colors: active) {
+  .eac-market__topbar--editorial,
+  .eac-market__poster-stage {
+    background: Canvas !important;
+    color: CanvasText;
+    border-color: ButtonText;
+  }
+  .eac-market__topbar--editorial .eac-market__nav button,
+  .eac-market__topbar--editorial .eac-market__top-action,
+  .eac-market__facts-strip,
+  .eac-market__faq,
+  .eac-market__dirty-sticker,
+  .eac-market__help-steps::before,
+  .eac-market__help-step::before {
+    background: Canvas;
+    color: CanvasText;
+    border-color: CanvasText;
+  }
+  .eac-market__chapter-head { border-top-color: CanvasText; }
+}
+
+/* ============================================================
+   Round-4 polish layer - 2026-10-05
+   实机反馈三连修: 抽屉锚定/筛选呼吸/图标蓝色底片
+   ============================================================ */
+
+/* ---- 1. 抽屉空态在面板内居中（配合 EmptyState） ---- */
+.eac-modal--drawer .eac-market__task-list {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  height: 100%;
+}
+.eac-modal--drawer .eac-market__task-list > .eac-market__empty {
+  margin: auto 0;
+  width: 100%;
+  align-items: center;
+  text-align: center;
+}
+.eac-modal--drawer .eac-market__empty-mark { align-self: center; }
+
+/* ---- 2. 发现页筛选呼吸感（图2: 胶囊行太紧凑、与按钮挤在一起） ---- */
+.eac-market__discover-page .eac-market__filters { gap: 10px; margin-bottom: 18px; }
+.eac-market__filters { gap: 10px; }
+.eac-market__filters .eac-pill { padding: 6px 14px; }
+.eac-market__discover-page .eac-market__button-row { gap: 12px; }
+
+/* ---- 3. 插件图标: 薄荷方块下叠一张紫外蓝底片（图3, 双层贴纸 3D 感） ---- */
+.eac-market__plugin-icon {
+  box-shadow: 4px 4px 0 var(--eac-uv), 5px 5px 0 1px var(--eac-ink);
+}
+.eac-market__detail > .eac-market__plugin-head .eac-market__plugin-icon {
+  box-shadow: 6px 6px 0 var(--eac-uv), 7px 7px 0 1px var(--eac-ink);
+}
+@media (forced-colors: active) {
+  .eac-market__plugin-icon { box-shadow: none !important; }
 }
 `

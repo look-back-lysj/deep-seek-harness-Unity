@@ -2,7 +2,7 @@
 
 更新时间：2026-10-05（Asia/Shanghai）。**所有新协作者先读本文，再开始改代码。** 本文是当前接手入口；归档中的旧阶段报告和旧计划只能追溯。
 
-**当前开发交接与修改记录：**[详细开发者交接](DEVELOPER-HANDOFF-2026-10-05.md)、[逐模块修改记录](MODIFICATION-RECORD-2026-10-05.md)。已正常合并GitHub上游mvp.18，保留两边功能；合并后build、额外Client tsc、lint、包边界及全量1877 passed / 0 failed / 2既有pending、合成browser55/55通过。独立布局审计被中断，合并后新官方制品尚未打包安装验收，不能引用下面mvp.17批次证明mvp.18字节通过。本次提交/推送只交付当前分支源码、工具和文档，不是npm、tag/Release或日常Profile安装。
+**当前开发交接与修改记录：**[详细开发者交接](DEVELOPER-HANDOFF-2026-10-05.md)、[逐模块修改记录](MODIFICATION-RECORD-2026-10-05.md)。两次正常合并GitHub上游至mvp.19，保留两边功能；两次逐文件取舍见修改记录第13节。最新build、额外Client tsc、lint、包边界及全量1906 passed / 0 failed / 2既有pending、合成browser60/60通过。独立布局审计被中断，新官方字节及普通unknown的迟到回执追账仍待验，不能引用下面mvp.17批次证明新版字节通过。本次提交/推送只交付当前分支源码、工具和文档，不是npm、tag/Release或日常Profile安装。
 
 **下一阶段详细实现计划：**[问题分类、实现步骤与验收门禁](NEXT-IMPLEMENTATION-PLAN-2026-10-05.md)。RW-13的Core/Client实现及本批rc.2管理范围已经执行，后续优先处理真实媒体源体积、版本/制品映射与安装长链路；退出问题单独归因，正式发布需授权。各阶段状态与历史计划分开记录。
 
@@ -18,7 +18,7 @@
 
 - 本轮工作区：`G:/Code/fork/agent-market`；协作者使用自己的检出路径，历史 `D:/eac-market` 不是运行时默认目录。
 - 当前协作分支：`refactor/market-core-adapter`
-- 桌面适配器源码候选：`@dsh-eac/market@0.1.0-mvp.18`；上游`releases/0.1.0-mvp.18-dual/`是合并前预备制品，不能覆盖，也不能当成本轮修复的安装字节。
+- 桌面适配器源码候选：`@dsh-eac/market@0.1.0-mvp.19`；上游`releases/0.1.0-mvp.18-dual/`是合并前预备制品，不能覆盖，也不能当成本轮修复的安装字节。
 - Core 源码候选：`@dsh-eac/market-core@0.1.6`；Provider Core API `1.1.0`、Remote `2.1.0`；Client 最低要求仍为 Core API `1.0.0` / Remote `2.0.0`，新增能力单独探测。
 - 当前正式可安装版：`0.1.0-mvp.9` 单包
 - 当前 Client 已完成：发现页、全部插件目录、详情、导航返回快照、筛选、任务/皮肤/作者工具交互收口和兼容 fallback。

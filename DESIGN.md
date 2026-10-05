@@ -231,7 +231,7 @@ await ctx.remote.$mount(TYPERT_REMOTE)
 
 - 海报优先使用真实精选；没有精选时将现有目录中已有安装包且非硬不兼容的功能条目展示为“插件探索”，明示不是团队精选或评分。只做视觉组织，不构造虚假的 DiscoveryCard/推荐记录。没有图片或图片失败保留同尺寸排版海报；皮肤、高分分区仍无数据不显示。
 - 大海报位于皮肤入口之前，保留详情、安装方案、分页、手动暂停；手动暂停与悬停/焦点暂停独立，后台隐藏监听不依赖轮播 timer，返回后可恢复。减少动态时不自动轮播和淡入。标题使用平衡换行，避免长中文孤字。
-- 列表中 unverified 是中性事实，不等同已知危险；硬不兼容保留 danger。安装仍从真实预检开始，显式试装同意和最终确认都保留，不自动开始任务。
+- 列表中 unverified 是中性事实，不等同已知危险；硬不兼容保留 danger。安装采用「预检 → 方案 → 一次最终确认」（2026-10-05 定案，本句为唯一规则）：不额外要求试装勾选，未验证理由在方案内以中性状态与折叠说明呈现，不自动开始任务。
 - inventory:unverified-state 单独解释为环境状态待核对，不宣称目标插件有风险；该状态下隐藏无法解除阻断的试装勾选，提供官方插件页与重新预检。现有库存 unknownItems 仅投影安全包名和通俗类别，不输出原始路径/URL/凭据。
 - 常驻冗长保护说明折叠收纳；降级第二次确认、校验/缺包/硬阻断、未知提交不重放等保护不变。
 
@@ -275,3 +275,24 @@ typecheck/lint 通过；Client 248 项通过（新增触感层断言）；browse
 - 新增浏览器检查 2 项：`微交互`（按压无位移+台阶塌陷+彩纸/reduced-motion/磁吸正反向）与 `排版节奏`（行尾 ≤24、顶栏中心差 ≤4、标签贴合 ≤1）。
 
 验证：typecheck/lint 通过；Client 248 项通过；browser-check **55 项全过**；布局审计 **0 违规（exit 0）**；兼容专项通过；全量 `pnpm check` 758 项通过、2 项固定跳过、包验证通过（调度器测试偶发超时按交接文档单跑 24 项确认为历史波动）。截图证据 `D:/eac-market-verify/implementation-20260928/C-UI`，布局审计明细 `D:/eac-market-verify/layout-audit/findings.json`。官方 Desktop 实机验收仍属未完成 P0。
+
+## 19. 2026-10-05 Round-3 全界面精修（双评审综合）
+
+按 impeccable critique 方法论完成两项隔离评审：Assessment A（设计总监，Nielsen 28/40，结论"母题只覆盖展示型首屏"）与 Assessment B（证据检测，55/55 通过、0 布局违规，但抓到折叠触达 21–24px、窄屏 44px 规则被覆盖）。三项定案：**安装一次最终确认 / 任务真右侧抽屉 / 浅色下墨黑刊头+首推框**。
+
+- **P0 定案落地**：DESIGN.md 第 16 节改为唯一规则（预检→方案→一次最终确认）；确认按钮 `disabled` 补 `result.status !== 'ready'` 与 `aria-busy`；高风险弹窗点击遮罩不再关闭；弹窗入场改"遮罩淡入 + 卡片始终不透明"（`eac-card-plant`）；弹窗打开时顶栏 `inert`+`aria-hidden`（关闭恢复，计数器防叠加），背景其余部分由 `aria-modal` + 焦点陷阱覆盖。
+- **任务真抽屉**：`TaskDrawer` 走 `Modal variant="drawer"` → `.eac-modal-overlay--drawer/.eac-modal--drawer`，右缘滑入 460px、内容区独立滚动；任务贴片左侧 UV 计数编号牌（CSS counter，零 DOM 改动），脚本授权按钮升 primary 并标粉红「高权限操作」；焦点/几何/480 无溢出由新检查断言。
+- **墨黑刊头+首推框**：`.eac-market__topbar--editorial` 与 `.eac-market__poster-stage` 固定 `#131313` 实色板并在局部重定义文字/线色 token（浅色宿主下也保持 The Verge 身份；深色天然等价）；forced-colors 下回系统色。
+- **发现页**：fallback 海报只留大名+版本/包名 meta，右栏去重复 h3（`{hasImage && <h3>}`）；章节编号改 `nextChapter()` 按实际渲染动态排布（缺内容不再跳号）；分类 Pill 前 4 直出 + "更多用途"收纳；轮播自动换页重置 6.5s 计时并更新 live 播报；高级筛选"取消"升 outline。
+- **目录/详情**：分页翻页后按容器几何滚回 `.eac-market__directory-meta`（容器高度必须真实可滚，夹具需 `official-panel-fixture`）；详情侧栏压成一行事实条（验证/安装/重启 + 可展开完整详情），禁用主按钮下可见"暂不可用原因"标签+文字并 `aria-describedby`；返回钮升 outline；单张失败截图 `:has(:only-child)` 跨列。
+- **操作型页面母题化**：帮助三步上虚线轨道 + `01/02/03` 编号牌、FAQ 改 hairline 台账；设置拆 `01 目录与来源 / 02 检查与运行 / 03 外观与诊断` 三章节头；作者未保存改黄色贴纸、切换弹窗 safe 升 primary/破坏降 outline+粉标签；空状态加 `EMPTY` 编号牌；皮肤中心当前外观拆"主操作/工具行"两组；检查偏好保存失败升 `role="alert"`。
+- **控件与动效**：全局 `summary ≥32px`（窄屏/粗指针 44px）；`@media (max-width:719px),(pointer:coarse)` 重申按钮/pill/轮播/菜单 44px 下限（置于全层之后防覆盖）；`FileTransferField` 补 `progressbar` 语义；reduced-motion 补齐 brand-mark/ranked/grid--two/skin-entry/tag 等残留位移；警告主体永平，仅 `RESTART/BLOCK` 贴纸静态旋转 −2°；彩纸改里程碑制（`ActionFeedbackState.milestone`：任务完成、插件启停管理、皮肤切换为 true；刷新/诊断/分析/导出只盖章）。
+- **门禁**：browser-check 新增 6 项（任务抽屉、遮罩不关闭、分页回顶、海报去重、轮播播报、非里程碑不撒纸），共 **60 项全过**；layout-audit 触达/summary 纳入违规，**0 违规 exit 0**；Client 单测 **249 项全过**；closeLabel 全部以"关闭"开头（可见文字包含于可访问名）。
+
+### Round-4 实机三连修（2026-10-05 晚，来自用户预览实拍反馈）
+
+1. **任务抽屉布局问题**：根因是弹层此前 `position: fixed` 锚定整个窗口——窄面板预览时抽屉飘到窗口右边、与面板脱节，且被预览工具条压住头部。改为 **`position: absolute` + `.eac-market { position: relative }`**，弹层始终贴合市场面板四边；新增回归断言：① 抽屉 right/top 与 `.eac-market` 差 ≤2px；② 面板内容滚动 240px 时弹层位置不动（absolute 定位上下文在滚动容器之外的经典逃逸，实测通过）；③ 无任务空态改用 `EmptyState`（EMPTY 编号牌 + 标题 + 描述 + 动作），抽屉内自动垂直居中。连带修复：合成夹具页面补 `html,body,#root{height:100%}`（否则定位后的弹层塌成 0 高、截图全白），并给 `.official-panel-fixture` 补 `min-height:0`，防止 `min-height:100%` 顶掉 `calc(100dvh-32px)` 造成宿主溢出 32px。
+2. **发现页筛选太紧凑**：胶囊行 `gap:10px`、内边距 `6px 14px`（高36），与「浏览全部插件」行间距18px（实测值已进 CSS 合同断言）。
+3. **图标加蓝色底片 3D 感**：`.eac-market__plugin-icon` 改为双层贴纸——薄荷方块下叠 4px 紫外蓝底片 + 1px 墨边（`rgb(82,0,255) 4px 4px` + `rgb(19,19,19) 5px 5px 0 1px`），详情页大图标 6px 版本；forced-colors 下去台阶回系统色。任务贴片、机架、行情表、详情带头全部生效。
+
+验证：Client 251 项通过；browser-check 60 项全过（含抽屉对齐/锚定/空态三项新断言）；layout-audit 0 违规；兼容专项通过。

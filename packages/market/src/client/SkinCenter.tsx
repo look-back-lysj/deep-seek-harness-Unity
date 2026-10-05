@@ -142,7 +142,7 @@ export function SkinCenter({ catalog, inventory, skinService, onBack, onOpen, on
       } else if (current === id && active) {
         const message = `${id === DEFAULT_SKIN_ID ? '已恢复默认外观。' : '加载器已确认使用此皮肤。'}${result.warning ?? ''}`
         setNotice(message)
-        setFeedback(completedActionFeedback('切换皮肤', message, '可以继续浏览市场；再次切换前会重新核对运行时状态。'))
+        setFeedback(completedActionFeedback('切换皮肤', message, '可以继续浏览市场；再次切换前会重新核对运行时状态。', true))
       } else {
         const message = `切换请求已返回，但当前状态未确认目标生效，请重新读取状态。${result.warning ?? ''}`
         setNotice(message)
@@ -168,12 +168,16 @@ export function SkinCenter({ catalog, inventory, skinService, onBack, onOpen, on
           <p>{!canSwitch ? '尚未确认当前外观' : snapshot.current === DEFAULT_SKIN_ID ? '默认外观' : currentInfo && currentInstalled ? `${currentInfo.name} · ${currentInfo.version} · 使用中` : `加载器当前标识：${snapshot.current ?? '未知'}；安装或激活状态待核对`}</p>
           <p>{!loader ? '皮肤管理器尚未安装。先查看管理器安装方案，完成安装与启用后再切换。' : !loader.bundleEnabled ? `皮肤管理器 ${loader.version ?? '版本未知'} 已停用，请在官方插件页启用。` : loader.restartRequired ? '皮肤管理器正在等待重启。请保存工作后重启 DSH。' : !snapshot.runtime ? `皮肤管理器 ${loader.version ?? '版本未知'} 已安装，切换服务暂不可用。请检查启用状态；也可使用 DSH 设置里的皮肤管理器。` : `皮肤管理器 ${loader.version ?? '版本未知'} · 切换服务已连接`}</p>
         </div>
-        <div className="eac-market__button-row">
-          {!loader && loaderPlugin && <Button variant="primary" disabled={!canInstall || loaderBlocked} onClick={() => onInstall(loaderPlugin)}>查看管理器安装方案</Button>}
-          {loaderPlugin && <Button variant="ghost" onClick={() => onOpen(loaderPlugin)}>管理器说明</Button>}
-          {canSwitch && <Button variant="outline" disabled={busy || snapshot.current === DEFAULT_SKIN_ID} onClick={() => void switchSkin(DEFAULT_SKIN_ID)}>恢复默认外观</Button>}
-          <Button variant="outline" disabled={busy} onClick={() => refresh.current()}>重新读取状态</Button>
-          {onOpenOfficialPlugins && <Button variant="ghost" onClick={onOpenOfficialPlugins}>官方插件页</Button>}
+        <div className="eac-market__skin-actions">
+          <div className="eac-market__button-row eac-market__skin-actions-primary">
+            {!loader && loaderPlugin && <Button variant="primary" disabled={!canInstall || loaderBlocked} onClick={() => onInstall(loaderPlugin)}>查看管理器安装方案</Button>}
+            {canSwitch && <Button variant="outline" disabled={busy || snapshot.current === DEFAULT_SKIN_ID} onClick={() => void switchSkin(DEFAULT_SKIN_ID)}>恢复默认外观</Button>}
+          </div>
+          <div className="eac-market__button-row eac-market__skin-actions-tools">
+            {loaderPlugin && <Button variant="ghost" onClick={() => onOpen(loaderPlugin)}>管理器说明</Button>}
+            <Button variant="outline" disabled={busy} onClick={() => refresh.current()}>重新读取状态</Button>
+            {onOpenOfficialPlugins && <Button variant="ghost" onClick={onOpenOfficialPlugins}>官方插件页</Button>}
+          </div>
         </div>
       </div>
       {!loader && !loaderPlugin && <p className="eac-market__notice">目录尚未收录皮肤管理器，请先在官方插件页安装作者提供的管理器。</p>}

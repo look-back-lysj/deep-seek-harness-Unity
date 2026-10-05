@@ -6,6 +6,8 @@ import {
   VerificationStatus,
 } from '../../packages/market/src/client/components.tsx'
 import { MARKET_CSS } from '../../packages/market/src/client/marketStyles.ts'
+import { readFileSync } from 'node:fs'
+import { completedActionFeedback, taskActionFeedback } from '../../packages/market/src/client/action-state.ts'
 import { inventoryFixture, pluginFixtures } from './fixtures.ts'
 import type { CatalogMedia, InventoryItem } from '../../packages/market/src/types.ts'
 
@@ -217,6 +219,41 @@ describe('视觉与组件回归', () => {
     expect(MARKET_CSS).toContain('.eac-market__nav button:nth-child(1)::before')
     expect(MARKET_CSS).toContain('--eac-mint: #3cffd0')
     expect(MARKET_CSS).toContain('--eac-uv: #5200ff')
+  })
+
+  it('Round-4：抽屉锚定、筛选呼吸与图标底片合同', () => {
+    expect(MARKET_CSS).toMatch(/\.eac-modal-overlay \{\n  position: absolute/)
+    expect(MARKET_CSS).toMatch(/\.eac-market \{\n  position: relative/)
+    expect(MARKET_CSS).toContain('.eac-market__plugin-icon {\n  box-shadow: 4px 4px 0 var(--eac-uv)')
+    expect(MARKET_CSS).toContain('.eac-market__discover-page .eac-market__filters { gap: 10px; margin-bottom: 18px; }')
+    expect(MARKET_CSS).toContain('.eac-modal--drawer .eac-market__task-list > .eac-market__empty')
+  })
+
+  it('Round-3：三定案与评审修复合同', () => {
+    const clientDir = new URL('../../packages/market/src/client/', import.meta.url)
+    const sources = ['MarketPage.tsx', 'AuthorWorkspace.tsx', 'TaskDrawer.tsx', 'InstallPlanDialog.tsx', 'components.tsx']
+      .map((file) => readFileSync(new URL(file, clientDir), 'utf8'))
+    const labels = sources.flatMap((src) => [...src.matchAll(/closeLabel="([^"]+)"/g)].map((m) => m[1]))
+    expect(labels.length).toBeGreaterThan(3)
+    for (const label of labels) expect(label).toContain('关闭')
+    expect(completedActionFeedback('x', 'y').milestone).toBeUndefined()
+    expect(completedActionFeedback('x', 'y', 'z', true).milestone).toBe(true)
+    expect(taskActionFeedback({ status: 'completed' } as never, '任务').milestone).toBe(true)
+    expect(MARKET_CSS).toContain('.eac-modal-overlay--drawer')
+    expect(MARKET_CSS).toContain('.eac-modal--drawer')
+    expect(MARKET_CSS).toContain('eac-card-plant')
+    expect(MARKET_CSS).toContain('.eac-market__chapter-head')
+    expect(MARKET_CSS).toContain('.eac-market__facts-strip')
+    expect(MARKET_CSS).toContain('@media (max-width: 719px), (pointer: coarse)')
+    expect(MARKET_CSS).toContain('.eac-market__brand-mark:hover')
+    expect(MARKET_CSS).toMatch(/\.eac-market__topbar--editorial \{\n  background: #131313/)
+    const marketPage = readFileSync(new URL('MarketPage.tsx', clientDir), 'utf8')
+    expect(marketPage).toContain('nextChapter()')
+    expect(marketPage).not.toContain('aria-hidden="true">01</span><h2 id="skin-recommendations-title"')
+    expect(marketPage).toContain('{hasImage && <h3>')
+    expect(marketPage).not.toContain('第 {index + 1} 步')
+    expect(marketPage).toContain('更多用途')
+    expect(marketPage).toContain('changePage(page + 1)')
   })
 
   it('不可操作按钮保留真实 disabled 理由并关联 aria-describedby', () => {

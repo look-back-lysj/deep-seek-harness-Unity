@@ -191,7 +191,7 @@ export function AuthorWorkspace({ remote, visible = true, supplemental, onDraftS
     }
   }
   return <section aria-label="作者草稿工作区">
-    <header className="eac-market__page-head"><div><h1>作者工具</h1><p>编辑介绍并导出资料 ZIP，交给团队接收。</p></div><span role="status">{dirty ? '有未保存修改' : saved ? '已保存' : '新草稿'}</span></header>
+    <header className="eac-market__page-head"><div><h1>作者工具</h1><p>编辑介绍并导出资料 ZIP，交给团队接收。</p></div><span role="status" className={dirty ? 'eac-market__dirty-sticker' : 'eac-market__chip-ok'}>{dirty ? '有未保存修改' : saved ? '已保存' : '新草稿'}</span></header>
     <div className="eac-market__author-layout">
       <aside aria-label="已保存草稿"><Button variant="outline" disabled={!!busy} onClick={() => choose('new')}>新建草稿</Button>
         <ul className="eac-market__draft-list">{drafts.map((item) => <li key={item.id}><button type="button" disabled={!!busy || !remote.getDraft} aria-current={saved?.id === item.id ? 'true' : undefined} onClick={() => choose(item.id)}>{item.title || '未命名草稿'}<small>{new Date(item.updatedAt).toLocaleString('zh-CN')}</small></button></li>)}</ul>
@@ -217,12 +217,12 @@ export function AuthorWorkspace({ remote, visible = true, supplemental, onDraftS
       </div>
     </div>
     {supplemental}
-    <Modal open={candidate !== undefined} onClose={() => { if (!busy) setCandidate(undefined) }} title="确认正文差异" closeLabel="取消导入">
+    <Modal open={candidate !== undefined} onClose={() => { if (!busy) setCandidate(undefined) }} title="确认正文差异" closeLabel="关闭导入确认">
       <p>确认后保存到当前草稿。若其他窗口已修改草稿，后台会拒绝覆盖并保留你的编辑。</p>
       <div className="eac-market__split"><section><h3>当前内容</h3><p>标题：{form.title} · 简介：{form.summary}</p><pre className="eac-market__diff">{form.markdown || '（空）'}</pre></section><section><h3>导入内容</h3><p>标题：{candidate?.content.title} · 简介：{candidate?.content.summary}</p><pre className="eac-market__diff">{candidate?.content.markdown}</pre></section></div>
       {candidate?.warnings.map((warning, index) => <p key={index}>{warning}</p>)}
       <p role="status">{notice}</p><Button variant="primary" disabled={!!busy || !remote.saveDraft} onClick={() => void run('保存差异', applyCandidate)}>确认差异并保存</Button>
     </Modal>
-    <Modal open={switchTo !== undefined} onClose={() => setSwitchTo(undefined)} title="当前草稿尚未保存" closeLabel="继续编辑"><p>切换会丢弃当前未保存修改。</p><Button variant="outline" onClick={() => setSwitchTo(undefined)}>继续编辑</Button><Button variant="primary" onClick={() => { const id = switchTo; setSwitchTo(undefined); if (id) void run('切换草稿', () => open(id)) }}>放弃修改并切换</Button></Modal>
+    <Modal open={switchTo !== undefined} onClose={() => setSwitchTo(undefined)} title="当前草稿尚未保存" closeLabel="关闭切换确认"><p>切换会丢弃当前未保存修改。<span className="eac-tag eac-tag--danger">会丢弃修改</span></p><Button variant="primary" onClick={() => setSwitchTo(undefined)}>继续编辑</Button><Button variant="outline" onClick={() => { const id = switchTo; setSwitchTo(undefined); if (id) void run('切换草稿', () => open(id)) }}>放弃修改并切换</Button></Modal>
   </section>
 }

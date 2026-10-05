@@ -17,7 +17,7 @@
 
 清单排除.pnpm-store/、.verify/、Profile/userdata、token/凭据日志、产品生成lib及安装/打包制品。只引用去敏证据文件名、公开版本号和SHA-256，不交付原始证据或制品。tools/desktop-acceptance/fixture-plugin/lib/index.js是手写合法noop夹具源码，不能按lib名字误删。packages/market/src/protocol-ambient.d.ts保留，未作本次改动。
 
-## 2. 本地修复与上游mvp.18时间线
+## 2. 本地修复与两次上游合并时间线
 
 | 身份/时点 | 已发生事实 | 不能推出的结论 |
 | --- | --- | --- |
@@ -27,6 +27,10 @@
 | 9709c75 | 主控提交22个既有实施报告/指南及handoff夹具；只读差异核实 | 全部历史计划已执行 |
 | e880a883a84e86d284bd2ddcf08ccc301ec705a8 | 正常merge，父提交为9709c757c8f74fb2dab162457dfcb38f38af5f44与b8a977b868eea0bd2f937c875afd38ae2a20aabb，双方历史保留 | 合并后全量、新字节官方验收或push通过 |
 | 合并后 | 源码Adapter为mvp.18；主控确认merged源码build通过 | 旧mvp.17的1866/0/2、browser49或字节比对可用于新UI |
+| 84a516b | 31个工具/fixture/离线测试/独立审计输出/忽略规则文件提交 | 官方新版安装或完整layout-audit通过 |
+| 5df36be | 详细开发者交接、修改记录及四处入口/状态文档提交 | 当时未产生的第二次合并或远端push已经完成 |
+| 推送前再次fetch | 网络失败后按主人“重试”成功；origin由b8a977b前进至4f9a627，新增5提交 | 可以force覆盖远端，或mvp.18数字适用于mvp.19 |
+| 第二次正常merge | 父输入为5df36be和4f9a627；源码Adapter为mvp.19，两个子智能体分别处理独占Client冲突与只读语义复查，主控串行处理Core/合同/测试/文档 | 新官方制品、真实UI矩阵或晚到回执追账通过；结果SHA不能在自身提交内自引用 |
 
 上游三提交：f47174a（StoryStream/tactile/布局节奏、mvp.18）、aa2ef09（mvp.18 Registry/GitHub adapter制品准备）、b8a977b（双通道固定URL文档）。两个Git冲突按主控通知已解决：MarketFrame保留documentHidden类及MEDIA_CSS；Detail用上游全宽带头并保留CatalogMediaIcon；dialogs保留6条history严格断言及上游结构断言。未通过丢弃任一方功能或放宽断言解决冲突。
 
@@ -463,8 +467,57 @@ M tests/client/visual-polish.test.tsx
 | e880a88合并后全量/浏览器/静态 | 串行Vitest`full.json`为success=true，1877 passed / 0 failed / 2既有pending，failed suites=0；合成browser55/55；额外Client tsc/lint/包边界通过，工具专项9/9。具体命令与本机日志见开发者handoff10.2 |
 | 独立布局审计 | 输出改为`EAC_LAYOUT_AUDIT_OUT`或默认时间戳目录，不覆盖旧findings；CDP精确阻断已定位注入脚本，违规阈值未降低。执行被主人中断，没有完整结果，不签通过；随后未发现本批遗留审计进程 |
 | mvp.18新制品/官方实机 | **待验**；没有本轮新SHA、安装字节或实机业务证据，旧mvp.17结果不移用。主人后续将收尾限定为Git提交及推送 |
-| GitHub当前分支 | 网络曾reset/无法连接；主人要求重试后fetch成功，发现远端又新增5提交至4f9a627。主控须正常合并并复验后普通push，实际远端SHA必须再查询核对，不force。该次合并后的最终状态另行补录，不提前填成功 |
+| GitHub当前分支 | 网络曾reset/无法连接；主人要求重试后fetch成功，远端5提交至4f9a627已第二次正常合并；逐文件取舍和最终复验见第13节。提交后普通push，实际远端SHA必须再查询与HEAD核对，不force；本文件冻结不是远端ref成功证明 |
 | public release/公网渠道/升级回退 | 未证明通过；独立授权及实际公开获取/安装证据，不等于分支push |
 | rc.1/natural断线/media UI长链路 | 保留待验；补前置/步骤/实际结果，不用fault injection/局部API顶替 |
 
 下一步按新handoff与当前账本收口merged候选验证，独立推进真实源体积/缺字段、固定revision、可信DSH范围、不可变制品及安装原task恢复。未经授权不扩读取预算、不启未知来源、不改官方或日常用户环境。
+
+## 13. 两次合并的逐文件修改与取舍
+
+此节是主控在最终提交前补写的实际合并记录，不仅罗列上游提交。第11节清单为第一次交付冻结快照；本节补齐第二次同步、接线修正和新增回归，不能将快照数字当作最终Git总数。两次合并都保留双方提交历史，未整文件选择ours/theirs、未force。
+
+### 13.1 第一次：9709c75 + b8a977b → e880a88
+
+远端三提交为f47174a、aa2ef09、b8a977b；源码Adapter由mvp.17变mvp.18，保留本地Core0.1.6、核心兼容/恢复/media实现，并带入StoryStream、tactile、flex布局修正和双通道预备材料。实际两个冲突文件处理如下（已用`git show --cc e880a88`复核）：
+
+| 冲突文件/位置 | 合并实际修改 | 取舍依据与未改变事项 |
+| --- | --- | --- |
+| packages/market/src/client/MarketPage.tsx / MarketFrame | 保留远端documentHidden状态、visibilitychange订阅与hidden类，同时style仍注入本地MARKET_CSS + MEDIA_CSS | 不丢后台动效控制，也不丢media加载/失败/重试/放大样式 |
+| 同文件 / DetailView | 将带头放在detail直接子元素，保留远端单列/宽屏布局；图标用本地CatalogMediaIcon，删除main内重复带头 | 保留真实media/icon，不退回纯首字母，也不重复h1/图标 |
+| tests/client/dialogs.test.tsx | 同时保留本地6条task-history严格数量断言和远端details/summary结构断言 | 不是把严格断言换成“任意存在”来掩盖冲突 |
+
+其它上游非冲突修改正常并入：marketStyles/ui/action-feedback触感及布局、browser夹具/检查、layout-audit/preview、包版本和文档。保留上游已跟踪的mvp.18 tgz/release.json/SHA256SUMS，未覆盖或新公开发布。同版本制品早于本地修复，不能称它们含有本轮新字节。
+
+合并后重新build、额外Client tsc、lint、包边界通过，全量success=true、1877/0/2既有pending、failed suites=0；合成browser55/55，工具离线9/9。layout-audit执行中断，没有完整结果。官方191文件和4/3/3结果只属此前mvp.17不可变批次。
+
+### 13.2 第二次：5df36be + 4f9a627 → 本次mvp.19候选
+
+五个远端增量：f6aef9f（安装日志/宽松方案）、ad53f2e（供货草稿）、e011b8b（只读previewPacks）、2fc644c（夜计划实录）、4f9a627（全表面UI/panel锚定/mvp.19）。远端增量50文件，包含新源码、测试、文档；它不等于50处冲突。主控确认10个冲突文件，另外修正三个非冲突测试接线/用例，详见表：
+
+| 文件 | 实际合并修改与保留内容 |
+| --- | --- |
+| packages/market-core/src/adapters/dsh/host-port.ts | constructor第4参继续为readHostCoreRevision，第5参新增installLog；保留可信核心revision、原回执/幂等，同时接入上游逐项postcheck日志和官方applied的宽松后核对行为 |
+| packages/market-core/src/catalog/model.ts | listings仍为本地MarketListingRecord以保留Agent Forge权威metadata，另增previewPacks；不退回会丢媒体原文身份的CatalogListing-only模型 |
+| packages/market-core/src/contracts/types.ts | InstallPlanItem同时保留releaseContext与新增warnings；供货/PreviewPack/InstallLog可选合同保留，不因字段相邻冲突删任一字段 |
+| packages/market-core/src/core/task-manager.ts | 管理settled→settleBusiness→completeManagementRecord仍在execution锁内，并在原路径追加logManagement；安装applied后postcheck/logged按上游策略记录，不回退成旧纯unknown；使用本地共享inventoryIssueAffectsPackage helper而非已移除的实例方法 |
+| 同文件 / 重启状态 | 修正宽松存疑分支遗漏restartRequired：item优先为restart-required，installOutcome亦为restart-required，task为awaiting-resume；不因库存疑点将官方重启要求吞成completed |
+| packages/market-core/src/host/market-runtime.ts | 同时构造InstallLog并传核心getter/日志sink；validateStart/validateWrite继续走统一assertSelectedReleaseActive，保留精确package/version/digest/releaseId、来源撤回、releaseContext、可信dsh范围；仅移除普通hard-incompatible标签硬拒绝以兼容计划warnings。没有照搬远端仅检查hard-blocked的弱校验，也没有恢复重复全items检查破坏部分计划 |
+| packages/market/src/client/MarketPage.tsx | 独占Client子智能体解冲突：AuthorWorkspace保留visible和outline返回；media CSS/icon/preview、releaseOptions默认选版、原意图恢复保留；previewPacks只读展区、安全来源链接、撤回/未解析说明、nextChapter动态编号、panel/tactile布局和禁用原因无障碍关联并入 |
+| tests/core-api/backend.test.ts | Core业务方法精确数量由本地40/远端37合成41，不删方法或放宽为下界 |
+| tests/core-api/browser-boundary.test.ts | 合同/运行时方法仍完全相等，精确41；保留5个可信callerId必填检查，含taskStartRecover，不退回远端4个旧检查 |
+| DESIGN.md | 保留本地与上游设计/历史验证段，合入Round-3/4，不把上游60项/0布局违规冒充本次验收；去除多余EOF空行 |
+| docs/UPGRADE-GUIDE.md | 当前候选改mvp.19，保留详细交接、历史失败和mvp.18固定制品不可覆盖/不等于新源码的边界；不直接采用远端“已发布”文字来宣布本轮发布 |
+| tests/adapter/receipt-recovery.test.ts（非冲突接线） | 新日志sink从误占第4参改传第5参，核心getter位置留undefined；保留上游装后存疑日志断言 |
+| tests/core/loose-install.test.ts（新增回归） | 增“装后核对存疑仍保留官方要求的重启状态”，实际fake Host返回applied/restartRequired且库存未知，断言awaiting-resume与postcheck/logged，不能completed |
+| tests/adapter/install-state-gate.test.ts（策略对齐） | fixture增加日志sink；原“写后重复目标→unknown”预期按上游拍板改为“官方applied且目标未知日志”，同时严格断言postcheck.pass=false、无纠正启停、同request只安装一次。写前重复/未知目标/摘要检查仍不放行，不删旧用例 |
+
+其它50文件增量中的非冲突部分正常并入：InstallLog只读API/Adapter/settings导出、supply read/validate/classify及导入CLI、previewPack validation/project/display/gates、Author/Skin/Task等panel锚定、UI反馈/按钮/布局和browser测试。两份上游夜计划文档保留原始“计划/执行”区别，没有把真实供货缺失或官方待验改成完成。
+
+**业务兼容取舍：**宽松安装是上游明确决定的行为改变，不仅是新增字段。官方applied的后置核对存疑只写日志；普通unknown保留原枚举/提示且不自动重放，但不阻塞后续独立任务。可信dsh核心范围incompatible/conflict、撤回、摘要/字节、原caller/计划身份、官方供应链和管理completion真实失败仍保留。日志不是管理完整业务凭证，也不证明未知任务后来成功。
+
+**已知待改：**第二次复查静态确认普通unknown被写成execution verified/attempt finished，因此冷启动恢复会跳过后续追账；taskStartRecover仍是原快照只读，不会自行补结算。需要另行设计非阻塞的原request只读追账并测试晚到回执，不能把此场景写成已通过，也不能通过自动重发来“修复”。本次没有增加第二套状态机；原管理完整恢复仍保留。
+
+**第二次验证轨迹：**输出在`.verify/github-delivery-20261005/upstream-mvp19/`，独立于首次证据。build/额外Client tsc/lint/包边界通过（96文件、42Remote descriptor）；merge-focused81/81。首轮全量success=false、1905 passed/1 failed/2pending，失败为上述写后重复目标旧断言；按已决定策略增强日志与零重放断言后merge-corrected-focused35/35。最终串行`full-corrected.json`为success=true、1906 passed / 0 failed / 2既有pending、failed suites=0、总计1908；合成browser60/60。首轮失败不删除。未运行新官方Profile/Registry、未生成新版官方制品SHA、未重跑中断layout-audit或公开发布。
+
+最终具体命令、证据文件和不随Git交付的边界见开发者handoff10.5；本节两次合并取舍及实际结果在最终提交前补齐，不将仍待验的功能写成已完成。GitHub最终merge SHA由`git log --merges --oneline`取得，文档所属提交由`git log -1 -- docs/handoff/MODIFICATION-RECORD-2026-10-05.md`取得；推送后仍须独立查询ref，不让文档代替远端验证。

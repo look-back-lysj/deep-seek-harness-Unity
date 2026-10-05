@@ -6,7 +6,7 @@
 
 ## 当前状态
 
-- 源码候选：`@dsh-eac/market@0.1.0-mvp.18`
+- 源码候选：`@dsh-eac/market@0.1.0-mvp.19`
 - 源码候选：`@dsh-eac/market-core@0.1.6`
 - Core API：`1.0.0`
 - 页面通信协议：`2.0.0`

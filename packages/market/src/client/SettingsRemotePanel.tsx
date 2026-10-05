@@ -4,6 +4,8 @@ import type {
   CatalogRefreshView,
   CatalogSourceView,
   CoreMaintenanceSnapshot,
+  InstallLogAction,
+  InstallLogEntry,
   UpdateCheckItem,
   UpdateCheckResult,
   UpdatePolicySnapshot,
@@ -13,6 +15,7 @@ import { Status } from './components.tsx'
 import { Button } from './ui.tsx'
 import type { MarketRemote } from './model.ts'
 import { boundedRequest } from './data-controller.ts'
+import { saveBytes } from './transfer.ts'
 
 type LoadState<T> =
   | { readonly status: 'loading' }
@@ -27,6 +30,31 @@ export interface SettingsRemotePanelProps {
   readonly environmentId?: string
   readonly refreshBusy: boolean
   readonly onRefreshSource: (sourceId: string) => Promise<CatalogRefreshView | undefined>
+}
+
+function installLogActionLabel(action: InstallLogAction): string {
+  if (action === 'install') return '安装'
+  if (action === 'update') return '更新'
+  if (action === 'remove') return '卸载'
+  if (action === 'enable') return '启用'
+  return '停用'
+}
+
+/** 单行文本视图：用户导出的是可读文本，不是原始 JSON。 */
+function formatInstallLogEntry(entry: InstallLogEntry): string {
+  const parts = [`[${entry.at}]`, installLogActionLabel(entry.action), entry.packageName, entry.version ?? '版本未知']
+  const result = entry.officialResult
+  parts.push(result === undefined
+    ? '官方结果未记录'
+    : `官方结果 ${result.kind}${result.changed === undefined ? '' : result.changed ? '（有变更）' : '（无变更）'}${result.error === undefined ? '' : `：${result.error}`}`)
+  if (entry.postcheck !== undefined) {
+    const failed = entry.postcheck.filter((check) => !check.pass)
+    parts.push(failed.length === 0
+      ? `装后核对全部通过（${entry.postcheck.length} 项）`
+      : `装后核对存疑：${failed.map((check) => `${check.check}${check.reason === undefined ? '' : `（${check.reason}）`}`).join('；')}`)
+  }
+  if (entry.source !== undefined) parts.push(`交付来源指纹 ${entry.source}`)
+  return parts.join(' | ')
 }
 
 function sourceKindLabel(source: CatalogSourceView): string {
@@ -106,6 +134,7 @@ export function SettingsRemotePanel({ remote, capabilities, environmentId, refre
   const canReadMaintenance = canUse('core-maintenance', 'maintenanceStatus')
   const canReadPolicy = canUse('update-policy', 'updatePolicyGet')
   const canSavePolicy = canUse('update-policy', 'updatePolicySave')
+  const canExportInstallLog = typeof remote.installLogRead === 'function'
 
   const [sources, setSources] = useState<LoadState<readonly CatalogSourceView[]>>({ status: 'loading' })
   const [maintenance, setMaintenance] = useState<LoadState<CoreMaintenanceSnapshot>>({ status: 'loading' })
@@ -116,7 +145,9 @@ export function SettingsRemotePanel({ remote, capabilities, environmentId, refre
   const [policy, setPolicy] = useState<LoadState<UpdatePolicySnapshot>>({ status: 'loading' })
   const [policyDraft, setPolicyDraft] = useState<{ readonly enabled: boolean; readonly intervalMinutes: number }>({ enabled: true, intervalMinutes: 60 })
   const [savingPolicy, setSavingPolicy] = useState(false)
-  const [policyFeedback, setPolicyFeedback] = useState('')
+  const [installLogBusy, setInstallLogBusy] = useState(false)
+  const [installLogFeedback, setInstallLogFeedback] = useState<{ text: string; failed: boolean }>()
+  const [policyFeedback, setPolicyFeedback] = useState<{ text: string; failed: boolean }>({ text: '', failed: false })
 
   const readSources = useCallback(async () => {
     const catalogSources = remote.catalogSources
@@ -158,26 +189,43 @@ export function SettingsRemotePanel({ remote, capabilities, environmentId, refre
       intervalMinutes: policyDraft.intervalMinutes,
     }
     setSavingPolicy(true)
-    setPolicyFeedback('')
+    setPolicyFeedback({ text: '', failed: false })
     try {
       const saved = await boundedRequest(updatePolicySave({ expectedRevision: policy.value.revision, policy: next }), '更新策略保存')
       setPolicy({ status: 'ready', value: saved })
       setPolicyDraft({ enabled: saved.policy.automaticChecksEnabled, intervalMinutes: saved.policy.intervalMinutes ?? 60 })
-      setPolicyFeedback('检查偏好已保存。自动下载和自动安装的保存值已关闭；这不是后台检查已执行的回执。')
+      setPolicyFeedback({ text: '检查偏好已保存。自动下载和自动安装的保存值已关闭；这不是后台检查已执行的回执。', failed: false })
     } catch {
-      setPolicyFeedback('保存结果暂不确定，正在重新读取后台当前值。不会自动重放保存。')
+      setPolicyFeedback({ text: '保存结果暂不确定，正在重新读取后台当前值。不会自动重放保存。', failed: true })
       const current = await readPolicy(true)
       if (current) {
         const matches = current.policy.automaticChecksEnabled === next.automaticChecksEnabled
           && (current.policy.intervalMinutes ?? 60) === next.intervalMinutes
           && current.policy.automaticDownloadsEnabled === false
           && current.policy.automaticInstallsEnabled === false
-        setPolicyFeedback(matches
+        setPolicyFeedback({ text: matches
           ? '后台当前值与本次设置一致；保存请求没有重放。'
-          : '后台当前策略已重新读取；本次设置未确认生效。请核对后再次手动保存，旧值不会被自动覆盖。')
-      } else setPolicyFeedback('重新读取也未完成。请先确认后台当前策略，再决定是否重试。')
+          : '后台当前策略已重新读取；本次设置未确认生效。请核对后再次手动保存，旧值不会被自动覆盖。', failed: !matches })
+      } else setPolicyFeedback({ text: '重新读取也未完成。请先确认后台当前策略，再决定是否重试。', failed: true })
     } finally { setSavingPolicy(false) }
   }, [canSavePolicy, policy, policyDraft, readPolicy, savingPolicy])
+
+  const exportInstallLog = useCallback(async () => {
+    const installLogRead = remote.installLogRead
+    if (installLogBusy || installLogRead === undefined) return
+    setInstallLogBusy(true)
+    setInstallLogFeedback(undefined)
+    try {
+      const entries = await boundedRequest(installLogRead({ limit: 500 }), '安装日志读取')
+      const header = entries.length === 0
+        ? 'EAC 安装日志：暂无记录。\n'
+        : `EAC 安装日志（最近 ${entries.length} 条，已脱敏）\n\n` + entries.map(formatInstallLogEntry).join('\n') + '\n'
+      saveBytes(new TextEncoder().encode(header), `install-log-${new Date().toISOString().slice(0, 10)}.txt`, 'text/plain;charset=utf-8')
+      setInstallLogFeedback({ text: entries.length === 0 ? '当前没有安装日志记录，已导出空日志。' : `已导出 ${entries.length} 条安装日志。`, failed: false })
+    } catch {
+      setInstallLogFeedback({ text: '安装日志读取失败；请确认宿主仍在运行后重试。', failed: true })
+    } finally { setInstallLogBusy(false) }
+  }, [installLogBusy, remote])
 
   const refresh = useCallback(async (sourceId: string) => {
     if (refreshBusy || typeof remote.refreshCatalog !== 'function') return
@@ -293,7 +341,7 @@ export function SettingsRemotePanel({ remote, capabilities, environmentId, refre
             {(policy.value.policy.automaticDownloadsEnabled || policy.value.policy.automaticInstallsEnabled) && <p className="eac-market__integration-note eac-market__integration-note--warning">后台原偏好包含自动写入设置。本市场不会触发自动下载或安装；点击保存会把这两个选项关闭。</p>}
           </div>
         )}
-        {policyFeedback && <p className="eac-market__integration-note" role="status" aria-live="polite">{policyFeedback}</p>}
+        {policyFeedback.text && <p className={policyFeedback.failed ? 'eac-market__integration-note eac-market__integration-note--warning' : 'eac-market__integration-note'} role={policyFeedback.failed ? 'alert' : 'status'} {...(policyFeedback.failed ? {} : { 'aria-live': 'polite' })}>{policyFeedback.text}</p>}
       </section>
 
       <section className="eac-market__setting eac-market__setting--stacked" aria-labelledby="eac-maintenance-heading">
@@ -319,6 +367,15 @@ export function SettingsRemotePanel({ remote, capabilities, environmentId, refre
             <small>状态读取于 {localTime(maintenance.value.generatedAt)}</small>
           </div>
         })()}
+      </section>
+
+      <section className="eac-market__setting eac-market__setting--stacked" aria-labelledby="eac-install-log-heading">
+        <div className="eac-market__integration-head">
+          <div><h3 id="eac-install-log-heading">安装日志</h3><p>导出最近 500 条安装、更新、卸载与启停记录；文本已脱敏，不含本机路径或凭据。</p></div>
+          {canExportInstallLog && <Button variant="outline" size="sm" disabled={installLogBusy} onClick={() => void exportInstallLog()}>{installLogBusy ? '正在导出…' : '导出安装日志'}</Button>}
+        </div>
+        {!canExportInstallLog && <p className="eac-market__integration-note" role="status">当前宿主版本未提供安装日志接口。</p>}
+        {installLogFeedback !== undefined && <p className={installLogFeedback.failed ? 'eac-market__integration-note eac-market__integration-note--warning' : 'eac-market__integration-note'} role={installLogFeedback.failed ? 'alert' : 'status'} {...(installLogFeedback.failed ? {} : { 'aria-live': 'polite' })}>{installLogFeedback.text}</p>}
       </section>
     </>
   )

@@ -72,6 +72,7 @@ export function createDshMarketBackend(
     authorExportDraft: request => runtime.authorExportDraft(request),
     authorMediaRead: request => runtime.authorMediaRead(request),
     diagnosticsExport: selection => runtime.diagnosticsExport(selection),
+    installLogRead: request => runtime.installLogRead(request),
     aiAnalyze: async (request, callerId, signal) => runtime.aiAnalyze(request, requireCallerId(callerId), signal),
     aiConfirm: async (request, callerId) => runtime.aiConfirm(request, requireCallerId(callerId)),
   }

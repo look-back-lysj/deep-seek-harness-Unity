@@ -9,6 +9,7 @@ import { InstallTaskManager } from '../../packages/market-core/src/core/task-man
 import { createPlanBundle } from '../../packages/market-core/src/core/planner.ts'
 import { InMemoryLocks, InMemoryTaskStore, waitForTask } from '../core/helpers.ts'
 import type { HostInstallRequest } from '../../packages/market-core/src/core/ports.ts'
+import type { InstallLogEntry } from '../../packages/market-core/src/contracts/types.ts'
 
 const packageName = '@test/plugin'
 
@@ -43,7 +44,9 @@ async function fixture(bundles: unknown[] = []) {
     requestId: 'gate-request', enabled: true,
     artifact: { pluginId: 'p0', packageName, version: '1.0.0', localRef, size: bytes.length, artifactDigest: createHash('sha256').update(bytes).digest('hex') },
   }
-  return { root, manager, request, port: new OfficialHostPort(context, 'env-test') }
+  const entries: Omit<InstallLogEntry, 'hostVersion'>[] = []
+  const installLog = { append: (entry: Omit<InstallLogEntry, 'hostVersion'>) => { entries.push(entry) } }
+  return { root, manager, request, entries, port: new OfficialHostPort(context, 'env-test', undefined, undefined, installLog) }
 }
 
 function expectNoOfficialWrites(manager: Awaited<ReturnType<typeof fixture>>['manager']) {
@@ -195,7 +198,7 @@ describe('HC-1 official HostPort pre-install inventory gate', () => {
     expectNoOfficialWrites(current.manager)
   })
 
-  it('does not accept the first matching entry when the target becomes duplicated after writing', async () => {
+  it('logs duplicate target uncertainty after an official applied result without corrective writes or replay', async () => {
     const current = await fixture()
     const implementation = current.manager.installBundle.getMockImplementation()!
     current.manager.installBundle.mockImplementationOnce(async path => {
@@ -203,7 +206,13 @@ describe('HC-1 official HostPort pre-install inventory gate', () => {
       current.manager.listBundles.mockResolvedValue([bundle(), bundle()])
       return result
     })
-    expect(await current.port.install(current.request)).toMatchObject({ kind: 'unknown', errorCode: 'receipt/postcondition' })
+    expect(await current.port.install(current.request)).toMatchObject({ kind: 'applied', changed: true })
+    expect(current.entries.at(-1)).toMatchObject({
+      packageName,
+      officialResult: { kind: 'applied', changed: true },
+      postcheck: expect.arrayContaining([{ check: '库存目标状态已核定', pass: false, reason: '官方库存仍把目标标为未知' }]),
+    })
+    expect(await current.port.install(current.request)).toMatchObject({ kind: 'applied', changed: true })
     expect(current.manager.installBundle).toHaveBeenCalledTimes(1)
     expect(current.manager.setBundleEnabled).not.toHaveBeenCalled()
   })

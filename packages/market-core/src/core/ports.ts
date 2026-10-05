@@ -9,7 +9,13 @@ import type {
   VerificationState,
   InventoryItem,
   CatalogDelivery,
+  InstallLogEntry,
 } from '../contracts/types.ts'
+
+/** 安装日志的最小写入口；宿主负责脱敏与落盘，core 只投递字段。 */
+export interface InstallLogSink {
+  append(entry: Omit<InstallLogEntry, 'hostVersion'>): void
+}
 
 export interface HostWriteActivity {
   readonly stable: boolean

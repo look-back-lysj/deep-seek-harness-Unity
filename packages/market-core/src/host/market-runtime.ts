@@ -33,6 +33,7 @@ import type {
   UpdatePolicySnapshot,
   UpdatePolicySaveRequest,
   DiagnosticExport,
+  InstallLogEntry,
   PlanCreateRequest,
   PlanResult,
   PluginActionResult,
@@ -66,6 +67,7 @@ import type {
 import { AiAssistant } from "./ai-assist.ts"
 import { AiProposalStore } from './ai-proposal-store.ts'
 import { collectDiagnostics, diagnosticDigest, sanitizeDiagnostic, sourceIdentity } from './diagnostics.ts'
+import { InstallLog } from './install-log.ts'
 import { assessRiskyAction, type ManagementManifest } from './management-impact.ts'
 import { canonicalJson } from '../core/canonical.ts'
 import { validVersion } from '../core/semver.ts'
@@ -146,6 +148,7 @@ function publicManagementResult(result: PluginActionResult): PluginActionResult 
 
 export class MarketRuntime {
   readonly host: OfficialHostPort
+  readonly installLog: InstallLog
   readonly catalog: CatalogRepository
   readonly artifacts: CatalogArtifactPort
   readonly tasks: InstallTaskManager
@@ -188,8 +191,9 @@ export class MarketRuntime {
     this.marketVersion = options.marketVersion ?? 'development'
     this.artifactCacheDir = join(dataDirectory, 'artifacts')
     this.network = options.network
+    this.installLog = new InstallLog(join(dataDirectory, 'logs'), identity.hostVersion)
     this.host = new OfficialHostPort(ctx, identity.environmentId, { hostVersion: identity.hostVersion, profileName: identity.profileName },
-      options.readHostCore === undefined ? undefined : () => this.hostCore().hostRevision)
+      options.readHostCore === undefined ? undefined : () => this.hostCore().hostRevision, this.installLog)
     this.files = new NodePersistenceFiles(join(dataDirectory, 'state'))
     const locks = new AtomicProfileLocks(dataDirectory)
     this.maintenanceIntents = new MaintenanceIntentStore(this.files, locks)
@@ -266,6 +270,7 @@ export class MarketRuntime {
       },
       locks,
       events: new SegmentedEventLog(this.files),
+      installLog: this.installLog,
     })
     const authorRoot = join(dataDirectory, 'authoring')
     this.authoring = new AuthorPackageService(authorRoot)
@@ -404,7 +409,7 @@ export class MarketRuntime {
     this.catalog.assertReleaseActive(item.pluginId, item.targetVersion, item.targetDigest)
     const current = this.catalogView().plugins.find(plugin => plugin.id === item.pluginId && plugin.packageName === item.packageName
       && plugin.version === item.targetVersion && plugin.artifactDigest === item.targetDigest)
-    if (current === undefined || current.publication === 'withdrawn' || current.verification === 'hard-incompatible' || current.installability !== 'bundle-installable') throw new Error('所选发行已缺失、发生冲突、被撤回或无法安装，请重新预检')
+    if (current === undefined || current.publication === 'withdrawn' || current.installability !== 'bundle-installable') throw new Error('所选发行已缺失、发生冲突、被撤回或无法安装，请重新预检')
     if (item.releaseContext !== undefined) {
       const captured = this.readCatalogContext()
       const expected = releaseSelectionContext(current, { environmentId: this.identity.environmentId, hostCore: this.hostCore(),
@@ -1182,5 +1187,10 @@ export class MarketRuntime {
     try { inventory = (await this.host.readState()).inventory } catch (error) { errors.push(errorText(error)) }
     return collectDiagnostics({ environmentId: this.identity.environmentId, hostVersion: this.identity.hostVersion,
       marketVersion: this.marketVersion, selection, tasks, inventory, catalog: this.catalog.load().snapshot, errors })
+  }
+
+  /** 安装日志只读出口（B 档）：最多返回 500 条，字段已脱敏。 */
+  installLogRead(request?: { readonly limit?: number }): Promise<readonly InstallLogEntry[]> {
+    return this.installLog.read(request?.limit)
   }
 }

@@ -9,8 +9,8 @@
 1. 读本文件、`START-HERE.md`、`NEXT-AGENT-PLAYBOOK.md`、`../PRODUCT.md`和`../CORE-ADAPTER-GUIDE.md`；投稿作者则走投稿流程，不接管市场代码。
 2. 当前协作分支是`refactor/market-core-adapter`，不是`main`或`dev`。先核对实际HEAD、工作区、远端和未提交内容，不重置、不删未知文件。
 3. `9fc09a2`是本轮之前的代码基线，`9c6a1d2`只是接力文档提交。不能把9c6a1d2误当作本轮实现。
-4. 本地功能提交`3fa1fc6`、旧批次文档提交`9709c75`；本轮fetch发现GitHub已经新增`f47174a`、`aa2ef09`、`b8a977b`三个提交，已正常合并为`e880a88`。没有强推或用本地mvp.17覆盖远端mvp.18。
-5. 合并后源码候选为Adapter `0.1.0-mvp.18` / Core `0.1.6`。它包含更多Core/Client修复，**不等于**`releases/0.1.0-mvp.18-dual/`里先前制作的发行字节；这批Git提交不授权覆盖公开同版本制品或npm发布。
+4. 本地功能提交`3fa1fc6`、旧批次文档提交`9709c75`；第一次正常合并GitHub三提交至`b8a977b`，结果为`e880a88`。随后`84a516b`交付隔离工具，`5df36be`交付两份详细文档。推送前重试fetch又取得五提交至`4f9a627`，第二次正常合并已整合并重新验证；两次取舍逐文件记录在修改记录第13节，不用ours/theirs整片覆盖。
+5. 第二次合并后的源码候选为Adapter `0.1.0-mvp.19` / Core `0.1.6`。它包含更多Core/Client修复，**不等于**`releases/0.1.0-mvp.18-dual/`里先前制作的发行字节；这批Git提交不授权覆盖公开同版本制品或npm发布。第二次merge的实际SHA由`git log --merges --oneline`取得，不在产生它的提交内自引用。
 6. 修复已覆盖核心版本事实、可选版本API、预检上下文、只读原操作恢复、媒体传递、作者工具与管理闭环。真实媒体目录体积、上游版本/制品映射及完整产品矩阵仍有阻断。
 7. 官方实际载体是Desktop `0.2.0-rc.2`，不是原指定rc.1。合成Edge、rc.2、局部管理验收均不能冒充原载体全功能通过。
 8. 数据目录、旧回执与未知结果不能为了让页面解锁而清空。not-found不证明未执行，库存当前状态不证明原请求成功。
@@ -77,9 +77,9 @@ git diff --check
 | 可选能力 | `host-release-context`、`operation-recovery`等，以hello实际capabilities为准 |
 | 方法探测 | capability和optional方法都检查；只有方法存在不能推断协议获准 |
 
-关键公开API：`hostCore`、`releaseOptions`、计划创建/任务开始、`taskStartRecover`、`pluginActionRecover`、`pluginSetEnabled`、`pluginRemove`、`maintenanceStatus`、`checkUpdates`。实际Remote名称以`packages/market/src/index.ts`及生成描述符为准；Client facade的`setPluginEnabled/removePlugin`别名不一定是官方命名空间原名。
+关键公开API：`hostCore`、`releaseOptions`、计划创建/任务开始、`taskStartRecover`、`pluginActionRecover`、`pluginSetEnabled`、`pluginRemove`、`maintenanceStatus`、`checkUpdates`、`installLogRead`。实际Remote名称以`packages/market/src/index.ts`及生成描述符为准；Client facade的`setPluginEnabled/removePlugin`别名不一定是官方命名空间原名。Core业务方法41个，生成Remote descriptor42个，两者不是相同计数。
 
-新Remote后必须运行官方生成器/build和包检查；不能手写第二套临时RPC协议。协议minor允许新增可选方法，不允许改变旧语义。当前描述符计数只是接线检查，不是相同数量的官方功能通过。
+新Remote后必须运行官方生成器/build和包检查；不能手写第二套临时RPC协议。字段及方法兼容不等于业务结果没有变化：第二次合并带入上游已决定的宽松安装语义，详见7.1节；不要把同一个协议minor当作装后核对行为未变的证据。当前描述符计数只是接线检查，不是相同数量的官方功能通过。
 
 ## 5. dsh核心兼容与默认版本
 
@@ -127,6 +127,22 @@ InstallPlanDialog提交超时保留原意图；TaskDrawer使用TaskRequestGuard�
 `not-found`、缺记录、权限/归属冲突都不是安全重发证明。取消不代表回滚已经发生的写入，partial/unknown/restart-required必须继续显示真实业务语义。
 
 重点测试：`tests/host/operation-recovery.test.ts`、`tests/core-api/operation-recovery-wire.test.ts`、`tests/client/task-inflight.test.tsx`、`task-recheck.test.tsx`。
+
+### 7.1 第二次合并带入的宽松安装、日志与恢复边界
+
+上游`f6aef9f`及`MOJOBOX-COOPERATION-SUMMARY-2026-10-05.md`、`NIGHT-PLAN-2026-10-05.md`记录了方案1决定：官方明确`applied`时，装后库存/版本/缓存来源/启用核对的疑点写日志，不再仅因疑点改写为unknown；普通官方异常仍保留unknown及“已提交，结果未核实”文案，但不暂停后续独立安装。`failed`、审批、撤回、下载指纹及官方供应链门禁没有因此变成成功。
+
+本次整合仍保留本地精准发行身份、来源撤回、可信dsh范围和`releaseContext`写前复验。普通`verification:hard-incompatible`标签按上游变成计划warnings，不再由统一复验函数额外硬拒绝；**可信dsh范围incompatible/conflict依然阻断**。宽松不意味着可以替换用户选定版本、使用错误摘要、接受撤回发行或自动重放原unknown。计划中的blocked/keep项目不因重复的全项早期校验破坏部分执行；实际写步骤在既有锁内统一复验。
+
+官方`restartRequired`在`postcheck/logged`分支仍必须形成item `restart-required`和task `awaiting-resume`，本次已补回归测试，不能只在installOutcome字段保留重启字样却把task结成completed。
+
+独立日志实现为`host/install-log.ts`，API `installLogRead({limit})`只读、最多500条、字段去敏，Client设置页负责导出中间态。日志不是原管理completion、供应链证明或完整任务账本，写日志失败不授权重放。OfficialHostPort constructor保留第4参核心revision getter，第5参日志sink，迁移调用时不要把对象当getter调用。
+
+**静态确认的待验/待改边界：**普通unknown在宽松分支被标记为execution `verified`，attempt `finished`；启动恢复跳过该阶段，`taskStartRecover`只返回既有原任务快照，因此不能宣称它会追账之后才出现的可靠回执。后续应设计“非阻塞但仍可只读核对原request”的状态，测试迟到回执/冷启动/零重放/不重新全局阻塞；本轮未为此新增第二套恢复状态机，管理completion恢复也不替代该安装场景。
+
+### 7.2 供货草稿与previewPacks的职责边界
+
+新增`supply-draft-read.ts`、`supply-draft-validate.ts`、`supply-draft-classify.ts`以及`scripts/supply-draft-import.mjs`，负责读取、校验、四档分类与导入报告。未取得可信的真实供货时不造兼容范围、组件绑定或制品SHA。`PreviewPack`和`CatalogSnapshot.previewPacks`只展示未解析组件、原来源和薄包，不接plan/task/install；Client“上游整合包”区没有一键安装，`tests/supply/preview-pack-gate.test.ts`验证这条边界。
 
 ## 8. 管理业务记录与恢复：最重要的不变式
 
@@ -212,6 +228,16 @@ update-check-scheduler已有计时波动；历史宽回归2项失败与隔离24/
 `.verify/management-business-20261005/`、`.verify/github-delivery-20261005/`、本机D盘Profile/Registry/日志/截图等是本机证据，不在Git。拿到仓库的新开发者只能取得已提交实录和脚本，不能假设这些目录存在。
 
 需要复查原始证据时向原执行者申请**脱敏导出**；不要要求上传全Profile或原始官方日志。当前实录引用文件名只是本机定位，不是公开下载地址。没有原始材料时应重新跑安全的离线/只读测试；不能盲目重跑带写入的官方探针。
+
+### 10.5 第二次合并mvp.19：本次交付的最新门禁
+
+远端五提交为`f6aef9f`、`ad53f2e`、`e011b8b`、`2fc644c`、`4f9a627`；增加日志/宽松策略、供货/previewPacks、后续全表面UI和panel锚定。主控与独占Client子智能体整合，另一个只读子智能体复查业务语义，不并行构建或官方操作。本机输出为`.verify/github-delivery-20261005/upstream-mvp19/`，不覆盖10.2的mvp.18证据。
+
+build、额外Client tsc、lint、包边界通过；包检查96文件、42 descriptor。合并focused81/81通过；首轮全量1905 passed / 1 failed / 2pending、success=false，失败为装后重复目标用例仍期待旧unknown语义。按已决定的宽松策略改为核实官方applied、日志明确目标未知、零纠正写及同request零重放，未删测试、未改写前阻断；修正focused35/35通过。最终串行全量`full-corrected.json`：success=true、1906 passed / 0 failed / 2既有pending、failed suites=0，总计1908；合成browser60/60，结果在`browser/browser-results.json`。首轮失败保留，不用上游自述或10.2数字代替。
+
+本次实际命令仍为第10.2节的build、tsc、lint、verify-package与串行Vitest；Vitest的outputFile改为`.verify/github-delivery-20261005/upstream-mvp19/full-corrected.json`，browser的`EAC_BROWSER_CHECK_OUT`改为本批`upstream-mvp19/browser`。只有代码/测试合并后的这些输出属于最新检出，不包括独立layout-audit或官方载体。
+
+新mvp.19官方制品、实际安装字节、独立layout-audit、晚到安装回执追账、其余真实功能矩阵仍待验；没有公开发布或日常Profile动作。推送成功应由提交后的`ls-remote`与本地HEAD相等证明，本文不是远端ref证明。
 
 ## 11. 官方Desktop新批次的操作规程
 

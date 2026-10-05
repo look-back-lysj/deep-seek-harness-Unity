@@ -25,7 +25,7 @@ import type {
   TaskStorePort,
 } from '../../packages/market-core/src/core/ports.ts'
 import { createPlanBundle } from '../../packages/market-core/src/core/planner.ts'
-import { InstallTaskManager } from '../../packages/market-core/src/core/task-manager.ts'
+import { InstallTaskManager, type TaskManagerDeps } from '../../packages/market-core/src/core/task-manager.ts'
 
 export function inventoryItem(packageName: string, version: string | undefined, enabled = true): InventoryItem {
   return {
@@ -260,7 +260,7 @@ export async function makeBundle(options: SyntheticPlanOptions): Promise<PlanBun
   return result.bundle
 }
 
-export async function makeManager(bundle: PlanBundle, host = new FakeHost(), store = new InMemoryTaskStore()): Promise<{
+export async function makeManager(bundle: PlanBundle, host = new FakeHost(), store = new InMemoryTaskStore(), extra: Partial<TaskManagerDeps> = {}): Promise<{
   manager: InstallTaskManager
   host: FakeHost
   store: InMemoryTaskStore
@@ -276,6 +276,7 @@ export async function makeManager(bundle: PlanBundle, host = new FakeHost(), sto
     locks: new InMemoryLocks(),
     events: new MemoryEventLog(),
     now: () => new Date(clock++),
+    ...extra,
   })
   const outcome = await manager.start(bundle, {
     planId: bundle.plan.planId,

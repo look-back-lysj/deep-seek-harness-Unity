@@ -413,6 +413,46 @@ export interface CatalogDelivery {
   readonly sources: readonly DeliverySource[]
 }
 
+/** 上游未解析整合包的组件引用：只读展示，不绑定市场发行。 */
+export interface PreviewPackComponent {
+  readonly id: string
+  readonly ref: string
+  readonly version?: string | undefined
+  readonly resolved?: {
+    readonly packageName: string
+    readonly version: string
+    readonly sha256: string
+  } | undefined
+}
+
+/** 只读纯展示模型：没有 delivery / releaseId，结构上进不了安装计划。
+ * 完整可装的组合未来走 MarketCollection，不走预览。 */
+export interface PreviewPack {
+  readonly id: string
+  readonly version: string
+  readonly name: string
+  readonly summary: string
+  readonly source: {
+    readonly url: string
+    readonly commit: string | null
+  }
+  readonly requiresDsh: string | null
+  readonly compatibilityBasis: 'author-declared' | 'maintainer-target' | 'unknown'
+  readonly components: readonly PreviewPackComponent[]
+  readonly artifact?: {
+    readonly format: 'eac-feature-pack-v1'
+    readonly downloadUrl: string
+    readonly sha256: string
+    readonly size: number
+  }
+  readonly execution: {
+    readonly coverage: 'unknown' | 'partial'
+    readonly edges: readonly PackExecutionEdge[]
+    readonly reference?: string | undefined
+  }
+  readonly status: 'active' | 'withdrawn'
+}
+
 export interface CatalogSnapshot {
   readonly schemaVersion: string
   readonly revision: string
@@ -421,6 +461,7 @@ export interface CatalogSnapshot {
   readonly stale: boolean
   readonly plugins: readonly CatalogPlugin[]
   readonly listings?: readonly CatalogListing[] | undefined
+  readonly previewPacks?: readonly PreviewPack[] | undefined
   readonly packs: readonly CatalogPack[]
   readonly presentations: readonly CatalogPresentation[]
   readonly deliveries: readonly CatalogDelivery[]
@@ -686,6 +727,7 @@ export interface InstallPlanItem {
   readonly requiresRestart: boolean
   readonly blockers: readonly string[]
   readonly releaseContext?: ReleaseSelectionContext
+  readonly warnings?: readonly string[]
 }
 
 export interface InstallPlan {
@@ -1108,4 +1150,32 @@ export interface DiagnosticExport {
   readonly summaries: readonly string[]
   readonly diagnostics: readonly DiagnosticEntry[]
   readonly redacted: boolean
+}
+/** 安装日志（B 档）：每行一条 JSON 的只读记录面。字段只含脱敏摘要，
+ * 不含本机绝对路径、令牌或完整交付 URL。 */
+export type InstallLogAction = 'install' | 'remove' | 'enable' | 'disable' | 'update'
+
+export interface InstallLogCheck {
+  readonly check: string
+  readonly pass: boolean
+  readonly reason?: string | undefined
+}
+
+export interface InstallLogOfficialResult {
+  readonly kind: string
+  readonly changed?: boolean | undefined
+  readonly error?: string | undefined
+}
+
+export interface InstallLogEntry {
+  readonly at: string
+  readonly action: InstallLogAction
+  readonly packageName: string
+  readonly version?: string | undefined
+  readonly artifactDigest?: string | undefined
+  readonly source?: string | undefined
+  readonly officialResult?: InstallLogOfficialResult | undefined
+  readonly postcheck?: readonly InstallLogCheck[] | undefined
+  readonly taskId?: string | undefined
+  readonly hostVersion: string
 }
