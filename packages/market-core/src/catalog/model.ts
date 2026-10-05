@@ -12,6 +12,7 @@ import type {
   CatalogPresentation,
   CatalogRecommendation,
   CatalogSnapshot,
+  PreviewPack,
 } from '../contracts/types.ts'
 
 export const MARKET_INDEX_SCHEMA_VERSION = '1'
@@ -111,6 +112,7 @@ export interface MarketIndexDocument {
   readonly generatedAt: string
   readonly plugins: readonly MarketPluginRecord[]
   readonly listings?: readonly CatalogListing[] | undefined
+  readonly previewPacks?: readonly PreviewPack[] | undefined
   readonly packs: readonly MarketPackRecord[]
   readonly presentations: readonly CatalogPresentation[]
   readonly deliveries: readonly CatalogDelivery[]

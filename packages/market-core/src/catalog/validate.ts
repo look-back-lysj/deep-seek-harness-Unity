@@ -17,6 +17,8 @@ import type {
   PackComponent,
   PackExecution,
   PackExecutionEdge,
+  PreviewPack,
+  PreviewPackComponent,
 } from '../contracts/types.ts'
 import {
   CatalogValidationError,
@@ -49,6 +51,11 @@ const BASE64_RE = /^[A-Za-z0-9+/]*={0,2}$/
 
 function fail(code: string, message: string, details: readonly string[] = []): never {
   throw new CatalogValidationError(code, message, details)
+}
+
+function pick<T extends string>(value: unknown, field: string, allowed: readonly T[]): T {
+  if (typeof value !== 'string' || !(allowed as readonly string[]).includes(value)) fail('catalog/invalid-field', `${field} 无效`)
+  return value as T
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -190,6 +197,81 @@ function parsePlugin(value: unknown, field: string, maxTextBytes: number, now: D
   validatePublicManifest(manifest.bytes, plugin)
   const evidence = value.evidence === undefined ? [] : array(value.evidence, `${field}.evidence`, 32).map((item, index) => decodeRaw(item, `${field}.evidence[${index}]`, maxTextBytes))
   return { ...plugin, manifestDigest, manifest: manifest.record, ...(value.releaseId === undefined ? {} : { releaseId: string(value.releaseId, 'releaseId', 100) }), ...(evidence.length === 0 ? {} : { evidence: evidence.map((item) => item.record) }) }
+}
+
+function parsePreviewComponent(value: unknown, field: string): PreviewPackComponent {
+  if (!isRecord(value)) fail('catalog/invalid-field', `${field} 必须是对象`)
+  const resolved = value.resolved === undefined ? undefined : (() => {
+    if (!isRecord(value.resolved)) fail('catalog/invalid-field', `${field}.resolved 必须是对象`)
+    return {
+      packageName: requiredString(value.resolved.packageName, `${field}.resolved.packageName`, 214),
+      version: parseVersion(value.resolved.version, `${field}.resolved.version`),
+      sha256: requiredString(value.resolved.sha256, `${field}.resolved.sha256`, 64),
+    }
+  })()
+  return {
+    id: requiredString(value.id, `${field}.id`, 200),
+    ref: requiredString(value.ref, `${field}.ref`, 512),
+    ...(value.version === undefined ? {} : { version: requiredString(value.version, `${field}.version`, 100) }),
+    ...(resolved === undefined ? {} : { resolved }),
+  }
+}
+
+/** 上游未解析整合包：只做展示解析，coverage 禁 complete，组件 ID 必须唯一。 */
+function parsePreviewPack(value: unknown, field: string): PreviewPack {
+  if (!isRecord(value)) fail('catalog/invalid-field', `${field} 必须是对象`)
+  const status = pick(value.status, `${field}.status`, ['active', 'withdrawn'] as const)
+  const basis = pick(value.compatibilityBasis, `${field}.compatibilityBasis`, ['author-declared', 'maintainer-target', 'unknown'] as const)
+  const requiresDsh = value.requiresDsh === null ? null : requiredString(value.requiresDsh, `${field}.requiresDsh`, 100)
+  const source = value.source
+  if (!isRecord(source)) fail('catalog/invalid-field', `${field}.source 必须是对象`)
+  let sourceUrl: URL
+  try { sourceUrl = new URL(requiredString(source.url, `${field}.source.url`, 4096)) } catch { fail('catalog/invalid-field', `${field}.source.url 不是有效链接`) }
+  if (sourceUrl.protocol !== 'https:' || sourceUrl.username || sourceUrl.password) fail('catalog/invalid-field', `${field}.source.url 只允许无凭据 HTTPS`)
+  if (source.commit !== null && typeof source.commit !== 'string') fail('catalog/invalid-field', `${field}.source.commit 只能是字符串或 null`)
+  const components = array(value.components, `${field}.components`, 2_000).map((item, index) => parsePreviewComponent(item, `${field}.components[${index}]`))
+  if (components.length === 0) fail('catalog/invalid-field', `${field}.components 至少要有一个组件`)
+  if (new Set(components.map(item => item.id)).size !== components.length) fail('catalog/invalid-field', `${field}.components 组件 ID 重复`)
+  const execution = value.execution
+  if (!isRecord(execution)) fail('catalog/invalid-field', `${field}.execution 必须是对象`)
+  if (execution.coverage === 'complete') {
+    fail('catalog/preview-pack-coverage', `${field}.execution.coverage 不允许 complete：完整可装组合走 MarketCollection，不走预览`)
+  }
+  const coverage = pick(execution.coverage, `${field}.execution.coverage`, ['unknown', 'partial'] as const)
+  const edges = array(execution.edges, `${field}.execution.edges`, 4_000).map((edge, index) => {
+    if (!isRecord(edge)) fail('catalog/invalid-field', `${field}.execution.edges[${index}] 必须是对象`)
+    const milestone = pick(edge.milestone, `${field}.execution.edges[${index}].milestone`, ['installed', 'active'] as const)
+    return {
+      prerequisiteId: requiredString(edge.prerequisiteId, `${field}.execution.edges[${index}].prerequisiteId`, 200),
+      consumerId: requiredString(edge.consumerId, `${field}.execution.edges[${index}].consumerId`, 200),
+      milestone,
+    }
+  })
+  const componentIds = new Set(components.map(item => item.id))
+  validateExecutionGraph({ schemaVersion: '1', packId: String(value.id ?? ''), packVersion: String(value.version ?? ''), lockDigest: '', coverage, edges, provenance: 'preview-pack' }, componentIds)
+  const artifact = value.artifact === undefined ? undefined : (() => {
+    if (!isRecord(value.artifact)) fail('catalog/invalid-field', `${field}.artifact 必须是对象`)
+    if (value.artifact.format !== 'eac-feature-pack-v1') fail('catalog/invalid-field', `${field}.artifact.format 只能是 eac-feature-pack-v1`)
+    let url: URL
+    try { url = new URL(requiredString(value.artifact.downloadUrl, `${field}.artifact.downloadUrl`, 4096)) } catch { fail('catalog/invalid-field', `${field}.artifact.downloadUrl 不是有效链接`) }
+    if (url.protocol !== 'https:' || url.username || url.password) fail('catalog/invalid-field', `${field}.artifact.downloadUrl 只允许无凭据 HTTPS`)
+    const sha256 = requiredString(value.artifact.sha256, `${field}.artifact.sha256`, 64)
+    if (!/^[0-9a-f]{64}$/.test(sha256)) fail('catalog/invalid-digest', `${field}.artifact.sha256 必须是 64 位小写十六进制`)
+    return { format: 'eac-feature-pack-v1' as const, downloadUrl: url.href, sha256, size: numberInt(value.artifact.size, `${field}.artifact.size`, 1, Number.MAX_SAFE_INTEGER) }
+  })()
+  return {
+    id: parseId(value.id, `${field}.id`),
+    version: parseVersion(value.version, `${field}.version`),
+    name: requiredString(value.name, `${field}.name`, 200),
+    summary: requiredString(value.summary, `${field}.summary`, 4096),
+    source: { url: sourceUrl.href, commit: source.commit === null ? null : String(source.commit) },
+    requiresDsh,
+    compatibilityBasis: basis,
+    components,
+    ...(artifact === undefined ? {} : { artifact }),
+    execution: { coverage, edges, ...(execution.reference === undefined ? {} : { reference: requiredString(execution.reference, `${field}.execution.reference`, 4096) }) },
+    status,
+  }
 }
 
 function parseListing(value: unknown, field: string): CatalogListing {
@@ -491,6 +573,7 @@ export function validateMarketIndex(
   const projectedPlugins = plugins.map(({ manifest: _manifest, manifestDigest: _manifestDigest, metadata: _metadata, releaseId, evidence: _evidence, ...plugin }) => ({ ...plugin, verification: verificationByKey.get(`${plugin.id}@${plugin.version}`) ?? plugin.verification, ...(isV2 && releaseId ? { releasedAt: releasesById.get(releaseId)?.publishedAt } : {}), ...(releaseId && latestStatuses.get(releaseId)?.status === 'withdrawn' ? { installability: 'hard-blocked' as const } : {}) }))
 
   const recommendations = parseRecommendations(input.recommendations, projectedPlugins, options.now ?? new Date(), isV2)
+  const snapshotPluginIds = new Set(plugins.map(plugin => plugin.id))
   const snapshot: CatalogSnapshot = {
     schemaVersion: input.schemaVersion,
     revision,
@@ -499,6 +582,12 @@ export function validateMarketIndex(
     stale: false,
     plugins: projectedPlugins,
     ...(input.listings === undefined ? {} : { listings: array(input.listings, 'listings', limits.maxPlugins).map((value, i) => parseListing(value, `listings[${i}]`)) }),
+    ...(input.previewPacks === undefined ? {} : { previewPacks: (() => {
+      const packs = array(input.previewPacks, 'previewPacks', limits.maxPacks).map((value, i) => parsePreviewPack(value, `previewPacks[${i}]`))
+      if (new Set(packs.map(item => item.id + '@' + item.version)).size !== packs.length) fail('catalog/duplicate-record', '预览组合 ID 重复')
+      if (packs.some(pack => snapshotPluginIds.has(pack.id))) fail('catalog/duplicate-record', '预览组合 ID 与插件记录冲突')
+      return packs
+    })() }),
     packs: packs.map(({ pack: _pack, packDigest: _packDigest, lock: _lock, ...pack }) => pack),
     presentations,
     deliveries,

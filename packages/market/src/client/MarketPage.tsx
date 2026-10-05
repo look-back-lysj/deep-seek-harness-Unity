@@ -1210,6 +1210,22 @@ export function DiscoverView({ catalog, inventory, onOpen, onInstall, onPack, on
           <div className="eac-market__plugin-bottom"><span className="eac-market__status">{collection.components.length} 个组件 · {collection.version}</span><Button size="sm" variant="primary" disabled={onCollection === undefined} onClick={() => onCollection?.(collection)}>查看组合变更</Button></div>
         </article>)}</div>
       </section>}
+      {(catalog.previewPacks?.length ?? 0) > 0 && <section className="eac-market__section" aria-label="上游整合包">
+        <div className="eac-market__section-head"><div className="eac-market__section-title"><span className="eac-market__chapter-index" aria-hidden="true">07</span><h2>上游整合包（组件整理中）</h2></div><p>组件尚未解析绑定，只展示原始薄包与来源；确认安装范围前不提供一键安装。</p></div>
+        <div className="eac-market__grid eac-market__grid--two">{catalog.previewPacks?.map((pack) => {
+          let href: string | undefined
+          try { const url = new URL(pack.source.url); href = url.protocol === 'https:' || url.protocol === 'http:' ? url.href : undefined } catch { href = undefined }
+          return <article className="eac-market__card" key={pack.id + ':' + pack.version} data-preview-pack-id={pack.id}>
+            <div className="eac-market__tags"><Tag tone="info">上游整合包</Tag><Status tone="warning">{packCoverageLabel(pack.execution.coverage)}</Status>{pack.status === 'withdrawn' && <Status tone="danger">已撤回</Status>}</div>
+            <h3>{pack.name}</h3>
+            <p className="eac-market__plugin-summary">{pack.summary}</p>
+            <p className="eac-market__status">{pack.version} · {pack.requiresDsh === null ? '宿主要求未知' : '需要宿主 ' + pack.requiresDsh}</p>
+            <p className="eac-market__status">组件：{pack.components.map((component) => component.ref).join('、')}</p>
+            {pack.artifact !== undefined && <p className="eac-market__status">薄包 {pack.artifact.size} 字节 · 指纹 {pack.artifact.sha256.slice(0, 12)}…</p>}
+            <div className="eac-market__plugin-bottom"><span className="eac-market__status">{pack.components.length} 个组件</span>{href === undefined ? <span>来源链接待补充</span> : <a href={href} target="_blank" rel="noreferrer">查看来源</a>}</div>
+          </article>
+        })}</div>
+      </section>}
       {supplemental}
     </div>
   )
